@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    kotlin("kapt")
 }
 
 android {
@@ -121,8 +122,10 @@ dependencies {
     // SplashScreen
     implementation(libs.androidx.core.splashscreen)
 
-    // Logging
-    implementation(libs.slf4j.android)
+    // Logging - SLF4J API only (provider implemented in code)
+    implementation(libs.slf4j.api)
+    compileOnly(libs.auto.service.annotations)
+    kapt(libs.auto.service)
 
     // ML Kit Barcode Scanning
     implementation(libs.mlkit.barcode.scanning)

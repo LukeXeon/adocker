@@ -358,8 +358,45 @@ class PRootEngine(
                 environment = buildProotEnvironment(),
                 timeout = 5000
             )
-            result.stdout.lines().firstOrNull()?.trim()
+
+            // PRoot --version outputs ASCII art + version info
+            // Example output:
+            //  _____ _____              ___
+            // |  __ \  __ \_____  _____|   |_
+            // |   __/     /  _  \/  _  \    _|
+            // |__|  |__|__\_____/\_____/\____| 84a5bdf8-dirty
+            //
+            // built-in accelerators: process_vm = no, seccomp_filter = yes
+            // ...
+
+            // Extract version from the ASCII art line (last line of the art, contains version)
+            val lines = result.stdout.lines()
+            val versionLine = lines.find { it.contains("|__|") && it.contains("|") }
+
+            if (versionLine != null) {
+                // Extract version after the last |
+                val version = versionLine.substringAfterLast("|").trim()
+                if (version.isNotEmpty()) {
+                    return@withContext "PRoot $version"
+                }
+            }
+
+            // Fallback: look for "built-in accelerators" line
+            val acceleratorsLine = lines.find { it.contains("built-in accelerators") }
+            if (acceleratorsLine != null) {
+                // Extract accelerator info
+                val seccompSupport = if (acceleratorsLine.contains("seccomp_filter = yes")) {
+                    "seccomp enabled"
+                } else {
+                    "seccomp disabled"
+                }
+                return@withContext "PRoot ($seccompSupport)"
+            }
+
+            // Last fallback: just return that PRoot is available
+            "PRoot (version unknown)"
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to get PRoot version", e)
             null
         }
     }
