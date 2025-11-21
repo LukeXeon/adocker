@@ -88,6 +88,13 @@ sealed class Screen(
         selectedIcon = Icons.Filled.Cloud,
         unselectedIcon = Icons.Outlined.Cloud
     )
+
+    data object QRCodeScanner : Screen(
+        route = "qr_scanner",
+        title = "Scan QR Code",
+        selectedIcon = Icons.Filled.QrCodeScanner,
+        unselectedIcon = Icons.Outlined.QrCodeScanner
+    )
 }
 
 val bottomNavItems = listOf(

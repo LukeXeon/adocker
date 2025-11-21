@@ -48,6 +48,12 @@ splashscreen = "1.0.1"
 # Logging
 slf4j = "1.7.36"
 
+# ML Kit Barcode Scanning
+mlkitBarcodeScanning = "17.3.0"
+
+# CameraX
+camerax = "1.4.1"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -114,6 +120,15 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 
 # Logging
 slf4j-android = { group = "org.slf4j", name = "slf4j-android", version.ref = "slf4j" }
+
+# ML Kit Barcode Scanning
+mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcodeScanning" }
+
+# CameraX
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -16,6 +16,7 @@ import com.adocker.runner.ui.screens.containers.CreateContainerScreen
 import com.adocker.runner.ui.screens.home.HomeScreen
 import com.adocker.runner.ui.screens.images.ImagesScreen
 import com.adocker.runner.ui.screens.images.PullImageScreen
+import com.adocker.runner.ui.screens.images.QRCodeScannerScreen
 import com.adocker.runner.ui.screens.settings.MirrorSettingsScreen
 import com.adocker.runner.ui.screens.settings.SettingsScreen
 import com.adocker.runner.ui.screens.terminal.TerminalScreen
@@ -137,9 +138,40 @@ fun MainScreen() {
             }
 
             // Pull Image
-            composable(Screen.PullImage.route) {
+            composable(Screen.PullImage.route) { backStackEntry ->
+                val scannedImage = backStackEntry.savedStateHandle
+                    .getStateFlow<String?>("scanned_image", null)
+                    .collectAsState()
+
+                // Clear scanned image after reading
+                LaunchedEffect(scannedImage.value) {
+                    if (scannedImage.value != null) {
+                        backStackEntry.savedStateHandle.remove<String>("scanned_image")
+                    }
+                }
+
                 PullImageScreen(
                     viewModel = mainViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToQRScanner = {
+                        navController.navigate(Screen.QRCodeScanner.route)
+                    },
+                    scannedImageName = scannedImage.value
+                )
+            }
+
+            // QR Code Scanner
+            composable(Screen.QRCodeScanner.route) {
+                QRCodeScannerScreen(
+                    onBarcodeScanned = { imageName ->
+                        // Set the scanned image to the previous screen's savedStateHandle
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scanned_image", imageName)
+                        navController.popBackStack()
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }

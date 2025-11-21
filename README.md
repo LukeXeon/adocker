@@ -9,6 +9,7 @@ ADocker 是一个在 Android 上运行 Docker 容器的应用，基于 udocker �
 - **镜像管理**
   - 从 Docker Hub 搜索镜像
   - 拉取镜像 (pull)
+  - **扫描二维码添加镜像** ✨ 新功能
   - 查看本地镜像列表
   - 删除本地镜像
   - 导入/导出镜像
@@ -169,10 +170,25 @@ cd adocker
 
 ### 拉取镜像
 
+#### 方式一：手动输入
 1. 打开应用，进入 "Images" 页面
 2. 点击右上角的下载图标或 FAB
 3. 在 "Pull Image" 页面输入镜像名称（如 `alpine:latest`）
 4. 点击 "Pull" 按钮等待下载完成
+
+#### 方式二：扫描二维码（推荐）✨
+1. 进入 "Pull Image" 页面
+2. 点击右上角的二维码扫描图标
+3. 授予相机权限（首次使用）
+4. 将二维码对准扫描框
+5. 自动识别后确认并开始拉取
+
+支持的二维码格式：
+- 简单格式：`alpine:latest`
+- JSON 格式：`{"type":"docker-image","image":"alpine:latest"}`
+- URL 格式：`adocker://pull?image=alpine:latest`
+
+详细使用说明请参考 [QR_CODE_SCANNING.md](QR_CODE_SCANNING.md)
 
 ### 创建容器
 
@@ -275,4 +291,4 @@ MIT License
 
 
 ## TODO
-- 能够通过扫码添加镜像
+- 将proot构建集成到项目中

@@ -24,6 +24,8 @@ import com.adocker.runner.ui.viewmodel.MainViewModel
 fun PullImageScreen(
     viewModel: MainViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToQRScanner: () -> Unit = {},
+    scannedImageName: String? = null,
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
@@ -36,6 +38,13 @@ fun PullImageScreen(
     var searchQuery by remember { mutableStateOf("") }
     var pullImageName by remember { mutableStateOf("") }
     var showPullDialog by remember { mutableStateOf(false) }
+
+    // Handle scanned image from QR code
+    LaunchedEffect(scannedImageName) {
+        if (scannedImageName != null) {
+            pullImageName = scannedImageName
+        }
+    }
 
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -65,6 +74,11 @@ fun PullImageScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToQRScanner) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code")
                     }
                 }
             )

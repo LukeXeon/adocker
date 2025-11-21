@@ -1,11 +1,13 @@
 package com.adocker.runner.core.utils
 
+import android.os.Build
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import okhttp3.internal.wait
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -63,12 +65,37 @@ object ProcessUtils {
         stderrThread.start()
 
         val exitCode = if (timeout > 0) {
-            val finished = process.waitFor(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)
-            if (!finished) {
-                process.destroyForcibly()
-                -1
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // API 26+: Use waitFor with timeout
+                val finished = process.waitFor(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)
+                if (!finished) {
+                    process.destroyForcibly()
+                    -1
+                } else {
+                    process.exitValue()
+                }
             } else {
-                process.exitValue()
+                // API < 26: Manual timeout implementation
+                val startTime = System.currentTimeMillis()
+                var finished = false
+
+                while (System.currentTimeMillis() - startTime < timeout) {
+                    try {
+                        val exitValue = process.exitValue()
+                        finished = true
+                        break
+                    } catch (e: IllegalThreadStateException) {
+                        // Process is still running
+                        Thread.sleep(100)
+                    }
+                }
+
+                if (!finished) {
+                    process.destroy()
+                    -1
+                } else {
+                    process.exitValue()
+                }
             }
         } else {
             process.waitFor()
