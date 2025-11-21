@@ -331,11 +331,15 @@ class PRootEngine(
                 timeout = 5000
             )
 
-            val available = result.exitCode == 0 || result.stdout.contains("proot", ignoreCase = true)
+            val available =
+                result.exitCode == 0 || result.stdout.contains("proot", ignoreCase = true)
             if (!available) {
-                Log.w(TAG, "PRoot check failed. Exit code: ${result.exitCode}, stdout: ${result.stdout}, stderr: ${result.stderr}")
+                Log.w(
+                    TAG,
+                    "PRoot check failed. Exit code: ${result.exitCode}, stdout: ${result.stdout}, stderr: ${result.stderr}"
+                )
             } else {
-                Log.d(TAG, "PRoot available. Version output: ${result.stdout}")
+                Log.d(TAG, "PRoot available. Version output:\n ${result.stdout}")
             }
             available
         } catch (e: Exception) {
