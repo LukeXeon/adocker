@@ -1,0 +1,5 @@
+按步骤完善这个项目
+1、学习udocker这个项目，在安卓上使用kotlin和Android SDK来实现udocker中python的逻辑，如果有需要你可以自己找需要的三方库（kotlin或者java库，但是最好是kotlin库）进行引入，但是要确保他们能在安卓上运行
+2、需要实现udocker所有支持的能力（包括镜像下载和运行等等）
+3、但是运行时仅需要实现proot这一个就行，root的代码使用termux进行patch过的源码进行编译，确保其在安卓上可以运行
+4、通过对上面功能的调用和封装，使用Compose实现Material design风格的界面，功能对齐尽量对齐docker desktop
