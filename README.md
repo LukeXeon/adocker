@@ -109,8 +109,6 @@ com.adocker.runner/
 
 ## PRoot 构建
 
-项目集成了 PRoot 源码构建，使用 CMake 和 Gradle 的 `externalNativeBuild` 功能自动编译。
-
 **PRoot 版本**：v0.15_release（来自 [green-green-avk/proot](https://github.com/green-green-avk/proot)）
 
 **特点**：
