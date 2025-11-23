@@ -1,10 +1,17 @@
 package com.adocker.runner
 
 import android.app.Application
-import com.adocker.runner.core.config.Config
-import com.adocker.runner.core.config.RegistrySettings
 import dagger.hilt.android.HiltAndroidApp
 
+/**
+ * Application class for ADocker
+ *
+ * All initialization is handled by AndroidX App Startup.
+ * See the following initializers in core.startup package:
+ * - TimberInitializer: Timber logging setup
+ * - ConfigInitializer: Config initialization
+ * - RegistrySettingsInitializer: Registry settings initialization
+ */
 @HiltAndroidApp
 class ADockerApplication : Application() {
 
@@ -12,11 +19,8 @@ class ADockerApplication : Application() {
         super.onCreate()
         instance = this
 
-        // Initialize config
-        Config.init(this)
-
-        // Initialize registry settings with default mirror for China
-        RegistrySettings.init(this)
+        // All initialization is now handled by AndroidX App Startup
+        // See AndroidManifest.xml for InitializationProvider configuration
     }
 
     companion object {

@@ -3,9 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
 }
 
 android {
@@ -126,6 +126,12 @@ dependencies {
     implementation(libs.slf4j.api)
     compileOnly(libs.auto.service.annotations)
     kapt(libs.auto.service)
+
+    // Timber Logging
+    implementation(libs.timber)
+
+    // App Startup
+    implementation(libs.androidx.startup.runtime)
 
     // ML Kit Barcode Scanning
     implementation(libs.mlkit.barcode.scanning)
