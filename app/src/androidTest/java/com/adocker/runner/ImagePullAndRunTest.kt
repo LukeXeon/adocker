@@ -3,9 +3,8 @@ package com.adocker.runner
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.adocker.runner.core.config.Config
-import com.adocker.runner.core.config.RegistrySettings
+import com.adocker.runner.core.config.AppConfig
+import com.adocker.runner.core.config.RegistrySettingsManager
 import com.adocker.runner.data.local.AppDatabase
 import com.adocker.runner.data.remote.api.DockerRegistryApi
 import com.adocker.runner.data.repository.ContainerRepository
@@ -15,6 +14,8 @@ import com.adocker.runner.domain.model.ContainerStatus
 import com.adocker.runner.domain.model.PullStatus
 import com.adocker.runner.engine.executor.ContainerExecutor
 import com.adocker.runner.engine.proot.PRootEngine
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -22,9 +23,10 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Integration tests for image pull and container run functionality.
@@ -36,41 +38,34 @@ import java.io.File
  *
  * Check logcat with `adb logcat -d | grep -i PRootEngine` for detailed error info.
  */
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class ImagePullAndRunTest {
 
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var appConfig: AppConfig
+
+    @Inject
+    lateinit var registrySettings: RegistrySettingsManager
+
+    @Inject
+    lateinit var imageRepository: ImageRepository
+
+    @Inject
+    lateinit var containerRepository: ContainerRepository
+
     private lateinit var context: Context
-    private lateinit var database: AppDatabase
-    private lateinit var registryApi: DockerRegistryApi
-    private lateinit var imageRepository: ImageRepository
-    private lateinit var containerRepository: ContainerRepository
     private var prootEngine: PRootEngine? = null
     private var containerExecutor: ContainerExecutor? = null
     private var prootAvailable = false
 
     @Before
     fun setup() {
+        hiltRule.inject()
         runBlocking {
             context = ApplicationProvider.getApplicationContext()
-
-            // Initialize Config
-            Config.init(context)
-            RegistrySettings.init(context)
-
-            // Initialize database
-            database = AppDatabase.getInstance(context)
-
-            // Initialize repositories
-            registryApi = DockerRegistryApi()
-            imageRepository = ImageRepository(
-                database.imageDao(),
-                database.layerDao(),
-                registryApi
-            )
-            containerRepository = ContainerRepository(
-                database.containerDao(),
-                database.imageDao()
-            )
 
             // Try to initialize PRoot engine (may not work on emulators)
             try {
@@ -81,8 +76,8 @@ class ImagePullAndRunTest {
                     containerExecutor = ContainerExecutor(engine, containerRepository)
                     prootAvailable = true
                 } else {
-                    val binDir = Config.binDir
-                    val prootFile = File(binDir, "proot")
+                    val nativeLibDir = appConfig.nativeLibDir
+                    val prootFile = File(nativeLibDir, "libproot.so")
                     Log.w("ImagePullAndRunTest",
                         "PRoot not available. Binary exists: ${prootFile.exists()}, " +
                         "Executable: ${prootFile.canExecute()}, " +
@@ -107,7 +102,7 @@ class ImagePullAndRunTest {
      * (execute_no_trans) because files there have app_data_file context.
      */
     private fun initializePRoot(): PRootEngine {
-        val nativeLibDir = Config.getNativeLibDir()
+        val nativeLibDir = appConfig.nativeLibDir
             ?: throw IllegalStateException("Native library directory is null")
 
         val prootBinary = File(nativeLibDir, "libproot.so")
@@ -124,18 +119,19 @@ class ImagePullAndRunTest {
             throw IllegalStateException("PRoot binary not found in native lib dir: ${prootBinary.absolutePath}")
         }
 
-        return PRootEngine(prootBinary, nativeLibDir)
+        return PRootEngine(prootBinary, nativeLibDir, appConfig)
     }
 
     @Test
     fun testRegistryMirrorConnectivity() {
         runBlocking {
             // Test that we can reach the configured registry mirror
-            val currentMirror = RegistrySettings.getCurrentMirror()
+            val currentMirror = registrySettings.getCurrentMirror()
             Log.i("ImagePullAndRunTest", "Testing connectivity to: ${currentMirror.name} (${currentMirror.url})")
 
             try {
                 // Try to get a token for library/alpine
+                val registryApi = DockerRegistryApi(registrySettings, appConfig)
                 val result = registryApi.authenticate("library/alpine", currentMirror.url)
 
                 if (result.isSuccess) {
@@ -177,7 +173,7 @@ class ImagePullAndRunTest {
         assumeTrue("Skipping test - PRoot not available on this device/emulator", prootAvailable)
 
         runBlocking {
-            val nativeLibDir = Config.getNativeLibDir()
+            val nativeLibDir = appConfig.nativeLibDir!!
             val prootBinary = File(nativeLibDir, "libproot.so")
 
             Log.i("ImagePullAndRunTest", "=== EXECUTING PROOT --help ===")
@@ -229,7 +225,7 @@ class ImagePullAndRunTest {
 
             // Use default China mirror (DaoCloud) for better connectivity in China
             // The default mirror is already configured in RegistrySettings
-            val currentMirror = RegistrySettings.getCurrentMirror()
+            val currentMirror = registrySettings.getCurrentMirror()
             Log.i("ImagePullAndRunTest", "Using registry mirror: ${currentMirror.name} (${currentMirror.url})")
 
             // Test with Alpine Linux (small image, ~3MB)
@@ -314,7 +310,7 @@ class ImagePullAndRunTest {
 
             // Step 3: Verify layers are extracted
             pulledImage.layerIds.forEach { digest ->
-                val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
                 Log.d("ImagePullAndRunTest", "=== LAYER VERIFICATION ===")
                 Log.d("ImagePullAndRunTest", "Layer digest: $digest")
                 Log.d("ImagePullAndRunTest", "Layer dir path: ${layerDir.absolutePath}")

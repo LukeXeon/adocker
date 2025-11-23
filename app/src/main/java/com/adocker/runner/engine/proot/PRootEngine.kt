@@ -1,8 +1,6 @@
 package com.adocker.runner.engine.proot
 
-import android.util.Log
-import com.adocker.runner.core.config.Config
-import com.adocker.runner.core.utils.FileUtils
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.ProcessUtils
 import com.adocker.runner.domain.model.Container
 import com.adocker.runner.domain.model.ContainerConfig
@@ -12,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 
 /**
@@ -30,7 +29,8 @@ import java.io.File
  */
 class PRootEngine(
     private val prootBinary: File,
-    private val nativeLibDir: File? = prootBinary.parentFile
+    private val nativeLibDir: File?,
+    private val appConfig: AppConfig
 ) {
     companion object {
         private const val TAG = "PRootEngine"
@@ -38,31 +38,6 @@ class PRootEngine(
         // PRoot execution modes
         const val MODE_P1 = "P1"  // With SECCOMP
         const val MODE_P2 = "P2"  // Without SECCOMP (more compatible but slower)
-
-        /**
-         * Initialize PRoot engine with the binary from native libs directory.
-         *
-         * IMPORTANT: On Android 10+, PRoot must be executed directly from the
-         * native library directory to avoid SELinux execute_no_trans denial.
-         * Do NOT copy the binary to app data directory.
-         */
-        suspend fun initialize(nativeLibDir: File?): PRootEngine? = withContext(Dispatchers.IO) {
-            if (nativeLibDir == null) {
-                Log.e(TAG, "Native library directory is null")
-                return@withContext null
-            }
-
-            // Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
-            val prootFile = File(nativeLibDir, "libproot.so")
-
-            if (!prootFile.exists()) {
-                Log.e(TAG, "PRoot binary not found at: ${prootFile.absolutePath}")
-                return@withContext null
-            }
-
-            Log.d(TAG, "Initializing PRoot from native lib dir: ${prootFile.absolutePath}")
-            PRootEngine(prootFile, nativeLibDir)
-        }
     }
 
     /**
@@ -198,7 +173,7 @@ class PRootEngine(
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
         // Use app's tmp directory which has write permissions
-        val tmpDir = Config.tmpDir
+        val tmpDir = appConfig.tmpDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
 
@@ -254,14 +229,14 @@ class PRootEngine(
             val prootCommand = buildCommand(container, rootfsDir, command, mode)
             val env = buildEnvironment(container)
 
-            Log.d(TAG, "=== EXEC IN CONTAINER ===")
-            Log.d(TAG, "Command to execute: $command")
-            Log.d(TAG, "Mode: $mode")
-            Log.d(TAG, "PRoot command size: ${prootCommand.size}")
+            Timber.d("=== EXEC IN CONTAINER ===")
+            Timber.d("Command to execute: $command")
+            Timber.d("Mode: $mode")
+            Timber.d("PRoot command size: ${prootCommand.size}")
             prootCommand.forEachIndexed { index, arg ->
-                Log.d(TAG, "  [$index] = '$arg'")
+                Timber.d("  [$index] = '$arg'")
             }
-            Log.d(TAG, "========================")
+            Timber.d("========================")
 
             val result = ProcessUtils.execute(
                 command = prootCommand,
@@ -313,17 +288,17 @@ class PRootEngine(
             val loaderPath = File(libDir, "libproot_loader.so")
             if (loaderPath.exists()) {
                 env["PROOT_LOADER"] = loaderPath.absolutePath
-                Log.d(TAG, "PROOT_LOADER set to: ${loaderPath.absolutePath}")
+                Timber.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
             } else {
-                Log.w(TAG, "PRoot loader not found at: ${loaderPath.absolutePath}")
+                Timber.w("PRoot loader not found at: ${loaderPath.absolutePath}")
             }
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
-        val tmpDir = Config.tmpDir
+        val tmpDir = appConfig.tmpDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
-        Log.d(TAG, "PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
+        Timber.d("PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
 
         return env
     }
@@ -334,16 +309,16 @@ class PRootEngine(
     suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {
             if (!prootBinary.exists()) {
-                Log.w(TAG, "PRoot binary not found at: ${prootBinary.absolutePath}")
+                Timber.w("PRoot binary not found at: ${prootBinary.absolutePath}")
                 return@withContext false
             }
             if (!prootBinary.canExecute()) {
-                Log.w(TAG, "PRoot binary not executable: ${prootBinary.absolutePath}")
+                Timber.w("PRoot binary not executable: ${prootBinary.absolutePath}")
                 return@withContext false
             }
 
             val env = buildProotEnvironment()
-            Log.d(TAG, "Running proot --version with env: $env")
+            Timber.d("Running proot --version with env: $env")
 
             val result = ProcessUtils.execute(
                 command = listOf(prootBinary.absolutePath, "--version"),
@@ -354,16 +329,13 @@ class PRootEngine(
             val available =
                 result.exitCode == 0 || result.stdout.contains("proot", ignoreCase = true)
             if (!available) {
-                Log.w(
-                    TAG,
-                    "PRoot check failed. Exit code: ${result.exitCode}, stdout: ${result.stdout}, stderr: ${result.stderr}"
-                )
+                Timber.w("PRoot check failed. Exit code: ${result.exitCode}, stdout: ${result.stdout}, stderr: ${result.stderr}")
             } else {
-                Log.d(TAG, "PRoot available. Version output:\n ${result.stdout}")
+                Timber.d("PRoot available. Version output:\n ${result.stdout}")
             }
             available
         } catch (e: Exception) {
-            Log.e(TAG, "PRoot availability check failed with exception", e)
+            Timber.e(e, "PRoot availability check failed with exception")
             false
         }
     }
@@ -416,7 +388,7 @@ class PRootEngine(
             // Last fallback: just return that PRoot is available
             "PRoot (version unknown)"
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get PRoot version", e)
+            Timber.e(e, "Failed to get PRoot version")
             null
         }
     }

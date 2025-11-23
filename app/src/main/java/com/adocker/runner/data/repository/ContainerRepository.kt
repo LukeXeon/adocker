@@ -2,8 +2,9 @@ package com.adocker.runner.data.repository
 
 import android.system.Os
 import android.system.OsConstants
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.FileUtils
+import timber.log.Timber
 import com.adocker.runner.data.local.dao.ContainerDao
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.entity.ContainerEntity
@@ -21,7 +22,8 @@ import java.io.File
  */
 class ContainerRepository(
     private val containerDao: ContainerDao,
-    private val imageDao: ImageDao
+    private val imageDao: ImageDao,
+    private val appConfig: AppConfig
 ) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
@@ -71,13 +73,13 @@ class ContainerRepository(
             val containerId = java.util.UUID.randomUUID().toString().take(12)
 
             // Create container directory structure
-            val containerDir = File(Config.containersDir, containerId)
-            val rootfsDir = File(containerDir, Config.ROOTFS_DIR)
+            val containerDir = File(appConfig.containersDir, containerId)
+            val rootfsDir = File(containerDir, AppConfig.ROOTFS_DIR)
             rootfsDir.mkdirs()
 
             // Copy layers to rootfs (overlay simulation)
             image.layerIds.forEach { digest ->
-                val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
                 if (layerDir.exists()) {
                     copyLayerToRootfs(layerDir, rootfsDir)
                 }
@@ -116,7 +118,7 @@ class ContainerRepository(
             )
 
             // Save container metadata
-            val containerJson = File(containerDir, Config.CONTAINER_JSON)
+            val containerJson = File(containerDir, AppConfig.CONTAINER_JSON)
             containerJson.writeText(json.encodeToString(container))
 
             containerDao.insertContainer(container.toEntity())
@@ -162,11 +164,11 @@ class ContainerRepository(
 
                     // Create the symlink at destination
                     Os.symlink(linkTarget, destFile.absolutePath)
-                    android.util.Log.d("ContainerRepository", "✓ Copied symlink: ${destFile.name} -> $linkTarget")
+                    Timber.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
                     return@forEach
                 }
             } catch (e: Exception) {
-                android.util.Log.w("ContainerRepository", "Failed to check if ${file.name} is symlink", e)
+                Timber.w(e, "Failed to check if ${file.name} is symlink")
                 // Fall through to regular file handling
             }
 
@@ -180,7 +182,7 @@ class ContainerRepository(
                         val stat = Os.lstat(file.absolutePath)
                         Os.chmod(destFile.absolutePath, stat.st_mode)
                     } catch (e: Exception) {
-                        android.util.Log.w("ContainerRepository", "Failed to preserve permissions for ${file.name}", e)
+                        Timber.w(e, "Failed to preserve permissions for ${file.name}")
                         // Fallback to Java File API
                         destFile.setReadable(file.canRead())
                         destFile.setWritable(file.canWrite())
@@ -204,7 +206,7 @@ class ContainerRepository(
             }
 
             // Delete container directory
-            val containerDir = File(Config.containersDir, containerId)
+            val containerDir = File(appConfig.containersDir, containerId)
             FileUtils.deleteRecursively(containerDir)
 
             containerDao.deleteContainerById(containerId)
@@ -236,14 +238,14 @@ class ContainerRepository(
      * Get container rootfs directory
      */
     fun getContainerRootfs(containerId: String): File {
-        return File(Config.containersDir, "$containerId/${Config.ROOTFS_DIR}")
+        return File(appConfig.containersDir, "$containerId/${AppConfig.ROOTFS_DIR}")
     }
 
     /**
      * Get container directory
      */
     fun getContainerDir(containerId: String): File {
-        return File(Config.containersDir, containerId)
+        return File(appConfig.containersDir, containerId)
     }
 
     /**

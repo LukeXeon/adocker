@@ -1,7 +1,8 @@
 package com.adocker.runner.data.repository
 
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.FileUtils
+import timber.log.Timber
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.dao.LayerDao
 import com.adocker.runner.data.local.entity.ImageEntity
@@ -22,7 +23,8 @@ import java.io.FileInputStream
 class ImageRepository(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
-    private val registryApi: DockerRegistryApi
+    private val registryApi: DockerRegistryApi,
+    private val appConfig: AppConfig
 ) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
@@ -85,31 +87,31 @@ class ImageRepository(
 
             emit(PullProgress(layerDigest, 0, layerDescriptor.size, PullStatus.WAITING))
 
-            android.util.Log.d("ImageRepository", "Processing layer ${layerDigest.take(16)}, size: ${layerDescriptor.size}")
+            Timber.d("Processing layer ${layerDigest.take(16)}, size: ${layerDescriptor.size}")
 
             val existingLayer: LayerEntity?
             val layerFile: File
             val extractedDir: File
 
             try {
-                android.util.Log.d("ImageRepository", "About to check database for existing layer")
+                Timber.d("About to check database for existing layer")
                 // Check if layer already exists
                 existingLayer = layerDao.getLayerByDigest(layerDigest)
-                android.util.Log.d("ImageRepository", "Database check complete: $existingLayer")
+                Timber.d("Database check complete: $existingLayer")
 
-                layerFile = File(Config.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
-                extractedDir = File(Config.layersDir, layerDigest.removePrefix("sha256:"))
-                android.util.Log.d("ImageRepository", "File paths created")
+                layerFile = File(appConfig.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
+                extractedDir = File(appConfig.layersDir, layerDigest.removePrefix("sha256:"))
+                Timber.d("File paths created")
 
-                android.util.Log.d("ImageRepository", "Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
+                Timber.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
             } catch (e: Exception) {
-                android.util.Log.e("ImageRepository", "Error checking layer existence", e)
+                Timber.e("Error checking layer existence", e)
                 throw e
             }
 
             if (existingLayer?.extracted == true && extractedDir.exists()) {
                 // Layer already exists, increment reference
-                android.util.Log.i("ImageRepository", "Layer ${layerDigest.take(16)} already exists, skipping download")
+                Timber.i("Layer ${layerDigest.take(16)} already exists, skipping download")
                 layerDao.incrementRefCount(layerDigest)
                 layerIds.add(layerDigest)
                 emit(PullProgress(layerDigest, layerDescriptor.size, layerDescriptor.size, PullStatus.DONE))
@@ -117,14 +119,14 @@ class ImageRepository(
             }
 
             // Download layer
-            android.util.Log.d("ImageRepository", "Calling downloadLayer for ${layerDigest.take(16)}")
+            Timber.d("Calling downloadLayer for ${layerDigest.take(16)}")
             val layer = Layer(layerDigest, layerDescriptor.size, layerDescriptor.mediaType)
 
             val downloadResult = registryApi.downloadLayer(imageRef, layer, layerFile) { downloaded, total ->
                 // We can't emit from inside the callback, progress is tracked externally
             }
 
-            android.util.Log.d("ImageRepository", "downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
+            Timber.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
             downloadResult.getOrThrow()
 
             emit(PullProgress(layerDigest, layerDescriptor.size, layerDescriptor.size, PullStatus.EXTRACTING))
@@ -156,7 +158,7 @@ class ImageRepository(
         // Calculate total size
         var totalSize = 0L
         layerIds.forEach { digest ->
-            val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+            val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
             totalSize += FileUtils.getDirectorySize(layerDir)
         }
 
@@ -174,8 +176,8 @@ class ImageRepository(
             repository = imageRef.repository,
             tag = imageRef.tag,
             digest = manifest.config.digest,
-            architecture = configResponse.architecture ?: Config.getArchitecture(),
-            os = configResponse.os ?: Config.DEFAULT_OS,
+            architecture = configResponse.architecture ?: appConfig.getArchitecture(),
+            os = configResponse.os ?: AppConfig.DEFAULT_OS,
             size = totalSize,
             layerIds = layerIds,
             config = imageConfig
@@ -203,7 +205,7 @@ class ImageRepository(
                 // Delete layer if no longer referenced
                 val layer = layerDao.getLayerByDigest(digest)
                 if (layer != null && layer.refCount <= 1) {
-                    val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                    val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
                     FileUtils.deleteRecursively(layerDir)
                     layerDao.deleteUnreferencedLayer(digest)
                 }
@@ -228,7 +230,7 @@ class ImageRepository(
         withContext(Dispatchers.IO) {
             runCatching {
                 val imageId = java.util.UUID.randomUUID().toString()
-                val extractDir = File(Config.layersDir, imageId)
+                val extractDir = File(appConfig.layersDir, imageId)
 
                 FileInputStream(tarFile).use { fis ->
                     FileUtils.extractTar(fis, extractDir).getOrThrow()
@@ -241,8 +243,8 @@ class ImageRepository(
                     repository = repository,
                     tag = tag,
                     digest = "sha256:$imageId",
-                    architecture = Config.getArchitecture(),
-                    os = Config.DEFAULT_OS,
+                    architecture = appConfig.getArchitecture(),
+                    os = AppConfig.DEFAULT_OS,
                     size = size,
                     layerIds = listOf("sha256:$imageId")
                 )
@@ -273,12 +275,12 @@ class ImageRepository(
                 ?: throw IllegalArgumentException("Image not found: $imageId")
 
             // Create tar from layers
-            val tempDir = File(Config.tmpDir, "export_$imageId")
+            val tempDir = File(appConfig.tmpDir, "export_$imageId")
             tempDir.mkdirs()
 
             // Copy all layers
             image.layerIds.forEach { digest ->
-                val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
                 if (layerDir.exists()) {
                     FileUtils.copyDirectory(layerDir, File(tempDir, "layer"))
                 }

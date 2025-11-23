@@ -1,8 +1,9 @@
 package com.adocker.runner.core.di
 
 import android.content.Context
-import android.util.Log
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
+import com.adocker.runner.core.config.RegistrySettingsManager
+import timber.log.Timber
 import com.adocker.runner.data.local.AppDatabase
 import com.adocker.runner.data.local.dao.ContainerDao
 import com.adocker.runner.data.local.dao.ImageDao
@@ -51,8 +52,17 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDockerRegistryApi(): DockerRegistryApi {
-        return DockerRegistryApi()
+    fun provideRegistrySettingsManager(@ApplicationContext context: Context): RegistrySettingsManager {
+        return RegistrySettingsManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDockerRegistryApi(
+        registrySettings: RegistrySettingsManager,
+        appConfig: AppConfig
+    ): DockerRegistryApi {
+        return DockerRegistryApi(registrySettings, appConfig)
     }
 
     @Provides
@@ -60,25 +70,27 @@ object AppModule {
     fun provideImageRepository(
         imageDao: ImageDao,
         layerDao: LayerDao,
-        registryApi: DockerRegistryApi
+        registryApi: DockerRegistryApi,
+        appConfig: AppConfig
     ): ImageRepository {
-        return ImageRepository(imageDao, layerDao, registryApi)
+        return ImageRepository(imageDao, layerDao, registryApi, appConfig)
     }
 
     @Provides
     @Singleton
     fun provideContainerRepository(
         containerDao: ContainerDao,
-        imageDao: ImageDao
+        imageDao: ImageDao,
+        appConfig: AppConfig
     ): ContainerRepository {
-        return ContainerRepository(containerDao, imageDao)
+        return ContainerRepository(containerDao, imageDao, appConfig)
     }
 
     @Provides
     @Singleton
-    fun providePRootEngine(@ApplicationContext context: Context): PRootEngine? {
+    fun providePRootEngine(appConfig: AppConfig): PRootEngine? {
         return runBlocking {
-            initializePRoot(context)
+            initializePRoot(appConfig)
         }
     }
 
@@ -104,11 +116,11 @@ object AppModule {
      * Therefore, PRoot must be executed DIRECTLY from the native library directory.
      * Do NOT copy binaries to app data directory - this will fail on Android 10+.
      */
-    private suspend fun initializePRoot(context: Context): PRootEngine? {
-        val nativeLibDir = Config.getNativeLibDir()
+    private suspend fun initializePRoot(appConfig: AppConfig): PRootEngine? {
+        val nativeLibDir = appConfig.nativeLibDir
 
         if (nativeLibDir == null) {
-            Log.e("AppModule", "Native library directory is null")
+            Timber.e("Native library directory is null")
             return null
         }
 
@@ -116,23 +128,23 @@ object AppModule {
         val prootBinary = File(nativeLibDir, "libproot.so")
 
         if (!prootBinary.exists()) {
-            Log.e("AppModule", "PRoot binary not found at: ${prootBinary.absolutePath}")
+            Timber.e("PRoot binary not found at: ${prootBinary.absolutePath}")
             return null
         }
 
-        Log.d("AppModule", "Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
+        Timber.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
 
         // List files in native lib dir for debugging
         nativeLibDir.listFiles()?.forEach { file ->
-            Log.d("AppModule", "  Native lib: ${file.name} (${file.length()} bytes)")
+            Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
         }
 
-        val engine = PRootEngine(prootBinary, nativeLibDir)
+        val engine = PRootEngine(prootBinary, nativeLibDir, appConfig)
         return if (engine.isAvailable()) {
-            Log.d("AppModule", "PRoot engine initialized successfully")
+            Timber.d("PRoot engine initialized successfully")
             engine
         } else {
-            Log.e("AppModule", "PRoot engine not available")
+            Timber.e("PRoot engine not available")
             null
         }
     }

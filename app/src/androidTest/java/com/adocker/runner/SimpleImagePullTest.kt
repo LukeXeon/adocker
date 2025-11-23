@@ -3,56 +3,57 @@ package com.adocker.runner
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.adocker.runner.core.config.Config
-import com.adocker.runner.core.config.RegistrySettings
-import com.adocker.runner.data.local.AppDatabase
-import com.adocker.runner.data.remote.api.DockerRegistryApi
+import com.adocker.runner.core.config.AppConfig
+import com.adocker.runner.core.config.RegistrySettingsManager
 import com.adocker.runner.data.repository.ImageRepository
 import com.adocker.runner.domain.model.PullStatus
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import java.io.File
+import javax.inject.Inject
 
 /**
  * Simple test to verify image pull without container execution
  */
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class SimpleImagePullTest {
 
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var appConfig: AppConfig
+
+    @Inject
+    lateinit var registrySettings: RegistrySettingsManager
+
+    @Inject
+    lateinit var imageRepository: ImageRepository
+
     private lateinit var context: Context
-    private lateinit var database: AppDatabase
-    private lateinit var registryApi: DockerRegistryApi
-    private lateinit var imageRepository: ImageRepository
 
     @Before
     fun setup() {
+        hiltRule.inject()
         runBlocking {
             context = ApplicationProvider.getApplicationContext()
-            Config.init(context)
-            RegistrySettings.init(context)
-
-            database = AppDatabase.getInstance(context)
-            registryApi = DockerRegistryApi()
-            imageRepository = ImageRepository(
-                database.imageDao(),
-                database.layerDao(),
-                registryApi
-            )
         }
     }
 
     @Test
     fun testPullAlpineImageFromChinaMirror() {
         runBlocking {
-            val currentMirror = RegistrySettings.getCurrentMirror()
+            val currentMirror = registrySettings.getCurrentMirror()
             Log.i("SimpleImagePullTest", "========================================")
             Log.i("SimpleImagePullTest", "Testing Alpine Image Pull")
             Log.i("SimpleImagePullTest", "Registry: ${currentMirror.name} (${currentMirror.url})")
@@ -123,7 +124,7 @@ class SimpleImagePullTest {
 
             // Verify layers on disk
             alpineImage.layerIds.forEach { digest ->
-                val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
                 assertTrue("Layer should exist: ${layerDir.absolutePath}", layerDir.exists())
                 assertTrue("Layer should not be empty", layerDir.listFiles()?.isNotEmpty() == true)
                 Log.i("SimpleImagePullTest", "✅ Layer verified: ${digest.take(12)}")
@@ -141,7 +142,6 @@ class SimpleImagePullTest {
             try {
                 // Don't close database - let it be closed naturally
                 // Closing it early causes job cancellation
-                // database.close()
                 Log.d("SimpleImagePullTest", "Cleanup completed (database left open)")
             } catch (e: Exception) {
                 Log.e("SimpleImagePullTest", "Cleanup error: ${e.message}")

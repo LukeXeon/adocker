@@ -3,27 +3,41 @@ package com.adocker.runner
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.config.RegistryMirror
-import com.adocker.runner.core.config.RegistrySettings
+import com.adocker.runner.core.config.RegistrySettingsManager
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
+import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.inject.Inject
 
 /**
  * Test to verify connectivity and availability of all built-in registry mirrors.
  * This test will check which mirrors are accessible from China and report the results.
  */
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class RegistryMirrorConnectivityTest {
+
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var appConfig: AppConfig
+
+    @Inject
+    lateinit var registrySettings: RegistrySettingsManager
 
     private lateinit var context: Context
     private val client = HttpClient(OkHttp) {
@@ -36,9 +50,8 @@ class RegistryMirrorConnectivityTest {
 
     @Before
     fun setup() {
+        hiltRule.inject()
         context = ApplicationProvider.getApplicationContext()
-        Config.init(context)
-        RegistrySettings.init(context)
     }
 
     @Test
@@ -50,7 +63,7 @@ class RegistryMirrorConnectivityTest {
 
             val results = mutableListOf<MirrorTestResult>()
 
-            for (mirror in RegistrySettings.BUILT_IN_MIRRORS) {
+            for (mirror in RegistrySettingsManager.BUILT_IN_MIRRORS) {
                 val result = testMirrorConnectivity(mirror)
                 results.add(result)
 
@@ -108,7 +121,7 @@ class RegistryMirrorConnectivityTest {
     @Test
     fun testCurrentMirrorConnectivity() {
         runBlocking {
-            val currentMirror = RegistrySettings.getCurrentMirror()
+            val currentMirror = registrySettings.getCurrentMirror()
             Log.i("MirrorTest", "Testing current configured mirror: ${currentMirror.name}")
 
             val result = testMirrorConnectivity(currentMirror)
@@ -131,7 +144,7 @@ class RegistryMirrorConnectivityTest {
             Log.i("MirrorTest", "Testing authentication to accessible mirrors")
             Log.i("MirrorTest", "========================================")
 
-            for (mirror in RegistrySettings.BUILT_IN_MIRRORS) {
+            for (mirror in RegistrySettingsManager.BUILT_IN_MIRRORS) {
                 // First test basic connectivity
                 val connectivityResult = testMirrorConnectivity(mirror)
                 if (!connectivityResult.isAccessible) {
@@ -166,16 +179,16 @@ class RegistryMirrorConnectivityTest {
                 HttpStatusCode.Forbidden -> {  // 403 may also indicate server is up
                     MirrorTestResult(mirror, true, latency, null)
                 }
+
                 else -> {
                     MirrorTestResult(mirror, false, latency, "HTTP ${response.status}")
                 }
             }
         } catch (e: Exception) {
             val errorMsg = when (e) {
-                is java.net.UnknownHostException -> "DNS resolution failed"
-                is java.net.SocketTimeoutException -> "Connection timeout"
-                is io.ktor.client.network.sockets.ConnectTimeoutException -> "Connect timeout"
-                is io.ktor.client.network.sockets.SocketTimeoutException -> "Socket timeout"
+                is UnknownHostException -> "DNS resolution failed"
+                is SocketTimeoutException -> "Connection timeout"
+                is ConnectTimeoutException -> "Connect timeout"
                 else -> e.message ?: "Unknown error"
             }
             MirrorTestResult(mirror, false, -1, errorMsg)
@@ -185,7 +198,8 @@ class RegistryMirrorConnectivityTest {
     private suspend fun testMirrorAuthentication(mirror: RegistryMirror): AuthTestResult {
         return try {
             // Try to get an auth token for library/alpine
-            val authUrl = "${mirror.authUrl}/token?service=${Config.DEFAULT_REGISTRY_SERVICE}&scope=repository:library/alpine:pull"
+            val authUrl =
+                "${mirror.authUrl}/token?service=${AppConfig.DEFAULT_REGISTRY_SERVICE}&scope=repository:library/alpine:pull"
             val response = client.get(authUrl)
 
             if (response.status == HttpStatusCode.OK) {

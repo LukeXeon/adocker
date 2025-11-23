@@ -2,39 +2,49 @@ package com.adocker.runner
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.adocker.runner.core.config.Config
-import com.adocker.runner.core.config.RegistrySettings
+import com.adocker.runner.core.config.AppConfig
+import com.adocker.runner.core.config.RegistrySettingsManager
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
+import javax.inject.Inject
 
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class BasicFunctionalityTest {
+
+    @get:Rule
+    var hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var appConfig: AppConfig
+
+    @Inject
+    lateinit var registrySettings: RegistrySettingsManager
 
     private lateinit var context: Context
 
     @Before
     fun setup() {
+        hiltRule.inject()
         context = ApplicationProvider.getApplicationContext()
-        Config.init(context)
-        RegistrySettings.init(context)
     }
 
     @Test
     fun config_isInitializedProperly() {
         assertNotNull("Context should be initialized", context)
-        assertTrue("Base directory should exist", Config.baseDir.exists())
-        assertTrue("Bin directory should exist", Config.binDir.exists())
-        assertTrue("Containers directory should exist", Config.containersDir.exists())
-        assertTrue("Layers directory should exist", Config.layersDir.exists())
+        assertTrue("Base directory should exist", appConfig.baseDir.exists())
+        assertTrue("Bin directory should exist", appConfig.binDir.exists())
+        assertTrue("Containers directory should exist", appConfig.containersDir.exists())
+        assertTrue("Layers directory should exist", appConfig.layersDir.exists())
     }
 
     @Test
     fun registrySettings_hasDefaultMirror() = runBlocking {
-        val currentMirror = RegistrySettings.getCurrentMirror()
+        val currentMirror = registrySettings.getCurrentMirror()
         assertNotNull("Default mirror should be set", currentMirror)
         assertEquals("DaoCloud should be default", "DaoCloud (China)", currentMirror.name)
         assertTrue("Mirror URL should not be empty", currentMirror.url.isNotEmpty())
@@ -42,7 +52,7 @@ class BasicFunctionalityTest {
 
     @Test
     fun registrySettings_hasBuiltInMirrors() = runBlocking {
-        val allMirrors = RegistrySettings.getAllMirrors()
+        val allMirrors = registrySettings.getAllMirrors()
         assertTrue("Should have at least 5 built-in mirrors", allMirrors.size >= 5)
 
         val mirrorNames = allMirrors.map { it.name }
@@ -60,52 +70,52 @@ class BasicFunctionalityTest {
         val testUrl = "https://test.example.com"
 
         // Add custom mirror
-        RegistrySettings.addCustomMirror(testName, testUrl)
+        registrySettings.addCustomMirror(testName, testUrl)
 
         // Verify it was added
-        var allMirrors = RegistrySettings.getAllMirrors()
+        var allMirrors = registrySettings.getAllMirrors()
         val addedMirror = allMirrors.find { it.name == testName }
         assertNotNull("Custom mirror should be added", addedMirror)
         assertFalse("Custom mirror should not be built-in", addedMirror!!.isBuiltIn)
         assertEquals("Custom mirror URL should match", testUrl, addedMirror.url)
 
         // Delete custom mirror
-        RegistrySettings.deleteCustomMirror(addedMirror)
+        registrySettings.deleteCustomMirror(addedMirror)
 
         // Verify it was deleted
-        allMirrors = RegistrySettings.getAllMirrors()
+        allMirrors = registrySettings.getAllMirrors()
         val deletedMirror = allMirrors.find { it.name == testName }
         assertNull("Custom mirror should be deleted", deletedMirror)
     }
 
     @Test
     fun registrySettings_cannotDeleteBuiltInMirror() = runBlocking {
-        val initialCount = RegistrySettings.getAllMirrors().size
-        val builtInMirror = RegistrySettings.BUILT_IN_MIRRORS.first()
+        val initialCount = registrySettings.getAllMirrors().size
+        val builtInMirror = RegistrySettingsManager.BUILT_IN_MIRRORS.first()
 
         // Try to delete built-in mirror
-        RegistrySettings.deleteCustomMirror(builtInMirror)
+        registrySettings.deleteCustomMirror(builtInMirror)
 
         // Verify it still exists
-        val finalCount = RegistrySettings.getAllMirrors().size
+        val finalCount = registrySettings.getAllMirrors().size
         assertEquals("Built-in mirrors should not be deleted", initialCount, finalCount)
     }
 
     @Test
     fun registrySettings_canSwitchMirrors() = runBlocking {
-        val dockerHubMirror = RegistrySettings.BUILT_IN_MIRRORS.find { it.name.contains("Docker Hub") }
+        val dockerHubMirror = RegistrySettingsManager.BUILT_IN_MIRRORS.find { it.name.contains("Docker Hub") }
         assertNotNull("Docker Hub mirror should exist", dockerHubMirror)
 
         // Switch to Docker Hub
-        RegistrySettings.setMirror(dockerHubMirror!!)
+        registrySettings.setMirror(dockerHubMirror!!)
 
         // Verify switch
-        val currentMirror = RegistrySettings.getCurrentMirror()
+        val currentMirror = registrySettings.getCurrentMirror()
         assertEquals("Should be Docker Hub", dockerHubMirror.url, currentMirror.url)
 
         // Switch back to default
-        RegistrySettings.setMirror(RegistrySettings.getDefaultMirror())
-        val resetMirror = RegistrySettings.getCurrentMirror()
-        assertEquals("Should be back to default", RegistrySettings.getDefaultMirror().url, resetMirror.url)
+        registrySettings.setMirror(RegistrySettingsManager.getDefaultMirror())
+        val resetMirror = registrySettings.getCurrentMirror()
+        assertEquals("Should be back to default", RegistrySettingsManager.getDefaultMirror().url, resetMirror.url)
     }
 }

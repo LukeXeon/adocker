@@ -139,19 +139,19 @@ object FileUtils {
      */
     private fun createSymlink(link: File, target: String) {
         try {
-            android.util.Log.d("FileUtils", "Creating symlink: ${link.absolutePath} -> $target")
+            Timber.d("Creating symlink: ${link.absolutePath} -> $target")
 
             // Delete existing file/link if it exists
             if (link.exists()) {
                 link.delete()
-                android.util.Log.d("FileUtils", "Deleted existing file before creating symlink")
+                Timber.d("Deleted existing file before creating symlink")
             }
 
             // Use Android's Os.symlink (available since API 21)
             Os.symlink(target, link.absolutePath)
-            android.util.Log.d("FileUtils", "✓ Symlink created successfully: ${link.name} -> $target")
+            Timber.d("✓ Symlink created successfully: ${link.name} -> $target")
         } catch (e: Exception) {
-            android.util.Log.e("FileUtils", "✗ Failed to create symlink ${link.name} -> $target", e)
+            Timber.e(e, "✗ Failed to create symlink ${link.name} -> $target")
             // Don't throw - let extraction continue
         }
     }
@@ -161,33 +161,33 @@ object FileUtils {
      */
     private fun createHardLink(newPath: File, existingPath: File) {
         try {
-            android.util.Log.d("FileUtils", "Creating hard link: ${newPath.absolutePath} -> ${existingPath.absolutePath}")
+            Timber.d("Creating hard link: ${newPath.absolutePath} -> ${existingPath.absolutePath}")
 
             // Delete existing file if it exists
             if (newPath.exists()) {
                 newPath.delete()
-                android.util.Log.d("FileUtils", "Deleted existing file before creating hard link")
+                Timber.d("Deleted existing file before creating hard link")
             }
 
             if (!existingPath.exists()) {
-                android.util.Log.w("FileUtils", "Hard link target doesn't exist: ${existingPath.absolutePath}, copying will be attempted later")
+                Timber.w("Hard link target doesn't exist: ${existingPath.absolutePath}, copying will be attempted later")
                 // Fallback: copy the file when it becomes available
                 return
             }
 
             // Use Android's Os.link (available since API 21)
             Os.link(existingPath.absolutePath, newPath.absolutePath)
-            android.util.Log.d("FileUtils", "✓ Hard link created successfully: ${newPath.name} -> ${existingPath.name}")
+            Timber.d("✓ Hard link created successfully: ${newPath.name} -> ${existingPath.name}")
         } catch (e: Exception) {
-            android.util.Log.e("FileUtils", "✗ Failed to create hard link ${newPath.name} -> ${existingPath.name}", e)
+            Timber.e(e, "✗ Failed to create hard link ${newPath.name} -> ${existingPath.name}")
             // Fallback: try copying the file
             try {
                 if (existingPath.exists()) {
                     existingPath.copyTo(newPath, overwrite = true)
-                    android.util.Log.d("FileUtils", "Copied file as fallback for hard link")
+                    Timber.d("Copied file as fallback for hard link")
                 }
             } catch (copyException: Exception) {
-                android.util.Log.e("FileUtils", "Failed to copy file as fallback", copyException)
+                Timber.e(copyException, "Failed to copy file as fallback")
             }
         }
     }
@@ -201,7 +201,7 @@ object FileUtils {
             // The mode from tar is already in the correct format (octal)
             Os.chmod(file.absolutePath, mode)
         } catch (e: Exception) {
-            android.util.Log.w("FileUtils", "Failed to set permissions for ${file.name}: mode=$mode", e)
+            Timber.w(e, "Failed to set permissions for ${file.name}: mode=$mode")
             // Fallback: use Java File API (less precise)
             val ownerExecute = (mode and 0b001_000_000) != 0
             val ownerWrite = (mode and 0b010_000_000) != 0

@@ -44,14 +44,7 @@
             <meta-data
                 android:name="com.adocker.runner.core.startup.TimberInitializer"
                 android:value="androidx.startup" />
-            <!-- Config Initializer (depends on Timber) -->
-            <meta-data
-                android:name="com.adocker.runner.core.startup.ConfigInitializer"
-                android:value="androidx.startup" />
-            <!-- RegistrySettings Initializer (depends on Config) -->
-            <meta-data
-                android:name="com.adocker.runner.core.startup.RegistrySettingsInitializer"
-                android:value="androidx.startup" />
+            <!-- Config and RegistrySettings are now handled by Hilt DI -->
         </provider>
 
         <activity

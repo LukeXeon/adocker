@@ -2,9 +2,9 @@ package com.adocker.runner.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.config.RegistryMirror
-import com.adocker.runner.core.config.RegistrySettings
+import com.adocker.runner.core.config.RegistrySettingsManager
 import com.adocker.runner.core.utils.FileUtils
 import com.adocker.runner.engine.proot.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +18,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val prootEngine: PRootEngine?
+    private val prootEngine: PRootEngine?,
+    private val appConfig: AppConfig,
+    private val registrySettings: RegistrySettingsManager
 ) : ViewModel() {
 
     private val _storageUsage = MutableStateFlow<Long?>(null)
@@ -30,7 +32,10 @@ class SettingsViewModel @Inject constructor(
     private val _currentMirror = MutableStateFlow<RegistryMirror?>(null)
     val currentMirror: StateFlow<RegistryMirror?> = _currentMirror.asStateFlow()
 
-    val availableMirrors: List<RegistryMirror> = RegistrySettings.AVAILABLE_MIRRORS
+    val availableMirrors: List<RegistryMirror> = RegistrySettingsManager.AVAILABLE_MIRRORS
+
+    val architecture: String = appConfig.getArchitecture()
+    val baseDir: String = appConfig.baseDir.absolutePath
 
     init {
         loadSettings()
@@ -39,16 +44,16 @@ class SettingsViewModel @Inject constructor(
     private fun loadSettings() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _storageUsage.value = FileUtils.getDirectorySize(Config.baseDir)
+                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
                 _prootVersion.value = prootEngine?.getVersion()
-                _currentMirror.value = RegistrySettings.getCurrentMirror()
+                _currentMirror.value = registrySettings.getCurrentMirror()
             }
         }
     }
 
     fun setRegistryMirror(mirror: RegistryMirror) {
         viewModelScope.launch {
-            RegistrySettings.setMirror(mirror)
+            registrySettings.setMirror(mirror)
             _currentMirror.value = mirror
         }
     }
@@ -57,18 +62,18 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 // Clear containers
-                Config.containersDir.deleteRecursively()
-                Config.containersDir.mkdirs()
+                appConfig.containersDir.deleteRecursively()
+                appConfig.containersDir.mkdirs()
 
                 // Clear layers
-                Config.layersDir.deleteRecursively()
-                Config.layersDir.mkdirs()
+                appConfig.layersDir.deleteRecursively()
+                appConfig.layersDir.mkdirs()
 
                 // Clear temp
-                Config.tmpDir.deleteRecursively()
-                Config.tmpDir.mkdirs()
+                appConfig.tmpDir.deleteRecursively()
+                appConfig.tmpDir.mkdirs()
 
-                _storageUsage.value = FileUtils.getDirectorySize(Config.baseDir)
+                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
             }
             onComplete()
         }
@@ -77,7 +82,7 @@ class SettingsViewModel @Inject constructor(
     fun refreshStorageUsage() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _storageUsage.value = FileUtils.getDirectorySize(Config.baseDir)
+                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
             }
         }
     }

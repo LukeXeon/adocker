@@ -81,12 +81,12 @@ object ProcessUtils {
 
                 while (System.currentTimeMillis() - startTime < timeout) {
                     try {
-                        val exitValue = process.exitValue()
+                        process.exitValue()
                         finished = true
                         break
                     } catch (e: IllegalThreadStateException) {
                         // Process is still running
-                        Thread.sleep(100)
+                        delay(100)
                     }
                 }
 

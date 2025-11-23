@@ -16,7 +16,7 @@ import org.slf4j.spi.SLF4JServiceProvider
  * The @AutoService annotation generates the required META-INF/services file.
  */
 @AutoService(SLF4JServiceProvider::class)
-class AndroidServiceProvider : SLF4JServiceProvider {
+class TimberServiceProvider : SLF4JServiceProvider {
 
     companion object {
         /**
@@ -39,7 +39,7 @@ class AndroidServiceProvider : SLF4JServiceProvider {
     override fun getRequestedApiVersion(): String = REQUESTED_API_VERSION
 
     override fun initialize() {
-        loggerFactory = AndroidLoggerFactory()
+        loggerFactory = TimberLoggerFactory()
         markerFactory = BasicMarkerFactory()
         mdcAdapter = NOPMDCAdapter()
     }

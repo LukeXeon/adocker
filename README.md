@@ -111,28 +111,6 @@ com.adocker.runner/
 
 **PRoot 版本**：v0.15_release（来自 [green-green-avk/proot](https://github.com/green-green-avk/proot)）
 
-**特点**：
-- **CMake 集成**：PRoot 源码通过 CMake 编译，与 Gradle 构建系统无缝集成
-- **16KB 页面对齐**：支持 Android 15+ (targetSdk 35+) 的 16KB 页面大小要求
-- **静态链接 libtalloc**：talloc 库在构建时自动下载并静态链接
-- **独立 loader**：使用 unbundled loader 架构
-- **多架构支持**：arm64-v8a, armeabi-v7a, x86_64, x86
-
-**项目结构**：
-```
-app/src/main/cpp/
-├── CMakeLists.txt    # PRoot 构建配置
-└── proot/            # PRoot 源码 (v0.15_release)
-    └── src/          # PRoot 核心源码
-```
-
-**构建产物**（自动打包到 APK）：
-- `libproot.so` - PRoot 主程序
-- `libproot_loader.so` - PRoot loader
-
-**依赖**：
-- talloc 2.1.14（构建时自动从 samba.org 下载到 build 目录）
-
 ## 编译项目
 
 1. 确保安装了 Android Studio 和 JDK 17+

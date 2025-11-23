@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.adocker.runner.core.config.Config
+import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.FileUtils
 import com.adocker.runner.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -94,17 +94,17 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Info,
                     title = "Version",
-                    subtitle = Config.VERSION
+                    subtitle = AppConfig.VERSION
                 )
                 SettingsItem(
                     icon = Icons.Default.Sailing,
                     title = "App Name",
-                    subtitle = Config.APP_NAME
+                    subtitle = AppConfig.APP_NAME
                 )
                 SettingsItem(
                     icon = Icons.Default.Memory,
                     title = "Architecture",
-                    subtitle = Config.getArchitecture()
+                    subtitle = viewModel.architecture
                 )
             }
 
@@ -132,7 +132,7 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Folder,
                     title = "Data Directory",
-                    subtitle = Config.baseDir.absolutePath
+                    subtitle = viewModel.baseDir
                 )
 
                 // Clear data button

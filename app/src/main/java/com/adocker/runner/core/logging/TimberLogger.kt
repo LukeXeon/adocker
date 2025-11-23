@@ -1,16 +1,15 @@
 package com.adocker.runner.core.logging
 
-import android.util.Log
-import org.slf4j.Logger
 import org.slf4j.Marker
 import org.slf4j.event.Level
 import org.slf4j.helpers.LegacyAbstractLogger
 import org.slf4j.helpers.MessageFormatter
+import timber.log.Timber
 
 /**
- * SLF4J Logger implementation that forwards to Android Log
+ * SLF4J Logger implementation that forwards to Timber
  */
-class AndroidLogger(private val tag: String) : LegacyAbstractLogger() {
+class TimberLogger(private val tag: String) : LegacyAbstractLogger() {
 
     companion object {
         private const val MAX_TAG_LENGTH = 23
@@ -18,11 +17,13 @@ class AndroidLogger(private val tag: String) : LegacyAbstractLogger() {
 
     override fun getName(): String = tag
 
-    override fun isTraceEnabled(): Boolean = Log.isLoggable(tag, Log.VERBOSE)
-    override fun isDebugEnabled(): Boolean = Log.isLoggable(tag, Log.DEBUG)
-    override fun isInfoEnabled(): Boolean = Log.isLoggable(tag, Log.INFO)
-    override fun isWarnEnabled(): Boolean = Log.isLoggable(tag, Log.WARN)
-    override fun isErrorEnabled(): Boolean = Log.isLoggable(tag, Log.ERROR)
+    // Let Timber decide whether to log based on planted trees
+    // Always return true for SLF4J compatibility
+    override fun isTraceEnabled(): Boolean = Timber.treeCount > 0
+    override fun isDebugEnabled(): Boolean = Timber.treeCount > 0
+    override fun isInfoEnabled(): Boolean = Timber.treeCount > 0
+    override fun isWarnEnabled(): Boolean = Timber.treeCount > 0
+    override fun isErrorEnabled(): Boolean = Timber.treeCount > 0
 
     override fun isTraceEnabled(marker: Marker?): Boolean = isTraceEnabled()
     override fun isDebugEnabled(marker: Marker?): Boolean = isDebugEnabled()
@@ -45,18 +46,15 @@ class AndroidLogger(private val tag: String) : LegacyAbstractLogger() {
             messagePattern ?: ""
         }
 
-        val finalMessage = if (throwable != null) {
-            "$message\n${Log.getStackTraceString(throwable)}"
-        } else {
-            message
-        }
+        val finalMessage = message
 
+        // Use Timber's logging methods with throwable support
         when (level) {
-            Level.TRACE -> Log.v(tag, finalMessage)
-            Level.DEBUG -> Log.d(tag, finalMessage)
-            Level.INFO -> Log.i(tag, finalMessage)
-            Level.WARN -> Log.w(tag, finalMessage)
-            Level.ERROR -> Log.e(tag, finalMessage)
+            Level.TRACE -> if (throwable != null) Timber.tag(tag).v(throwable) else Timber.tag(tag).v(finalMessage)
+            Level.DEBUG -> if (throwable != null) Timber.tag(tag).d(throwable) else Timber.tag(tag).d(finalMessage)
+            Level.INFO -> if (throwable != null) Timber.tag(tag).i(throwable) else Timber.tag(tag).i(finalMessage)
+            Level.WARN -> if (throwable != null) Timber.tag(tag).w(throwable) else Timber.tag(tag).w(finalMessage)
+            Level.ERROR -> if (throwable != null) Timber.tag(tag).e(throwable) else Timber.tag(tag).e(finalMessage)
         }
     }
 

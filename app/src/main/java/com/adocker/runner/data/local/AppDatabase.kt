@@ -34,8 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "adocker_database"
-                )
-                    .fallbackToDestructiveMigration()
+                ).fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance
                 instance

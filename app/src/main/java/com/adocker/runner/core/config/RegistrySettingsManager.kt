@@ -13,65 +13,15 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "registry_settings")
 
 /**
- * Registry settings with mirror support for China mainland users
+ * Registry settings manager - dependency injected version
+ *
+ * Manages Docker registry mirrors with support for custom mirrors
  */
-object RegistrySettings {
-    private val REGISTRY_MIRROR_KEY = stringPreferencesKey("registry_mirror")
-    private val CUSTOM_MIRRORS_KEY = stringPreferencesKey("custom_mirrors")
+class RegistrySettingsManager(context: Context) {
+    private val dataStore: DataStore<Preferences> = context.dataStore
 
-    // Built-in mirrors for Docker Hub
-    // Note: Only including mirrors that are verified accessible from China mainland
-    // Tested on 2025-11-23 using RegistryMirrorConnectivityTest
-    val BUILT_IN_MIRRORS = listOf(
-        RegistryMirror(
-            name = "Docker Hub (Official)",
-            url = "https://registry-1.docker.io",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "DaoCloud (China)",
-            url = "https://docker.m.daocloud.io",
-            authUrl = "https://auth.docker.io",
-            isDefault = true,  // Default - supports token auth
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "Xuanyuan (China)",
-            url = "https://docker.xuanyuan.me",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,  // Returns empty response
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "Aliyun (China)",
-            url = "https://registry.cn-hangzhou.aliyuncs.com",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,  // Requires auth
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "Huawei Cloud (China)",
-            url = "https://mirrors.huaweicloud.com",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,  // Requires auth
-            isBuiltIn = true
-        )
-        // Removed mirrors that failed connectivity test:
-        // - USTC (China): https://docker.mirrors.ustc.edu.cn - connection failed
-        // - Tencent Cloud (China): https://mirror.ccs.tencentyun.com - connection failed
-    )
-
-    // Backwards compatible alias
-    val AVAILABLE_MIRRORS get() = BUILT_IN_MIRRORS
-
-    private var appContext: Context? = null
+    @Volatile
     private var cachedMirror: RegistryMirror? = null
-
-    fun init(context: Context) {
-        appContext = context.applicationContext
-    }
 
     /**
      * Get all mirrors (built-in + custom)
@@ -85,8 +35,7 @@ object RegistrySettings {
      * Get all mirrors flow for observing changes
      */
     fun getAllMirrorsFlow(): Flow<List<RegistryMirror>> {
-        val context = appContext ?: throw IllegalStateException("RegistrySettings not initialized")
-        return context.dataStore.data.map { prefs ->
+        return dataStore.data.map { prefs ->
             val customJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
             val customMirrors = parseCustomMirrors(customJson)
             BUILT_IN_MIRRORS + customMirrors
@@ -99,8 +48,7 @@ object RegistrySettings {
     suspend fun getCurrentMirror(): RegistryMirror {
         cachedMirror?.let { return it }
 
-        val context = appContext ?: return getDefaultMirror()
-        val prefs = context.dataStore.data.first()
+        val prefs = dataStore.data.first()
         val mirrorUrl = prefs[REGISTRY_MIRROR_KEY]
 
         val allMirrors = getAllMirrors()
@@ -121,8 +69,7 @@ object RegistrySettings {
      * Get current mirror flow for observing changes
      */
     fun getCurrentMirrorFlow(): Flow<RegistryMirror> {
-        val context = appContext ?: throw IllegalStateException("RegistrySettings not initialized")
-        return context.dataStore.data.map { prefs ->
+        return dataStore.data.map { prefs ->
             val mirrorUrl = prefs[REGISTRY_MIRROR_KEY]
             val customJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
             val customMirrors = parseCustomMirrors(customJson)
@@ -140,8 +87,7 @@ object RegistrySettings {
      * Set registry mirror
      */
     suspend fun setMirror(mirror: RegistryMirror) {
-        val context = appContext ?: return
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             prefs[REGISTRY_MIRROR_KEY] = mirror.url
         }
         cachedMirror = mirror
@@ -151,7 +97,6 @@ object RegistrySettings {
      * Add a custom mirror
      */
     suspend fun addCustomMirror(name: String, url: String) {
-        val context = appContext ?: return
         val newMirror = RegistryMirror(
             name = name,
             url = url.removeSuffix("/"),
@@ -160,7 +105,7 @@ object RegistrySettings {
             isBuiltIn = false
         )
 
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val currentJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
             val currentMirrors = parseCustomMirrors(currentJson).toMutableList()
             // Avoid duplicates by URL
@@ -177,8 +122,7 @@ object RegistrySettings {
     suspend fun deleteCustomMirror(mirror: RegistryMirror) {
         if (mirror.isBuiltIn) return // Cannot delete built-in mirrors
 
-        val context = appContext ?: return
-        context.dataStore.edit { prefs ->
+        dataStore.edit { prefs ->
             val currentJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
             val currentMirrors = parseCustomMirrors(currentJson).toMutableList()
             currentMirrors.removeAll { it.url == mirror.url }
@@ -194,11 +138,37 @@ object RegistrySettings {
     }
 
     /**
+     * Get registry URL for pulling images
+     * Replaces Docker Hub URLs with mirror URL
+     */
+    suspend fun getRegistryUrl(originalRegistry: String): String {
+        val mirror = getCurrentMirror()
+
+        return when {
+            // Docker Hub - use mirror
+            originalRegistry == "docker.io" ||
+            originalRegistry == "registry-1.docker.io" ||
+            originalRegistry.contains("docker.io") -> mirror.url
+
+            // Other registries - use as-is
+            originalRegistry.startsWith("http") -> originalRegistry
+            else -> "https://$originalRegistry"
+        }
+    }
+
+    /**
+     * Check if using a mirror (not official Docker Hub)
+     */
+    suspend fun isUsingMirror(): Boolean {
+        val mirror = getCurrentMirror()
+        return mirror.url != "https://registry-1.docker.io"
+    }
+
+    /**
      * Get custom mirrors
      */
     private suspend fun getCustomMirrors(): List<RegistryMirror> {
-        val context = appContext ?: return emptyList()
-        val prefs = context.dataStore.data.first()
+        val prefs = dataStore.data.first()
         val json = prefs[CUSTOM_MIRRORS_KEY] ?: return emptyList()
         return parseCustomMirrors(json)
     }
@@ -234,38 +204,58 @@ object RegistrySettings {
         return mirrors.joinToString(";") { "${it.name}|${it.url}" }
     }
 
-    /**
-     * Get default mirror (DaoCloud for China)
-     */
-    fun getDefaultMirror(): RegistryMirror {
-        return AVAILABLE_MIRRORS.find { it.isDefault } ?: AVAILABLE_MIRRORS.first()
-    }
+    companion object {
+        private val REGISTRY_MIRROR_KEY = stringPreferencesKey("registry_mirror")
+        private val CUSTOM_MIRRORS_KEY = stringPreferencesKey("custom_mirrors")
 
-    /**
-     * Get registry URL for pulling images
-     * Replaces Docker Hub URLs with mirror URL
-     */
-    suspend fun getRegistryUrl(originalRegistry: String): String {
-        val mirror = getCurrentMirror()
+        // Built-in mirrors for Docker Hub
+        val BUILT_IN_MIRRORS = listOf(
+            RegistryMirror(
+                name = "Docker Hub (Official)",
+                url = "https://registry-1.docker.io",
+                authUrl = "https://auth.docker.io",
+                isDefault = false,
+                isBuiltIn = true
+            ),
+            RegistryMirror(
+                name = "DaoCloud (China)",
+                url = "https://docker.m.daocloud.io",
+                authUrl = "https://auth.docker.io",
+                isDefault = true,  // Default - supports token auth
+                isBuiltIn = true
+            ),
+            RegistryMirror(
+                name = "Xuanyuan (China)",
+                url = "https://docker.xuanyuan.me",
+                authUrl = "https://auth.docker.io",
+                isDefault = false,
+                isBuiltIn = true
+            ),
+            RegistryMirror(
+                name = "Aliyun (China)",
+                url = "https://registry.cn-hangzhou.aliyuncs.com",
+                authUrl = "https://auth.docker.io",
+                isDefault = false,
+                isBuiltIn = true
+            ),
+            RegistryMirror(
+                name = "Huawei Cloud (China)",
+                url = "https://mirrors.huaweicloud.com",
+                authUrl = "https://auth.docker.io",
+                isDefault = false,
+                isBuiltIn = true
+            )
+        )
 
-        return when {
-            // Docker Hub - use mirror
-            originalRegistry == "docker.io" ||
-            originalRegistry == "registry-1.docker.io" ||
-            originalRegistry.contains("docker.io") -> mirror.url
+        // Backwards compatible alias
+        val AVAILABLE_MIRRORS get() = BUILT_IN_MIRRORS
 
-            // Other registries - use as-is
-            originalRegistry.startsWith("http") -> originalRegistry
-            else -> "https://$originalRegistry"
+        /**
+         * Get default mirror (DaoCloud for China)
+         */
+        fun getDefaultMirror(): RegistryMirror {
+            return AVAILABLE_MIRRORS.find { it.isDefault } ?: AVAILABLE_MIRRORS.first()
         }
-    }
-
-    /**
-     * Check if using a mirror (not official Docker Hub)
-     */
-    suspend fun isUsingMirror(): Boolean {
-        val mirror = getCurrentMirror()
-        return mirror.url != "https://registry-1.docker.io"
     }
 }
 

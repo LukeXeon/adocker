@@ -3,7 +3,7 @@ package com.adocker.runner.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adocker.runner.core.config.RegistryMirror
-import com.adocker.runner.core.config.RegistrySettings
+import com.adocker.runner.core.config.RegistrySettingsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,16 +12,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MirrorSettingsViewModel @Inject constructor() : ViewModel() {
+class MirrorSettingsViewModel @Inject constructor(
+    private val registrySettings: RegistrySettingsManager
+) : ViewModel() {
 
-    val allMirrors: StateFlow<List<RegistryMirror>> = RegistrySettings.getAllMirrorsFlow()
+    val allMirrors: StateFlow<List<RegistryMirror>> = registrySettings.getAllMirrorsFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = RegistrySettings.BUILT_IN_MIRRORS
+            initialValue = RegistrySettingsManager.BUILT_IN_MIRRORS
         )
 
-    val currentMirror: StateFlow<RegistryMirror?> = RegistrySettings.getCurrentMirrorFlow()
+    val currentMirror: StateFlow<RegistryMirror?> = registrySettings.getCurrentMirrorFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -30,19 +32,19 @@ class MirrorSettingsViewModel @Inject constructor() : ViewModel() {
 
     fun selectMirror(mirror: RegistryMirror) {
         viewModelScope.launch {
-            RegistrySettings.setMirror(mirror)
+            registrySettings.setMirror(mirror)
         }
     }
 
     fun addCustomMirror(name: String, url: String) {
         viewModelScope.launch {
-            RegistrySettings.addCustomMirror(name, url)
+            registrySettings.addCustomMirror(name, url)
         }
     }
 
     fun deleteCustomMirror(mirror: RegistryMirror) {
         viewModelScope.launch {
-            RegistrySettings.deleteCustomMirror(mirror)
+            registrySettings.deleteCustomMirror(mirror)
         }
     }
 }
