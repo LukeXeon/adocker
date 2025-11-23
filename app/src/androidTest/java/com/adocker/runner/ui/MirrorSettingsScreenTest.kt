@@ -39,11 +39,11 @@ class MirrorSettingsScreenTest {
     fun mirrorSettingsScreen_displaysBuiltInMirrors() {
         composeTestRule.apply {
             onNodeWithText("Docker Hub (Official)").assertIsDisplayed()
+            onNodeWithText("Xuanyuan (China)").assertIsDisplayed()
             onNodeWithText("DaoCloud (China)").assertIsDisplayed()
             onNodeWithText("Aliyun (China)").assertIsDisplayed()
-            onNodeWithText("USTC (China)").assertIsDisplayed()
-            onNodeWithText("Tencent Cloud (China)").assertIsDisplayed()
             onNodeWithText("Huawei Cloud (China)").assertIsDisplayed()
+            // Note: USTC and Tencent Cloud mirrors removed due to connectivity issues in China
         }
     }
 

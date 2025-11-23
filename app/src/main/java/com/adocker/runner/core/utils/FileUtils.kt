@@ -1,5 +1,6 @@
 package com.adocker.runner.core.utils
 
+import android.system.Os
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -50,10 +51,10 @@ object FileUtils {
                                 createSymlink(outputFile, linkTarget)
                             }
                             entry.isLink -> {
-                                // Handle hard links
+                                // Handle hard links using Os.link
                                 val linkTarget = File(destDir, entry.linkName)
                                 outputFile.parentFile?.mkdirs()
-                                linkTarget.copyTo(outputFile, overwrite = true)
+                                createHardLink(outputFile, linkTarget)
                             }
                             else -> {
                                 outputFile.parentFile?.mkdirs()
@@ -109,11 +110,10 @@ object FileUtils {
                             createSymlink(outputFile, linkTarget)
                         }
                         entry.isLink -> {
+                            // Handle hard links using Os.link
                             val linkTarget = File(destDir, entry.linkName)
                             outputFile.parentFile?.mkdirs()
-                            if (linkTarget.exists()) {
-                                linkTarget.copyTo(outputFile, overwrite = true)
-                            }
+                            createHardLink(outputFile, linkTarget)
                         }
                         else -> {
                             outputFile.parentFile?.mkdirs()
@@ -134,35 +134,81 @@ object FileUtils {
     }
 
     /**
-     * Create a symbolic link (requires API 26+, falls back to copy on older versions)
+     * Create a symbolic link using Android's Os.symlink API (API 21+)
      */
     private fun createSymlink(link: File, target: String) {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                java.nio.file.Files.createSymbolicLink(
-                    link.toPath(),
-                    java.nio.file.Paths.get(target)
-                )
-            } else {
-                // Fallback: create a file with link info
-                link.writeText("SYMLINK:$target")
+            android.util.Log.d("FileUtils", "Creating symlink: ${link.absolutePath} -> $target")
+
+            // Delete existing file/link if it exists
+            if (link.exists()) {
+                link.delete()
+                android.util.Log.d("FileUtils", "Deleted existing file before creating symlink")
             }
+
+            // Use Android's Os.symlink (available since API 21)
+            Os.symlink(target, link.absolutePath)
+            android.util.Log.d("FileUtils", "✓ Symlink created successfully: ${link.name} -> $target")
         } catch (e: Exception) {
-            // Ignore symlink creation failures
+            android.util.Log.e("FileUtils", "✗ Failed to create symlink ${link.name} -> $target", e)
+            // Don't throw - let extraction continue
         }
     }
 
     /**
-     * Set file permissions from tar mode
+     * Create a hard link using Android's Os.link API (API 21+)
+     */
+    private fun createHardLink(newPath: File, existingPath: File) {
+        try {
+            android.util.Log.d("FileUtils", "Creating hard link: ${newPath.absolutePath} -> ${existingPath.absolutePath}")
+
+            // Delete existing file if it exists
+            if (newPath.exists()) {
+                newPath.delete()
+                android.util.Log.d("FileUtils", "Deleted existing file before creating hard link")
+            }
+
+            if (!existingPath.exists()) {
+                android.util.Log.w("FileUtils", "Hard link target doesn't exist: ${existingPath.absolutePath}, copying will be attempted later")
+                // Fallback: copy the file when it becomes available
+                return
+            }
+
+            // Use Android's Os.link (available since API 21)
+            Os.link(existingPath.absolutePath, newPath.absolutePath)
+            android.util.Log.d("FileUtils", "✓ Hard link created successfully: ${newPath.name} -> ${existingPath.name}")
+        } catch (e: Exception) {
+            android.util.Log.e("FileUtils", "✗ Failed to create hard link ${newPath.name} -> ${existingPath.name}", e)
+            // Fallback: try copying the file
+            try {
+                if (existingPath.exists()) {
+                    existingPath.copyTo(newPath, overwrite = true)
+                    android.util.Log.d("FileUtils", "Copied file as fallback for hard link")
+                }
+            } catch (copyException: Exception) {
+                android.util.Log.e("FileUtils", "Failed to copy file as fallback", copyException)
+            }
+        }
+    }
+
+    /**
+     * Set file permissions from tar mode using Android's Os.chmod (API 21+)
      */
     private fun setFilePermissions(file: File, mode: Int) {
-        val ownerExecute = (mode and 0b001_000_000) != 0
-        val ownerWrite = (mode and 0b010_000_000) != 0
-        val ownerRead = (mode and 0b100_000_000) != 0
-
-        file.setReadable(ownerRead, true)
-        file.setWritable(ownerWrite, true)
-        file.setExecutable(ownerExecute, true)
+        try {
+            // Use Android's Os.chmod directly with the mode from tar
+            // The mode from tar is already in the correct format (octal)
+            Os.chmod(file.absolutePath, mode)
+        } catch (e: Exception) {
+            android.util.Log.w("FileUtils", "Failed to set permissions for ${file.name}: mode=$mode", e)
+            // Fallback: use Java File API (less precise)
+            val ownerExecute = (mode and 0b001_000_000) != 0
+            val ownerWrite = (mode and 0b010_000_000) != 0
+            val ownerRead = (mode and 0b100_000_000) != 0
+            file.setReadable(ownerRead, true)
+            file.setWritable(ownerWrite, true)
+            file.setExecutable(ownerExecute, true)
+        }
     }
 
     /**

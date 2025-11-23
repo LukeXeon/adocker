@@ -85,13 +85,31 @@ class ImageRepository(
 
             emit(PullProgress(layerDigest, 0, layerDescriptor.size, PullStatus.WAITING))
 
-            // Check if layer already exists
-            val existingLayer = layerDao.getLayerByDigest(layerDigest)
-            val layerFile = File(Config.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
-            val extractedDir = File(Config.layersDir, layerDigest.removePrefix("sha256:"))
+            android.util.Log.d("ImageRepository", "Processing layer ${layerDigest.take(16)}, size: ${layerDescriptor.size}")
+
+            val existingLayer: LayerEntity?
+            val layerFile: File
+            val extractedDir: File
+
+            try {
+                android.util.Log.d("ImageRepository", "About to check database for existing layer")
+                // Check if layer already exists
+                existingLayer = layerDao.getLayerByDigest(layerDigest)
+                android.util.Log.d("ImageRepository", "Database check complete: $existingLayer")
+
+                layerFile = File(Config.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
+                extractedDir = File(Config.layersDir, layerDigest.removePrefix("sha256:"))
+                android.util.Log.d("ImageRepository", "File paths created")
+
+                android.util.Log.d("ImageRepository", "Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
+            } catch (e: Exception) {
+                android.util.Log.e("ImageRepository", "Error checking layer existence", e)
+                throw e
+            }
 
             if (existingLayer?.extracted == true && extractedDir.exists()) {
                 // Layer already exists, increment reference
+                android.util.Log.i("ImageRepository", "Layer ${layerDigest.take(16)} already exists, skipping download")
                 layerDao.incrementRefCount(layerDigest)
                 layerIds.add(layerDigest)
                 emit(PullProgress(layerDigest, layerDescriptor.size, layerDescriptor.size, PullStatus.DONE))
@@ -99,11 +117,15 @@ class ImageRepository(
             }
 
             // Download layer
+            android.util.Log.d("ImageRepository", "Calling downloadLayer for ${layerDigest.take(16)}")
             val layer = Layer(layerDigest, layerDescriptor.size, layerDescriptor.mediaType)
 
-            registryApi.downloadLayer(imageRef, layer, layerFile) { downloaded, total ->
+            val downloadResult = registryApi.downloadLayer(imageRef, layer, layerFile) { downloaded, total ->
                 // We can't emit from inside the callback, progress is tracked externally
-            }.getOrThrow()
+            }
+
+            android.util.Log.d("ImageRepository", "downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
+            downloadResult.getOrThrow()
 
             emit(PullProgress(layerDigest, layerDescriptor.size, layerDescriptor.size, PullStatus.EXTRACTING))
 
@@ -161,7 +183,10 @@ class ImageRepository(
 
         imageDao.insertImage(localImage.toEntity())
 
-    }.flowOn(Dispatchers.IO)
+        // Emit final completion status
+        emit(PullProgress("image", totalSize, totalSize, PullStatus.DONE))
+
+    }.buffer(capacity = 64).flowOn(Dispatchers.IO)
 
     /**
      * Delete a local image

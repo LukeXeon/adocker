@@ -241,6 +241,7 @@ open app/build/reports/androidTests/connected/debug/index.html
 - **集成测试** (`ImagePullAndRunTest.kt`)：
   - PRoot 引擎可用性测试 ✅
   - 镜像拉取和容器运行测试（网络不可用时自动跳过）
+  - Alpine Linux 容器执行测试 ✅（验证 musl libc 兼容性）
 
 ### SELinux 和 PRoot 执行
 
@@ -277,6 +278,60 @@ PRootEngine(prootBinary, nativeLibDir)
 ```bash
 adb logcat -d | grep -i "PRootEngine\|AppModule"
 ```
+
+### 符号链接处理和 Android Os API
+
+为了正确支持 Docker 镜像中的符号链接（特别是 Alpine Linux 等使用大量符号链接的发行版），项目优先使用 Android 的原生 `Os` 类 API，而不是 JDK 的文件 API。
+
+**技术背景**：
+- Alpine Linux 使用 BusyBox，其中 `/bin/sh` 等工具都是指向 `/bin/busybox` 的符号链接
+- Docker 镜像层使用 tar 格式，包含符号链接和硬链接
+- Java 的 `File` API 无法正确处理符号链接的创建和检测
+
+**实现方案**：
+
+1. **符号链接处理** (`FileUtils.kt`, `ContainerRepository.kt`)：
+   - 使用 `Os.lstat()` 检测符号链接（而不是 `Files.isSymbolicLink()`）
+   - 使用 `OsConstants.S_ISLNK()` 判断文件类型
+   - 使用 `Os.readlink()` 读取符号链接目标
+   - 使用 `Os.symlink()` 创建符号链接（而不是 `Files.createSymbolicLink()`）
+
+2. **硬链接处理** (`FileUtils.kt`)：
+   - 使用 `Os.link()` 创建硬链接
+
+3. **权限设置** (`FileUtils.kt`, `ContainerRepository.kt`)：
+   - 使用 `Os.chmod()` 设置文件权限（而不是 `File.setReadable/setWritable/setExecutable()`）
+   - 直接使用 tar 文件中的原始权限模式
+
+**关键代码示例** (`ContainerRepository.kt:151-168`)：
+```kotlin
+// 检测符号链接
+val stat = Os.lstat(file.absolutePath)
+if (OsConstants.S_ISLNK(stat.st_mode)) {
+    // 读取链接目标
+    val linkTarget = Os.readlink(file.absolutePath)
+    // 在目标位置重新创建符号链接
+    Os.symlink(linkTarget, destFile.absolutePath)
+}
+```
+
+**验证**：
+- Alpine Linux 容器测试通过，所有符号链接正确创建
+- musl libc 正常工作（`/lib/ld-musl-aarch64.so.1` 可执行）
+- BusyBox 工具链完全可用（`sh`, `ls`, `cat` 等）
+
+## 限制说明
+
+- 无 root 权限限制：部分系统调用可能不可用
+- 网络隔离：不支持 Docker 网络功能
+- 存储限制：受 Android 应用沙箱限制
+- 架构限制：仅支持设备原生架构的容器
+
+## 已验证的镜像
+
+以下镜像已通过测试，可以在 ADocker 上正常运行：
+- ✅ **Alpine Linux** (latest) - 使用 musl libc 和 BusyBox
+- 其他镜像正在测试中...
 
 ## 许可证
 

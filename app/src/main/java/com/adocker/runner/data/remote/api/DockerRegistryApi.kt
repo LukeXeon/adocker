@@ -1,5 +1,6 @@
 package com.adocker.runner.data.remote.api
 
+import android.util.Log
 import com.adocker.runner.core.config.Config
 import com.adocker.runner.core.config.RegistrySettings
 import com.adocker.runner.data.remote.dto.*
@@ -59,25 +60,68 @@ class DockerRegistryApi {
     private var tokenExpiry: Long = 0
 
     /**
-     * Get authentication token for Docker Hub
+     * Get authentication token for Docker Hub or mirror
+     *
+     * Implements Docker Registry V2 authentication flow:
+     * 1. Try to access /v2/ endpoint without auth to get WWW-Authenticate header
+     * 2. Parse the WWW-Authenticate header to extract auth service URL
+     * 3. Request anonymous token from auth service
+     * 4. Use token for subsequent requests
      */
     suspend fun authenticate(
         repository: String,
         registry: String = Config.DEFAULT_REGISTRY
     ): Result<String> = runCatching {
-        val authUrl = when {
-            registry.contains("docker.io") || registry == Config.DEFAULT_REGISTRY -> {
-                "${Config.DEFAULT_REGISTRY_AUTH}/token?service=${Config.DEFAULT_REGISTRY_SERVICE}&scope=repository:$repository:pull"
-            }
-            else -> {
-                "$registry/v2/token?service=registry&scope=repository:$repository:pull"
-            }
-        }
+        Log.d("DockerRegistryApi", "Authenticating for repository: $repository, registry: $registry")
 
-        val response: AuthTokenResponse = client.get(authUrl).body()
-        authToken = response.token
-        tokenExpiry = System.currentTimeMillis() + ((response.expiresIn ?: 300) * 1000L)
-        response.token
+        try {
+            // Step 1: Try to access /v2/ without auth to get WWW-Authenticate header
+            val pingResponse = client.get("$registry/v2/") {
+                // Don't follow redirects, we want to see 401
+            }
+
+            Log.d("DockerRegistryApi", "Ping response status: ${pingResponse.status}")
+
+            // If 200 OK, no auth needed (shouldn't happen but handle it)
+            if (pingResponse.status == io.ktor.http.HttpStatusCode.OK) {
+                Log.i("DockerRegistryApi", "Registry allows anonymous access")
+                authToken = ""
+                tokenExpiry = System.currentTimeMillis() + 3600000
+                return@runCatching ""
+            }
+
+            // Step 2: Parse WWW-Authenticate header
+            val wwwAuth = pingResponse.headers["Www-Authenticate"]
+                ?: pingResponse.headers["WWW-Authenticate"]
+                ?: throw Exception("No WWW-Authenticate header in response")
+
+            Log.d("DockerRegistryApi", "WWW-Authenticate: $wwwAuth")
+
+            // Parse: Bearer realm="https://xxx",service="xxx",scope="..."
+            val realm = Regex("realm=\"([^\"]+)\"").find(wwwAuth)?.groupValues?.get(1)
+                ?: throw Exception("Cannot parse realm from WWW-Authenticate")
+            val service = Regex("service=\"([^\"]+)\"").find(wwwAuth)?.groupValues?.get(1) ?: ""
+
+            // Step 3: Build auth URL and request token
+            val authUrl = buildString {
+                append(realm)
+                append("?service=").append(service)
+                append("&scope=repository:$repository:pull")
+            }
+
+            Log.d("DockerRegistryApi", "Requesting token from: $authUrl")
+
+            val tokenResponse: AuthTokenResponse = client.get(authUrl).body()
+            authToken = tokenResponse.token ?: tokenResponse.access_token
+            tokenExpiry = System.currentTimeMillis() + ((tokenResponse.expiresIn ?: tokenResponse.expires_in ?: 300) * 1000L)
+
+            Log.i("DockerRegistryApi", "Successfully obtained auth token (expires in ${tokenResponse.expiresIn ?: tokenResponse.expires_in ?: 300}s)")
+
+            authToken ?: ""
+        } catch (e: Exception) {
+            Log.e("DockerRegistryApi", "Authentication failed for $registry: ${e.message}", e)
+            throw e
+        }
     }
 
     /**
@@ -102,7 +146,10 @@ class DockerRegistryApi {
 
         // First try to get the manifest list
         val manifestListResponse = client.get("$registry/v2/${imageRef.repository}/manifests/${imageRef.tag}") {
-            header(HttpHeaders.Authorization, "Bearer $authToken")
+            // Only add Authorization header if we have a token
+            if (!authToken.isNullOrEmpty()) {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
             header(HttpHeaders.Accept, listOf(
                 "application/vnd.docker.distribution.manifest.list.v2+json",
                 "application/vnd.oci.image.index.v1+json",
@@ -113,6 +160,9 @@ class DockerRegistryApi {
 
         val contentType = manifestListResponse.contentType()?.toString() ?: ""
         val bodyText = manifestListResponse.bodyAsText()
+
+        Log.d("DockerRegistryApi", "Manifest response - ContentType: $contentType")
+        Log.d("DockerRegistryApi", "Manifest response - Body: ${bodyText.take(500)}")
 
         when {
             contentType.contains("manifest.list") || contentType.contains("image.index") -> {
@@ -148,7 +198,9 @@ class DockerRegistryApi {
         }
 
         val response = client.get("$registry/v2/${imageRef.repository}/manifests/$digest") {
-            header(HttpHeaders.Authorization, "Bearer $authToken")
+            if (!authToken.isNullOrEmpty()) {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
             header(HttpHeaders.Accept, listOf(
                 "application/vnd.docker.distribution.manifest.v2+json",
                 "application/vnd.oci.image.manifest.v1+json"
@@ -172,10 +224,15 @@ class DockerRegistryApi {
         }
 
         val response = client.get("$registry/v2/${imageRef.repository}/blobs/$configDigest") {
-            header(HttpHeaders.Authorization, "Bearer $authToken")
+            if (!authToken.isNullOrEmpty()) {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
         }
 
-        response.body()
+        // Some registries (like DaoCloud) don't set ContentType header,
+        // so manually parse JSON from body text
+        val bodyText = response.bodyAsText()
+        json.decodeFromString(bodyText)
     }
 
     /**
@@ -186,35 +243,49 @@ class DockerRegistryApi {
         layer: Layer,
         destFile: File,
         onProgress: (Long, Long) -> Unit
-    ): Result<Unit> = runCatching {
-        val registry = getRegistryUrl(imageRef.registry)
+    ): Result<Unit> {
+        return runCatching {
+            val registry = getRegistryUrl(imageRef.registry)
 
-        if (!isTokenValid()) {
-            authenticate(imageRef.repository, registry).getOrThrow()
-        }
-
-        client.prepareGet("$registry/v2/${imageRef.repository}/blobs/${layer.digest}") {
-            header(HttpHeaders.Authorization, "Bearer $authToken")
-            timeout {
-                requestTimeoutMillis = Config.DOWNLOAD_TIMEOUT
+            if (!isTokenValid()) {
+                authenticate(imageRef.repository, registry).getOrThrow()
             }
-        }.execute { response ->
-            val contentLength = response.contentLength() ?: layer.size
-            var downloaded = 0L
 
-            destFile.parentFile?.mkdirs()
-            FileOutputStream(destFile).use { fos ->
-                val channel: ByteReadChannel = response.body()
-                val buffer = ByteArray(Config.DOWNLOAD_BUFFER_SIZE)
-                while (!channel.isClosedForRead) {
-                    val bytesRead = channel.readAvailable(buffer)
-                    if (bytesRead > 0) {
-                        fos.write(buffer, 0, bytesRead)
-                        downloaded += bytesRead
-                        onProgress(downloaded, contentLength)
+            Log.d("DockerRegistryApi", "Starting layer download: ${layer.digest.take(16)}, size: ${layer.size}")
+
+            client.prepareGet("$registry/v2/${imageRef.repository}/blobs/${layer.digest}") {
+                if (!authToken.isNullOrEmpty()) {
+                    header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+                timeout {
+                    requestTimeoutMillis = Config.DOWNLOAD_TIMEOUT
+                }
+            }.execute { response ->
+                Log.d("DockerRegistryApi", "Layer download response status: ${response.status}")
+                val contentLength = response.contentLength() ?: layer.size
+                var downloaded = 0L
+
+                destFile.parentFile?.mkdirs()
+                FileOutputStream(destFile).use { fos ->
+                    val channel: ByteReadChannel = response.body()
+                    val buffer = ByteArray(Config.DOWNLOAD_BUFFER_SIZE)
+                    while (!channel.isClosedForRead) {
+                        val bytesRead = channel.readAvailable(buffer)
+                        if (bytesRead > 0) {
+                            fos.write(buffer, 0, bytesRead)
+                            downloaded += bytesRead
+                            onProgress(downloaded, contentLength)
+                            if (downloaded % (512 * 1024) == 0L || downloaded == contentLength) {
+                                Log.d("DockerRegistryApi", "Download progress: $downloaded/$contentLength bytes")
+                            }
+                        }
                     }
                 }
+                Log.i("DockerRegistryApi", "Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
             }
+            Unit
+        }.onFailure { e ->
+            Log.e("DockerRegistryApi", "Layer download failed: ${layer.digest.take(16)}", e)
         }
     }
 
@@ -270,7 +341,9 @@ class DockerRegistryApi {
         }
 
         val response: TagsListResponse = client.get("$registry/v2/${imageRef.repository}/tags/list") {
-            header(HttpHeaders.Authorization, "Bearer $authToken")
+            if (!authToken.isNullOrEmpty()) {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
         }.body()
 
         response.tags

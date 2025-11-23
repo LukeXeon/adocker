@@ -43,15 +43,15 @@ class BasicFunctionalityTest {
     @Test
     fun registrySettings_hasBuiltInMirrors() = runBlocking {
         val allMirrors = RegistrySettings.getAllMirrors()
-        assertTrue("Should have at least 6 built-in mirrors", allMirrors.size >= 6)
+        assertTrue("Should have at least 5 built-in mirrors", allMirrors.size >= 5)
 
         val mirrorNames = allMirrors.map { it.name }
         assertTrue("Should have Docker Hub", mirrorNames.any { it.contains("Docker Hub") })
+        assertTrue("Should have Xuanyuan", mirrorNames.any { it.contains("Xuanyuan") })
         assertTrue("Should have DaoCloud", mirrorNames.any { it.contains("DaoCloud") })
         assertTrue("Should have Aliyun", mirrorNames.any { it.contains("Aliyun") })
-        assertTrue("Should have USTC", mirrorNames.any { it.contains("USTC") })
-        assertTrue("Should have Tencent", mirrorNames.any { it.contains("Tencent") })
         assertTrue("Should have Huawei", mirrorNames.any { it.contains("Huawei") })
+        // Note: USTC and Tencent Cloud mirrors removed due to connectivity issues in China
     }
 
     @Test

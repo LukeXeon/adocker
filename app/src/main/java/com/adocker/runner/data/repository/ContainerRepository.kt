@@ -1,5 +1,7 @@
 package com.adocker.runner.data.repository
 
+import android.system.Os
+import android.system.OsConstants
 import com.adocker.runner.core.config.Config
 import com.adocker.runner.core.utils.FileUtils
 import com.adocker.runner.data.local.dao.ContainerDao
@@ -145,16 +147,45 @@ class ContainerRepository(
                 destFile.parentFile?.listFiles()?.forEach { it.deleteRecursively() }
                 return@forEach
             }
+            // Check if it's a symbolic link using Os.lstat
+            try {
+                val stat = Os.lstat(file.absolutePath)
+                if (OsConstants.S_ISLNK(stat.st_mode)) {
+                    // It's a symbolic link - read the target and recreate it
+                    val linkTarget = Os.readlink(file.absolutePath)
+                    destFile.parentFile?.mkdirs()
+
+                    // Delete existing file/link if it exists
+                    if (destFile.exists()) {
+                        destFile.delete()
+                    }
+
+                    // Create the symlink at destination
+                    Os.symlink(linkTarget, destFile.absolutePath)
+                    android.util.Log.d("ContainerRepository", "✓ Copied symlink: ${destFile.name} -> $linkTarget")
+                    return@forEach
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ContainerRepository", "Failed to check if ${file.name} is symlink", e)
+                // Fall through to regular file handling
+            }
 
             when {
                 file.isDirectory -> destFile.mkdirs()
                 file.isFile -> {
                     destFile.parentFile?.mkdirs()
                     file.copyTo(destFile, overwrite = true)
-                    // Preserve permissions
-                    destFile.setReadable(file.canRead())
-                    destFile.setWritable(file.canWrite())
-                    destFile.setExecutable(file.canExecute())
+                    // Preserve permissions using Os.chmod
+                    try {
+                        val stat = Os.lstat(file.absolutePath)
+                        Os.chmod(destFile.absolutePath, stat.st_mode)
+                    } catch (e: Exception) {
+                        android.util.Log.w("ContainerRepository", "Failed to preserve permissions for ${file.name}", e)
+                        // Fallback to Java File API
+                        destFile.setReadable(file.canRead())
+                        destFile.setWritable(file.canWrite())
+                        destFile.setExecutable(file.canExecute())
+                    }
                 }
             }
         }

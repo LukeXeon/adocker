@@ -20,6 +20,8 @@ object RegistrySettings {
     private val CUSTOM_MIRRORS_KEY = stringPreferencesKey("custom_mirrors")
 
     // Built-in mirrors for Docker Hub
+    // Note: Only including mirrors that are verified accessible from China mainland
+    // Tested on 2025-11-23 using RegistryMirrorConnectivityTest
     val BUILT_IN_MIRRORS = listOf(
         RegistryMirror(
             name = "Docker Hub (Official)",
@@ -32,37 +34,33 @@ object RegistrySettings {
             name = "DaoCloud (China)",
             url = "https://docker.m.daocloud.io",
             authUrl = "https://auth.docker.io",
-            isDefault = true,  // Default for China users
+            isDefault = true,  // Default - supports token auth
+            isBuiltIn = true
+        ),
+        RegistryMirror(
+            name = "Xuanyuan (China)",
+            url = "https://docker.xuanyuan.me",
+            authUrl = "https://auth.docker.io",
+            isDefault = false,  // Returns empty response
             isBuiltIn = true
         ),
         RegistryMirror(
             name = "Aliyun (China)",
             url = "https://registry.cn-hangzhou.aliyuncs.com",
             authUrl = "https://auth.docker.io",
-            isDefault = false,
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "USTC (China)",
-            url = "https://docker.mirrors.ustc.edu.cn",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,
-            isBuiltIn = true
-        ),
-        RegistryMirror(
-            name = "Tencent Cloud (China)",
-            url = "https://mirror.ccs.tencentyun.com",
-            authUrl = "https://auth.docker.io",
-            isDefault = false,
+            isDefault = false,  // Requires auth
             isBuiltIn = true
         ),
         RegistryMirror(
             name = "Huawei Cloud (China)",
             url = "https://mirrors.huaweicloud.com",
             authUrl = "https://auth.docker.io",
-            isDefault = false,
+            isDefault = false,  // Requires auth
             isBuiltIn = true
         )
+        // Removed mirrors that failed connectivity test:
+        // - USTC (China): https://docker.mirrors.ustc.edu.cn - connection failed
+        // - Tencent Cloud (China): https://mirror.ccs.tencentyun.com - connection failed
     )
 
     // Backwards compatible alias

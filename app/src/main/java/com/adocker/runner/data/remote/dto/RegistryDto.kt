@@ -9,9 +9,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AuthTokenResponse(
-    val token: String,
-    @SerialName("access_token") val accessToken: String? = null,
-    @SerialName("expires_in") val expiresIn: Int? = null,
+    val token: String? = null,
+    @SerialName("access_token") val access_token: String? = null,
+    @SerialName("expires_in") val expires_in: Int? = null,
+    val expiresIn: Int? = null,
     @SerialName("issued_at") val issuedAt: String? = null
 )
 
