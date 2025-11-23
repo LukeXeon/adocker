@@ -104,6 +104,8 @@ com.adocker.runner/
 - **压缩处理**: Apache Commons Compress
 - **执行引擎**: PRoot (Termux patched)
 - **启动画面**: AndroidX SplashScreen
+- **相机处理**: CameraX
+- **二维码扫描**: Google ML Kit Barcode Scanning
 
 ## PRoot 构建
 
@@ -177,18 +179,61 @@ cd adocker
 4. 点击 "Pull" 按钮等待下载完成
 
 #### 方式二：扫描二维码（推荐）✨
+
+**使用方法**：
 1. 进入 "Pull Image" 页面
 2. 点击右上角的二维码扫描图标
 3. 授予相机权限（首次使用）
 4. 将二维码对准扫描框
 5. 自动识别后确认并开始拉取
 
-支持的二维码格式：
-- 简单格式：`alpine:latest`
-- JSON 格式：`{"type":"docker-image","image":"alpine:latest"}`
-- URL 格式：`adocker://pull?image=alpine:latest`
+**功能特性**：
+- 自动对焦：相机会自动对焦二维码
+- 闪光灯控制：适用于暗光环境
+- 实时识别：对准即可识别，无需拍照
+- 扫描框引导：清晰的视觉引导
 
-详细使用说明请参考 [QR_CODE_SCANNING.md](QR_CODE_SCANNING.md)
+**支持的二维码格式**：
+
+1. **简单格式（推荐）**：
+   ```
+   alpine:latest
+   ubuntu:22.04
+   nginx:1.25
+   ```
+
+2. **JSON 格式**：
+   ```json
+   {
+     "type": "docker-image",
+     "image": "ubuntu:22.04",
+     "description": "Ubuntu 22.04 LTS"
+   }
+   ```
+
+3. **URL 格式**：
+   ```
+   adocker://pull?image=alpine:latest
+   ```
+
+**生成测试二维码**：
+
+使用在线工具（如 qr-code-generator.com）或命令行工具：
+
+```bash
+# 使用 qrencode (macOS/Linux)
+brew install qrencode  # macOS
+qrencode -o alpine.png "alpine:latest"
+
+# 使用 Python
+pip install qrcode
+python -c "import qrcode; qrcode.make('alpine:latest').save('alpine.png')"
+```
+
+**技术实现**：
+- Google ML Kit Barcode Scanning (v17.3.0)
+- CameraX (v1.4.1)
+- Jetpack Compose UI
 
 ### 创建容器
 

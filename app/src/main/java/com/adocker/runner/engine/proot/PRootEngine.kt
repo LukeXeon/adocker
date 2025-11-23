@@ -104,14 +104,12 @@ class PRootEngine(
         // Essential bind mounts for Android
         addEssentialBinds(cmd, rootfsDir)
 
-        // SECCOMP mode
-        if (mode == MODE_P1) {
-            cmd.add("-S")
-        }
+        // Note: Removed -k (kernel version spoofing) as it causes issues with Android PRoot
+        // The -k option is for binding /proc/sys/kernel/* which doesn't work well on Android
 
-        // Add kernel version spoofing for compatibility
-        cmd.add("-k")
-        cmd.add("5.4.0")
+        // Note: Removed -S (SECCOMP) option as it was incorrectly used.
+        // The -S option in PRoot help is an alias for "-0 -r *path*", not for SECCOMP.
+        // MODE_P1 and MODE_P2 distinction may need to be handled differently if needed.
 
         // The command to run
         val execCmd = command ?: buildExecCommand(config)
@@ -198,6 +196,12 @@ class PRootEngine(
             }
         }
 
+        // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
+        // Use app's tmp directory which has write permissions
+        val tmpDir = Config.tmpDir
+        tmpDir.mkdirs()  // Ensure directory exists
+        env["PROOT_TMP_DIR"] = tmpDir.absolutePath
+
         // Default environment
         env["HOME"] = "/root"
         env["USER"] = container.config.user.ifEmpty { "root" }
@@ -249,6 +253,15 @@ class PRootEngine(
         runCatching {
             val prootCommand = buildCommand(container, rootfsDir, command, mode)
             val env = buildEnvironment(container)
+
+            Log.d(TAG, "=== EXEC IN CONTAINER ===")
+            Log.d(TAG, "Command to execute: $command")
+            Log.d(TAG, "Mode: $mode")
+            Log.d(TAG, "PRoot command size: ${prootCommand.size}")
+            prootCommand.forEachIndexed { index, arg ->
+                Log.d(TAG, "  [$index] = '$arg'")
+            }
+            Log.d(TAG, "========================")
 
             val result = ProcessUtils.execute(
                 command = prootCommand,
@@ -305,6 +318,13 @@ class PRootEngine(
                 Log.w(TAG, "PRoot loader not found at: ${loaderPath.absolutePath}")
             }
         }
+
+        // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
+        val tmpDir = Config.tmpDir
+        tmpDir.mkdirs()  // Ensure directory exists
+        env["PROOT_TMP_DIR"] = tmpDir.absolutePath
+        Log.d(TAG, "PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
+
         return env
     }
 

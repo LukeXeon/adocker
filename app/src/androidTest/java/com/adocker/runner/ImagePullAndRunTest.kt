@@ -172,6 +172,42 @@ class ImagePullAndRunTest {
     }
 
     @Test
+    fun testPRootHelp() {
+        // Skip this test if PRoot is not available on this architecture
+        assumeTrue("Skipping test - PRoot not available on this device/emulator", prootAvailable)
+
+        runBlocking {
+            val nativeLibDir = Config.getNativeLibDir()
+            val prootBinary = File(nativeLibDir, "libproot.so")
+
+            Log.i("ImagePullAndRunTest", "=== EXECUTING PROOT --help ===")
+            Log.i("ImagePullAndRunTest", "PRoot binary: ${prootBinary.absolutePath}")
+
+            try {
+                val result = com.adocker.runner.core.utils.ProcessUtils.execute(
+                    command = listOf(prootBinary.absolutePath, "--help"),
+                    timeout = 5000
+                )
+
+                Log.i("ImagePullAndRunTest", "=== PROOT --help OUTPUT ===")
+                Log.i("ImagePullAndRunTest", "Exit code: ${result.exitCode}")
+                Log.i("ImagePullAndRunTest", "=== STDOUT ===")
+                result.stdout.lines().forEach { line ->
+                    Log.i("ImagePullAndRunTest", line)
+                }
+                Log.i("ImagePullAndRunTest", "=== STDERR ===")
+                result.stderr.lines().forEach { line ->
+                    Log.i("ImagePullAndRunTest", line)
+                }
+                Log.i("ImagePullAndRunTest", "=== END PROOT --help ===")
+            } catch (e: Exception) {
+                Log.e("ImagePullAndRunTest", "Failed to execute PRoot --help", e)
+                throw e
+            }
+        }
+    }
+
+    @Test
     fun testPRootIsAvailable() {
         // Skip this test if PRoot is not available on this architecture
         assumeTrue("Skipping test - PRoot not available on this device/emulator", prootAvailable)
@@ -279,9 +315,34 @@ class ImagePullAndRunTest {
             // Step 3: Verify layers are extracted
             pulledImage.layerIds.forEach { digest ->
                 val layerDir = File(Config.layersDir, digest.removePrefix("sha256:"))
+                Log.d("ImagePullAndRunTest", "=== LAYER VERIFICATION ===")
+                Log.d("ImagePullAndRunTest", "Layer digest: $digest")
+                Log.d("ImagePullAndRunTest", "Layer dir path: ${layerDir.absolutePath}")
+                Log.d("ImagePullAndRunTest", "Layer dir exists: ${layerDir.exists()}")
+                Log.d("ImagePullAndRunTest", "Layer dir is directory: ${layerDir.isDirectory}")
+
+                if (layerDir.exists()) {
+                    val files = layerDir.listFiles()
+                    Log.d("ImagePullAndRunTest", "Layer dir file count: ${files?.size ?: 0}")
+                    files?.take(10)?.forEach { file ->
+                        Log.d("ImagePullAndRunTest", "  - ${file.name} (${if (file.isDirectory) "dir" else "file"}, ${file.length()} bytes)")
+                    }
+
+                    // Check for /bin/sh specifically
+                    val binDir = File(layerDir, "bin")
+                    Log.d("ImagePullAndRunTest", "bin/ directory exists: ${binDir.exists()}")
+                    if (binDir.exists()) {
+                        val shFile = File(binDir, "sh")
+                        Log.d("ImagePullAndRunTest", "bin list: ${binDir.listFiles().contentToString()}")
+                        Log.d("ImagePullAndRunTest", "bin/sh exists: ${shFile.exists()}, size: ${shFile.length()}")
+                    }
+                } else {
+                    Log.e("ImagePullAndRunTest", "❌ Layer directory DOES NOT EXIST!")
+                }
+                Log.d("ImagePullAndRunTest", "=========================")
+
                 assertTrue("Layer directory should exist: ${layerDir.absolutePath}", layerDir.exists())
                 assertTrue("Layer directory should not be empty", layerDir.listFiles()?.isNotEmpty() == true)
-                Log.d("ImagePullAndRunTest", "Layer ${digest.take(12)} extracted to ${layerDir.absolutePath}")
             }
 
             // Step 4: Create container
@@ -301,31 +362,42 @@ class ImagePullAndRunTest {
             assertEquals("Container should be in created state initially", ContainerStatus.CREATED, container.status)
             Log.i("ImagePullAndRunTest", "Created container: ${container.name} (${container.id})")
 
-            // Step 5: Start container and verify execution
-            try {
+            // Step 5: Execute command in container and capture output
+            Log.d("ImagePullAndRunTest", "Executing command in container ${container.id}...")
+            val execResult = try {
                 withTimeout(30000) { // 30 second timeout
-                    Log.d("ImagePullAndRunTest", "Starting container ${container.id}...")
-                    executor.startContainer(container.id)
-                    Log.i("ImagePullAndRunTest", "Container started successfully")
+                    executor.execInContainer(
+                        container.id,
+                        listOf("/bin/sh", "-c", "echo 'Hello from ADocker on Alpine Linux!'; uname -a; echo ''; echo 'LibC Information:'; ldd /bin/sh 2>&1 | head -1 || ls -la /lib/libc.musl-*.so* 2>&1; echo ''; echo 'Test completed successfully'")
+                    ).getOrThrow()
                 }
             } catch (e: Exception) {
-                Log.e("ImagePullAndRunTest", "Failed to start container: ${e.message}", e)
+                Log.e("ImagePullAndRunTest", "Failed to execute in container: ${e.message}", e)
                 throw e
             }
 
-            // Step 6: Verify container state
-            val containerAfterStart = containerRepository.getContainerById(container.id)
-            assertNotNull("Container should still exist after start", containerAfterStart)
-            Log.d("ImagePullAndRunTest", "Container status after start: ${containerAfterStart?.status}")
+            // Step 6: Verify execution output
+            Log.i("ImagePullAndRunTest", "========================================")
+            Log.i("ImagePullAndRunTest", "=== ALPINE LINUX CONTAINER OUTPUT ===")
+            Log.i("ImagePullAndRunTest", "========================================")
+            Log.i("ImagePullAndRunTest", "Exit code: ${execResult.exitCode}")
+            Log.i("ImagePullAndRunTest", "")
+            execResult.output.split("\n").forEach { line ->
+                Log.i("ImagePullAndRunTest", "  $line")
+            }
+            Log.i("ImagePullAndRunTest", "")
+            Log.i("ImagePullAndRunTest", "========================================")
 
-            // Container may be running or exited after running the command
-            assertTrue(
-                "Container should be running or exited, but was: ${containerAfterStart?.status}",
-                containerAfterStart?.status == ContainerStatus.RUNNING ||
-                containerAfterStart?.status == ContainerStatus.EXITED
-            )
+            // Verify output contains expected messages
+            assertTrue("Container output should contain 'Hello from ADocker'",
+                execResult.output.contains("Hello from ADocker"))
+            assertTrue("Container output should contain 'Alpine'",
+                execResult.output.contains("Alpine") || execResult.output.contains("Linux"))
+            assertTrue("Container output should contain 'Test completed successfully'",
+                execResult.output.contains("Test completed successfully"))
+            assertEquals("Container should exit successfully", 0, execResult.exitCode)
 
-            Log.i("ImagePullAndRunTest", "Test completed successfully! Image pulled, container created and executed.")
+            Log.i("ImagePullAndRunTest", "✅ Test completed successfully! Alpine image pulled, container created and executed with verified output!")
         }
     }
 
