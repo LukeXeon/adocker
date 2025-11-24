@@ -15,21 +15,38 @@ import javax.inject.Singleton
  */
 @Singleton
 class AppConfig @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext context: Context
 ) {
     // Directories
-    val baseDir: File = context.filesDir
-    val containersDir: File = File(baseDir, DIR_CONTAINERS)
-    val layersDir: File = File(baseDir, DIR_LAYERS)
-    val reposDir: File = File(baseDir, DIR_REPOS)
-    val binDir: File = File(baseDir, DIR_BIN)
-    val tmpDir: File = File(baseDir, DIR_TMP)
+    val baseDir = requireNotNull(context.filesDir)
+    val containersDir = File(baseDir, DIR_CONTAINERS)
+    val layersDir = File(baseDir, DIR_LAYERS)
+    val reposDir = File(baseDir, DIR_REPOS)
+    val binDir = File(baseDir, DIR_BIN)
+    val tmpDir = File(baseDir, DIR_TMP)
+    val nativeLibDir = File(requireNotNull(context.applicationInfo.nativeLibraryDir))
 
-    val nativeLibDir: File? = context.applicationInfo?.nativeLibraryDir?.let { File(it) }
+    val packageInfo = requireNotNull(
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    )
+
+    val architecture = when (Build.SUPPORTED_ABIS.firstOrNull()) {
+        "arm64-v8a" -> "arm64"
+        "armeabi-v7a" -> "arm"
+        "x86_64" -> "amd64"
+        "x86" -> "386"
+        else -> DEFAULT_ARCHITECTURE
+    }
 
     init {
         // Create directories on initialization
-        listOf(containersDir, layersDir, reposDir, binDir, tmpDir).forEach { dir ->
+        listOf(
+            containersDir,
+            layersDir,
+            reposDir,
+            binDir,
+            tmpDir
+        ).forEach { dir ->
             if (!dir.exists()) {
                 dir.mkdirs()
             }
@@ -37,37 +54,15 @@ class AppConfig @Inject constructor(
         Timber.d("AppConfig initialized: baseDir=${baseDir.absolutePath}")
     }
 
-    fun getArchitecture(): String {
-        return when (Build.SUPPORTED_ABIS.firstOrNull()) {
-            "arm64-v8a" -> "arm64"
-            "armeabi-v7a" -> "arm"
-            "x86_64" -> "amd64"
-            "x86" -> "386"
-            else -> DEFAULT_ARCHITECTURE
-        }
-    }
 
     companion object {
-        // Version info
-        const val VERSION = "1.0.0"
-        const val APP_NAME = "ADocker"
 
         // Docker Registry defaults
         const val DEFAULT_REGISTRY = "https://registry-1.docker.io"
-        const val DEFAULT_REGISTRY_AUTH = "https://auth.docker.io"
         const val DEFAULT_REGISTRY_SERVICE = "registry.docker.io"
 
-        // API versions
-        const val DOCKER_REGISTRY_API_V2 = "/v2"
-
-        // Default image settings
-        const val DEFAULT_IMAGE_TAG = "latest"
         const val DEFAULT_ARCHITECTURE = "arm64"
         const val DEFAULT_OS = "linux"
-
-        // Execution modes
-        const val EXEC_MODE_PROOT = "P1"
-        const val EXEC_MODE_PROOT_NOSECCOMP = "P2"
 
         // Timeouts (milliseconds)
         const val NETWORK_TIMEOUT = 30000L
@@ -75,7 +70,6 @@ class AppConfig @Inject constructor(
 
         // Buffer sizes
         const val DOWNLOAD_BUFFER_SIZE = 8192
-        const val TAR_BUFFER_SIZE = 65536
 
         // Directories (relative to app's files directory)
         const val DIR_CONTAINERS = "containers"
@@ -88,8 +82,5 @@ class AppConfig @Inject constructor(
         const val CONTAINER_JSON = "container.json"
         const val IMAGE_JSON = "image.json"
         const val ROOTFS_DIR = "ROOT"
-
-        // PRoot settings
-        const val PROOT_BINARY = "proot"
     }
 }

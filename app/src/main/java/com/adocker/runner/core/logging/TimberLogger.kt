@@ -11,10 +11,6 @@ import timber.log.Timber
  */
 class TimberLogger(private val tag: String) : LegacyAbstractLogger() {
 
-    companion object {
-        private const val MAX_TAG_LENGTH = 23
-    }
-
     override fun getName(): String = tag
 
     // Let Timber decide whether to log based on planted trees
@@ -25,11 +21,11 @@ class TimberLogger(private val tag: String) : LegacyAbstractLogger() {
     override fun isWarnEnabled(): Boolean = Timber.treeCount > 0
     override fun isErrorEnabled(): Boolean = Timber.treeCount > 0
 
-    override fun isTraceEnabled(marker: Marker?): Boolean = isTraceEnabled()
-    override fun isDebugEnabled(marker: Marker?): Boolean = isDebugEnabled()
-    override fun isInfoEnabled(marker: Marker?): Boolean = isInfoEnabled()
-    override fun isWarnEnabled(marker: Marker?): Boolean = isWarnEnabled()
-    override fun isErrorEnabled(marker: Marker?): Boolean = isErrorEnabled()
+    override fun isTraceEnabled(marker: Marker?): Boolean = Timber.treeCount > 0
+    override fun isDebugEnabled(marker: Marker?): Boolean = Timber.treeCount > 0
+    override fun isInfoEnabled(marker: Marker?): Boolean = Timber.treeCount > 0
+    override fun isWarnEnabled(marker: Marker?): Boolean = Timber.treeCount > 0
+    override fun isErrorEnabled(marker: Marker?): Boolean = Timber.treeCount > 0
 
     override fun getFullyQualifiedCallerName(): String? = null
 
@@ -50,19 +46,40 @@ class TimberLogger(private val tag: String) : LegacyAbstractLogger() {
 
         // Use Timber's logging methods with throwable support
         when (level) {
-            Level.TRACE -> if (throwable != null) Timber.tag(tag).v(throwable) else Timber.tag(tag).v(finalMessage)
-            Level.DEBUG -> if (throwable != null) Timber.tag(tag).d(throwable) else Timber.tag(tag).d(finalMessage)
-            Level.INFO -> if (throwable != null) Timber.tag(tag).i(throwable) else Timber.tag(tag).i(finalMessage)
-            Level.WARN -> if (throwable != null) Timber.tag(tag).w(throwable) else Timber.tag(tag).w(finalMessage)
-            Level.ERROR -> if (throwable != null) Timber.tag(tag).e(throwable) else Timber.tag(tag).e(finalMessage)
-        }
-    }
+            Level.TRACE -> if (throwable != null) {
+                Timber.tag(tag).v(throwable)
+            } else {
+                Timber.tag(tag)
+                    .v(finalMessage)
+            }
 
-    private fun sanitizeTag(tag: String): String {
-        return if (tag.length > MAX_TAG_LENGTH) {
-            tag.substring(0, MAX_TAG_LENGTH)
-        } else {
-            tag
+            Level.DEBUG -> if (throwable != null) {
+                Timber.tag(tag).d(throwable)
+            } else {
+                Timber.tag(tag)
+                    .d(finalMessage)
+            }
+
+            Level.INFO -> if (throwable != null) {
+                Timber.tag(tag).i(throwable)
+            } else {
+                Timber.tag(tag)
+                    .i(finalMessage)
+            }
+
+            Level.WARN -> if (throwable != null) {
+                Timber.tag(tag).w(throwable)
+            } else {
+                Timber.tag(tag)
+                    .w(finalMessage)
+            }
+
+            Level.ERROR -> if (throwable != null) {
+                Timber.tag(tag).e(throwable)
+            } else {
+                Timber.tag(tag)
+                    .e(finalMessage)
+            }
         }
     }
 }

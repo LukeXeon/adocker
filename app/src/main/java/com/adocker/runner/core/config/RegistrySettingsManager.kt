@@ -1,140 +1,130 @@
 package com.adocker.runner.core.config
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import com.adocker.runner.data.local.dao.MirrorDao
+import com.adocker.runner.data.local.entity.MirrorEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "registry_settings")
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Registry settings manager - dependency injected version
  *
  * Manages Docker registry mirrors with support for custom mirrors
+ * Now using Room database for persistence
  */
-class RegistrySettingsManager(context: Context) {
-    private val dataStore: DataStore<Preferences> = context.dataStore
 
-    @Volatile
-    private var cachedMirror: RegistryMirror? = null
+@Singleton
+class RegistrySettingsManager @Inject constructor(
+    private val mirrorDao: MirrorDao
+) {
+    /**
+     * Initialize built-in mirrors on first use
+     * Using database as source of truth - no need for separate initialized flag
+     */
+    private suspend fun ensureInitialized() {
+        // Check if database already has mirrors
+        val existingMirrors = mirrorDao.getAllMirrors().first()
+        if (existingMirrors.isEmpty()) {
+            // Insert built-in mirrors
+            mirrorDao.insertMirrors(BUILT_IN_MIRRORS)
+
+            // Set default mirror as selected
+            val defaultMirror = BUILT_IN_MIRRORS.find { it.isDefault }
+            if (defaultMirror != null) {
+                mirrorDao.selectMirrorByUrl(defaultMirror.url)
+            }
+        }
+    }
 
     /**
      * Get all mirrors (built-in + custom)
      */
-    suspend fun getAllMirrors(): List<RegistryMirror> {
-        val customMirrors = getCustomMirrors()
-        return BUILT_IN_MIRRORS + customMirrors
+    suspend fun getAllMirrors(): List<MirrorEntity> {
+        ensureInitialized()
+        return mirrorDao.getAllMirrors().first()
     }
 
     /**
      * Get all mirrors flow for observing changes
      */
-    fun getAllMirrorsFlow(): Flow<List<RegistryMirror>> {
-        return dataStore.data.map { prefs ->
-            val customJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
-            val customMirrors = parseCustomMirrors(customJson)
-            BUILT_IN_MIRRORS + customMirrors
-        }
+    fun getAllMirrorsFlow(): Flow<List<MirrorEntity>> {
+        return mirrorDao.getAllMirrors()
     }
 
     /**
-     * Get current registry mirror URL
+     * Get current registry mirror
      */
-    suspend fun getCurrentMirror(): RegistryMirror {
-        cachedMirror?.let { return it }
+    suspend fun getCurrentMirror(): MirrorEntity {
+        ensureInitialized()
 
-        val prefs = dataStore.data.first()
-        val mirrorUrl = prefs[REGISTRY_MIRROR_KEY]
-
-        val allMirrors = getAllMirrors()
-        val mirror = if (mirrorUrl != null) {
-            allMirrors.find { it.url == mirrorUrl } ?: getDefaultMirror()
-        } else {
-            // First run - set default mirror for China
-            val defaultMirror = getDefaultMirror()
-            setMirror(defaultMirror)
-            defaultMirror
+        val selectedMirror = mirrorDao.getSelectedMirror()
+        if (selectedMirror != null) {
+            return selectedMirror
         }
 
-        cachedMirror = mirror
-        return mirror
+        // No mirror selected, use default
+        val defaultMirror = getDefaultMirror()
+        setMirror(defaultMirror)
+        return defaultMirror
     }
 
     /**
      * Get current mirror flow for observing changes
      */
-    fun getCurrentMirrorFlow(): Flow<RegistryMirror> {
-        return dataStore.data.map { prefs ->
-            val mirrorUrl = prefs[REGISTRY_MIRROR_KEY]
-            val customJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
-            val customMirrors = parseCustomMirrors(customJson)
-            val allMirrors = BUILT_IN_MIRRORS + customMirrors
-
-            if (mirrorUrl != null) {
-                allMirrors.find { it.url == mirrorUrl } ?: getDefaultMirror()
-            } else {
-                getDefaultMirror()
-            }
+    fun getCurrentMirrorFlow(): Flow<MirrorEntity> {
+        return mirrorDao.getSelectedMirrorFlow().map { entity ->
+            entity ?: getDefaultMirror()
         }
     }
 
     /**
      * Set registry mirror
      */
-    suspend fun setMirror(mirror: RegistryMirror) {
-        dataStore.edit { prefs ->
-            prefs[REGISTRY_MIRROR_KEY] = mirror.url
-        }
-        cachedMirror = mirror
+    suspend fun setMirror(mirror: MirrorEntity) {
+        ensureInitialized()
+
+        // Clear previous selection
+        mirrorDao.clearAllSelected()
+
+        // Select new mirror
+        mirrorDao.selectMirrorByUrl(mirror.url)
     }
 
     /**
      * Add a custom mirror
      */
     suspend fun addCustomMirror(name: String, url: String) {
-        val newMirror = RegistryMirror(
-            name = name,
+        ensureInitialized()
+
+        val newMirror = MirrorEntity(
             url = url.removeSuffix("/"),
-            authUrl = "https://auth.docker.io",
+            name = name,
             isDefault = false,
-            isBuiltIn = false
+            isBuiltIn = false,
+            isSelected = false
         )
 
-        dataStore.edit { prefs ->
-            val currentJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
-            val currentMirrors = parseCustomMirrors(currentJson).toMutableList()
-            // Avoid duplicates by URL
-            if (currentMirrors.none { it.url == newMirror.url }) {
-                currentMirrors.add(newMirror)
-                prefs[CUSTOM_MIRRORS_KEY] = serializeCustomMirrors(currentMirrors)
-            }
-        }
+        mirrorDao.insertMirror(newMirror)
     }
 
     /**
      * Delete a custom mirror
      */
-    suspend fun deleteCustomMirror(mirror: RegistryMirror) {
+    suspend fun deleteCustomMirror(mirror: MirrorEntity) {
         if (mirror.isBuiltIn) return // Cannot delete built-in mirrors
 
-        dataStore.edit { prefs ->
-            val currentJson = prefs[CUSTOM_MIRRORS_KEY] ?: "[]"
-            val currentMirrors = parseCustomMirrors(currentJson).toMutableList()
-            currentMirrors.removeAll { it.url == mirror.url }
-            prefs[CUSTOM_MIRRORS_KEY] = serializeCustomMirrors(currentMirrors)
+        ensureInitialized()
 
-            // If the deleted mirror was selected, switch to default
-            val selectedUrl = prefs[REGISTRY_MIRROR_KEY]
-            if (selectedUrl == mirror.url) {
-                prefs[REGISTRY_MIRROR_KEY] = getDefaultMirror().url
-                cachedMirror = null
-            }
+        // If the deleted mirror was selected, switch to default
+        val currentMirror = mirrorDao.getSelectedMirror()
+        if (currentMirror?.url == mirror.url) {
+            val defaultMirror = getDefaultMirror()
+            setMirror(defaultMirror)
         }
+
+        mirrorDao.deleteMirrorByUrl(mirror.url)
     }
 
     /**
@@ -147,8 +137,8 @@ class RegistrySettingsManager(context: Context) {
         return when {
             // Docker Hub - use mirror
             originalRegistry == "docker.io" ||
-            originalRegistry == "registry-1.docker.io" ||
-            originalRegistry.contains("docker.io") -> mirror.url
+                    originalRegistry == "registry-1.docker.io" ||
+                    originalRegistry.contains("docker.io") -> mirror.url
 
             // Other registries - use as-is
             originalRegistry.startsWith("http") -> originalRegistry
@@ -164,84 +154,36 @@ class RegistrySettingsManager(context: Context) {
         return mirror.url != "https://registry-1.docker.io"
     }
 
-    /**
-     * Get custom mirrors
-     */
-    private suspend fun getCustomMirrors(): List<RegistryMirror> {
-        val prefs = dataStore.data.first()
-        val json = prefs[CUSTOM_MIRRORS_KEY] ?: return emptyList()
-        return parseCustomMirrors(json)
-    }
-
-    /**
-     * Parse custom mirrors from JSON string
-     * Format: "name1|url1;name2|url2;..."
-     */
-    private fun parseCustomMirrors(data: String): List<RegistryMirror> {
-        if (data.isBlank() || data == "[]") return emptyList()
-        return try {
-            data.split(";").mapNotNull { entry ->
-                val parts = entry.split("|")
-                if (parts.size >= 2) {
-                    RegistryMirror(
-                        name = parts[0],
-                        url = parts[1],
-                        authUrl = "https://auth.docker.io",
-                        isDefault = false,
-                        isBuiltIn = false
-                    )
-                } else null
-            }
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    /**
-     * Serialize custom mirrors to string
-     */
-    private fun serializeCustomMirrors(mirrors: List<RegistryMirror>): String {
-        return mirrors.joinToString(";") { "${it.name}|${it.url}" }
-    }
-
     companion object {
-        private val REGISTRY_MIRROR_KEY = stringPreferencesKey("registry_mirror")
-        private val CUSTOM_MIRRORS_KEY = stringPreferencesKey("custom_mirrors")
-
         // Built-in mirrors for Docker Hub
         val BUILT_IN_MIRRORS = listOf(
-            RegistryMirror(
+            MirrorEntity(
                 name = "Docker Hub (Official)",
                 url = "https://registry-1.docker.io",
-                authUrl = "https://auth.docker.io",
                 isDefault = false,
                 isBuiltIn = true
             ),
-            RegistryMirror(
+            MirrorEntity(
                 name = "DaoCloud (China)",
                 url = "https://docker.m.daocloud.io",
-                authUrl = "https://auth.docker.io",
                 isDefault = true,  // Default - supports token auth
                 isBuiltIn = true
             ),
-            RegistryMirror(
+            MirrorEntity(
                 name = "Xuanyuan (China)",
                 url = "https://docker.xuanyuan.me",
-                authUrl = "https://auth.docker.io",
                 isDefault = false,
                 isBuiltIn = true
             ),
-            RegistryMirror(
+            MirrorEntity(
                 name = "Aliyun (China)",
                 url = "https://registry.cn-hangzhou.aliyuncs.com",
-                authUrl = "https://auth.docker.io",
                 isDefault = false,
                 isBuiltIn = true
             ),
-            RegistryMirror(
+            MirrorEntity(
                 name = "Huawei Cloud (China)",
                 url = "https://mirrors.huaweicloud.com",
-                authUrl = "https://auth.docker.io",
                 isDefault = false,
                 isBuiltIn = true
             )
@@ -253,16 +195,8 @@ class RegistrySettingsManager(context: Context) {
         /**
          * Get default mirror (DaoCloud for China)
          */
-        fun getDefaultMirror(): RegistryMirror {
+        fun getDefaultMirror(): MirrorEntity {
             return AVAILABLE_MIRRORS.find { it.isDefault } ?: AVAILABLE_MIRRORS.first()
         }
     }
 }
-
-data class RegistryMirror(
-    val name: String,
-    val url: String,
-    val authUrl: String,
-    val isDefault: Boolean = false,
-    val isBuiltIn: Boolean = true
-)

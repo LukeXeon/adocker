@@ -1,35 +1,42 @@
 package com.adocker.runner.core.di
 
 import android.content.Context
+import androidx.room.Room
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
-import timber.log.Timber
 import com.adocker.runner.data.local.AppDatabase
 import com.adocker.runner.data.local.dao.ContainerDao
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.dao.LayerDao
-import com.adocker.runner.data.remote.api.DockerRegistryApi
-import com.adocker.runner.data.repository.ContainerRepository
-import com.adocker.runner.data.repository.ImageRepository
-import com.adocker.runner.engine.executor.ContainerExecutor
-import com.adocker.runner.engine.proot.PRootEngine
+import com.adocker.runner.data.local.dao.MirrorDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.runBlocking
-import java.io.File
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getInstance(context)
+        return Room.databaseBuilder(
+            context.applicationContext,
+            AppDatabase::class.java,
+            "shared_database"
+        ).build()
     }
 
     @Provides
@@ -46,106 +53,53 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun mirrorDao(database: AppDatabase): MirrorDao {
+        return database.mirrorDao()
+    }
+
+    @Provides
+    @Singleton
     fun provideLayerDao(database: AppDatabase): LayerDao {
         return database.layerDao()
     }
 
     @Provides
     @Singleton
-    fun provideRegistrySettingsManager(@ApplicationContext context: Context): RegistrySettingsManager {
-        return RegistrySettingsManager(context)
+    fun json(): Json {
+        return Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            coerceInputValues = true
+            prettyPrint = true
+        }
     }
 
     @Provides
     @Singleton
-    fun provideDockerRegistryApi(
-        registrySettings: RegistrySettingsManager,
+    fun httpClient(
+        json: Json,
         appConfig: AppConfig
-    ): DockerRegistryApi {
-        return DockerRegistryApi(registrySettings, appConfig)
-    }
-
-    @Provides
-    @Singleton
-    fun provideImageRepository(
-        imageDao: ImageDao,
-        layerDao: LayerDao,
-        registryApi: DockerRegistryApi,
-        appConfig: AppConfig
-    ): ImageRepository {
-        return ImageRepository(imageDao, layerDao, registryApi, appConfig)
-    }
-
-    @Provides
-    @Singleton
-    fun provideContainerRepository(
-        containerDao: ContainerDao,
-        imageDao: ImageDao,
-        appConfig: AppConfig
-    ): ContainerRepository {
-        return ContainerRepository(containerDao, imageDao, appConfig)
-    }
-
-    @Provides
-    @Singleton
-    fun providePRootEngine(appConfig: AppConfig): PRootEngine? {
-        return runBlocking {
-            initializePRoot(appConfig)
+    ): HttpClient {
+        return HttpClient(OkHttp) {
+            install(ContentNegotiation) {
+                json(json)
+            }
+            install(Logging) {
+                level = LogLevel.HEADERS
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = AppConfig.NETWORK_TIMEOUT
+                connectTimeoutMillis = AppConfig.NETWORK_TIMEOUT
+                socketTimeoutMillis = AppConfig.DOWNLOAD_TIMEOUT
+            }
+            defaultRequest {
+                header(
+                    HttpHeaders.UserAgent,
+                    "${requireNotNull(appConfig.packageInfo.applicationInfo).name}/${appConfig.packageInfo.versionName}"
+                )
+            }
         }
     }
 
-    @Provides
-    @Singleton
-    fun provideContainerExecutor(
-        prootEngine: PRootEngine?,
-        containerRepository: ContainerRepository
-    ): ContainerExecutor? {
-        return prootEngine?.let { engine ->
-            ContainerExecutor(engine, containerRepository)
-        }
-    }
 
-    /**
-     * Initialize PRoot directly from native library directory.
-     *
-     * IMPORTANT: On Android 10+ (API 29+), binaries can only be executed from directories
-     * with the correct SELinux context. The native library directory (/data/app/<pkg>/lib/<arch>)
-     * has 'apk_data_file' context which allows execution. The app data directory
-     * (/data/data/<pkg>) has 'app_data_file' context which blocks execution (execute_no_trans).
-     *
-     * Therefore, PRoot must be executed DIRECTLY from the native library directory.
-     * Do NOT copy binaries to app data directory - this will fail on Android 10+.
-     */
-    private suspend fun initializePRoot(appConfig: AppConfig): PRootEngine? {
-        val nativeLibDir = appConfig.nativeLibDir
-
-        if (nativeLibDir == null) {
-            Timber.e("Native library directory is null")
-            return null
-        }
-
-        // Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
-        val prootBinary = File(nativeLibDir, "libproot.so")
-
-        if (!prootBinary.exists()) {
-            Timber.e("PRoot binary not found at: ${prootBinary.absolutePath}")
-            return null
-        }
-
-        Timber.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
-
-        // List files in native lib dir for debugging
-        nativeLibDir.listFiles()?.forEach { file ->
-            Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
-        }
-
-        val engine = PRootEngine(prootBinary, nativeLibDir, appConfig)
-        return if (engine.isAvailable()) {
-            Timber.d("PRoot engine initialized successfully")
-            engine
-        } else {
-            Timber.e("PRoot engine not available")
-            null
-        }
-    }
 }

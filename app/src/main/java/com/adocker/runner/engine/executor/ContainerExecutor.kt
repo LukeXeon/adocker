@@ -1,7 +1,6 @@
 package com.adocker.runner.engine.executor
 
 import com.adocker.runner.data.repository.ContainerRepository
-import com.adocker.runner.domain.model.Container
 import com.adocker.runner.domain.model.ContainerStatus
 import com.adocker.runner.domain.model.ExecResult
 import com.adocker.runner.engine.proot.PRootEngine
@@ -18,12 +17,15 @@ import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Container executor - manages container lifecycle and execution
  * Equivalent to udocker's ExecutionEngine
  */
-class ContainerExecutor(
+@Singleton
+class ContainerExecutor @Inject constructor(
     private val prootEngine: PRootEngine,
     private val containerRepository: ContainerRepository
 ) {
@@ -38,6 +40,7 @@ class ContainerExecutor(
     )
 
     private val _containerOutput = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+
     val containerOutput: StateFlow<Map<String, List<String>>> = _containerOutput.asStateFlow()
 
     /**
@@ -63,7 +66,6 @@ class ContainerExecutor(
             val process = prootEngine.startContainer(
                 container = container,
                 rootfsDir = rootfsDir,
-                mode = container.config.execMode
             ).getOrThrow()
 
             val stdin = BufferedWriter(OutputStreamWriter(process.outputStream))
@@ -141,7 +143,6 @@ class ContainerExecutor(
                 container = container,
                 rootfsDir = rootfsDir,
                 command = command,
-                mode = container.config.execMode,
                 timeout = timeout
             ).getOrThrow()
         }
@@ -167,7 +168,7 @@ class ContainerExecutor(
 
             containerResult?.let { cont ->
                 val rootfsDir = containerRepository.getContainerRootfs(containerId)
-                prootEngine.execStreaming(cont, rootfsDir, command, cont.config.execMode)
+                prootEngine.execStreaming(cont, rootfsDir, command)
             }
         }
     }

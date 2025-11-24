@@ -13,19 +13,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Repository for container management - equivalent to udocker's ContainerStructure
  */
-class ContainerRepository(
+@Singleton
+class ContainerRepository @Inject constructor(
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
-    private val appConfig: AppConfig
+    private val appConfig: AppConfig,
+    private val json: Json,
 ) {
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     /**
      * Get all containers
@@ -183,10 +185,6 @@ class ContainerRepository(
                         Os.chmod(destFile.absolutePath, stat.st_mode)
                     } catch (e: Exception) {
                         Timber.w(e, "Failed to preserve permissions for ${file.name}")
-                        // Fallback to Java File API
-                        destFile.setReadable(file.canRead())
-                        destFile.setWritable(file.canWrite())
-                        destFile.setExecutable(file.canExecute())
                     }
                 }
             }
@@ -251,25 +249,28 @@ class ContainerRepository(
     /**
      * Rename container
      */
-    suspend fun renameContainer(containerId: String, newName: String): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val existing = containerDao.getContainerByName(newName)
-            if (existing != null && existing.id != containerId) {
-                throw IllegalArgumentException("Container with name '$newName' already exists")
+    suspend fun renameContainer(containerId: String, newName: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val existing = containerDao.getContainerByName(newName)
+                if (existing != null && existing.id != containerId) {
+                    throw IllegalArgumentException("Container with name '$newName' already exists")
+                }
+
+                val container = containerDao.getContainerById(containerId)?.toContainer()
+                    ?: throw IllegalArgumentException("Container not found: $containerId")
+
+                containerDao.updateContainer(container.copy(name = newName).toEntity())
             }
-
-            val container = containerDao.getContainerById(containerId)?.toContainer()
-                ?: throw IllegalArgumentException("Container not found: $containerId")
-
-            containerDao.updateContainer(container.copy(name = newName).toEntity())
         }
-    }
 
     /**
      * Generate a random container name
      */
     private fun generateContainerName(): String {
-        val adjectives = listOf("happy", "sleepy", "brave", "clever", "swift", "calm", "eager", "fancy")
+        val adjectives = listOf(
+            "happy", "sleepy", "brave", "clever", "swift", "calm", "eager", "fancy"
+        )
         val nouns = listOf("panda", "tiger", "eagle", "dolphin", "falcon", "wolf", "bear", "lion")
         val adj = adjectives.random()
         val noun = nouns.random()

@@ -1,20 +1,25 @@
 package com.adocker.runner.data.local
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.adocker.runner.data.local.dao.ContainerDao
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.dao.LayerDao
+import com.adocker.runner.data.local.dao.MirrorDao
 import com.adocker.runner.data.local.entity.ContainerEntity
 import com.adocker.runner.data.local.entity.Converters
 import com.adocker.runner.data.local.entity.ImageEntity
 import com.adocker.runner.data.local.entity.LayerEntity
+import com.adocker.runner.data.local.entity.MirrorEntity
 
 @Database(
-    entities = [ImageEntity::class, ContainerEntity::class, LayerEntity::class],
+    entities = [
+        ImageEntity::class,
+        ContainerEntity::class,
+        LayerEntity::class,
+        MirrorEntity::class
+    ],
     version = 1,
     exportSchema = false
 )
@@ -24,21 +29,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun containerDao(): ContainerDao
     abstract fun layerDao(): LayerDao
 
-    companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        fun getInstance(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "adocker_database"
-                ).fallbackToDestructiveMigration(false)
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
+    abstract fun mirrorDao(): MirrorDao
 }

@@ -10,14 +10,10 @@ import com.adocker.runner.domain.model.PullProgress
 import com.adocker.runner.domain.model.PullStatus
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -26,37 +22,19 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Docker Registry API client - equivalent to udocker's DockerIoAPI
  */
-class DockerRegistryApi(
+@Singleton
+class DockerRegistryApi @Inject constructor(
     private val registrySettings: RegistrySettingsManager,
-    private val appConfig: AppConfig
+    private val appConfig: AppConfig,
+    private val json: Json,
+    private val client: HttpClient,
 ) {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        coerceInputValues = true
-    }
-
-    private val client = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            json(json)
-        }
-        install(Logging) {
-            level = LogLevel.HEADERS
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = AppConfig.NETWORK_TIMEOUT
-            connectTimeoutMillis = AppConfig.NETWORK_TIMEOUT
-            socketTimeoutMillis = AppConfig.DOWNLOAD_TIMEOUT
-        }
-        defaultRequest {
-            header(HttpHeaders.UserAgent, "${AppConfig.APP_NAME}/${AppConfig.VERSION}")
-        }
-    }
 
     private var authToken: String? = null
     private var tokenExpiry: Long = 0
@@ -85,7 +63,7 @@ class DockerRegistryApi(
             Timber.d("Ping response status: ${pingResponse.status}")
 
             // If 200 OK, no auth needed (shouldn't happen but handle it)
-            if (pingResponse.status == io.ktor.http.HttpStatusCode.OK) {
+            if (pingResponse.status == HttpStatusCode.OK) {
                 Timber.i("Registry allows anonymous access")
                 authToken = ""
                 tokenExpiry = System.currentTimeMillis() + 3600000
@@ -113,11 +91,11 @@ class DockerRegistryApi(
 
             Timber.d("Requesting token from: $authUrl")
 
-            val tokenResponse: AuthTokenResponse = client.get(authUrl).body()
-            authToken = tokenResponse.token ?: tokenResponse.access_token
-            tokenExpiry = System.currentTimeMillis() + ((tokenResponse.expiresIn ?: tokenResponse.expires_in ?: 300) * 1000L)
+            val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
+            authToken = tokenResponse.token ?: tokenResponse.accessToken
+            tokenExpiry = System.currentTimeMillis() + tokenResponse.expiresIn * 1000L
 
-            Timber.i("Successfully obtained auth token (expires in ${tokenResponse.expiresIn ?: tokenResponse.expires_in ?: 300}s)")
+            Timber.i("Successfully obtained auth token (expires in ${tokenResponse.expiresIn}s)")
 
             authToken ?: ""
         } catch (e: Exception) {
@@ -138,7 +116,7 @@ class DockerRegistryApi(
      */
     suspend fun getManifest(
         imageRef: ImageReference,
-        architecture: String = appConfig.getArchitecture()
+        architecture: String = appConfig.architecture
     ): Result<ImageManifestV2> = runCatching {
         val registry = getRegistryUrl(imageRef.registry)
 
@@ -147,17 +125,21 @@ class DockerRegistryApi(
         }
 
         // First try to get the manifest list
-        val manifestListResponse = client.get("$registry/v2/${imageRef.repository}/manifests/${imageRef.tag}") {
+        val manifestListResponse = client.get(
+            "$registry/v2/${imageRef.repository}/manifests/${imageRef.tag}"
+        ) {
             // Only add Authorization header if we have a token
             if (!authToken.isNullOrEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
-            header(HttpHeaders.Accept, listOf(
-                "application/vnd.docker.distribution.manifest.list.v2+json",
-                "application/vnd.oci.image.index.v1+json",
-                "application/vnd.docker.distribution.manifest.v2+json",
-                "application/vnd.oci.image.manifest.v1+json"
-            ).joinToString(", "))
+            header(
+                HttpHeaders.Accept, listOf(
+                    "application/vnd.docker.distribution.manifest.list.v2+json",
+                    "application/vnd.oci.image.index.v1+json",
+                    "application/vnd.docker.distribution.manifest.v2+json",
+                    "application/vnd.oci.image.manifest.v1+json"
+                ).joinToString(", ")
+            )
         }
 
         val contentType = manifestListResponse.contentType()?.toString() ?: ""
@@ -179,6 +161,7 @@ class DockerRegistryApi(
                 // Get the specific manifest
                 getManifestByDigest(imageRef, platformManifest.digest).getOrThrow()
             }
+
             else -> {
                 // Direct manifest
                 json.decodeFromString(bodyText)
@@ -203,10 +186,12 @@ class DockerRegistryApi(
             if (!authToken.isNullOrEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
-            header(HttpHeaders.Accept, listOf(
-                "application/vnd.docker.distribution.manifest.v2+json",
-                "application/vnd.oci.image.manifest.v1+json"
-            ).joinToString(", "))
+            header(
+                HttpHeaders.Accept, listOf(
+                    "application/vnd.docker.distribution.manifest.v2+json",
+                    "application/vnd.oci.image.manifest.v1+json"
+                ).joinToString(", ")
+            )
         }
 
         response.body()
@@ -287,7 +272,7 @@ class DockerRegistryApi(
             }
             Unit
         }.onFailure { e ->
-            Timber.e("Layer download failed: ${layer.digest.take(16)}", e)
+            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
         }
     }
 
@@ -308,7 +293,8 @@ class DockerRegistryApi(
         for (layer in layers) {
             emit(PullProgress(layer.digest, 0, layer.size, PullStatus.DOWNLOADING))
 
-            val layerFile = File(appConfig.layersDir, "${layer.digest.removePrefix("sha256:")}.tar.gz")
+            val layerFile =
+                File(appConfig.layersDir, "${layer.digest.removePrefix("sha256:")}.tar.gz")
 
             if (!layerFile.exists()) {
                 downloadLayer(imageRef, layer, layerFile) { downloaded, total ->
@@ -323,14 +309,16 @@ class DockerRegistryApi(
     /**
      * Search Docker Hub for images
      */
-    suspend fun search(query: String, limit: Int = 25): Result<List<SearchResultDto>> = runCatching {
-        val response: SearchResponse = client.get("https://hub.docker.com/v2/search/repositories/") {
-            parameter("query", query)
-            parameter("page_size", limit)
-        }.body()
+    suspend fun search(query: String, limit: Int = 25): Result<List<SearchResultDto>> =
+        runCatching {
+            val response: SearchResponse =
+                client.get("https://hub.docker.com/v2/search/repositories/") {
+                    parameter("query", query)
+                    parameter("page_size", limit)
+                }.body()
 
-        response.results
-    }
+            response.results
+        }
 
     /**
      * Get tags for a repository
@@ -342,11 +330,12 @@ class DockerRegistryApi(
             authenticate(imageRef.repository, registry).getOrThrow()
         }
 
-        val response: TagsListResponse = client.get("$registry/v2/${imageRef.repository}/tags/list") {
-            if (!authToken.isNullOrEmpty()) {
-                header(HttpHeaders.Authorization, "Bearer $authToken")
-            }
-        }.body()
+        val response: TagsListResponse =
+            client.get("$registry/v2/${imageRef.repository}/tags/list") {
+                if (!authToken.isNullOrEmpty()) {
+                    header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+            }.body()
 
         response.tags
     }
@@ -360,9 +349,5 @@ class DockerRegistryApi(
      */
     suspend fun getCurrentMirrorName(): String {
         return registrySettings.getCurrentMirror().name
-    }
-
-    fun close() {
-        client.close()
     }
 }

@@ -2,20 +2,17 @@ package com.adocker.runner.ui.screens.containers
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.adocker.runner.domain.model.ContainerConfig
-import com.adocker.runner.domain.model.LocalImage
-import com.adocker.runner.domain.model.VolumeBinding
 import com.adocker.runner.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +33,6 @@ fun CreateContainerScreen(
     var workingDir by remember { mutableStateOf("/") }
     var envVars by remember { mutableStateOf("") }
     var hostname by remember { mutableStateOf("localhost") }
-    var execMode by remember { mutableStateOf("P1") }
     var autoStart by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -128,7 +124,7 @@ fun CreateContainerScreen(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Container Name (optional)") },
                     placeholder = { Text("Auto-generated if empty") },
-                    leadingIcon = { Icon(Icons.Default.Label, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) },
                     singleLine = true
                 )
 
@@ -177,39 +173,6 @@ fun CreateContainerScreen(
                     supportingText = { Text("Format: KEY=value, one per line") }
                 )
 
-                // Execution mode
-                Text(
-                    text = "Execution Mode",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = execMode == "P1",
-                            onClick = { execMode = "P1" }
-                        )
-                        Text("P1 (SECCOMP)")
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = execMode == "P2",
-                            onClick = { execMode = "P2" }
-                        )
-                        Text("P2 (Compatible)")
-                    }
-                }
-                Text(
-                    text = if (execMode == "P1") "Better performance, may have compatibility issues"
-                    else "More compatible, slower performance",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
 
                 // Auto start option
                 Row(
@@ -244,7 +207,6 @@ fun CreateContainerScreen(
                             workingDir = workingDir.ifBlank { "/" },
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
-                            execMode = execMode
                         )
 
                         if (autoStart) {

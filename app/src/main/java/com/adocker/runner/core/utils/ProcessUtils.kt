@@ -1,12 +1,11 @@
 package com.adocker.runner.core.utils
 
-import android.os.Build
-import android.system.Os
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedReader
@@ -49,62 +48,39 @@ object ProcessUtils {
         // Read stdout
         val stdoutReader = BufferedReader(InputStreamReader(process.inputStream))
         val stderrReader = BufferedReader(InputStreamReader(process.errorStream))
-
-        val stdoutThread = Thread {
+        val stdoutThread = launch {
             stdoutReader.useLines { lines ->
                 lines.forEach { stdout.appendLine(it) }
             }
         }
-
-        val stderrThread = Thread {
+        val stderrThread = launch {
             stderrReader.useLines { lines ->
                 lines.forEach { stderr.appendLine(it) }
             }
         }
-
-        stdoutThread.start()
-        stderrThread.start()
-
         val exitCode = if (timeout > 0) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // API 26+: Use waitFor with timeout
-                val finished = process.waitFor(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)
-                if (!finished) {
-                    process.destroyForcibly()
-                    -1
-                } else {
-                    process.exitValue()
-                }
-            } else {
-                // API < 26: Manual timeout implementation
-                val startTime = System.currentTimeMillis()
-                var finished = false
-
-                while (System.currentTimeMillis() - startTime < timeout) {
+            val code = withTimeoutOrNull(timeout) {
+                while (true) {
                     try {
-                        process.exitValue()
-                        finished = true
-                        break
-                    } catch (e: IllegalThreadStateException) {
+                        return@withTimeoutOrNull process.exitValue()
+                    } catch (_: IllegalThreadStateException) {
                         // Process is still running
                         delay(100)
                     }
                 }
-
-                if (!finished) {
-                    process.destroy()
-                    -1
-                } else {
-                    process.exitValue()
-                }
+                throw AssertionError()
+            }
+            if (code != null) {
+                code
+            } else {
+                process.destroy()
+                -1
             }
         } else {
             process.waitFor()
         }
-
         stdoutThread.join()
         stderrThread.join()
-
         ProcessResult(
             exitCode = exitCode,
             stdout = stdout.toString().trim(),
@@ -153,30 +129,5 @@ object ProcessUtils {
         }
 
         return processBuilder.start()
-    }
-
-    /**
-     * Check if a process is running
-     */
-    fun isProcessRunning(pid: Int): Boolean {
-        return try {
-            val process = Runtime.getRuntime().exec(arrayOf("kill", "-0", pid.toString()))
-            process.waitFor() == 0
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /**
-     * Kill a process by PID
-     */
-    suspend fun killProcess(pid: Int, force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val signal = if (force) "-9" else "-15"
-            val process = Runtime.getRuntime().exec(arrayOf("kill", signal, pid.toString()))
-            process.waitFor() == 0
-        } catch (e: Exception) {
-            false
-        }
     }
 }

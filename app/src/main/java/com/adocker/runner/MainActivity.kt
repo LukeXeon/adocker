@@ -18,10 +18,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Install splash screen - must be before super.onCreate()
         installSplashScreen()
-
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        super.onCreate(savedInstanceState)
         setContent {
             ADockerTheme {
                 Surface(

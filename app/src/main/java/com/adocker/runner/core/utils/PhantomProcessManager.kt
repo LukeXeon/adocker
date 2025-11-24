@@ -17,9 +17,7 @@ import javax.inject.Singleton
  * Manager for handling Android 12+ phantom process restrictions using Shizuku
  */
 @Singleton
-class PhantomProcessManager @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
+class PhantomProcessManager @Inject constructor() {
 
     companion object {
         const val SHIZUKU_PERMISSION_REQUEST_CODE = 1001
@@ -160,7 +158,7 @@ class PhantomProcessManager @Inject constructor(
         // Since newProcess is private, we use the ShizukuRemoteProcess through a helper
         val process = try {
             // Try to use the public API if available
-            val processBuilder = java.lang.ProcessBuilder("sh", "-c", command)
+            val processBuilder = ProcessBuilder("sh", "-c", command)
 
             // Execute via Shizuku using the shell with elevated privileges
             val shellCmd = "sh"

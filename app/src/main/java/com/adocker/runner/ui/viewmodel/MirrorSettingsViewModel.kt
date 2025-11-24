@@ -2,8 +2,8 @@ package com.adocker.runner.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.adocker.runner.core.config.RegistryMirror
 import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.local.entity.MirrorEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,21 +16,21 @@ class MirrorSettingsViewModel @Inject constructor(
     private val registrySettings: RegistrySettingsManager
 ) : ViewModel() {
 
-    val allMirrors: StateFlow<List<RegistryMirror>> = registrySettings.getAllMirrorsFlow()
+    val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrorsFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = RegistrySettingsManager.BUILT_IN_MIRRORS
         )
 
-    val currentMirror: StateFlow<RegistryMirror?> = registrySettings.getCurrentMirrorFlow()
+    val currentMirror: StateFlow<MirrorEntity?> = registrySettings.getCurrentMirrorFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
 
-    fun selectMirror(mirror: RegistryMirror) {
+    fun selectMirror(mirror: MirrorEntity) {
         viewModelScope.launch {
             registrySettings.setMirror(mirror)
         }
@@ -42,7 +42,7 @@ class MirrorSettingsViewModel @Inject constructor(
         }
     }
 
-    fun deleteCustomMirror(mirror: RegistryMirror) {
+    fun deleteCustomMirror(mirror: MirrorEntity) {
         viewModelScope.launch {
             registrySettings.deleteCustomMirror(mirror)
         }

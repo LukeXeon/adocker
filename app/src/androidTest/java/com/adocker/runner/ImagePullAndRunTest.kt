@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.config.RegistrySettingsManager
-import com.adocker.runner.data.local.AppDatabase
 import com.adocker.runner.data.remote.api.DockerRegistryApi
 import com.adocker.runner.data.repository.ContainerRepository
 import com.adocker.runner.data.repository.ImageRepository
@@ -14,6 +13,7 @@ import com.adocker.runner.domain.model.ContainerStatus
 import com.adocker.runner.domain.model.PullStatus
 import com.adocker.runner.engine.executor.ContainerExecutor
 import com.adocker.runner.engine.proot.PRootEngine
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
@@ -56,10 +56,19 @@ class ImagePullAndRunTest {
     @Inject
     lateinit var containerRepository: ContainerRepository
 
-    private lateinit var context: Context
-    private var prootEngine: PRootEngine? = null
-    private var containerExecutor: ContainerExecutor? = null
-    private var prootAvailable = false
+    @Inject
+    @ApplicationContext
+    lateinit var context: Context
+
+    @Inject
+    lateinit var prootEngine: PRootEngine
+
+    @Inject
+    lateinit var containerExecutor: ContainerExecutor
+
+    @Inject
+    lateinit var registryApi: DockerRegistryApi
+    var prootAvailable = false
 
     @Before
     fun setup() {
@@ -78,10 +87,12 @@ class ImagePullAndRunTest {
                 } else {
                     val nativeLibDir = appConfig.nativeLibDir
                     val prootFile = File(nativeLibDir, "libproot.so")
-                    Log.w("ImagePullAndRunTest",
+                    Log.w(
+                        "ImagePullAndRunTest",
                         "PRoot not available. Binary exists: ${prootFile.exists()}, " +
-                        "Executable: ${prootFile.canExecute()}, " +
-                        "Path: ${prootFile.absolutePath}")
+                                "Executable: ${prootFile.canExecute()}, " +
+                                "Path: ${prootFile.absolutePath}"
+                    )
                 }
             } catch (e: Exception) {
                 // PRoot not available, skip PRoot-dependent tests
@@ -108,7 +119,10 @@ class ImagePullAndRunTest {
         val prootBinary = File(nativeLibDir, "libproot.so")
 
         Log.d("ImagePullAndRunTest", "Native lib dir: ${nativeLibDir.absolutePath}")
-        Log.d("ImagePullAndRunTest", "PRoot binary: ${prootBinary.absolutePath}, exists: ${prootBinary.exists()}")
+        Log.d(
+            "ImagePullAndRunTest",
+            "PRoot binary: ${prootBinary.absolutePath}, exists: ${prootBinary.exists()}"
+        )
 
         // List all files in native lib dir for debugging
         nativeLibDir.listFiles()?.forEach { file ->
@@ -119,7 +133,7 @@ class ImagePullAndRunTest {
             throw IllegalStateException("PRoot binary not found in native lib dir: ${prootBinary.absolutePath}")
         }
 
-        return PRootEngine(prootBinary, nativeLibDir, appConfig)
+        return PRootEngine(appConfig)
     }
 
     @Test
@@ -127,15 +141,20 @@ class ImagePullAndRunTest {
         runBlocking {
             // Test that we can reach the configured registry mirror
             val currentMirror = registrySettings.getCurrentMirror()
-            Log.i("ImagePullAndRunTest", "Testing connectivity to: ${currentMirror.name} (${currentMirror.url})")
+            Log.i(
+                "ImagePullAndRunTest",
+                "Testing connectivity to: ${currentMirror.name} (${currentMirror.url})"
+            )
 
             try {
                 // Try to get a token for library/alpine
-                val registryApi = DockerRegistryApi(registrySettings, appConfig)
                 val result = registryApi.authenticate("library/alpine", currentMirror.url)
 
                 if (result.isSuccess) {
-                    Log.i("ImagePullAndRunTest", "Successfully authenticated with ${currentMirror.name}")
+                    Log.i(
+                        "ImagePullAndRunTest",
+                        "Successfully authenticated with ${currentMirror.name}"
+                    )
                     assertNotNull("Auth token should not be null", result.getOrNull())
                 } else {
                     val exception = result.exceptionOrNull()
@@ -145,7 +164,8 @@ class ImagePullAndRunTest {
                     if (exception is java.net.ConnectException ||
                         exception is java.net.UnknownHostException ||
                         exception is java.net.SocketTimeoutException ||
-                        exception?.cause is java.net.ConnectException) {
+                        exception?.cause is java.net.ConnectException
+                    ) {
                         assumeTrue("Skipping test - network error: ${exception.message}", false)
                         return@runBlocking
                     }
@@ -154,10 +174,16 @@ class ImagePullAndRunTest {
                     // In CI/testing environments, network access may be restricted
                 }
             } catch (e: java.net.ConnectException) {
-                Log.w("ImagePullAndRunTest", "Registry connectivity test skipped - connection failed: ${e.message}")
+                Log.w(
+                    "ImagePullAndRunTest",
+                    "Registry connectivity test skipped - connection failed: ${e.message}"
+                )
                 assumeTrue("Skipping test - connection failed: ${e.message}", false)
             } catch (e: java.net.UnknownHostException) {
-                Log.w("ImagePullAndRunTest", "Registry connectivity test skipped - host not found: ${e.message}")
+                Log.w(
+                    "ImagePullAndRunTest",
+                    "Registry connectivity test skipped - host not found: ${e.message}"
+                )
                 assumeTrue("Skipping test - host not found: ${e.message}", false)
             } catch (e: Exception) {
                 Log.w("ImagePullAndRunTest", "Registry connectivity test failed: ${e.message}", e)
@@ -221,12 +247,14 @@ class ImagePullAndRunTest {
         assumeTrue("Skipping test - PRoot not available on this device/emulator", prootAvailable)
 
         runBlocking {
-            val executor = containerExecutor!!
 
             // Use default China mirror (DaoCloud) for better connectivity in China
             // The default mirror is already configured in RegistrySettings
             val currentMirror = registrySettings.getCurrentMirror()
-            Log.i("ImagePullAndRunTest", "Using registry mirror: ${currentMirror.name} (${currentMirror.url})")
+            Log.i(
+                "ImagePullAndRunTest",
+                "Using registry mirror: ${currentMirror.name} (${currentMirror.url})"
+            )
 
             // Test with Alpine Linux (small image, ~3MB)
             val testImage = "alpine:latest"
@@ -240,8 +268,10 @@ class ImagePullAndRunTest {
             try {
                 withTimeout(300000) { // 5 minute timeout (longer for slow connections)
                     imageRepository.pullImage(testImage).collect { progress ->
-                        Log.d("ImagePullAndRunTest",
-                            "Pull progress: ${progress.status} - ${progress.layerDigest} - ${progress.downloaded}/${progress.total}")
+                        Log.d(
+                            "ImagePullAndRunTest",
+                            "Pull progress: ${progress.status} - ${progress.layerDigest} - ${progress.downloaded}/${progress.total}"
+                        )
 
                         when (progress.status) {
                             PullStatus.DOWNLOADING -> {
@@ -249,6 +279,7 @@ class ImagePullAndRunTest {
                                     layerCount = maxOf(layerCount, 1)
                                 }
                             }
+
                             PullStatus.DONE -> {
                                 if (progress.layerDigest != "manifest" && progress.layerDigest != "config") {
                                     completedLayers++
@@ -258,11 +289,14 @@ class ImagePullAndRunTest {
                                     pullCompleted = true
                                 }
                             }
+
                             PullStatus.ERROR -> {
                                 lastError = progress.layerDigest
                                 Log.e("ImagePullAndRunTest", "Pull error: ${progress.layerDigest}")
                             }
-                            else -> { /* Continue */ }
+
+                            else -> { /* Continue */
+                            }
                         }
                     }
                 }
@@ -283,7 +317,8 @@ class ImagePullAndRunTest {
                 if (e.message?.contains("resolve host") == true ||
                     e.message?.contains("Network") == true ||
                     e.message?.contains("timeout") == true ||
-                    e.cause is java.net.UnknownHostException) {
+                    e.cause is java.net.UnknownHostException
+                ) {
                     assumeTrue("Skipping test - network error: ${e.message}", false)
                     return@runBlocking
                 }
@@ -302,11 +337,15 @@ class ImagePullAndRunTest {
                 Log.d("ImagePullAndRunTest", "  - ${image.fullName} (${image.id})")
             }
 
-            val pulledImage = images.find { it.repository.contains("alpine") || it.fullName.contains("alpine") }
+            val pulledImage =
+                images.find { it.repository.contains("alpine") || it.fullName.contains("alpine") }
             assertNotNull("Alpine image should be in database after pull", pulledImage)
             assertTrue("Image should have at least one layer", pulledImage!!.layerIds.isNotEmpty())
             assertTrue("Image size should be greater than 0", pulledImage.size > 0)
-            Log.i("ImagePullAndRunTest", "Successfully pulled image: ${pulledImage.fullName}, size: ${pulledImage.size} bytes, layers: ${pulledImage.layerIds.size}")
+            Log.i(
+                "ImagePullAndRunTest",
+                "Successfully pulled image: ${pulledImage.fullName}, size: ${pulledImage.size} bytes, layers: ${pulledImage.layerIds.size}"
+            )
 
             // Step 3: Verify layers are extracted
             pulledImage.layerIds.forEach { digest ->
@@ -321,7 +360,10 @@ class ImagePullAndRunTest {
                     val files = layerDir.listFiles()
                     Log.d("ImagePullAndRunTest", "Layer dir file count: ${files?.size ?: 0}")
                     files?.take(10)?.forEach { file ->
-                        Log.d("ImagePullAndRunTest", "  - ${file.name} (${if (file.isDirectory) "dir" else "file"}, ${file.length()} bytes)")
+                        Log.d(
+                            "ImagePullAndRunTest",
+                            "  - ${file.name} (${if (file.isDirectory) "dir" else "file"}, ${file.length()} bytes)"
+                        )
                     }
 
                     // Check for /bin/sh specifically
@@ -329,21 +371,37 @@ class ImagePullAndRunTest {
                     Log.d("ImagePullAndRunTest", "bin/ directory exists: ${binDir.exists()}")
                     if (binDir.exists()) {
                         val shFile = File(binDir, "sh")
-                        Log.d("ImagePullAndRunTest", "bin list: ${binDir.listFiles().contentToString()}")
-                        Log.d("ImagePullAndRunTest", "bin/sh exists: ${shFile.exists()}, size: ${shFile.length()}")
+                        Log.d(
+                            "ImagePullAndRunTest",
+                            "bin list: ${binDir.listFiles().contentToString()}"
+                        )
+                        Log.d(
+                            "ImagePullAndRunTest",
+                            "bin/sh exists: ${shFile.exists()}, size: ${shFile.length()}"
+                        )
                     }
                 } else {
                     Log.e("ImagePullAndRunTest", "❌ Layer directory DOES NOT EXIST!")
                 }
                 Log.d("ImagePullAndRunTest", "=========================")
 
-                assertTrue("Layer directory should exist: ${layerDir.absolutePath}", layerDir.exists())
-                assertTrue("Layer directory should not be empty", layerDir.listFiles()?.isNotEmpty() == true)
+                assertTrue(
+                    "Layer directory should exist: ${layerDir.absolutePath}",
+                    layerDir.exists()
+                )
+                assertTrue(
+                    "Layer directory should not be empty",
+                    layerDir.listFiles()?.isNotEmpty() == true
+                )
             }
 
             // Step 4: Create container
             val containerConfig = ContainerConfig(
-                cmd = listOf("/bin/sh", "-c", "echo 'Hello from ADocker'; echo 'Test completed successfully'"),
+                cmd = listOf(
+                    "/bin/sh",
+                    "-c",
+                    "echo 'Hello from ADocker'; echo 'Test completed successfully'"
+                ),
                 workingDir = "/",
                 env = emptyMap()
             )
@@ -352,19 +410,30 @@ class ImagePullAndRunTest {
                 name = "test-alpine-${System.currentTimeMillis()}",
                 config = containerConfig
             )
-            assertTrue("Container should be created successfully: ${createResult.exceptionOrNull()?.message}", createResult.isSuccess)
+            assertTrue(
+                "Container should be created successfully: ${createResult.exceptionOrNull()?.message}",
+                createResult.isSuccess
+            )
             val container = createResult.getOrThrow()
             assertNotNull("Container should not be null", container)
-            assertEquals("Container should be in created state initially", ContainerStatus.CREATED, container.status)
+            assertEquals(
+                "Container should be in created state initially",
+                ContainerStatus.CREATED,
+                container.status
+            )
             Log.i("ImagePullAndRunTest", "Created container: ${container.name} (${container.id})")
 
             // Step 5: Execute command in container and capture output
             Log.d("ImagePullAndRunTest", "Executing command in container ${container.id}...")
             val execResult = try {
                 withTimeout(30000) { // 30 second timeout
-                    executor.execInContainer(
+                    containerExecutor.execInContainer(
                         container.id,
-                        listOf("/bin/sh", "-c", "echo 'Hello from ADocker on Alpine Linux!'; uname -a; echo ''; echo 'LibC Information:'; ldd /bin/sh 2>&1 | head -1 || ls -la /lib/libc.musl-*.so* 2>&1; echo ''; echo 'Test completed successfully'")
+                        listOf(
+                            "/bin/sh",
+                            "-c",
+                            "echo 'Hello from ADocker on Alpine Linux!'; uname -a; echo ''; echo 'LibC Information:'; ldd /bin/sh 2>&1 | head -1 || ls -la /lib/libc.musl-*.so* 2>&1; echo ''; echo 'Test completed successfully'"
+                        )
                     ).getOrThrow()
                 }
             } catch (e: Exception) {
@@ -385,15 +454,24 @@ class ImagePullAndRunTest {
             Log.i("ImagePullAndRunTest", "========================================")
 
             // Verify output contains expected messages
-            assertTrue("Container output should contain 'Hello from ADocker'",
-                execResult.output.contains("Hello from ADocker"))
-            assertTrue("Container output should contain 'Alpine'",
-                execResult.output.contains("Alpine") || execResult.output.contains("Linux"))
-            assertTrue("Container output should contain 'Test completed successfully'",
-                execResult.output.contains("Test completed successfully"))
+            assertTrue(
+                "Container output should contain 'Hello from ADocker'",
+                execResult.output.contains("Hello from ADocker")
+            )
+            assertTrue(
+                "Container output should contain 'Alpine'",
+                execResult.output.contains("Alpine") || execResult.output.contains("Linux")
+            )
+            assertTrue(
+                "Container output should contain 'Test completed successfully'",
+                execResult.output.contains("Test completed successfully")
+            )
             assertEquals("Container should exit successfully", 0, execResult.exitCode)
 
-            Log.i("ImagePullAndRunTest", "✅ Test completed successfully! Alpine image pulled, container created and executed with verified output!")
+            Log.i(
+                "ImagePullAndRunTest",
+                "✅ Test completed successfully! Alpine image pulled, container created and executed with verified output!"
+            )
         }
     }
 

@@ -8,10 +8,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import timber.log.Timber
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.security.MessageDigest
 
 object FileUtils {
 
@@ -180,15 +178,6 @@ object FileUtils {
             Timber.d("✓ Hard link created successfully: ${newPath.name} -> ${existingPath.name}")
         } catch (e: Exception) {
             Timber.e(e, "✗ Failed to create hard link ${newPath.name} -> ${existingPath.name}")
-            // Fallback: try copying the file
-            try {
-                if (existingPath.exists()) {
-                    existingPath.copyTo(newPath, overwrite = true)
-                    Timber.d("Copied file as fallback for hard link")
-                }
-            } catch (copyException: Exception) {
-                Timber.e(copyException, "Failed to copy file as fallback")
-            }
         }
     }
 
@@ -202,45 +191,9 @@ object FileUtils {
             Os.chmod(file.absolutePath, mode)
         } catch (e: Exception) {
             Timber.w(e, "Failed to set permissions for ${file.name}: mode=$mode")
-            // Fallback: use Java File API (less precise)
-            val ownerExecute = (mode and 0b001_000_000) != 0
-            val ownerWrite = (mode and 0b010_000_000) != 0
-            val ownerRead = (mode and 0b100_000_000) != 0
-            file.setReadable(ownerRead, true)
-            file.setWritable(ownerWrite, true)
-            file.setExecutable(ownerExecute, true)
         }
     }
 
-    /**
-     * Calculate SHA256 hash of a file
-     */
-    suspend fun sha256(file: File): String = withContext(Dispatchers.IO) {
-        val digest = MessageDigest.getInstance("SHA-256")
-        FileInputStream(file).use { fis ->
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-            while (fis.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
-            }
-        }
-        digest.digest().joinToString("") { "%02x".format(it) }
-    }
-
-    /**
-     * Calculate SHA256 hash from input stream
-     */
-    suspend fun sha256(inputStream: InputStream): String = withContext(Dispatchers.IO) {
-        val digest = MessageDigest.getInstance("SHA-256")
-        inputStream.use { input ->
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-            while (input.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
-            }
-        }
-        digest.digest().joinToString("") { "%02x".format(it) }
-    }
 
     /**
      * Delete directory recursively
@@ -265,13 +218,6 @@ object FileUtils {
             src.copyRecursively(dest, overwrite = true)
             Unit
         }
-    }
-
-    /**
-     * Make file executable
-     */
-    fun makeExecutable(file: File): Boolean {
-        return file.setExecutable(true, false)
     }
 
     /**

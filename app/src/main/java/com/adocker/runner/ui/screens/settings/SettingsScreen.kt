@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    modifier: Modifier = Modifier,
     onNavigateToMirrorSettings: () -> Unit,
     onNavigateToPhantomProcess: () -> Unit = {},
-    modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -133,17 +133,18 @@ fun SettingsScreen(
                 }
             }
 
+
             // About section
             SettingsSection(title = "About") {
                 SettingsItem(
                     icon = Icons.Default.Info,
                     title = "Version",
-                    subtitle = AppConfig.VERSION
+                    subtitle = viewModel.packageInfo.versionName ?: ""
                 )
                 SettingsItem(
                     icon = Icons.Default.Sailing,
                     title = "App Name",
-                    subtitle = AppConfig.APP_NAME
+                    subtitle = viewModel.packageInfo.applicationInfo?.name ?: ""
                 )
                 SettingsItem(
                     icon = Icons.Default.Memory,

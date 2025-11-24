@@ -4,17 +4,16 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistryMirror
 import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.local.entity.MirrorEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.network.sockets.ConnectTimeoutException
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
@@ -165,7 +164,7 @@ class RegistryMirrorConnectivityTest {
         }
     }
 
-    private suspend fun testMirrorConnectivity(mirror: RegistryMirror): MirrorTestResult {
+    private suspend fun testMirrorConnectivity(mirror: MirrorEntity): MirrorTestResult {
         return try {
             val startTime = System.currentTimeMillis()
 
@@ -195,11 +194,12 @@ class RegistryMirrorConnectivityTest {
         }
     }
 
-    private suspend fun testMirrorAuthentication(mirror: RegistryMirror): AuthTestResult {
+    private suspend fun testMirrorAuthentication(mirror: MirrorEntity): AuthTestResult {
         return try {
             // Try to get an auth token for library/alpine
+            // Use Docker's default auth server
             val authUrl =
-                "${mirror.authUrl}/token?service=${AppConfig.DEFAULT_REGISTRY_SERVICE}&scope=repository:library/alpine:pull"
+                "https://auth.docker.io/token?service=${AppConfig.DEFAULT_REGISTRY_SERVICE}&scope=repository:library/alpine:pull"
             val response = client.get(authUrl)
 
             if (response.status == HttpStatusCode.OK) {
@@ -213,7 +213,7 @@ class RegistryMirrorConnectivityTest {
     }
 
     data class MirrorTestResult(
-        val mirror: RegistryMirror,
+        val mirror: MirrorEntity,
         val isAccessible: Boolean,
         val latencyMs: Long,
         val error: String?

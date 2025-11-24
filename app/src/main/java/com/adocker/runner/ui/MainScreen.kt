@@ -50,7 +50,7 @@ fun MainScreen() {
     // Note: PhantomProcessManager is @Singleton and injected via Hilt in ViewModels
     // Here we create a local instance for startup check
     val phantomProcessManager = remember(context) {
-        PhantomProcessManager(context)
+        PhantomProcessManager()
     }
 
     // Phantom process warning state

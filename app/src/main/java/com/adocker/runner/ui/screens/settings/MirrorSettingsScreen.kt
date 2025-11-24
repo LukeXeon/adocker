@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.adocker.runner.core.config.RegistryMirror
+import com.adocker.runner.data.local.entity.MirrorEntity
 import com.adocker.runner.ui.viewmodel.MirrorSettingsViewModel
 import kotlinx.coroutines.launch
 
@@ -29,7 +29,7 @@ fun MirrorSettingsScreen(
     val currentMirror by viewModel.currentMirror.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var mirrorToDelete by remember { mutableStateOf<RegistryMirror?>(null) }
+    var mirrorToDelete by remember { mutableStateOf<MirrorEntity?>(null) }
 
     Scaffold(
         topBar = {
@@ -158,7 +158,7 @@ fun MirrorSettingsScreen(
 
 @Composable
 private fun MirrorCard(
-    mirror: RegistryMirror,
+    mirror: MirrorEntity,
     isSelected: Boolean,
     onSelect: () -> Unit,
     onDelete: (() -> Unit)?

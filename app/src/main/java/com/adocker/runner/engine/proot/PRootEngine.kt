@@ -1,10 +1,13 @@
 package com.adocker.runner.engine.proot
 
+import androidx.annotation.WorkerThread
 import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.ProcessUtils
 import com.adocker.runner.domain.model.Container
 import com.adocker.runner.domain.model.ContainerConfig
 import com.adocker.runner.domain.model.ExecResult
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -12,6 +15,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * PRoot execution engine - equivalent to udocker's PRootEngine
@@ -27,17 +32,35 @@ import java.io.File
  * Therefore, PRoot must be executed directly from the native library directory where
  * it was extracted from the APK's jniLibs folder.
  */
-class PRootEngine(
-    private val prootBinary: File,
-    private val nativeLibDir: File?,
+@Singleton
+class PRootEngine @WorkerThread @Inject constructor(
     private val appConfig: AppConfig
 ) {
-    companion object {
-        private const val TAG = "PRootEngine"
+    private val nativeLibDir = appConfig.nativeLibDir
 
-        // PRoot execution modes
-        const val MODE_P1 = "P1"  // With SECCOMP
-        const val MODE_P2 = "P2"  // Without SECCOMP (more compatible but slower)
+    /**
+     * Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
+     * */
+    private val prootBinary = File(nativeLibDir, "libproot.so")
+
+    init {
+        when {
+            !prootBinary.canExecute() -> {
+                Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
+            }
+
+            !prootBinary.exists() -> {
+                Timber.d("PRoot binary not found at: ${prootBinary.absolutePath}")
+            }
+
+            else -> {
+                Timber.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
+                // List files in native lib dir for debugging
+                nativeLibDir.listFiles()?.forEach { file ->
+                    Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
+                }
+            }
+        }
     }
 
     /**
@@ -47,7 +70,6 @@ class PRootEngine(
         container: Container,
         rootfsDir: File,
         command: List<String>? = null,
-        mode: String = MODE_P1
     ): List<String> {
         val config = container.config
         val cmd = mutableListOf<String>()
@@ -164,11 +186,9 @@ class PRootEngine(
         val env = mutableMapOf<String, String>()
 
         // Set PROOT_LOADER - must point to loader in native lib dir
-        nativeLibDir?.let { libDir ->
-            val loaderPath = File(libDir, "libproot_loader.so")
-            if (loaderPath.exists()) {
-                env["PROOT_LOADER"] = loaderPath.absolutePath
-            }
+        val loaderPath = File(nativeLibDir, "libproot_loader.so")
+        if (loaderPath.exists()) {
+            env["PROOT_LOADER"] = loaderPath.absolutePath
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
@@ -201,10 +221,9 @@ class PRootEngine(
     suspend fun startContainer(
         container: Container,
         rootfsDir: File,
-        mode: String = MODE_P1
     ): Result<Process> = withContext(Dispatchers.IO) {
         runCatching {
-            val command = buildCommand(container, rootfsDir, mode = mode)
+            val command = buildCommand(container, rootfsDir)
             val env = buildEnvironment(container)
 
             ProcessUtils.startInteractiveProcess(
@@ -222,16 +241,14 @@ class PRootEngine(
         container: Container,
         rootfsDir: File,
         command: List<String>,
-        mode: String = MODE_P1,
         timeout: Long = 0
     ): Result<ExecResult> = withContext(Dispatchers.IO) {
         runCatching {
-            val prootCommand = buildCommand(container, rootfsDir, command, mode)
+            val prootCommand = buildCommand(container, rootfsDir, command)
             val env = buildEnvironment(container)
 
             Timber.d("=== EXEC IN CONTAINER ===")
             Timber.d("Command to execute: $command")
-            Timber.d("Mode: $mode")
             Timber.d("PRoot command size: ${prootCommand.size}")
             prootCommand.forEachIndexed { index, arg ->
                 Timber.d("  [$index] = '$arg'")
@@ -259,9 +276,8 @@ class PRootEngine(
         container: Container,
         rootfsDir: File,
         command: List<String>,
-        mode: String = MODE_P1
     ): Flow<String> = flow {
-        val prootCommand = buildCommand(container, rootfsDir, command, mode)
+        val prootCommand = buildCommand(container, rootfsDir, command)
         val env = buildEnvironment(container)
 
         ProcessUtils.executeStreaming(
@@ -283,15 +299,13 @@ class PRootEngine(
      */
     private fun buildProotEnvironment(): Map<String, String> {
         val env = mutableMapOf<String, String>()
-        nativeLibDir?.let { libDir ->
-            // The loader is packaged as libproot_loader.so in jniLibs
-            val loaderPath = File(libDir, "libproot_loader.so")
-            if (loaderPath.exists()) {
-                env["PROOT_LOADER"] = loaderPath.absolutePath
-                Timber.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
-            } else {
-                Timber.w("PRoot loader not found at: ${loaderPath.absolutePath}")
-            }
+        // The loader is packaged as libproot_loader.so in jniLibs
+        val loaderPath = File(nativeLibDir, "libproot_loader.so")
+        if (loaderPath.exists()) {
+            env["PROOT_LOADER"] = loaderPath.absolutePath
+            Timber.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
+        } else {
+            Timber.w("PRoot loader not found at: ${loaderPath.absolutePath}")
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory

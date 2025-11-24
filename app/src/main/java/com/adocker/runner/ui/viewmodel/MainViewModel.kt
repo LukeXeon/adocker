@@ -218,12 +218,16 @@ class MainViewModel @Inject constructor(
         val stoppedContainers: Int
     )
 
-    val stats: StateFlow<Stats> = combine(images, containers) { imgs, ctrs ->
+    val stats: StateFlow<Stats> = combine(images, containers) { images, containers ->
         Stats(
-            totalImages = imgs.size,
-            totalContainers = ctrs.size,
-            runningContainers = ctrs.count { it.status == ContainerStatus.RUNNING },
-            stoppedContainers = ctrs.count { it.status != ContainerStatus.RUNNING }
+            totalImages = images.size,
+            totalContainers = containers.size,
+            runningContainers = containers.count { it.status == ContainerStatus.RUNNING },
+            stoppedContainers = containers.count { it.status != ContainerStatus.RUNNING }
         )
-    }.stateIn(viewModelScope, SharingStarted.Lazily, Stats(0, 0, 0, 0))
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        Stats(0, 0, 0, 0)
+    )
 }
