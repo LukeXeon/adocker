@@ -130,6 +130,12 @@
     <string name="mirror_settings_url_label">Mirror URL</string>
     <string name="mirror_settings_url_placeholder">https://registry.example.com</string>
     <string name="mirror_settings_url_hint">Must start with https://</string>
+    <string name="mirror_settings_token_label">Bearer Token (Optional)</string>
+    <string name="mirror_settings_token_placeholder">Leave empty if not required</string>
+    <string name="mirror_settings_scan_qr">Scan QR Code</string>
+    <string name="mirror_settings_import_success">Mirror imported successfully</string>
+    <string name="mirror_settings_import_error">Invalid QR code format</string>
+    <string name="mirror_settings_has_token">With Token</string>
 
     <!-- Phantom process management -->
     <string name="phantom_title">Phantom Process Management</string>

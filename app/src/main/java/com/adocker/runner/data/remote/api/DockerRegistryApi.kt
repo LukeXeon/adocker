@@ -43,10 +43,11 @@ class DockerRegistryApi @Inject constructor(
      * Get authentication token for Docker Hub or mirror
      *
      * Implements Docker Registry V2 authentication flow:
-     * 1. Try to access /v2/ endpoint without auth to get WWW-Authenticate header
-     * 2. Parse the WWW-Authenticate header to extract auth service URL
-     * 3. Request anonymous token from auth service
-     * 4. Use token for subsequent requests
+     * 1. Check if mirror has a configured Bearer Token - use it directly if available
+     * 2. Otherwise, try to access /v2/ endpoint without auth to get WWW-Authenticate header
+     * 3. Parse the WWW-Authenticate header to extract auth service URL
+     * 4. Request anonymous token from auth service
+     * 5. Use token for subsequent requests
      */
     suspend fun authenticate(
         repository: String,
@@ -55,6 +56,15 @@ class DockerRegistryApi @Inject constructor(
         Timber.d("Authenticating for repository: $repository, registry: $registry")
 
         try {
+            // Check if current mirror has a Bearer Token configured
+            val currentMirror = registrySettings.getCurrentMirror()
+            if (!currentMirror.bearerToken.isNullOrEmpty()) {
+                Timber.i("Using configured Bearer Token from mirror: ${currentMirror.name}")
+                authToken = currentMirror.bearerToken
+                tokenExpiry = System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
+                return@runCatching currentMirror.bearerToken
+            }
+
             // Step 1: Try to access /v2/ without auth to get WWW-Authenticate header
             val pingResponse = client.get("$registry/v2/") {
                 // Don't follow redirects, we want to see 401

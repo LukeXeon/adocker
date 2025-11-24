@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.adocker.runner.core.utils.PhantomProcessManager
+import com.adocker.runner.ui.screens.qrcode.MirrorQRCode
 import com.adocker.runner.ui.components.PhantomProcessWarningDialog
 import com.adocker.runner.ui.navigation.Screen
 import com.adocker.runner.ui.navigation.bottomNavItems
@@ -21,7 +22,7 @@ import com.adocker.runner.ui.screens.containers.CreateContainerScreen
 import com.adocker.runner.ui.screens.home.HomeScreen
 import com.adocker.runner.ui.screens.images.ImagesScreen
 import com.adocker.runner.ui.screens.images.PullImageScreen
-import com.adocker.runner.ui.screens.images.QRCodeScannerScreen
+import com.adocker.runner.ui.screens.qrcode.QRCodeScannerScreen
 import com.adocker.runner.ui.screens.settings.MirrorSettingsScreen
 import com.adocker.runner.ui.screens.settings.PhantomProcessScreen
 import com.adocker.runner.ui.screens.settings.SettingsScreen
@@ -45,7 +46,7 @@ fun MainScreen() {
         }
     }
 
-    val mainViewModel: MainViewModel = hiltViewModel()
+    val mainViewModel = hiltViewModel<MainViewModel>()
 
     // Create PhantomProcessManager instance
     // Note: PhantomProcessManager is @Singleton and injected via Hilt in ViewModels
@@ -89,7 +90,8 @@ fun MainScreen() {
             if (showBottomBar) {
                 NavigationBar {
                     bottomNavItems.forEach { screen ->
-                        val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                        val selected =
+                            currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
                         NavigationBarItem(
                             icon = {
@@ -178,11 +180,27 @@ fun MainScreen() {
             }
 
             // Mirror Settings
-            composable(Screen.MirrorSettings.route) {
+            composable(Screen.MirrorSettings.route) { backStackEntry ->
+                val scannedMirror = backStackEntry.savedStateHandle
+                    .getStateFlow<String?>("scanned_mirror", null)
+                    .collectAsState()
+
+                // Process scanned mirror data
+                LaunchedEffect(scannedMirror.value) {
+                    if (scannedMirror.value != null) {
+                        // Will be handled by MirrorSettingsScreen
+                        backStackEntry.savedStateHandle.remove<String>("scanned_mirror")
+                    }
+                }
+
                 MirrorSettingsScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    onNavigateToQRScanner = {
+                        navController.navigate(Screen.QRCodeScanner.route)
+                    },
+                    scannedMirrorData = scannedMirror.value,
                 )
             }
 
@@ -223,11 +241,28 @@ fun MainScreen() {
             // QR Code Scanner
             composable(Screen.QRCodeScanner.route) {
                 QRCodeScannerScreen(
-                    onBarcodeScanned = { imageName ->
-                        // Set the scanned image to the previous screen's savedStateHandle
+                    onBarcodeScanned = { data ->
+                        // Try to parse as mirror QR code first
+                        try {
+                            val json = mainViewModel.json
+                            val mirrorQRCode = json.runCatching {
+                                decodeFromString<MirrorQRCode>(data)
+                            }.getOrNull()
+                            if (mirrorQRCode != null) {
+                                // It's a mirror QR code
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("scanned_mirror", data)
+                                navController.popBackStack()
+                                return@QRCodeScannerScreen
+                            }
+                        } catch (_: Exception) {
+                            // Not a mirror QR code, try as image name
+                        }
+                        // Treat as image name
                         navController.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set("scanned_image", imageName)
+                            ?.set("scanned_image", data)
                         navController.popBackStack()
                     },
                     onNavigateBack = {
@@ -256,7 +291,7 @@ fun MainScreen() {
                 route = Screen.Terminal.route,
                 arguments = listOf(navArgument("containerId") { type = NavType.StringType })
             ) {
-                val terminalViewModel: TerminalViewModel = hiltViewModel()
+                val terminalViewModel = hiltViewModel<TerminalViewModel>()
                 TerminalScreen(
                     viewModel = terminalViewModel,
                     onNavigateBack = {

@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @HiltViewModel
 class MirrorSettingsViewModel @Inject constructor(
-    private val registrySettings: RegistryRepository
+    private val registrySettings: RegistryRepository,
+    val json: Json,
 ) : ViewModel() {
 
     val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrorsFlow()
@@ -36,9 +38,9 @@ class MirrorSettingsViewModel @Inject constructor(
         }
     }
 
-    fun addCustomMirror(name: String, url: String) {
+    fun addCustomMirror(name: String, url: String, token: String? = null) {
         viewModelScope.launch {
-            registrySettings.addCustomMirror(name, url)
+            registrySettings.addCustomMirror(name, url, token)
         }
     }
 

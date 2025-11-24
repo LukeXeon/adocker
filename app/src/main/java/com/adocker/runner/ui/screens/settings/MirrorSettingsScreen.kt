@@ -15,20 +15,48 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.adocker.runner.R
 import com.adocker.runner.data.local.model.MirrorEntity
+import com.adocker.runner.ui.screens.qrcode.MirrorQRCode
 import com.adocker.runner.ui.viewmodel.MirrorSettingsViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MirrorSettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: MirrorSettingsViewModel = hiltViewModel()
+    onNavigateToQRScanner: () -> Unit,
+    scannedMirrorData: String? = null,
 ) {
+    val viewModel = hiltViewModel<MirrorSettingsViewModel>()
+    val json = viewModel.json
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val mirrors by viewModel.allMirrors.collectAsState()
     val currentMirror by viewModel.currentMirror.collectAsState()
+
+    // Handle scanned mirror data
+    LaunchedEffect(scannedMirrorData) {
+        if (scannedMirrorData != null) {
+            try {
+                val mirrorQRCode = json.runCatching {
+                    decodeFromString<MirrorQRCode>(scannedMirrorData)
+                }.getOrNull()
+                if (mirrorQRCode != null) {
+                    viewModel.addCustomMirror(
+                        mirrorQRCode.name,
+                        mirrorQRCode.url,
+                        mirrorQRCode.bearerToken
+                    )
+                    snackbarHostState.showSnackbar("Mirror imported: ${mirrorQRCode.name}")
+                } else {
+                    snackbarHostState.showSnackbar("Invalid QR code format")
+                }
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar("Failed to import mirror: ${e.message}")
+            }
+        }
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var mirrorToDelete by remember { mutableStateOf<MirrorEntity?>(null) }
@@ -39,12 +67,24 @@ fun MirrorSettingsScreen(
                 title = { Text(stringResource(R.string.mirror_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToQRScanner) {
+                        Icon(
+                            Icons.Default.QrCodeScanner,
+                            contentDescription = stringResource(R.string.mirror_settings_scan_qr)
+                        )
+                    }
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.mirror_settings_add))
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.mirror_settings_add)
+                        )
                     }
                 }
             )
@@ -116,8 +156,8 @@ fun MirrorSettingsScreen(
     if (showAddDialog) {
         AddMirrorDialog(
             onDismiss = { showAddDialog = false },
-            onAdd = { name, url ->
-                viewModel.addCustomMirror(name, url)
+            onAdd = { name, url, token ->
+                viewModel.addCustomMirror(name, url, token)
                 showAddDialog = false
                 scope.launch {
                     snackbarHostState.showSnackbar("Mirror added: $name")
@@ -202,7 +242,12 @@ private fun MirrorCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         AssistChip(
                             onClick = { },
-                            label = { Text("Default", style = MaterialTheme.typography.labelSmall) },
+                            label = {
+                                Text(
+                                    "Default",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
                             modifier = Modifier.height(24.dp)
                         )
                     }
@@ -223,6 +268,13 @@ private fun MirrorCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!mirror.bearerToken.isNullOrEmpty()) {
+                    Text(
+                        text = stringResource(R.string.mirror_settings_has_token),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             onDelete?.let {
                 IconButton(onClick = it) {
@@ -240,10 +292,11 @@ private fun MirrorCard(
 @Composable
 private fun AddMirrorDialog(
     onDismiss: () -> Unit,
-    onAdd: (name: String, url: String) -> Unit
+    onAdd: (name: String, url: String, token: String?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("https://") }
+    var token by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
     var urlError by remember { mutableStateOf<String?>(null) }
 
@@ -285,6 +338,16 @@ private fun AddMirrorDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = token,
+                    onValueChange = { token = it },
+                    label = { Text(stringResource(R.string.mirror_settings_token_label)) },
+                    placeholder = { Text(stringResource(R.string.mirror_settings_token_placeholder)) },
+                    singleLine = false,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
@@ -303,7 +366,10 @@ private fun AddMirrorDialog(
                         hasError = true
                     }
                     if (!hasError) {
-                        onAdd(name.trim(), url.trim().removeSuffix("/"))
+                        onAdd(
+                            name.trim(),
+                            url.trim().removeSuffix("/"),
+                            token.trim().takeIf { it.isNotEmpty() })
                     }
                 }
             ) {

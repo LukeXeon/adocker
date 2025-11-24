@@ -19,7 +19,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
     private val containerRepository: ContainerRepository,
-    private val containerExecutor: ContainerExecutor?
+    private val containerExecutor: ContainerExecutor?,
+    val json: kotlinx.serialization.json.Json
 ) : ViewModel() {
 
     // Images

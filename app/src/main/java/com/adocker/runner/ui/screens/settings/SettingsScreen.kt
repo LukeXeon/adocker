@@ -25,8 +25,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onNavigateToMirrorSettings: () -> Unit,
     onNavigateToPhantomProcess: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val viewModel = hiltViewModel<SettingsViewModel>()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 

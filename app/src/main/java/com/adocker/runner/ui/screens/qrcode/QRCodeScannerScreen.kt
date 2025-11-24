@@ -1,4 +1,4 @@
-package com.adocker.runner.ui.screens.images
+package com.adocker.runner.ui.screens.qrcode
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -31,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.adocker.runner.R
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
@@ -49,7 +50,6 @@ fun QRCodeScannerScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -325,7 +325,7 @@ fun QRCodeScannerScreen(
     }
 }
 
-@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
 private fun CameraPreview(
     flashEnabled: Boolean,
@@ -412,7 +412,7 @@ private fun CameraPreview(
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 private fun processImageProxy(
-    barcodeScanner: com.google.mlkit.vision.barcode.BarcodeScanner,
+    barcodeScanner: BarcodeScanner,
     imageProxy: ImageProxy,
     onBarcodeDetected: (Barcode) -> Unit
 ) {

@@ -28,6 +28,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun imageDao(): ImageDao
     abstract fun containerDao(): ContainerDao
     abstract fun layerDao(): LayerDao
-
     abstract fun mirrorDao(): MirrorDao
 }

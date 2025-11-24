@@ -95,18 +95,28 @@ class RegistryRepository @Inject constructor(
     /**
      * Add a custom mirror
      */
-    suspend fun addCustomMirror(name: String, url: String) {
+    suspend fun addCustomMirror(name: String, url: String, bearerToken: String? = null) {
         ensureInitialized()
 
         val newMirror = MirrorEntity(
             url = url.removeSuffix("/"),
             name = name,
+            bearerToken = bearerToken,
             isDefault = false,
             isBuiltIn = false,
             isSelected = false
         )
 
         mirrorDao.insertMirror(newMirror)
+    }
+
+    /**
+     * Update mirror bearer token
+     */
+    suspend fun updateMirrorToken(url: String, bearerToken: String?) {
+        val mirror = mirrorDao.getAllMirrors().first().find { it.url == url } ?: return
+        val updatedMirror = mirror.copy(bearerToken = bearerToken)
+        mirrorDao.insertMirror(updatedMirror)
     }
 
     /**

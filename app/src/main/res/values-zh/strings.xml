@@ -130,6 +130,12 @@
     <string name="mirror_settings_url_label">镜像源地址</string>
     <string name="mirror_settings_url_placeholder">https://registry.example.com</string>
     <string name="mirror_settings_url_hint">必须以 https:// 开头</string>
+    <string name="mirror_settings_token_label">Bearer Token（可选）</string>
+    <string name="mirror_settings_token_placeholder">如不需要请留空</string>
+    <string name="mirror_settings_scan_qr">扫描二维码</string>
+    <string name="mirror_settings_import_success">镜像源导入成功</string>
+    <string name="mirror_settings_import_error">无效的二维码格式</string>
+    <string name="mirror_settings_has_token">已配置 Token</string>
 
     <!-- 幻影进程管理 -->
     <string name="phantom_title">幻影进程管理</string>

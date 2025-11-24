@@ -8,6 +8,7 @@ data class MirrorEntity(
     @PrimaryKey
     val url: String,
     val name: String,
+    val bearerToken: String? = null,
     val isDefault: Boolean = false,
     val isBuiltIn: Boolean = true,
     val isSelected: Boolean = false
