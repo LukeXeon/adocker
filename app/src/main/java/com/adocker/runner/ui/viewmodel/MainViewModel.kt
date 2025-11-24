@@ -2,11 +2,13 @@ package com.adocker.runner.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.adocker.runner.data.local.entity.ContainerEntity
-import com.adocker.runner.data.local.entity.ImageEntity
+import com.adocker.runner.data.local.model.ContainerConfig
+import com.adocker.runner.data.local.model.ContainerEntity
+import com.adocker.runner.data.local.model.ContainerStatus
+import com.adocker.runner.data.local.model.ImageEntity
 import com.adocker.runner.data.repository.ContainerRepository
 import com.adocker.runner.data.repository.ImageRepository
-import com.adocker.runner.domain.model.*
+import com.adocker.runner.data.repository.model.PullProgress
 import com.adocker.runner.engine.executor.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -29,8 +31,8 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
-    private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
-    val searchResults: StateFlow<List<SearchResult>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<com.adocker.runner.data.remote.model.SearchResult>>(emptyList())
+    val searchResults: StateFlow<List<com.adocker.runner.data.remote.model.SearchResult>> = _searchResults.asStateFlow()
 
     // Pull progress
     private val _pullProgress = MutableStateFlow<Map<String, PullProgress>>(emptyMap())

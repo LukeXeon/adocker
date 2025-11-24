@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.adocker.runner.data.local.entity.ImageEntity
+import com.adocker.runner.data.local.model.ImageEntity
 import com.adocker.runner.ui.components.ImageCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
 

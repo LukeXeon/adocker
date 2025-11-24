@@ -4,9 +4,9 @@ import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.repository.RegistryRepository
 import com.adocker.runner.core.utils.FileUtils
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.local.model.MirrorEntity
 import com.adocker.runner.engine.proot.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +21,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val prootEngine: PRootEngine?,
     private val appConfig: AppConfig,
-    private val registrySettings: RegistrySettingsManager
+    private val registrySettings: RegistryRepository
 ) : ViewModel() {
 
     private val _storageUsage = MutableStateFlow<Long?>(null)
@@ -33,7 +33,7 @@ class SettingsViewModel @Inject constructor(
     private val _currentMirror = MutableStateFlow<MirrorEntity?>(null)
     val currentMirror: StateFlow<MirrorEntity?> = _currentMirror.asStateFlow()
 
-    val availableMirrors: List<MirrorEntity> = RegistrySettingsManager.AVAILABLE_MIRRORS
+    val availableMirrors: List<MirrorEntity> = RegistryRepository.AVAILABLE_MIRRORS
 
     val architecture: String = appConfig.architecture
     val baseDir: String = appConfig.baseDir.absolutePath

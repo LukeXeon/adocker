@@ -3,7 +3,7 @@ package com.adocker.runner
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.repository.RegistryRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -23,7 +23,7 @@ class BasicFunctionalityTest {
     lateinit var appConfig: AppConfig
 
     @Inject
-    lateinit var registrySettings: RegistrySettingsManager
+    lateinit var registrySettings: RegistryRepository
 
     private lateinit var context: Context
 
@@ -91,7 +91,7 @@ class BasicFunctionalityTest {
     @Test
     fun registrySettings_cannotDeleteBuiltInMirror() = runBlocking {
         val initialCount = registrySettings.getAllMirrors().size
-        val builtInMirror = RegistrySettingsManager.BUILT_IN_MIRRORS.first()
+        val builtInMirror = RegistryRepository.BUILT_IN_MIRRORS.first()
 
         // Try to delete built-in mirror
         registrySettings.deleteCustomMirror(builtInMirror)
@@ -103,7 +103,7 @@ class BasicFunctionalityTest {
 
     @Test
     fun registrySettings_canSwitchMirrors() = runBlocking {
-        val dockerHubMirror = RegistrySettingsManager.BUILT_IN_MIRRORS.find { it.name.contains("Docker Hub") }
+        val dockerHubMirror = RegistryRepository.BUILT_IN_MIRRORS.find { it.name.contains("Docker Hub") }
         assertNotNull("Docker Hub mirror should exist", dockerHubMirror)
 
         // Switch to Docker Hub
@@ -114,8 +114,8 @@ class BasicFunctionalityTest {
         assertEquals("Should be Docker Hub", dockerHubMirror.url, currentMirror.url)
 
         // Switch back to default
-        registrySettings.setMirror(RegistrySettingsManager.getDefaultMirror())
+        registrySettings.setMirror(RegistryRepository.getDefaultMirror())
         val resetMirror = registrySettings.getCurrentMirror()
-        assertEquals("Should be back to default", RegistrySettingsManager.getDefaultMirror().url, resetMirror.url)
+        assertEquals("Should be back to default", RegistryRepository.getDefaultMirror().url, resetMirror.url)
     }
 }

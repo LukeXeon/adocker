@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.adocker.runner.data.local.entity.LayerEntity
+import com.adocker.runner.data.local.model.LayerEntity
 
 @Dao
 interface LayerDao {

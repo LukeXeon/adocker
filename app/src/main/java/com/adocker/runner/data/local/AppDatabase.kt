@@ -7,11 +7,11 @@ import com.adocker.runner.data.local.dao.ContainerDao
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.dao.LayerDao
 import com.adocker.runner.data.local.dao.MirrorDao
-import com.adocker.runner.data.local.entity.ContainerEntity
-import com.adocker.runner.data.local.entity.Converters
-import com.adocker.runner.data.local.entity.ImageEntity
-import com.adocker.runner.data.local.entity.LayerEntity
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.local.model.ContainerEntity
+import com.adocker.runner.data.local.model.Converters
+import com.adocker.runner.data.local.model.ImageEntity
+import com.adocker.runner.data.local.model.LayerEntity
+import com.adocker.runner.data.local.model.MirrorEntity
 
 @Database(
     entities = [

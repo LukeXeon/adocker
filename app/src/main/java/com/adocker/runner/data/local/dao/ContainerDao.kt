@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.adocker.runner.data.local.entity.ContainerEntity
-import com.adocker.runner.domain.model.ContainerStatus
+import com.adocker.runner.data.local.model.ContainerEntity
+import com.adocker.runner.data.local.model.ContainerStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao

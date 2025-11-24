@@ -20,11 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.adocker.runner.core.utils.FileUtils
-import com.adocker.runner.data.local.entity.ContainerEntity
-import com.adocker.runner.data.local.entity.ImageEntity
-import com.adocker.runner.domain.model.ContainerStatus
-import com.adocker.runner.domain.model.PullProgress
-import com.adocker.runner.domain.model.SearchResult
+import com.adocker.runner.data.local.model.ContainerEntity
+import com.adocker.runner.data.local.model.ImageEntity
+import com.adocker.runner.data.remote.model.SearchResult
+import com.adocker.runner.data.local.model.ContainerStatus
+import com.adocker.runner.data.repository.model.PullProgress
 
 @Composable
 fun StatusIndicator(
@@ -274,7 +274,9 @@ fun ActionButton(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.clickable(onClick = onClick).padding(8.dp)
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(8.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -348,7 +350,7 @@ fun SearchResultCard(
                     }
                 }
 
-                if (result.description.isNotBlank()) {
+                if (!result.description.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = result.description,

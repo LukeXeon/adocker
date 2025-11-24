@@ -3,9 +3,9 @@ package com.adocker.runner.engine.proot
 import androidx.annotation.WorkerThread
 import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.ProcessUtils
-import com.adocker.runner.data.local.entity.ContainerEntity
-import com.adocker.runner.domain.model.ContainerConfig
-import com.adocker.runner.domain.model.ExecResult
+import com.adocker.runner.data.local.model.ContainerEntity
+import com.adocker.runner.data.local.model.ContainerConfig
+import com.adocker.runner.engine.proot.ExecResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

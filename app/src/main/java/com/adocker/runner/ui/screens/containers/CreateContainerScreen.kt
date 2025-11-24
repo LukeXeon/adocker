@@ -12,8 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.adocker.runner.data.local.entity.ImageEntity
-import com.adocker.runner.domain.model.ContainerConfig
+import com.adocker.runner.data.local.model.ImageEntity
+import com.adocker.runner.data.local.model.ContainerConfig
 import com.adocker.runner.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

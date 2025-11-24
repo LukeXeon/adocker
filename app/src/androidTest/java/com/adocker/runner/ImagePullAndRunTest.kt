@@ -4,13 +4,13 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.repository.RegistryRepository
 import com.adocker.runner.data.remote.api.DockerRegistryApi
 import com.adocker.runner.data.repository.ContainerRepository
 import com.adocker.runner.data.repository.ImageRepository
-import com.adocker.runner.domain.model.ContainerConfig
-import com.adocker.runner.domain.model.ContainerStatus
-import com.adocker.runner.domain.model.PullStatus
+import com.adocker.runner.data.local.model.ContainerConfig
+import com.adocker.runner.data.local.model.ContainerStatus
+import com.adocker.runner.data.repository.model.PullStatus
 import com.adocker.runner.engine.executor.ContainerExecutor
 import com.adocker.runner.engine.proot.PRootEngine
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -48,7 +48,7 @@ class ImagePullAndRunTest {
     lateinit var appConfig: AppConfig
 
     @Inject
-    lateinit var registrySettings: RegistrySettingsManager
+    lateinit var registrySettings: RegistryRepository
 
     @Inject
     lateinit var imageRepository: ImageRepository

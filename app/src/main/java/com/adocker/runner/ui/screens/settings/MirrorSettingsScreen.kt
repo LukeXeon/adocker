@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.local.model.MirrorEntity
 import com.adocker.runner.ui.viewmodel.MirrorSettingsViewModel
 import kotlinx.coroutines.launch
 

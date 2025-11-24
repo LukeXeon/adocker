@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.repository.RegistryRepository
+import com.adocker.runner.data.local.model.MirrorEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.ktor.client.HttpClient
@@ -36,7 +36,7 @@ class RegistryMirrorConnectivityTest {
     lateinit var appConfig: AppConfig
 
     @Inject
-    lateinit var registrySettings: RegistrySettingsManager
+    lateinit var registrySettings: RegistryRepository
 
     private lateinit var context: Context
     private val client = HttpClient(OkHttp) {
@@ -62,7 +62,7 @@ class RegistryMirrorConnectivityTest {
 
             val results = mutableListOf<MirrorTestResult>()
 
-            for (mirror in RegistrySettingsManager.BUILT_IN_MIRRORS) {
+            for (mirror in RegistryRepository.BUILT_IN_MIRRORS) {
                 val result = testMirrorConnectivity(mirror)
                 results.add(result)
 
@@ -143,7 +143,7 @@ class RegistryMirrorConnectivityTest {
             Log.i("MirrorTest", "Testing authentication to accessible mirrors")
             Log.i("MirrorTest", "========================================")
 
-            for (mirror in RegistrySettingsManager.BUILT_IN_MIRRORS) {
+            for (mirror in RegistryRepository.BUILT_IN_MIRRORS) {
                 // First test basic connectivity
                 val connectivityResult = testMirrorConnectivity(mirror)
                 if (!connectivityResult.isAccessible) {

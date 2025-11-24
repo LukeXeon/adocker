@@ -2,8 +2,8 @@ package com.adocker.runner.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.adocker.runner.core.config.RegistrySettingsManager
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.repository.RegistryRepository
+import com.adocker.runner.data.local.model.MirrorEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +13,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MirrorSettingsViewModel @Inject constructor(
-    private val registrySettings: RegistrySettingsManager
+    private val registrySettings: RegistryRepository
 ) : ViewModel() {
 
     val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrorsFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = RegistrySettingsManager.BUILT_IN_MIRRORS
+            initialValue = RegistryRepository.BUILT_IN_MIRRORS
         )
 
     val currentMirror: StateFlow<MirrorEntity?> = registrySettings.getCurrentMirrorFlow()

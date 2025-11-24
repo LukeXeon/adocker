@@ -3,7 +3,7 @@ package com.adocker.runner.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.adocker.runner.data.local.entity.ContainerEntity
+import com.adocker.runner.data.local.model.ContainerEntity
 import com.adocker.runner.data.repository.ContainerRepository
 import com.adocker.runner.engine.executor.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel

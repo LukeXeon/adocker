@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.adocker.runner.data.local.entity.ImageEntity
+import com.adocker.runner.data.local.model.ImageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

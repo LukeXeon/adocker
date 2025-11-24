@@ -2,12 +2,12 @@ package com.adocker.runner.data.remote.api
 
 import com.adocker.runner.core.config.AppConfig
 import timber.log.Timber
-import com.adocker.runner.core.config.RegistrySettingsManager
-import com.adocker.runner.data.remote.dto.*
-import com.adocker.runner.data.local.entity.LayerEntity
-import com.adocker.runner.domain.model.ImageReference
-import com.adocker.runner.domain.model.PullProgress
-import com.adocker.runner.domain.model.PullStatus
+import com.adocker.runner.data.repository.RegistryRepository
+import com.adocker.runner.data.remote.model.*
+import com.adocker.runner.data.local.model.LayerEntity
+import com.adocker.runner.data.repository.model.ImageReference
+import com.adocker.runner.data.repository.model.PullProgress
+import com.adocker.runner.data.repository.model.PullStatus
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -30,7 +30,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class DockerRegistryApi @Inject constructor(
-    private val registrySettings: RegistrySettingsManager,
+    private val registrySettings: RegistryRepository,
     private val appConfig: AppConfig,
     private val json: Json,
     private val client: HttpClient,
@@ -311,7 +311,7 @@ class DockerRegistryApi @Inject constructor(
     /**
      * Search Docker Hub for images
      */
-    suspend fun search(query: String, limit: Int = 25): Result<List<SearchResultDto>> =
+    suspend fun search(query: String, limit: Int = 25): Result<List<SearchResult>> =
         runCatching {
             val response: SearchResponse =
                 client.get("https://hub.docker.com/v2/search/repositories/") {

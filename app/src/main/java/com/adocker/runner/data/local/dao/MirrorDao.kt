@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.adocker.runner.data.local.entity.MirrorEntity
+import com.adocker.runner.data.local.model.MirrorEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

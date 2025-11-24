@@ -1,8 +1,8 @@
 package com.adocker.runner.engine.executor
 
 import com.adocker.runner.data.repository.ContainerRepository
-import com.adocker.runner.domain.model.ContainerStatus
-import com.adocker.runner.domain.model.ExecResult
+import com.adocker.runner.data.local.model.ContainerStatus
+import com.adocker.runner.engine.proot.ExecResult
 import com.adocker.runner.engine.proot.PRootEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

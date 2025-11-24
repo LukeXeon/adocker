@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.adocker.runner.core.config.AppConfig
-import com.adocker.runner.core.config.RegistrySettingsManager
+import com.adocker.runner.data.repository.RegistryRepository
 import com.adocker.runner.data.repository.ImageRepository
-import com.adocker.runner.domain.model.PullStatus
+import com.adocker.runner.data.repository.model.PullStatus
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
@@ -35,7 +35,7 @@ class SimpleImagePullTest {
     lateinit var appConfig: AppConfig
 
     @Inject
-    lateinit var registrySettings: RegistrySettingsManager
+    lateinit var registrySettings: RegistryRepository
 
     @Inject
     lateinit var imageRepository: ImageRepository

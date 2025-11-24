@@ -5,10 +5,13 @@ import com.adocker.runner.core.utils.FileUtils
 import timber.log.Timber
 import com.adocker.runner.data.local.dao.ImageDao
 import com.adocker.runner.data.local.dao.LayerDao
-import com.adocker.runner.data.local.entity.ImageEntity
-import com.adocker.runner.data.local.entity.LayerEntity
+import com.adocker.runner.data.local.model.ImageConfig
+import com.adocker.runner.data.local.model.ImageEntity
+import com.adocker.runner.data.local.model.LayerEntity
 import com.adocker.runner.data.remote.api.DockerRegistryApi
-import com.adocker.runner.domain.model.*
+import com.adocker.runner.data.repository.model.ImageReference
+import com.adocker.runner.data.repository.model.PullProgress
+import com.adocker.runner.data.repository.model.PullStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
@@ -47,19 +50,7 @@ class ImageRepository @Inject constructor(
     /**
      * Search Docker Hub
      */
-    suspend fun searchImages(query: String): Result<List<SearchResult>> {
-        return registryApi.search(query).map { results ->
-            results.map { dto ->
-                SearchResult(
-                    name = dto.name,
-                    description = dto.description ?: "",
-                    starCount = dto.starCount,
-                    isOfficial = dto.isOfficial,
-                    isAutomated = dto.isAutomated
-                )
-            }
-        }
-    }
+    suspend fun searchImages(query: String) = registryApi.search(query)
 
     /**
      * Pull an image from registry
