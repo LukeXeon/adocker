@@ -1,14 +1,13 @@
 package com.adocker.runner.data.local.model
 
 import androidx.room.TypeConverter
-import kotlinx.serialization.json.Json
 
 class Converters {
     /**
      * Get Json instance from Hilt dependency graph
      * Using EntryPoint pattern since Room TypeConverters cannot use constructor injection
      */
-    private val json: Json = ConvertersEntryPoint.instance.json()
+    private val json = ConvertersEntryPoint.instance.json()
 
     @TypeConverter
     fun fromStringList(value: List<String>): String {

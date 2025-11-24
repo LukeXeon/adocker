@@ -88,7 +88,7 @@ fun ContainerCard(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = container.id.take(12),
+                            text = container.id,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = FontFamily.Monospace

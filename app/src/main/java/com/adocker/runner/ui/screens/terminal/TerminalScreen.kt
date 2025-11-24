@@ -60,7 +60,7 @@ fun TerminalScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = container?.id?.take(12) ?: "",
+                            text = container?.id ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -68,16 +68,25 @@ fun TerminalScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearOutput() }) {
-                        Icon(Icons.Default.ClearAll, contentDescription = stringResource(R.string.terminal_clear))
+                        Icon(
+                            Icons.Default.ClearAll,
+                            contentDescription = stringResource(R.string.terminal_clear)
+                        )
                     }
                     if (isRunning) {
                         IconButton(onClick = { viewModel.stopShell() }) {
-                            Icon(Icons.Default.Stop, contentDescription = stringResource(R.string.action_stop))
+                            Icon(
+                                Icons.Default.Stop,
+                                contentDescription = stringResource(R.string.action_stop)
+                            )
                         }
                     }
                 },

@@ -13,6 +13,7 @@ import com.adocker.runner.engine.executor.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,7 +21,7 @@ class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
     private val containerRepository: ContainerRepository,
     private val containerExecutor: ContainerExecutor?,
-    val json: kotlinx.serialization.json.Json
+    val json: Json
 ) : ViewModel() {
 
     // Images

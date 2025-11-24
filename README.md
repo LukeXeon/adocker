@@ -90,7 +90,6 @@ cd adocker
 **镜像源 QR 码格式**:
 ```json
 {
-  "type": "docker_registry_mirror",
   "name": "My Mirror",
   "url": "https://mirror.example.com",
   "bearerToken": "optional_token_here"
