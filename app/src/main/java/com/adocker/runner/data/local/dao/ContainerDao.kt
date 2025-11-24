@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.adocker.runner.data.local.entity.ContainerEntity
+import com.adocker.runner.domain.model.ContainerStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -33,10 +34,10 @@ interface ContainerDao {
     suspend fun deleteContainerById(id: String)
 
     @Query("UPDATE containers SET status = :status WHERE id = :id")
-    suspend fun updateContainerStatus(id: String, status: String)
+    suspend fun updateContainerStatus(id: String, status: ContainerStatus)
 
     @Query("UPDATE containers SET pid = :pid, status = :status WHERE id = :id")
-    suspend fun updateContainerRunning(id: String, pid: Int?, status: String)
+    suspend fun updateContainerRunning(id: String, pid: Int?, status: ContainerStatus)
 
     @Query("SELECT COUNT(*) FROM containers")
     suspend fun getContainerCount(): Int

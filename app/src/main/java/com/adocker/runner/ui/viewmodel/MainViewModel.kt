@@ -2,6 +2,8 @@ package com.adocker.runner.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.adocker.runner.data.local.entity.ContainerEntity
+import com.adocker.runner.data.local.entity.ImageEntity
 import com.adocker.runner.data.repository.ContainerRepository
 import com.adocker.runner.data.repository.ImageRepository
 import com.adocker.runner.domain.model.*
@@ -19,11 +21,11 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Images
-    val images: StateFlow<List<LocalImage>> = imageRepository.getAllImages()
+    val images: StateFlow<List<ImageEntity>> = imageRepository.getAllImages()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers: StateFlow<List<Container>> = containerRepository.getAllContainers()
+    val containers: StateFlow<List<ContainerEntity>> = containerRepository.getAllContainers()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results

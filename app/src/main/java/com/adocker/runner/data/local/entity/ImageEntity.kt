@@ -1,8 +1,11 @@
 package com.adocker.runner.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import com.adocker.runner.domain.model.ImageConfig
+import java.util.UUID
 
 /**
  * Room database entities
@@ -12,14 +15,18 @@ import androidx.room.TypeConverters
 @TypeConverters(Converters::class)
 data class ImageEntity(
     @PrimaryKey
-    val id: String,
+    val id: String = UUID.randomUUID().toString(),
     val repository: String,
     val tag: String,
     val digest: String,
     val architecture: String,
     val os: String,
-    val created: Long,
-    val size: Long,
-    val layerIds: List<String>,
-    val configJson: String?
-)
+    val created: Long = System.currentTimeMillis(),
+    val size: Long = 0,
+    val layerIds: List<String> = emptyList(),
+    val config: ImageConfig? = null
+) {
+    @get:Ignore
+    val fullName: String
+        get() = "$repository:$tag"
+}

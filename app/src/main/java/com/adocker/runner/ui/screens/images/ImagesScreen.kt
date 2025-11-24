@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.adocker.runner.domain.model.LocalImage
+import com.adocker.runner.data.local.entity.ImageEntity
 import com.adocker.runner.ui.components.ImageCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
 
@@ -28,7 +28,7 @@ fun ImagesScreen(
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
 
-    var showDeleteDialog by remember { mutableStateOf<LocalImage?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<ImageEntity?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredImages = remember(images, searchQuery) {

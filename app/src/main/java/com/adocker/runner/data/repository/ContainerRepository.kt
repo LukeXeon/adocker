@@ -32,24 +32,22 @@ class ContainerRepository @Inject constructor(
     /**
      * Get all containers
      */
-    fun getAllContainers(): Flow<List<Container>> {
-        return containerDao.getAllContainers().map { entities ->
-            entities.map { it.toContainer() }
-        }
+    fun getAllContainers(): Flow<List<ContainerEntity>> {
+        return containerDao.getAllContainers()
     }
 
     /**
      * Get container by ID
      */
-    suspend fun getContainerById(id: String): Container? {
-        return containerDao.getContainerById(id)?.toContainer()
+    suspend fun getContainerById(id: String): ContainerEntity? {
+        return containerDao.getContainerById(id)
     }
 
     /**
      * Get container by name
      */
-    suspend fun getContainerByName(name: String): Container? {
-        return containerDao.getContainerByName(name)?.toContainer()
+    suspend fun getContainerByName(name: String): ContainerEntity? {
+        return containerDao.getContainerByName(name)
     }
 
     /**
@@ -59,7 +57,7 @@ class ContainerRepository @Inject constructor(
         imageId: String,
         name: String? = null,
         config: ContainerConfig = ContainerConfig()
-    ): Result<Container> = withContext(Dispatchers.IO) {
+    ): Result<ContainerEntity> = withContext(Dispatchers.IO) {
         runCatching {
             val image = imageDao.getImageById(imageId)
                 ?: throw IllegalArgumentException("Image not found: $imageId")
@@ -88,7 +86,7 @@ class ContainerRepository @Inject constructor(
             }
 
             // Merge image config with provided config
-            val imageConfig = image.configJson?.let { json.decodeFromString<ImageConfig>(it) }
+            val imageConfig = image.config
             val mergedConfig = config.copy(
                 cmd = if (config.cmd == listOf("/bin/sh")) {
                     imageConfig?.cmd ?: imageConfig?.entrypoint ?: config.cmd
@@ -111,7 +109,7 @@ class ContainerRepository @Inject constructor(
                 } else config.user
             )
 
-            val container = Container(
+            val container = ContainerEntity(
                 id = containerId,
                 name = containerName,
                 imageId = image.id,
@@ -123,7 +121,7 @@ class ContainerRepository @Inject constructor(
             val containerJson = File(containerDir, AppConfig.CONTAINER_JSON)
             containerJson.writeText(json.encodeToString(container))
 
-            containerDao.insertContainer(container.toEntity())
+            containerDao.insertContainer(container)
             container
         }
     }
@@ -199,7 +197,7 @@ class ContainerRepository @Inject constructor(
             val container = containerDao.getContainerById(containerId)
                 ?: throw IllegalArgumentException("Container not found: $containerId")
 
-            if (container.status == "RUNNING") {
+            if (container.status == ContainerStatus.RUNNING) {
                 throw IllegalStateException("Cannot delete running container. Stop it first.")
             }
 
@@ -215,21 +213,21 @@ class ContainerRepository @Inject constructor(
      * Update container status
      */
     suspend fun updateContainerStatus(containerId: String, status: ContainerStatus) {
-        containerDao.updateContainerStatus(containerId, status.name)
+        containerDao.updateContainerStatus(containerId, status)
     }
 
     /**
      * Update container as running with PID
      */
     suspend fun setContainerRunning(containerId: String, pid: Int) {
-        containerDao.updateContainerRunning(containerId, pid, ContainerStatus.RUNNING.name)
+        containerDao.updateContainerRunning(containerId, pid, ContainerStatus.RUNNING)
     }
 
     /**
      * Update container as stopped
      */
     suspend fun setContainerStopped(containerId: String) {
-        containerDao.updateContainerRunning(containerId, null, ContainerStatus.STOPPED.name)
+        containerDao.updateContainerRunning(containerId, null, ContainerStatus.STOPPED)
     }
 
     /**
@@ -257,10 +255,10 @@ class ContainerRepository @Inject constructor(
                     throw IllegalArgumentException("Container with name '$newName' already exists")
                 }
 
-                val container = containerDao.getContainerById(containerId)?.toContainer()
+                val container = containerDao.getContainerById(containerId)
                     ?: throw IllegalArgumentException("Container not found: $containerId")
 
-                containerDao.updateContainer(container.copy(name = newName).toEntity())
+                containerDao.updateContainer(container.copy(name = newName))
             }
         }
 
@@ -278,29 +276,4 @@ class ContainerRepository @Inject constructor(
         return "${adj}_${noun}_$num"
     }
 
-    private fun ContainerEntity.toContainer(): Container {
-        return Container(
-            id = id,
-            name = name,
-            imageId = imageId,
-            imageName = imageName,
-            created = created,
-            status = ContainerStatus.valueOf(status),
-            config = json.decodeFromString(configJson),
-            pid = pid
-        )
-    }
-
-    private fun Container.toEntity(): ContainerEntity {
-        return ContainerEntity(
-            id = id,
-            name = name,
-            imageId = imageId,
-            imageName = imageName,
-            created = created,
-            status = status.name,
-            configJson = json.encodeToString(config),
-            pid = pid
-        )
-    }
 }

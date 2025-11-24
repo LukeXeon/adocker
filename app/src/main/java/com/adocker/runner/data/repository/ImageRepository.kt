@@ -33,17 +33,15 @@ class ImageRepository @Inject constructor(
     /**
      * Get all local images
      */
-    fun getAllImages(): Flow<List<LocalImage>> {
-        return imageDao.getAllImages().map { entities ->
-            entities.map { it.toLocalImage() }
-        }
+    fun getAllImages(): Flow<List<ImageEntity>> {
+        return imageDao.getAllImages()
     }
 
     /**
      * Get image by ID
      */
-    suspend fun getImageById(id: String): LocalImage? {
-        return imageDao.getImageById(id)?.toLocalImage()
+    suspend fun getImageById(id: String): ImageEntity? {
+        return imageDao.getImageById(id)
     }
 
     /**
@@ -131,7 +129,7 @@ class ImageRepository @Inject constructor(
 
             // Download layer
             Timber.d("Calling downloadLayer for ${layerDigest.take(16)}")
-            val layer = Layer(layerDigest, layerDescriptor.size, layerDescriptor.mediaType)
+            val layer = LayerEntity(layerDigest, layerDescriptor.size, layerDescriptor.mediaType, false, false)
 
             val downloadResult =
                 registryApi.downloadLayer(imageRef, layer, layerFile) { downloaded, total ->
@@ -198,7 +196,7 @@ class ImageRepository @Inject constructor(
         )
 
         // Save image to database
-        val localImage = LocalImage(
+        val imageEntity = ImageEntity(
             repository = imageRef.repository,
             tag = imageRef.tag,
             digest = manifest.config.digest,
@@ -209,7 +207,7 @@ class ImageRepository @Inject constructor(
             config = imageConfig
         )
 
-        imageDao.insertImage(localImage.toEntity())
+        imageDao.insertImage(imageEntity)
 
         // Emit final completion status
         emit(PullProgress("image", totalSize, totalSize, PullStatus.DONE))
@@ -252,7 +250,7 @@ class ImageRepository @Inject constructor(
     /**
      * Import image from tar file
      */
-    suspend fun importImage(tarFile: File, repository: String, tag: String): Result<LocalImage> =
+    suspend fun importImage(tarFile: File, repository: String, tag: String): Result<ImageEntity> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val imageId = java.util.UUID.randomUUID().toString()
@@ -264,7 +262,7 @@ class ImageRepository @Inject constructor(
 
                 val size = FileUtils.getDirectorySize(extractDir)
 
-                val localImage = LocalImage(
+                val imageEntity = ImageEntity(
                     id = imageId,
                     repository = repository,
                     tag = tag,
@@ -287,8 +285,8 @@ class ImageRepository @Inject constructor(
                     )
                 )
 
-                imageDao.insertImage(localImage.toEntity())
-                localImage
+                imageDao.insertImage(imageEntity)
+                imageEntity
             }
         }
 
@@ -325,33 +323,4 @@ class ImageRepository @Inject constructor(
             }
         }
 
-    private fun ImageEntity.toLocalImage(): LocalImage {
-        return LocalImage(
-            id = id,
-            repository = repository,
-            tag = tag,
-            digest = digest,
-            architecture = architecture,
-            os = os,
-            created = created,
-            size = size,
-            layerIds = layerIds,
-            config = configJson?.let { json.decodeFromString(it) }
-        )
-    }
-
-    private fun LocalImage.toEntity(): ImageEntity {
-        return ImageEntity(
-            id = id,
-            repository = repository,
-            tag = tag,
-            digest = digest,
-            architecture = architecture,
-            os = os,
-            created = created,
-            size = size,
-            layerIds = layerIds,
-            configJson = config?.let { json.encodeToString(it) }
-        )
-    }
 }

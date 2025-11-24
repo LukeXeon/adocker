@@ -20,7 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.adocker.runner.core.utils.FileUtils
-import com.adocker.runner.domain.model.*
+import com.adocker.runner.data.local.entity.ContainerEntity
+import com.adocker.runner.data.local.entity.ImageEntity
+import com.adocker.runner.domain.model.ContainerStatus
+import com.adocker.runner.domain.model.PullProgress
+import com.adocker.runner.domain.model.SearchResult
 
 @Composable
 fun StatusIndicator(
@@ -45,7 +49,7 @@ fun StatusIndicator(
 
 @Composable
 fun ContainerCard(
-    container: Container,
+    container: ContainerEntity,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onDelete: () -> Unit,
@@ -157,7 +161,7 @@ fun ContainerCard(
 
 @Composable
 fun ImageCard(
-    image: LocalImage,
+    image: ImageEntity,
     onRun: () -> Unit,
     onDelete: () -> Unit,
     onClick: () -> Unit,

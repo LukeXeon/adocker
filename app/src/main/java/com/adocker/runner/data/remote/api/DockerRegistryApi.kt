@@ -4,8 +4,8 @@ import com.adocker.runner.core.config.AppConfig
 import timber.log.Timber
 import com.adocker.runner.core.config.RegistrySettingsManager
 import com.adocker.runner.data.remote.dto.*
+import com.adocker.runner.data.local.entity.LayerEntity
 import com.adocker.runner.domain.model.ImageReference
-import com.adocker.runner.domain.model.Layer
 import com.adocker.runner.domain.model.PullProgress
 import com.adocker.runner.domain.model.PullStatus
 import io.ktor.client.*
@@ -227,7 +227,7 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun downloadLayer(
         imageRef: ImageReference,
-        layer: Layer,
+        layer: LayerEntity,
         destFile: File,
         onProgress: (Long, Long) -> Unit
     ): Result<Unit> {
@@ -282,10 +282,12 @@ class DockerRegistryApi @Inject constructor(
     fun pullImage(imageRef: ImageReference): Flow<PullProgress> = flow {
         val manifest = getManifest(imageRef).getOrThrow()
         val layers = manifest.layers.map { layer ->
-            Layer(
+            LayerEntity(
                 digest = layer.digest,
                 size = layer.size,
-                mediaType = layer.mediaType
+                mediaType = layer.mediaType,
+                downloaded = false,
+                extracted = false
             )
         }
 

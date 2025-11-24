@@ -3,11 +3,9 @@ package com.adocker.runner.engine.proot
 import androidx.annotation.WorkerThread
 import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.ProcessUtils
-import com.adocker.runner.domain.model.Container
+import com.adocker.runner.data.local.entity.ContainerEntity
 import com.adocker.runner.domain.model.ContainerConfig
 import com.adocker.runner.domain.model.ExecResult
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -67,7 +65,7 @@ class PRootEngine @WorkerThread @Inject constructor(
      * Build the PRoot command for running a container
      */
     fun buildCommand(
-        container: Container,
+        container: ContainerEntity,
         rootfsDir: File,
         command: List<String>? = null,
     ): List<String> {
@@ -182,7 +180,7 @@ class PRootEngine @WorkerThread @Inject constructor(
     /**
      * Build environment variables for the process
      */
-    fun buildEnvironment(container: Container): Map<String, String> {
+    fun buildEnvironment(container: ContainerEntity): Map<String, String> {
         val env = mutableMapOf<String, String>()
 
         // Set PROOT_LOADER - must point to loader in native lib dir
@@ -219,7 +217,7 @@ class PRootEngine @WorkerThread @Inject constructor(
      * Run a container and return immediately
      */
     suspend fun startContainer(
-        container: Container,
+        container: ContainerEntity,
         rootfsDir: File,
     ): Result<Process> = withContext(Dispatchers.IO) {
         runCatching {
@@ -238,7 +236,7 @@ class PRootEngine @WorkerThread @Inject constructor(
      * Execute a command in a container and wait for completion
      */
     suspend fun execInContainer(
-        container: Container,
+        container: ContainerEntity,
         rootfsDir: File,
         command: List<String>,
         timeout: Long = 0
@@ -273,7 +271,7 @@ class PRootEngine @WorkerThread @Inject constructor(
      * Execute a command and stream output
      */
     fun execStreaming(
-        container: Container,
+        container: ContainerEntity,
         rootfsDir: File,
         command: List<String>,
     ): Flow<String> = flow {

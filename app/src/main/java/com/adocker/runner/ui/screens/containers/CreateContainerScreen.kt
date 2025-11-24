@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.data.local.entity.ImageEntity
 import com.adocker.runner.domain.model.ContainerConfig
 import com.adocker.runner.ui.viewmodel.MainViewModel
 
@@ -24,7 +25,7 @@ fun CreateContainerScreen(
     modifier: Modifier = Modifier
 ) {
     val images by viewModel.images.collectAsState()
-    val image = remember(images, imageId) { images.find { it.id == imageId } }
+    val image = remember(images, imageId) { (images as? List<ImageEntity>)?.find { it.id == imageId } }
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
 

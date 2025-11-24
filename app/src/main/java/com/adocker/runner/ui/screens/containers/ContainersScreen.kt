@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.adocker.runner.domain.model.Container
+import com.adocker.runner.data.local.entity.ContainerEntity
 import com.adocker.runner.domain.model.ContainerStatus
 import com.adocker.runner.ui.components.ContainerCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
@@ -29,7 +29,7 @@ fun ContainersScreen(
     val message by viewModel.message.collectAsState()
 
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<ContainerEntity?>(null) }
 
     val filteredContainers = remember(containers, filterStatus) {
         if (filterStatus == null) containers
