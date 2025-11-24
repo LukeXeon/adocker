@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
@@ -94,10 +95,10 @@ fun MainScreen() {
                             icon = {
                                 Icon(
                                     imageVector = if (selected) screen.selectedIcon else screen.unselectedIcon,
-                                    contentDescription = screen.title
+                                    contentDescription = stringResource(screen.titleResId)
                                 )
                             },
-                            label = { Text(screen.title) },
+                            label = { Text(stringResource(screen.titleResId)) },
                             selected = selected,
                             onClick = {
                                 navController.navigate(screen.route) {

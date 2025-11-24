@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.data.local.model.ImageEntity
 import com.adocker.runner.ui.components.ImageCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
@@ -42,10 +44,10 @@ fun ImagesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Images") },
+                title = { Text(stringResource(R.string.images_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToPull) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = "Pull Image")
+                        Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.images_pull))
                     }
                 }
             )
@@ -55,7 +57,7 @@ fun ImagesScreen(
                 onClick = onNavigateToPull,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Pull Image")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.images_pull))
             }
         },
         modifier = modifier
@@ -73,12 +75,12 @@ fun ImagesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text("Search images...") },
+                    placeholder = { Text(stringResource(R.string.images_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotBlank()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.action_close))
                             }
                         }
                     },
@@ -103,13 +105,13 @@ fun ImagesScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No images",
+                            text = stringResource(R.string.images_empty),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Pull an image from Docker Hub\nto get started",
+                            text = stringResource(R.string.images_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
@@ -122,7 +124,7 @@ fun ImagesScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pull Image")
+                            Text(stringResource(R.string.images_pull))
                         }
                     }
                 }
@@ -172,9 +174,9 @@ fun ImagesScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text("Delete Image") },
+            title = { Text(stringResource(R.string.images_delete_confirm_title)) },
             text = {
-                Text("Are you sure you want to delete '${image.fullName}'? This action cannot be undone.")
+                Text(stringResource(R.string.images_delete_confirm_message, image.fullName))
             },
             confirmButton = {
                 TextButton(
@@ -186,12 +188,12 @@ fun ImagesScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

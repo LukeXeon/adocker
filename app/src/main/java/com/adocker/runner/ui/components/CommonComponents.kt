@@ -15,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.core.utils.FileUtils
 import com.adocker.runner.data.local.model.ContainerEntity
 import com.adocker.runner.data.local.model.ImageEntity
@@ -97,7 +99,7 @@ fun ContainerCard(
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Expand"
+                        contentDescription = null
                     )
                 }
             }
@@ -132,24 +134,24 @@ fun ContainerCard(
                     if (container.status == ContainerStatus.RUNNING) {
                         ActionButton(
                             icon = Icons.Default.Stop,
-                            label = "Stop",
+                            label = stringResource(R.string.action_stop),
                             onClick = onStop
                         )
                         ActionButton(
                             icon = Icons.Default.Terminal,
-                            label = "Terminal",
+                            label = stringResource(R.string.action_terminal),
                             onClick = onTerminal
                         )
                     } else {
                         ActionButton(
                             icon = Icons.Default.PlayArrow,
-                            label = "Start",
+                            label = stringResource(R.string.action_start),
                             onClick = onStart
                         )
                     }
                     ActionButton(
                         icon = Icons.Default.Delete,
-                        label = "Delete",
+                        label = stringResource(R.string.action_delete),
                         onClick = onDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -212,7 +214,7 @@ fun ImageCard(
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Expand"
+                        contentDescription = null
                     )
                 }
             }
@@ -249,12 +251,12 @@ fun ImageCard(
                 ) {
                     ActionButton(
                         icon = Icons.Default.PlayArrow,
-                        label = "Run",
+                        label = stringResource(R.string.action_run),
                         onClick = onRun
                     )
                     ActionButton(
                         icon = Icons.Default.Delete,
-                        label = "Delete",
+                        label = stringResource(R.string.action_delete),
                         onClick = onDelete,
                         tint = MaterialTheme.colorScheme.error
                     )
@@ -342,7 +344,7 @@ fun SearchResultCard(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "Official",
+                                text = stringResource(R.string.images_official),
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
@@ -381,7 +383,7 @@ fun SearchResultCard(
             IconButton(onClick = onPull) {
                 Icon(
                     imageVector = Icons.Default.CloudDownload,
-                    contentDescription = "Pull",
+                    contentDescription = stringResource(R.string.action_pull),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -459,7 +461,7 @@ fun PullProgressCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Pulling $imageName",
+                text = stringResource(R.string.pull_image_downloading, imageName),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )

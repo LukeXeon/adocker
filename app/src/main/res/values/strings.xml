@@ -1,3 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name -->
     <string name="app_name">ADocker</string>
+
+    <!-- Navigation titles -->
+    <string name="nav_home">Home</string>
+    <string name="nav_containers">Containers</string>
+    <string name="nav_images">Images</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_terminal">Terminal</string>
+    <string name="nav_image_detail">Image Detail</string>
+    <string name="nav_container_detail">Container Detail</string>
+    <string name="nav_pull_image">Pull Image</string>
+    <string name="nav_create_container">Create Container</string>
+    <string name="nav_qr_scanner">Scan QR Code</string>
+    <string name="nav_phantom_process">Phantom Process Management</string>
+
+    <!-- Home screen -->
+    <string name="home_title">ADocker</string>
+    <string name="home_welcome">Welcome to ADocker</string>
+    <string name="home_subtitle">Run Docker containers on Android without root</string>
+    <string name="home_overview">Overview</string>
+    <string name="home_images_count">Images</string>
+    <string name="home_containers_count">Containers</string>
+    <string name="home_running_count">Running</string>
+    <string name="home_stopped_count">Stopped</string>
+    <string name="home_quick_actions">Quick Actions</string>
+    <string name="home_pull_image">Pull Image</string>
+    <string name="home_pull_image_desc">Download from Docker Hub</string>
+    <string name="home_view_images">View Images</string>
+    <string name="home_view_images_desc">Manage local images</string>
+    <string name="home_view_containers_desc">Manage containers</string>
+    <string name="home_create_container">Create Container</string>
+    <string name="home_about">About</string>
+    <string name="home_engine">Engine</string>
+    <string name="home_engine_proot">PRoot</string>
+    <string name="home_architecture">Architecture</string>
+    <string name="home_android_version">Android Version</string>
+    <string name="home_api_level">API %1$d</string>
+    <string name="home_unknown">Unknown</string>
+
+    <!-- Containers screen -->
+    <string name="containers_title">Containers</string>
+    <string name="containers_tab_all">All</string>
+    <string name="containers_tab_running">Running</string>
+    <string name="containers_tab_stopped">Stopped</string>
+    <string name="containers_empty">No containers</string>
+    <string name="containers_empty_subtitle">Create a container from an image\nto get started</string>
+    <string name="containers_delete_confirm_title">Delete Container</string>
+    <string name="containers_delete_confirm_message">Are you sure you want to delete container %1$s?</string>
+    <string name="containers_created">Created: %1$s</string>
+
+    <!-- Images screen -->
+    <string name="images_title">Images</string>
+    <string name="images_search_placeholder">Search images...</string>
+    <string name="images_tab_local">Local</string>
+    <string name="images_tab_search">Search</string>
+    <string name="images_empty">No images</string>
+    <string name="images_empty_subtitle">Pull an image from Docker Hub\nto get started</string>
+    <string name="images_pull">Pull Image</string>
+    <string name="images_delete_confirm_title">Delete Image</string>
+    <string name="images_delete_confirm_message">Are you sure you want to delete image %1$s?</string>
+    <string name="images_scan_qr">Scan QR</string>
+    <string name="images_search_results">Search Results</string>
+    <string name="images_pull_count">%1$s pulls</string>
+    <string name="images_star_count">%1$s stars</string>
+    <string name="images_official">Official</string>
+
+    <!-- Pull image -->
+    <string name="pull_image_title">Pull Image</string>
+    <string name="pull_image_name_label">Image name</string>
+    <string name="pull_image_name_placeholder">e.g., alpine:latest, ubuntu:22.04</string>
+    <string name="pull_image_button">Pull</string>
+    <string name="pull_image_pulling">Pulling...</string>
+    <string name="pull_image_cancel">Cancel</string>
+    <string name="pull_image_success">Image pulled successfully</string>
+    <string name="pull_image_error">Pull failed: %1$s</string>
+    <string name="pull_image_downloading">Downloading %1$s</string>
+    <string name="pull_image_extracting">Extracting %1$s</string>
+    <string name="pull_image_saving">Saving...</string>
+
+    <!-- Create container -->
+    <string name="create_container_title">Create Container</string>
+    <string name="create_container_image_not_found">Image not found</string>
+    <string name="create_container_basic_config">Basic Configuration</string>
+    <string name="create_container_name_label">Container Name (optional)</string>
+    <string name="create_container_name_placeholder">Auto-generate random name</string>
+    <string name="create_container_command_label">Command</string>
+    <string name="create_container_command_placeholder">Leave empty to use image default</string>
+    <string name="create_container_workdir_label">Working Directory</string>
+    <string name="create_container_hostname_label">Hostname</string>
+    <string name="create_container_environment">Environment Variables</string>
+    <string name="create_container_env_key">Key</string>
+    <string name="create_container_env_value">Value</string>
+    <string name="create_container_add_env">Add Environment Variable</string>
+    <string name="create_container_volumes">Volume Mounts</string>
+    <string name="create_container_host_path">Host Path</string>
+    <string name="create_container_container_path">Container Path</string>
+    <string name="create_container_add_volume">Add Volume</string>
+    <string name="create_container_button">Create</string>
+    <string name="create_container_creating">Creating...</string>
+    <string name="create_container_success">Container created successfully</string>
+    <string name="create_container_error">Create failed: %1$s</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_registry">Registry Mirror</string>
+    <string name="settings_registry_mirror">Docker Registry Mirror</string>
+    <string name="settings_registry_mirror_subtitle">Select a faster registry mirror</string>
+    <string name="settings_current_mirror">Current: %1$s</string>
+    <string name="settings_process">Process Management</string>
+    <string name="settings_phantom_process">Phantom Process Restrictions</string>
+    <string name="settings_phantom_process_subtitle">Manage Android 12+ background process limits</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_github">GitHub Repository</string>
+
+    <!-- Mirror settings -->
+    <string name="mirror_settings_title">Registry Mirrors</string>
+    <string name="mirror_settings_subtitle">Select a registry mirror for faster image downloads. Users in mainland China are recommended to use domestic mirrors.</string>
+    <string name="mirror_settings_official">Official (Docker Hub)</string>
+    <string name="mirror_settings_url">URL: %1$s</string>
+    <string name="mirror_settings_add">Add Mirror</string>
+    <string name="mirror_settings_delete_title">Delete Mirror</string>
+    <string name="mirror_settings_delete_message">Are you sure you want to delete mirror %1$s?</string>
+    <string name="mirror_settings_add_dialog_title">Add Mirror</string>
+    <string name="mirror_settings_name_label">Mirror Name</string>
+    <string name="mirror_settings_name_placeholder">e.g., Alibaba Cloud</string>
+    <string name="mirror_settings_url_label">Mirror URL</string>
+    <string name="mirror_settings_url_placeholder">https://registry.example.com</string>
+    <string name="mirror_settings_url_hint">Must start with https://</string>
+
+    <!-- Phantom process management -->
+    <string name="phantom_title">Phantom Process Management</string>
+    <string name="phantom_no_restriction">Your Android version doesn\'t have phantom process restrictions</string>
+    <string name="phantom_status">Status Overview</string>
+    <string name="phantom_current_limit">Current Limit</string>
+    <string name="phantom_process_count">Process Count</string>
+    <string name="phantom_recommended_limit">Recommended limit: at least %1$d</string>
+    <string name="phantom_shizuku_required">Shizuku Required</string>
+    <string name="phantom_shizuku_message">Shizuku must be installed to manage phantom process restrictions.</string>
+    <string name="phantom_shizuku_install">Install Shizuku</string>
+    <string name="phantom_shizuku_not_running">Shizuku Not Running</string>
+    <string name="phantom_shizuku_not_running_message">Please start Shizuku service first</string>
+    <string name="phantom_shizuku_open">Open Shizuku</string>
+    <string name="phantom_permission_denied">Permission Denied</string>
+    <string name="phantom_permission_message">Please grant ADocker permission in Shizuku</string>
+    <string name="phantom_adjust_limit">Adjust Limit</string>
+    <string name="phantom_new_limit">New Limit Value</string>
+    <string name="phantom_apply">Apply</string>
+    <string name="phantom_success">Phantom process limit updated to %1$d</string>
+    <string name="phantom_error">Update failed: %1$s</string>
+    <string name="phantom_warning_title">Process Restrictions Detected</string>
+    <string name="phantom_warning_message">Android 12+ limits background processes to 32. This may affect container execution.\n\nIf you have Shizuku installed, you can adjust this limit through settings.</string>
+    <string name="phantom_warning_open_settings">Open Settings</string>
+    <string name="phantom_warning_later">Later</string>
+
+    <!-- QR scanner -->
+    <string name="qr_title">Scan QR Code</string>
+    <string name="qr_hint">Align the QR code within the frame</string>
+    <string name="qr_permission_title">Camera Permission Required</string>
+    <string name="qr_permission_message">Camera permission is required to scan QR codes</string>
+    <string name="qr_permission_grant">Grant Permission</string>
+    <string name="qr_image_detected">Image detected: %1$s</string>
+    <string name="qr_invalid">Invalid image QR code</string>
+
+    <!-- Terminal -->
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_clear">Clear</string>
+    <string name="terminal_input_placeholder">Enter command...</string>
+    <string name="terminal_send">Send</string>
+    <string name="terminal_starting">Starting shell...</string>
+    <string name="terminal_error">Error: %1$s</string>
+    <string name="terminal_unavailable">PRoot engine not available</string>
+    <string name="terminal_container_not_found">Container not found</string>
+    <string name="terminal_start_failed">Failed to start shell</string>
+    <string name="terminal_stopped">Shell terminated</string>
+
+    <!-- Common actions -->
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_create">Create</string>
+    <string name="action_pull">Pull</string>
+    <string name="action_run">Run</string>
+    <string name="action_terminal">Terminal</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_add">Add</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_save">Save</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+
+    <!-- Common status -->
+    <string name="status_created">Created</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_loading">Loading...</string>
+    <string name="status_error">Error</string>
+
+    <!-- Common messages -->
+    <string name="message_success">Operation successful</string>
+    <string name="message_error">Operation failed</string>
+    <string name="message_loading">Loading...</string>
+    <string name="message_no_data">No data</string>
 </resources>

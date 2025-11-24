@@ -1,47 +1,49 @@
 package com.adocker.runner.ui.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.adocker.runner.R
 
 sealed class Screen(
     val route: String,
-    val title: String,
+    @StringRes val titleResId: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
     data object Home : Screen(
         route = "home",
-        title = "Home",
+        titleResId = R.string.nav_home,
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     )
 
     data object Containers : Screen(
         route = "containers",
-        title = "Containers",
+        titleResId = R.string.nav_containers,
         selectedIcon = Icons.Filled.ViewInAr,
         unselectedIcon = Icons.Outlined.ViewInAr
     )
 
     data object Images : Screen(
         route = "images",
-        title = "Images",
+        titleResId = R.string.nav_images,
         selectedIcon = Icons.Filled.Layers,
         unselectedIcon = Icons.Outlined.Layers
     )
 
     data object Settings : Screen(
         route = "settings",
-        title = "Settings",
+        titleResId = R.string.nav_settings,
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings
     )
 
     data object Terminal : Screen(
         route = "terminal/{containerId}",
-        title = "Terminal",
+        titleResId = R.string.nav_terminal,
         selectedIcon = Icons.Filled.Terminal,
         unselectedIcon = Icons.Outlined.Terminal
     ) {
@@ -50,7 +52,7 @@ sealed class Screen(
 
     data object ImageDetail : Screen(
         route = "image/{imageId}",
-        title = "Image Detail",
+        titleResId = R.string.nav_image_detail,
         selectedIcon = Icons.Filled.Info,
         unselectedIcon = Icons.Outlined.Info
     ) {
@@ -59,7 +61,7 @@ sealed class Screen(
 
     data object ContainerDetail : Screen(
         route = "container/{containerId}",
-        title = "Container Detail",
+        titleResId = R.string.nav_container_detail,
         selectedIcon = Icons.Filled.Info,
         unselectedIcon = Icons.Outlined.Info
     ) {
@@ -68,14 +70,14 @@ sealed class Screen(
 
     data object PullImage : Screen(
         route = "pull",
-        title = "Pull Image",
+        titleResId = R.string.nav_pull_image,
         selectedIcon = Icons.Filled.CloudDownload,
         unselectedIcon = Icons.Outlined.CloudDownload
     )
 
     data object CreateContainer : Screen(
         route = "create/{imageId}",
-        title = "Create Container",
+        titleResId = R.string.nav_create_container,
         selectedIcon = Icons.Filled.Add,
         unselectedIcon = Icons.Outlined.Add
     ) {
@@ -84,21 +86,21 @@ sealed class Screen(
 
     data object MirrorSettings : Screen(
         route = "mirror_settings",
-        title = "Registry Mirrors",
+        titleResId = R.string.mirror_settings_title,
         selectedIcon = Icons.Filled.Cloud,
         unselectedIcon = Icons.Outlined.Cloud
     )
 
     data object QRCodeScanner : Screen(
         route = "qr_scanner",
-        title = "Scan QR Code",
+        titleResId = R.string.nav_qr_scanner,
         selectedIcon = Icons.Filled.QrCodeScanner,
         unselectedIcon = Icons.Outlined.QrCodeScanner
     )
 
     data object PhantomProcess : Screen(
         route = "phantom_process",
-        title = "Phantom Process Management",
+        titleResId = R.string.nav_phantom_process,
         selectedIcon = Icons.Filled.Block,
         unselectedIcon = Icons.Outlined.Block
     )

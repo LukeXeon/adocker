@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名称 -->
+    <string name="app_name">ADocker</string>
+
+    <!-- 导航标题 -->
+    <string name="nav_home">主页</string>
+    <string name="nav_containers">容器</string>
+    <string name="nav_images">镜像</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_terminal">终端</string>
+    <string name="nav_image_detail">镜像详情</string>
+    <string name="nav_container_detail">容器详情</string>
+    <string name="nav_pull_image">拉取镜像</string>
+    <string name="nav_create_container">创建容器</string>
+    <string name="nav_qr_scanner">扫描二维码</string>
+    <string name="nav_phantom_process">幻影进程管理</string>
+
+    <!-- 主页 -->
+    <string name="home_title">ADocker</string>
+    <string name="home_welcome">欢迎使用 ADocker</string>
+    <string name="home_subtitle">无需 root 即可在 Android 上运行 Docker 容器</string>
+    <string name="home_overview">概览</string>
+    <string name="home_images_count">镜像</string>
+    <string name="home_containers_count">容器</string>
+    <string name="home_running_count">运行中</string>
+    <string name="home_stopped_count">已停止</string>
+    <string name="home_quick_actions">快速操作</string>
+    <string name="home_pull_image">拉取镜像</string>
+    <string name="home_pull_image_desc">从 Docker Hub 下载</string>
+    <string name="home_view_images">查看镜像</string>
+    <string name="home_view_images_desc">管理本地镜像</string>
+    <string name="home_view_containers_desc">管理容器</string>
+    <string name="home_create_container">创建容器</string>
+    <string name="home_about">关于</string>
+    <string name="home_engine">引擎</string>
+    <string name="home_engine_proot">PRoot</string>
+    <string name="home_architecture">架构</string>
+    <string name="home_android_version">Android 版本</string>
+    <string name="home_api_level">API %1$d</string>
+    <string name="home_unknown">未知</string>
+
+    <!-- 容器屏幕 -->
+    <string name="containers_title">容器</string>
+    <string name="containers_tab_all">全部</string>
+    <string name="containers_tab_running">运行中</string>
+    <string name="containers_tab_stopped">已停止</string>
+    <string name="containers_empty">暂无容器</string>
+    <string name="containers_empty_subtitle">从镜像创建容器以开始使用</string>
+    <string name="containers_delete_confirm_title">删除容器</string>
+    <string name="containers_delete_confirm_message">确定要删除容器 %1$s 吗？</string>
+    <string name="containers_created">创建时间：%1$s</string>
+
+    <!-- 镜像屏幕 -->
+    <string name="images_title">镜像</string>
+    <string name="images_search_placeholder">搜索镜像...</string>
+    <string name="images_tab_local">本地</string>
+    <string name="images_tab_search">搜索</string>
+    <string name="images_empty">暂无镜像</string>
+    <string name="images_empty_subtitle">从 Docker Hub 拉取镜像以开始使用</string>
+    <string name="images_pull">拉取镜像</string>
+    <string name="images_delete_confirm_title">删除镜像</string>
+    <string name="images_delete_confirm_message">确定要删除镜像 %1$s 吗？</string>
+    <string name="images_scan_qr">扫码</string>
+    <string name="images_search_results">搜索结果</string>
+    <string name="images_pull_count">%1$s 次拉取</string>
+    <string name="images_star_count">%1$s 星标</string>
+    <string name="images_official">官方</string>
+
+    <!-- 拉取镜像 -->
+    <string name="pull_image_title">拉取镜像</string>
+    <string name="pull_image_name_label">镜像名称</string>
+    <string name="pull_image_name_placeholder">例如：alpine:latest, ubuntu:22.04</string>
+    <string name="pull_image_button">拉取</string>
+    <string name="pull_image_pulling">拉取中…</string>
+    <string name="pull_image_cancel">取消</string>
+    <string name="pull_image_success">镜像拉取成功</string>
+    <string name="pull_image_error">拉取失败：%1$s</string>
+    <string name="pull_image_downloading">下载中 %1$s</string>
+    <string name="pull_image_extracting">解压中 %1$s</string>
+    <string name="pull_image_saving">保存中…</string>
+
+    <!-- 创建容器 -->
+    <string name="create_container_title">创建容器</string>
+    <string name="create_container_image_not_found">镜像未找到</string>
+    <string name="create_container_basic_config">基本配置</string>
+    <string name="create_container_name_label">容器名称（可选）</string>
+    <string name="create_container_name_placeholder">自动生成随机名称</string>
+    <string name="create_container_command_label">命令</string>
+    <string name="create_container_command_placeholder">留空使用镜像默认命令</string>
+    <string name="create_container_workdir_label">工作目录</string>
+    <string name="create_container_hostname_label">主机名</string>
+    <string name="create_container_environment">环境变量</string>
+    <string name="create_container_env_key">键</string>
+    <string name="create_container_env_value">值</string>
+    <string name="create_container_add_env">添加环境变量</string>
+    <string name="create_container_volumes">卷挂载</string>
+    <string name="create_container_host_path">主机路径</string>
+    <string name="create_container_container_path">容器路径</string>
+    <string name="create_container_add_volume">添加卷</string>
+    <string name="create_container_button">创建</string>
+    <string name="create_container_creating">创建中…</string>
+    <string name="create_container_success">容器创建成功</string>
+    <string name="create_container_error">创建失败：%1$s</string>
+
+    <!-- 设置屏幕 -->
+    <string name="settings_title">设置</string>
+    <string name="settings_registry">镜像源</string>
+    <string name="settings_registry_mirror">Docker 镜像源</string>
+    <string name="settings_registry_mirror_subtitle">选择更快的镜像下载源</string>
+    <string name="settings_current_mirror">当前：%1$s</string>
+    <string name="settings_process">进程管理</string>
+    <string name="settings_phantom_process">幻影进程限制</string>
+    <string name="settings_phantom_process_subtitle">Android 12+ 后台进程限制管理</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_version">版本</string>
+    <string name="settings_github">GitHub 仓库</string>
+
+    <!-- 镜像源设置 -->
+    <string name="mirror_settings_title">镜像源</string>
+    <string name="mirror_settings_subtitle">选择镜像源以加快镜像下载速度。中国大陆用户建议使用国内镜像源。</string>
+    <string name="mirror_settings_official">官方源（Docker Hub）</string>
+    <string name="mirror_settings_url">地址：%1$s</string>
+    <string name="mirror_settings_add">添加镜像源</string>
+    <string name="mirror_settings_delete_title">删除镜像源</string>
+    <string name="mirror_settings_delete_message">确定要删除镜像源 %1$s 吗？</string>
+    <string name="mirror_settings_add_dialog_title">添加镜像源</string>
+    <string name="mirror_settings_name_label">镜像源名称</string>
+    <string name="mirror_settings_name_placeholder">例如：阿里云</string>
+    <string name="mirror_settings_url_label">镜像源地址</string>
+    <string name="mirror_settings_url_placeholder">https://registry.example.com</string>
+    <string name="mirror_settings_url_hint">必须以 https:// 开头</string>
+
+    <!-- 幻影进程管理 -->
+    <string name="phantom_title">幻影进程管理</string>
+    <string name="phantom_no_restriction">您的 Android 版本没有幻影进程限制</string>
+    <string name="phantom_status">状态概览</string>
+    <string name="phantom_current_limit">当前限制</string>
+    <string name="phantom_process_count">进程数</string>
+    <string name="phantom_recommended_limit">推荐限制：至少 %1$d</string>
+    <string name="phantom_shizuku_required">需要 Shizuku</string>
+    <string name="phantom_shizuku_message">必须安装 Shizuku 才能管理幻影进程限制。</string>
+    <string name="phantom_shizuku_install">安装 Shizuku</string>
+    <string name="phantom_shizuku_not_running">Shizuku 未运行</string>
+    <string name="phantom_shizuku_not_running_message">请先启动 Shizuku 服务</string>
+    <string name="phantom_shizuku_open">打开 Shizuku</string>
+    <string name="phantom_permission_denied">权限被拒绝</string>
+    <string name="phantom_permission_message">请在 Shizuku 中授予 ADocker 权限</string>
+    <string name="phantom_adjust_limit">调整限制</string>
+    <string name="phantom_new_limit">新限制值</string>
+    <string name="phantom_apply">应用</string>
+    <string name="phantom_success">幻影进程限制已更新为 %1$d</string>
+    <string name="phantom_error">更新失败：%1$s</string>
+    <string name="phantom_warning_title">检测到进程限制</string>
+    <string name="phantom_warning_message">Android 12+ 将后台进程限制为 32 个。这可能会影响容器运行。\n\n如果您已安装 Shizuku，可以通过设置调整此限制。</string>
+    <string name="phantom_warning_open_settings">打开设置</string>
+    <string name="phantom_warning_later">稍后</string>
+
+    <!-- QR 扫码 -->
+    <string name="qr_title">扫描二维码</string>
+    <string name="qr_hint">将二维码对准框内</string>
+    <string name="qr_permission_title">需要相机权限</string>
+    <string name="qr_permission_message">需要相机权限才能扫描二维码</string>
+    <string name="qr_permission_grant">授予权限</string>
+    <string name="qr_image_detected">检测到镜像：%1$s</string>
+    <string name="qr_invalid">无效的镜像二维码</string>
+
+    <!-- 终端 -->
+    <string name="terminal_title">终端</string>
+    <string name="terminal_clear">清空</string>
+    <string name="terminal_input_placeholder">输入命令...</string>
+    <string name="terminal_send">发送</string>
+    <string name="terminal_starting">启动 shell...</string>
+    <string name="terminal_error">错误：%1$s</string>
+    <string name="terminal_unavailable">PRoot 引擎不可用</string>
+    <string name="terminal_container_not_found">容器未找到</string>
+    <string name="terminal_start_failed">无法启动 shell</string>
+    <string name="terminal_stopped">Shell 已终止</string>
+
+    <!-- 通用按钮和操作 -->
+    <string name="action_start">启动</string>
+    <string name="action_stop">停止</string>
+    <string name="action_delete">删除</string>
+    <string name="action_create">创建</string>
+    <string name="action_pull">拉取</string>
+    <string name="action_run">运行</string>
+    <string name="action_terminal">终端</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">确认</string>
+    <string name="action_add">添加</string>
+    <string name="action_remove">移除</string>
+    <string name="action_save">保存</string>
+    <string name="action_back">返回</string>
+    <string name="action_close">关闭</string>
+
+    <!-- 通用状态 -->
+    <string name="status_created">已创建</string>
+    <string name="status_running">运行中</string>
+    <string name="status_stopped">已停止</string>
+    <string name="status_paused">已暂停</string>
+    <string name="status_loading">加载中...</string>
+    <string name="status_error">错误</string>
+
+    <!-- 通用消息 -->
+    <string name="message_success">操作成功</string>
+    <string name="message_error">操作失败</string>
+    <string name="message_loading">加载中…</string>
+    <string name="message_no_data">暂无数据</string>
+</resources>

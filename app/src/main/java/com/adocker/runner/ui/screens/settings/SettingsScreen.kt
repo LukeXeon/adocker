@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.adocker.runner.R
 import com.adocker.runner.core.config.AppConfig
 import com.adocker.runner.core.utils.FileUtils
 import com.adocker.runner.ui.viewmodel.SettingsViewModel
@@ -37,7 +39,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") }
+                title = { Text(stringResource(R.string.settings_title)) }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -50,7 +52,7 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // Registry Mirror section (important for China users)
-            SettingsSection(title = "Registry Mirror") {
+            SettingsSection(title = stringResource(R.string.settings_registry)) {
                 Surface(
                     onClick = onNavigateToMirrorSettings,
                     modifier = Modifier.fillMaxWidth()
@@ -67,16 +69,16 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Docker Registry Mirror",
+                                text = stringResource(R.string.settings_registry_mirror),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = currentMirror?.name ?: "Loading...",
+                                text = currentMirror?.name ?: stringResource(R.string.status_loading),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Tap to manage mirrors for faster downloads",
+                                text = stringResource(R.string.settings_registry_mirror_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -92,7 +94,7 @@ fun SettingsScreen(
 
             // Android 12+ Phantom Process Management
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                SettingsSection(title = "Process Management") {
+                SettingsSection(title = stringResource(R.string.settings_process)) {
                     Surface(
                         onClick = onNavigateToPhantomProcess,
                         modifier = Modifier.fillMaxWidth()
@@ -109,16 +111,11 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Phantom Process Management",
+                                    text = stringResource(R.string.settings_phantom_process),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 Text(
-                                    text = "Android 12+",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Text(
-                                    text = "Disable process restrictions for containers",
+                                    text = stringResource(R.string.settings_phantom_process_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -135,30 +132,30 @@ fun SettingsScreen(
 
 
             // About section
-            SettingsSection(title = "About") {
+            SettingsSection(title = stringResource(R.string.settings_about)) {
                 SettingsItem(
                     icon = Icons.Default.Info,
-                    title = "Version",
+                    title = stringResource(R.string.settings_version),
                     subtitle = viewModel.packageInfo.versionName ?: ""
                 )
                 SettingsItem(
                     icon = Icons.Default.Sailing,
-                    title = "App Name",
+                    title = stringResource(R.string.app_name),
                     subtitle = viewModel.packageInfo.applicationInfo?.name ?: ""
                 )
                 SettingsItem(
                     icon = Icons.Default.Memory,
-                    title = "Architecture",
+                    title = stringResource(R.string.home_architecture),
                     subtitle = viewModel.architecture
                 )
             }
 
             // Engine section
-            SettingsSection(title = "Execution Engine") {
+            SettingsSection(title = stringResource(R.string.home_engine)) {
                 SettingsItem(
                     icon = Icons.Default.Terminal,
-                    title = "PRoot Version",
-                    subtitle = prootVersion ?: "Not available"
+                    title = stringResource(R.string.home_engine_proot),
+                    subtitle = prootVersion ?: stringResource(R.string.terminal_unavailable)
                 )
                 SettingsItem(
                     icon = Icons.Default.Settings,
@@ -172,7 +169,7 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Storage,
                     title = "Storage Usage",
-                    subtitle = storageUsage?.let { FileUtils.formatSize(it) } ?: "Calculating..."
+                    subtitle = storageUsage?.let { FileUtils.formatSize(it) } ?: stringResource(R.string.status_loading)
                 )
                 SettingsItem(
                     icon = Icons.Default.Folder,
@@ -283,7 +280,7 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

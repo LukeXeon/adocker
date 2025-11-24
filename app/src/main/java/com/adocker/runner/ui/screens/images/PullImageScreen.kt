@@ -13,8 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.ui.components.PullProgressCard
 import com.adocker.runner.ui.components.SearchResultCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
@@ -70,15 +72,15 @@ fun PullImageScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pull Image") },
+                title = { Text(stringResource(R.string.pull_image_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToQRScanner) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code")
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.images_scan_qr))
                     }
                 }
             )
@@ -100,7 +102,7 @@ fun PullImageScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Pull Image",
+                        text = stringResource(R.string.pull_image_title),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -109,8 +111,8 @@ fun PullImageScreen(
                         value = pullImageName,
                         onValueChange = { pullImageName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Image name") },
-                        placeholder = { Text("e.g., alpine:latest, ubuntu:22.04") },
+                        label = { Text(stringResource(R.string.pull_image_name_label)) },
+                        placeholder = { Text(stringResource(R.string.pull_image_name_placeholder)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(
@@ -142,7 +144,7 @@ fun PullImageScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pulling...")
+                            Text(stringResource(R.string.pull_image_pulling))
                         } else {
                             Icon(
                                 Icons.Default.CloudDownload,
@@ -150,7 +152,7 @@ fun PullImageScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pull")
+                            Text(stringResource(R.string.pull_image_button))
                         }
                     }
                 }
@@ -169,7 +171,7 @@ fun PullImageScreen(
 
             // Search section
             Text(
-                text = "Search Docker Hub",
+                text = stringResource(R.string.images_tab_search),
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -179,12 +181,12 @@ fun PullImageScreen(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search images...") },
+                placeholder = { Text(stringResource(R.string.images_search_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.action_close))
                         }
                     }
                 },
@@ -214,7 +216,7 @@ fun PullImageScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Search")
+                    Text(stringResource(R.string.images_tab_search))
                 }
             }
 
@@ -253,7 +255,7 @@ fun PullImageScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No results found",
+                            text = stringResource(R.string.message_no_data),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -267,7 +269,7 @@ fun PullImageScreen(
         AlertDialog(
             onDismissRequest = { showPullDialog = false },
             icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) },
-            title = { Text("Pull Image") },
+            title = { Text(stringResource(R.string.pull_image_title)) },
             text = {
                 Column {
                     Text("Pull image '$pullImageName'?")
@@ -276,7 +278,7 @@ fun PullImageScreen(
                         value = pullImageName,
                         onValueChange = { pullImageName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Image name:tag") },
+                        label = { Text(stringResource(R.string.pull_image_name_label)) },
                         singleLine = true
                     )
                 }
@@ -288,12 +290,12 @@ fun PullImageScreen(
                         showPullDialog = false
                     }
                 ) {
-                    Text("Pull")
+                    Text(stringResource(R.string.pull_image_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPullDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

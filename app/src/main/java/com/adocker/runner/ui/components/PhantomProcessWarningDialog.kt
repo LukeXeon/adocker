@@ -5,7 +5,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.adocker.runner.R
 
 @Composable
 fun PhantomProcessWarningDialog(
@@ -28,7 +30,7 @@ fun PhantomProcessWarningDialog(
         },
         title = {
             Text(
-                text = "Process Restrictions Detected",
+                text = stringResource(R.string.phantom_warning_title),
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold
                 )
@@ -36,8 +38,7 @@ fun PhantomProcessWarningDialog(
         },
         text = {
             Text(
-                text = "Android 12+ limits background processes to 32. This may cause containers to terminate unexpectedly.\n\n" +
-                        "We recommend disabling this restriction for optimal container performance.",
+                text = stringResource(R.string.phantom_warning_message),
                 style = MaterialTheme.typography.bodyMedium
             )
         },
@@ -48,12 +49,12 @@ fun PhantomProcessWarningDialog(
                     onNavigateToSettings()
                 }
             ) {
-                Text("Open Settings")
+                Text(stringResource(R.string.phantom_warning_open_settings))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Later")
+                Text(stringResource(R.string.phantom_warning_later))
             }
         }
     )

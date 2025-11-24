@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.ui.components.StatCard
 import com.adocker.runner.ui.viewmodel.MainViewModel
 
@@ -39,7 +41,7 @@ fun HomeScreen(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Text("ADocker")
+                        Text(stringResource(R.string.home_title))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -68,14 +70,14 @@ fun HomeScreen(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
-                            text = "Welcome to ADocker",
+                            text = stringResource(R.string.home_welcome),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Run Docker containers on Android without root",
+                            text = stringResource(R.string.home_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
@@ -86,7 +88,7 @@ fun HomeScreen(
             // Stats grid
             item {
                 Text(
-                    text = "Overview",
+                    text = stringResource(R.string.home_overview),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -98,13 +100,13 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
-                        title = "Images",
+                        title = stringResource(R.string.home_images_count),
                         value = "${stats.totalImages}",
                         icon = Icons.Default.Layers,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        title = "Containers",
+                        title = stringResource(R.string.home_containers_count),
                         value = "${stats.totalContainers}",
                         icon = Icons.Default.ViewInAr,
                         modifier = Modifier.weight(1f)
@@ -118,13 +120,13 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
-                        title = "Running",
+                        title = stringResource(R.string.home_running_count),
                         value = "${stats.runningContainers}",
                         icon = Icons.Default.PlayCircle,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        title = "Stopped",
+                        title = stringResource(R.string.home_stopped_count),
                         value = "${stats.stoppedContainers}",
                         icon = Icons.Default.StopCircle,
                         modifier = Modifier.weight(1f)
@@ -136,7 +138,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Quick Actions",
+                    text = stringResource(R.string.home_quick_actions),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -148,15 +150,15 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickActionCard(
-                        title = "Pull Image",
-                        description = "Download from Docker Hub",
+                        title = stringResource(R.string.home_pull_image),
+                        description = stringResource(R.string.home_pull_image_desc),
                         icon = Icons.Default.CloudDownload,
                         onClick = onNavigateToPull,
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionCard(
-                        title = "View Images",
-                        description = "Manage local images",
+                        title = stringResource(R.string.home_view_images),
+                        description = stringResource(R.string.home_view_images_desc),
                         icon = Icons.Default.Layers,
                         onClick = onNavigateToImages,
                         modifier = Modifier.weight(1f)
@@ -170,8 +172,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickActionCard(
-                        title = "Containers",
-                        description = "Manage containers",
+                        title = stringResource(R.string.nav_containers),
+                        description = stringResource(R.string.home_view_containers_desc),
                         icon = Icons.Default.ViewInAr,
                         onClick = onNavigateToContainers,
                         modifier = Modifier.weight(1f)
@@ -184,7 +186,7 @@ fun HomeScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "About",
+                    text = stringResource(R.string.home_about),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -197,9 +199,9 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        InfoRow(label = "Engine", value = "PRoot")
-                        InfoRow(label = "Architecture", value = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown")
-                        InfoRow(label = "Android Version", value = "API ${android.os.Build.VERSION.SDK_INT}")
+                        InfoRow(label = stringResource(R.string.home_engine), value = stringResource(R.string.home_engine_proot))
+                        InfoRow(label = stringResource(R.string.home_architecture), value = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: stringResource(R.string.home_unknown))
+                        InfoRow(label = stringResource(R.string.home_android_version), value = stringResource(R.string.home_api_level, android.os.Build.VERSION.SDK_INT))
                     }
                 }
             }

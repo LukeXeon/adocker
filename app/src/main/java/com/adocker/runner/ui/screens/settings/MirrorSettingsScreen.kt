@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.adocker.runner.R
 import com.adocker.runner.data.local.model.MirrorEntity
 import com.adocker.runner.ui.viewmodel.MirrorSettingsViewModel
 import kotlinx.coroutines.launch
@@ -34,15 +36,15 @@ fun MirrorSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Registry Mirrors") },
+                title = { Text(stringResource(R.string.mirror_settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add mirror")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.mirror_settings_add))
                     }
                 }
             )
@@ -58,7 +60,7 @@ fun MirrorSettingsScreen(
         ) {
             item {
                 Text(
-                    text = "Select a registry mirror for faster image downloads. Custom mirrors can be added or removed.",
+                    text = stringResource(R.string.mirror_settings_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -101,7 +103,7 @@ fun MirrorSettingsScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Add Custom Mirror",
+                            stringResource(R.string.mirror_settings_add),
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -129,8 +131,8 @@ fun MirrorSettingsScreen(
         AlertDialog(
             onDismissRequest = { mirrorToDelete = null },
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text("Delete Mirror") },
-            text = { Text("Delete \"${mirror.name}\"? This cannot be undone.") },
+            title = { Text(stringResource(R.string.mirror_settings_delete_title)) },
+            text = { Text(stringResource(R.string.mirror_settings_delete_message, mirror.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -144,12 +146,12 @@ fun MirrorSettingsScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { mirrorToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -226,7 +228,7 @@ private fun MirrorCard(
                 IconButton(onClick = it) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.action_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -245,10 +247,15 @@ private fun AddMirrorDialog(
     var nameError by remember { mutableStateOf<String?>(null) }
     var urlError by remember { mutableStateOf<String?>(null) }
 
+    // Get error messages in Composable context
+    val nameRequiredError = "Name is required"
+    val urlHintError = stringResource(R.string.mirror_settings_url_hint)
+    val urlInvalidError = "Invalid URL"
+
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Add, contentDescription = null) },
-        title = { Text("Add Custom Mirror") },
+        title = { Text(stringResource(R.string.mirror_settings_add_dialog_title)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -257,8 +264,8 @@ private fun AddMirrorDialog(
                         name = it
                         nameError = null
                     },
-                    label = { Text("Mirror Name") },
-                    placeholder = { Text("My Mirror") },
+                    label = { Text(stringResource(R.string.mirror_settings_name_label)) },
+                    placeholder = { Text(stringResource(R.string.mirror_settings_name_placeholder)) },
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     singleLine = true,
@@ -271,8 +278,8 @@ private fun AddMirrorDialog(
                         url = it
                         urlError = null
                     },
-                    label = { Text("Mirror URL") },
-                    placeholder = { Text("https://mirror.example.com") },
+                    label = { Text(stringResource(R.string.mirror_settings_url_label)) },
+                    placeholder = { Text(stringResource(R.string.mirror_settings_url_placeholder)) },
                     isError = urlError != null,
                     supportingText = urlError?.let { { Text(it) } },
                     singleLine = true,
@@ -285,14 +292,14 @@ private fun AddMirrorDialog(
                 onClick = {
                     var hasError = false
                     if (name.isBlank()) {
-                        nameError = "Name is required"
+                        nameError = nameRequiredError
                         hasError = true
                     }
                     if (!url.startsWith("https://") && !url.startsWith("http://")) {
-                        urlError = "URL must start with https:// or http://"
+                        urlError = urlHintError
                         hasError = true
                     } else if (url.length < 10) {
-                        urlError = "Invalid URL"
+                        urlError = urlInvalidError
                         hasError = true
                     }
                     if (!hasError) {
@@ -300,12 +307,12 @@ private fun AddMirrorDialog(
                     }
                 }
             ) {
-                Text("Add")
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )

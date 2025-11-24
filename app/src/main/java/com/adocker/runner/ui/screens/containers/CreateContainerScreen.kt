@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.data.local.model.ImageEntity
 import com.adocker.runner.data.local.model.ContainerConfig
 import com.adocker.runner.ui.viewmodel.MainViewModel
@@ -58,10 +60,10 @@ fun CreateContainerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Container") },
+                title = { Text(stringResource(R.string.create_container_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -76,7 +78,7 @@ fun CreateContainerScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Image not found")
+                Text(stringResource(R.string.create_container_image_not_found))
             }
         } else {
             Column(
@@ -123,8 +125,8 @@ fun CreateContainerScreen(
                     value = containerName,
                     onValueChange = { containerName = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Container Name (optional)") },
-                    placeholder = { Text("Auto-generated if empty") },
+                    label = { Text(stringResource(R.string.create_container_name_label)) },
+                    placeholder = { Text(stringResource(R.string.create_container_name_placeholder)) },
                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) },
                     singleLine = true
                 )
@@ -134,11 +136,11 @@ fun CreateContainerScreen(
                     value = command,
                     onValueChange = { command = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Command") },
-                    placeholder = { Text("/bin/sh") },
+                    label = { Text(stringResource(R.string.create_container_command_label)) },
+                    placeholder = { Text(stringResource(R.string.create_container_command_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Terminal, contentDescription = null) },
                     singleLine = true,
-                    supportingText = { Text("Command to run (default: image CMD)") }
+                    supportingText = { Text(stringResource(R.string.create_container_command_placeholder)) }
                 )
 
                 // Working directory
@@ -146,7 +148,7 @@ fun CreateContainerScreen(
                     value = workingDir,
                     onValueChange = { workingDir = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Working Directory") },
+                    label = { Text(stringResource(R.string.create_container_workdir_label)) },
                     leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
                     singleLine = true
                 )
@@ -156,7 +158,7 @@ fun CreateContainerScreen(
                     value = hostname,
                     onValueChange = { hostname = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Hostname") },
+                    label = { Text(stringResource(R.string.create_container_hostname_label)) },
                     leadingIcon = { Icon(Icons.Default.Computer, contentDescription = null) },
                     singleLine = true
                 )
@@ -166,7 +168,7 @@ fun CreateContainerScreen(
                     value = envVars,
                     onValueChange = { envVars = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Environment Variables") },
+                    label = { Text(stringResource(R.string.create_container_environment)) },
                     placeholder = { Text("KEY=value, one per line") },
                     leadingIcon = { Icon(Icons.Default.Code, contentDescription = null) },
                     minLines = 3,
@@ -232,7 +234,7 @@ fun CreateContainerScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (autoStart) "Create & Run" else "Create")
+                    Text(stringResource(if (autoStart) R.string.action_run else R.string.create_container_button))
                 }
             }
         }

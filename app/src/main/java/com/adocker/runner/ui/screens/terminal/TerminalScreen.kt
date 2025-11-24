@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adocker.runner.R
 import com.adocker.runner.ui.viewmodel.TerminalViewModel
 import kotlinx.coroutines.launch
 
@@ -54,7 +56,7 @@ fun TerminalScreen(
                 title = {
                     Column {
                         Text(
-                            text = container?.name ?: "Terminal",
+                            text = container?.name ?: stringResource(R.string.terminal_title),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
@@ -66,16 +68,16 @@ fun TerminalScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearOutput() }) {
-                        Icon(Icons.Default.ClearAll, contentDescription = "Clear")
+                        Icon(Icons.Default.ClearAll, contentDescription = stringResource(R.string.terminal_clear))
                     }
                     if (isRunning) {
                         IconButton(onClick = { viewModel.stopShell() }) {
-                            Icon(Icons.Default.Stop, contentDescription = "Stop")
+                            Icon(Icons.Default.Stop, contentDescription = stringResource(R.string.action_stop))
                         }
                     }
                 },
@@ -141,7 +143,7 @@ fun TerminalScreen(
                         IconButton(onClick = { viewModel.clearError() }) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Dismiss",
+                                contentDescription = stringResource(R.string.action_close),
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
@@ -173,7 +175,7 @@ fun TerminalScreen(
                         modifier = Modifier.weight(1f),
                         placeholder = {
                             Text(
-                                "Enter command...",
+                                stringResource(R.string.terminal_input_placeholder),
                                 color = Color.Gray,
                                 fontFamily = FontFamily.Monospace
                             )
@@ -216,7 +218,7 @@ fun TerminalScreen(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send",
+                            contentDescription = stringResource(R.string.terminal_send),
                             tint = if (inputText.isNotBlank()) Color(0xFF4CAF50) else Color.Gray
                         )
                     }

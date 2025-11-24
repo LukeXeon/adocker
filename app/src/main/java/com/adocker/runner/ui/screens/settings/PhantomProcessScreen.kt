@@ -14,9 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.adocker.runner.R
 import com.adocker.runner.ui.viewmodel.PhantomProcessViewModel
 import kotlinx.coroutines.launch
 
@@ -56,10 +58,10 @@ fun PhantomProcessScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Phantom Process Management") },
+                title = { Text(stringResource(R.string.phantom_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -94,7 +96,7 @@ fun PhantomProcessScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Your Android version doesn't have phantom process restrictions",
+                            text = stringResource(R.string.phantom_no_restriction),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -107,7 +109,7 @@ fun PhantomProcessScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "Status Overview",
+                            text = stringResource(R.string.phantom_status),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -117,8 +119,8 @@ fun PhantomProcessScreen(
                         StatusRow(
                             label = "Shizuku",
                             status = when {
-                                !uiState.shizukuAvailable -> "Not installed"
-                                !uiState.shizukuPermissionGranted -> "Not authorized"
+                                !uiState.shizukuAvailable -> stringResource(R.string.phantom_shizuku_not_running)
+                                !uiState.shizukuPermissionGranted -> stringResource(R.string.phantom_permission_denied)
                                 else -> "Ready"
                             },
                             isGood = uiState.shizukuAvailable && uiState.shizukuPermissionGranted,
@@ -127,9 +129,9 @@ fun PhantomProcessScreen(
 
                         // Phantom process restriction status
                         StatusRow(
-                            label = "Restrictions",
+                            label = stringResource(R.string.phantom_current_limit),
                             status = when {
-                                uiState.isChecking -> "Checking..."
+                                uiState.isChecking -> stringResource(R.string.status_loading)
                                 uiState.phantomKillerDisabled -> "Disabled"
                                 else -> "Active (limit: ${uiState.currentLimit ?: "32"})"
                             },
@@ -162,12 +164,12 @@ fun PhantomProcessScreen(
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                     Text(
-                                        text = "Shizuku Required",
+                                        text = stringResource(R.string.phantom_shizuku_required),
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                 }
                                 Text(
-                                    text = "Shizuku must be installed to manage phantom process restrictions.",
+                                    text = stringResource(R.string.phantom_shizuku_message),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Button(
@@ -182,7 +184,7 @@ fun PhantomProcessScreen(
                                 ) {
                                     Icon(Icons.Default.Download, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Download Shizuku")
+                                    Text(stringResource(R.string.phantom_shizuku_install))
                                 }
                             }
                         }
@@ -196,11 +198,11 @@ fun PhantomProcessScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = "Authorization Required",
+                                    text = stringResource(R.string.phantom_permission_denied),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "Grant Shizuku permission to manage phantom process restrictions.",
+                                    text = stringResource(R.string.phantom_permission_message),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Button(

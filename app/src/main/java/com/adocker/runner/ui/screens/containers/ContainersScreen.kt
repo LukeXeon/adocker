@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.adocker.runner.R
 import com.adocker.runner.data.local.model.ContainerEntity
 import com.adocker.runner.data.local.model.ContainerStatus
 import com.adocker.runner.ui.components.ContainerCard
@@ -39,7 +41,7 @@ fun ContainersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Containers") },
+                title = { Text(stringResource(R.string.containers_title)) },
                 actions = {
                     // Filter dropdown
                     var expanded by remember { mutableStateOf(false) }
@@ -51,7 +53,7 @@ fun ContainersScreen(
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("All") },
+                            text = { Text(stringResource(R.string.containers_tab_all)) },
                             onClick = {
                                 filterStatus = null
                                 expanded = false
@@ -101,13 +103,13 @@ fun ContainersScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No containers",
+                        text = stringResource(R.string.containers_empty),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Create a container from an image\nto get started",
+                        text = stringResource(R.string.containers_empty_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -134,7 +136,7 @@ fun ContainersScreen(
                         FilterChip(
                             selected = filterStatus == null,
                             onClick = { filterStatus = null },
-                            label = { Text("All (${containers.size})") }
+                            label = { Text("${stringResource(R.string.containers_tab_all)} (${containers.size})") }
                         )
                         FilterChip(
                             selected = filterStatus == ContainerStatus.RUNNING,
@@ -142,7 +144,7 @@ fun ContainersScreen(
                                 filterStatus = if (filterStatus == ContainerStatus.RUNNING) null
                                 else ContainerStatus.RUNNING
                             },
-                            label = { Text("Running ($running)") },
+                            label = { Text("${stringResource(R.string.containers_tab_running)} ($running)") },
                             leadingIcon = {
                                 if (filterStatus == ContainerStatus.RUNNING) {
                                     Icon(
@@ -159,7 +161,7 @@ fun ContainersScreen(
                                 filterStatus = if (filterStatus == ContainerStatus.STOPPED) null
                                 else ContainerStatus.STOPPED
                             },
-                            label = { Text("Stopped ($stopped)") }
+                            label = { Text("${stringResource(R.string.containers_tab_stopped)} ($stopped)") }
                         )
                     }
                 }
@@ -183,9 +185,9 @@ fun ContainersScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text("Delete Container") },
+            title = { Text(stringResource(R.string.containers_delete_confirm_title)) },
             text = {
-                Text("Are you sure you want to delete '${container.name}'? This action cannot be undone.")
+                Text(stringResource(R.string.containers_delete_confirm_message, container.name))
             },
             confirmButton = {
                 TextButton(
@@ -197,12 +199,12 @@ fun ContainersScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

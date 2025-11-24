@@ -24,11 +24,13 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.adocker.runner.R
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
@@ -77,10 +79,10 @@ fun QRCodeScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scan QR Code") },
+                title = { Text(stringResource(R.string.qr_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -88,7 +90,7 @@ fun QRCodeScannerScreen(
                         IconButton(onClick = { flashEnabled = !flashEnabled }) {
                             Icon(
                                 if (flashEnabled) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                                contentDescription = if (flashEnabled) "Turn off flash" else "Turn on flash"
+                                contentDescription = null
                             )
                         }
                     }
@@ -223,7 +225,7 @@ fun QRCodeScannerScreen(
                         )
                     ) {
                         Text(
-                            text = "Align the QR code within the frame",
+                            text = stringResource(R.string.qr_hint),
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -248,13 +250,13 @@ fun QRCodeScannerScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Camera Permission Required",
+                        text = stringResource(R.string.qr_permission_title),
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Please grant camera permission to scan QR codes",
+                        text = stringResource(R.string.qr_permission_message),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -263,7 +265,7 @@ fun QRCodeScannerScreen(
                     Button(
                         onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
                     ) {
-                        Text("Grant Permission")
+                        Text(stringResource(R.string.qr_permission_grant))
                     }
                 }
             }
@@ -280,10 +282,10 @@ fun QRCodeScannerScreen(
                 scannedData = null
             },
             icon = { Icon(Icons.Default.FlashOn, contentDescription = null) },
-            title = { Text("QR Code Scanned") },
+            title = { Text(stringResource(R.string.qr_title)) },
             text = {
                 Column {
-                    Text("Image detected:")
+                    Text(stringResource(R.string.qr_image_detected, parsedImage ?: scannedData!!))
                     Spacer(modifier = Modifier.height(8.dp))
                     Card(
                         colors = CardDefaults.cardColors(
@@ -306,7 +308,7 @@ fun QRCodeScannerScreen(
                         onNavigateBack()
                     }
                 ) {
-                    Text("Pull Image")
+                    Text(stringResource(R.string.images_pull))
                 }
             },
             dismissButton = {
@@ -316,7 +318,7 @@ fun QRCodeScannerScreen(
                         scannedData = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
