@@ -61,6 +61,9 @@ timber = "5.0.1"
 # App Startup
 startup = "1.2.0"
 
+# Shizuku
+shizuku = "13.1.5"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -144,6 +147,10 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 
 # App Startup
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
+
+# Shizuku
+shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
+shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

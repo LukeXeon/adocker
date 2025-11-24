@@ -95,6 +95,13 @@ sealed class Screen(
         selectedIcon = Icons.Filled.QrCodeScanner,
         unselectedIcon = Icons.Outlined.QrCodeScanner
     )
+
+    data object PhantomProcess : Screen(
+        route = "phantom_process",
+        title = "Phantom Process Management",
+        selectedIcon = Icons.Filled.Block,
+        unselectedIcon = Icons.Outlined.Block
+    )
 }
 
 val bottomNavItems = listOf(

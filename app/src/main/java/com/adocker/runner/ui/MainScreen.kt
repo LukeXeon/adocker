@@ -1,14 +1,18 @@
 package com.adocker.runner.ui
 
+import android.os.Build
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.adocker.runner.core.utils.PhantomProcessManager
+import com.adocker.runner.ui.components.PhantomProcessWarningDialog
 import com.adocker.runner.ui.navigation.Screen
 import com.adocker.runner.ui.navigation.bottomNavItems
 import com.adocker.runner.ui.screens.containers.ContainersScreen
@@ -18,16 +22,20 @@ import com.adocker.runner.ui.screens.images.ImagesScreen
 import com.adocker.runner.ui.screens.images.PullImageScreen
 import com.adocker.runner.ui.screens.images.QRCodeScannerScreen
 import com.adocker.runner.ui.screens.settings.MirrorSettingsScreen
+import com.adocker.runner.ui.screens.settings.PhantomProcessScreen
 import com.adocker.runner.ui.screens.settings.SettingsScreen
 import com.adocker.runner.ui.screens.terminal.TerminalScreen
 import com.adocker.runner.ui.viewmodel.MainViewModel
 import com.adocker.runner.ui.viewmodel.TerminalViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     // Check if we should show bottom navigation
     val showBottomBar = remember(currentDestination) {
@@ -37,6 +45,43 @@ fun MainScreen() {
     }
 
     val mainViewModel: MainViewModel = hiltViewModel()
+
+    // Create PhantomProcessManager instance
+    // Note: PhantomProcessManager is @Singleton and injected via Hilt in ViewModels
+    // Here we create a local instance for startup check
+    val phantomProcessManager = remember(context) {
+        PhantomProcessManager(context)
+    }
+
+    // Phantom process warning state
+    var showPhantomWarning by remember { mutableStateOf(false) }
+    var hasCheckedPhantomProcess by remember { mutableStateOf(false) }
+
+    // Check phantom process restrictions on first launch
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasCheckedPhantomProcess) {
+            scope.launch {
+                if (phantomProcessManager.hasShizukuPermission()) {
+                    val isDisabled = phantomProcessManager.isPhantomProcessKillerDisabled()
+                    if (!isDisabled) {
+                        showPhantomWarning = true
+                    }
+                }
+                hasCheckedPhantomProcess = true
+            }
+        }
+    }
+
+    // Show warning dialog
+    if (showPhantomWarning) {
+        PhantomProcessWarningDialog(
+            onDismiss = { showPhantomWarning = false },
+            onNavigateToSettings = {
+                showPhantomWarning = false
+                navController.navigate(Screen.PhantomProcess.route)
+            }
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -124,6 +169,9 @@ fun MainScreen() {
                 SettingsScreen(
                     onNavigateToMirrorSettings = {
                         navController.navigate(Screen.MirrorSettings.route)
+                    },
+                    onNavigateToPhantomProcess = {
+                        navController.navigate(Screen.PhantomProcess.route)
                     }
                 )
             }
@@ -131,6 +179,15 @@ fun MainScreen() {
             // Mirror Settings
             composable(Screen.MirrorSettings.route) {
                 MirrorSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // Phantom Process Management
+            composable(Screen.PhantomProcess.route) {
+                PhantomProcessScreen(
                     onNavigateBack = {
                         navController.popBackStack()
                     }

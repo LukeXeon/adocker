@@ -133,6 +133,10 @@ dependencies {
     // App Startup
     implementation(libs.androidx.startup.runtime)
 
+    // Shizuku
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
+
     // ML Kit Barcode Scanning
     implementation(libs.mlkit.barcode.scanning)
 
