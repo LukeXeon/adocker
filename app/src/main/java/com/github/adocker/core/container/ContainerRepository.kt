@@ -5,7 +5,7 @@ import android.system.OsConstants
 import com.github.adocker.core.config.AppConfig
 import com.github.adocker.core.database.dao.ContainerDao
 import com.github.adocker.core.database.dao.ImageDao
-import com.github.adocker.core.database.model.ContainerConfig
+import com.github.adocker.core.registry.model.ContainerConfig
 import com.github.adocker.core.database.model.ContainerEntity
 import com.github.adocker.core.database.model.ContainerStatus
 import com.github.adocker.core.utils.deleteRecursively

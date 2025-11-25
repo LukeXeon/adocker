@@ -3,6 +3,7 @@ package com.github.adocker.core.database.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import com.github.adocker.core.registry.model.ContainerConfig
 import java.util.UUID
 
 @Entity(tableName = "containers")

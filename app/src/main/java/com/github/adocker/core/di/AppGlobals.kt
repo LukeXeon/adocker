@@ -1,4 +1,4 @@
-package com.github.adocker.core.database.model
+package com.github.adocker.core.di
 
 import com.github.adocker.ADockerApplication
 import dagger.hilt.EntryPoint
@@ -15,13 +15,13 @@ import kotlinx.serialization.json.Json
  */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-interface ConvertersEntryPoint {
+interface AppGlobals {
     fun json(): Json
 
     companion object {
         val instance = EntryPointAccessors.fromApplication(
-            ADockerApplication.instance,
-            ConvertersEntryPoint::class.java
+            ADockerApplication.Companion.instance,
+            AppGlobals::class.java
         )
     }
 }

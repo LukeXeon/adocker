@@ -1,5 +1,6 @@
-package com.github.adocker.core.database.model
+package com.github.adocker.core.registry.model
 
+import com.github.adocker.core.registry.model.EmptyObjectSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

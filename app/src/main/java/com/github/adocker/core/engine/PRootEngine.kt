@@ -6,7 +6,7 @@ import com.github.adocker.core.utils.execute
 import com.github.adocker.core.utils.executeStreaming
 import com.github.adocker.core.utils.startInteractiveProcess
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.database.model.ContainerConfig
+import com.github.adocker.core.registry.model.ContainerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

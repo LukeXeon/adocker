@@ -2,7 +2,7 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.core.database.model.ContainerConfig
+import com.github.adocker.core.registry.model.ContainerConfig
 import com.github.adocker.core.database.model.ContainerEntity
 import com.github.adocker.core.database.model.ContainerStatus
 import com.github.adocker.core.database.model.ImageEntity

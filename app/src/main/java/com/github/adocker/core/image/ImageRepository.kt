@@ -3,7 +3,7 @@ package com.github.adocker.core.image
 import com.github.adocker.core.config.AppConfig
 import com.github.adocker.core.database.dao.ImageDao
 import com.github.adocker.core.database.dao.LayerDao
-import com.github.adocker.core.database.model.ImageConfig
+import com.github.adocker.core.registry.model.ImageConfig
 import com.github.adocker.core.database.model.ImageEntity
 import com.github.adocker.core.database.model.LayerEntity
 import com.github.adocker.core.registry.DockerRegistryApi

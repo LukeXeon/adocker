@@ -1,6 +1,6 @@
 package com.github.adocker.core.registry.model
 
-import com.github.adocker.core.database.model.ImageConfig
+import com.github.adocker.core.registry.model.ImageConfig
 import kotlinx.serialization.Serializable
 
 @Serializable
