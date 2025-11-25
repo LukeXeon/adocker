@@ -45,7 +45,7 @@
             tools:node="merge">
             <!-- Timber Initializer -->
             <meta-data
-                android:name="com.adocker.runner.core.startup.TimberInitializer"
+                android:name="com.github.adocker.core.startup.TimberInitializer"
                 android:value="androidx.startup" />
             <!-- Config and RegistrySettings are now handled by Hilt DI -->
         </provider>

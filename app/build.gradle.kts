@@ -9,17 +9,17 @@ plugins {
 }
 
 android {
-    namespace = "com.adocker.runner"
+    namespace = "com.github.adocker"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.adocker.runner"
+        applicationId = "com.github.adocker"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.adocker.runner.HiltTestRunner"
+        testInstrumentationRunner = "com.github.adocker.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
