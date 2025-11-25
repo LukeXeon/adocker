@@ -7,7 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -128,10 +128,22 @@ fun MainScreen() {
                 HomeScreen(
                     viewModel = mainViewModel,
                     onNavigateToContainers = {
-                        navController.navigate(Screen.Containers.route)
+                        navController.navigate(Screen.Containers.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                     onNavigateToImages = {
-                        navController.navigate(Screen.Images.route)
+                        navController.navigate(Screen.Images.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                     onNavigateToPull = {
                         navController.navigate(Screen.PullImage.route)
@@ -251,6 +263,9 @@ fun MainScreen() {
                     },
                     onNavigateToQRScanner = {
                         navController.navigate(Screen.QRCodeScanner.route)
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(Screen.SearchImage.route)
                     },
                     scannedImageName = scannedImage.value
                 )

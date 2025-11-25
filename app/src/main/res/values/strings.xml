@@ -66,6 +66,8 @@
     <string name="images_pull_count">%1$s pulls</string>
     <string name="images_star_count">%1$s stars</string>
     <string name="images_official">Official</string>
+    <string name="images_search_hint_title">Need to find an image?</string>
+    <string name="images_search_hint_desc">Search millions of images on Docker Hub</string>
 
     <!-- Pull image -->
     <string name="pull_image_title">Pull Image</string>

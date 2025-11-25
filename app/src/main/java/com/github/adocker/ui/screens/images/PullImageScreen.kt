@@ -27,19 +27,16 @@ fun PullImageScreen(
     viewModel: MainViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
     scannedImageName: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val searchResults by viewModel.searchResults.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
     val isPulling by viewModel.isPulling.collectAsState()
     val pullProgress by viewModel.pullProgress.collectAsState()
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
 
-    var searchQuery by remember { mutableStateOf("") }
     var pullImageName by remember { mutableStateOf("") }
-    var showPullDialog by remember { mutableStateOf(false) }
 
     // Handle scanned image from QR code
     LaunchedEffect(scannedImageName) {
@@ -79,6 +76,9 @@ fun PullImageScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSearch) {
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.images_tab_search))
+                    }
                     IconButton(onClick = onNavigateToQRScanner) {
                         Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.images_scan_qr))
                     }
@@ -167,137 +167,51 @@ fun PullImageScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Search section
-            Text(
-                text = stringResource(R.string.images_tab_search),
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.images_search_placeholder)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.action_close))
-                        }
-                    }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.searchImages(searchQuery)
-                        focusManager.clearFocus()
-                    }
-                )
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    viewModel.searchImages(searchQuery)
-                    focusManager.clearFocus()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = searchQuery.isNotBlank() && !isLoading
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
+            // Empty state with search suggestion
+            if (!isPulling) {
+                Spacer(modifier = Modifier.height(32.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     )
-                } else {
-                    Text(stringResource(R.string.images_tab_search))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Search results
-            if (searchResults.isNotEmpty()) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(searchResults) { result ->
-                        SearchResultCard(
-                            result = result,
-                            onPull = {
-                                pullImageName = result.name
-                                showPullDialog = true
-                            }
-                        )
-                    }
-                }
-            } else if (!isLoading && searchQuery.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
                 ) {
                     Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            Icons.Default.SearchOff,
+                            Icons.Default.Search,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.images_search_hint_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.message_no_data),
+                            text = stringResource(R.string.images_search_hint_desc),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onNavigateToSearch,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.images_tab_search))
+                        }
                     }
                 }
             }
         }
-    }
-
-    // Pull confirmation dialog
-    if (showPullDialog) {
-        AlertDialog(
-            onDismissRequest = { showPullDialog = false },
-            icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) },
-            title = { Text(stringResource(R.string.pull_image_title)) },
-            text = {
-                Column {
-                    Text("Pull image '$pullImageName'?")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = pullImageName,
-                        onValueChange = { pullImageName = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(stringResource(R.string.pull_image_name_label)) },
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.pullImage(pullImageName)
-                        showPullDialog = false
-                    }
-                ) {
-                    Text(stringResource(R.string.pull_image_button))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPullDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
     }
 }

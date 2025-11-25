@@ -66,6 +66,8 @@
     <string name="images_pull_count">%1$s 次拉取</string>
     <string name="images_star_count">%1$s 星标</string>
     <string name="images_official">官方</string>
+    <string name="images_search_hint_title">需要查找镜像？</string>
+    <string name="images_search_hint_desc">在 Docker Hub 上搜索数百万个镜像</string>
 
     <!-- 拉取镜像 -->
     <string name="pull_image_title">拉取镜像</string>
