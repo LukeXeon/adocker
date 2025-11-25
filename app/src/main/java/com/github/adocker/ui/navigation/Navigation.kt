@@ -104,6 +104,13 @@ sealed class Screen(
         selectedIcon = Icons.Filled.Block,
         unselectedIcon = Icons.Outlined.Block
     )
+
+    data object SearchImage : Screen(
+        route = "search_image",
+        titleResId = R.string.images_tab_search,
+        selectedIcon = Icons.Filled.Search,
+        unselectedIcon = Icons.Outlined.Search
+    )
 }
 
 val bottomNavItems = listOf(

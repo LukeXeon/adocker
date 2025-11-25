@@ -24,6 +24,7 @@ fun ImagesScreen(
     onNavigateToPull: () -> Unit,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToDetail: (String) -> Unit,
+    onNavigateToSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val images by viewModel.images.collectAsState()
@@ -46,6 +47,9 @@ fun ImagesScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.images_title)) },
                 actions = {
+                    IconButton(onClick = onNavigateToSearch) {
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.images_tab_search))
+                    }
                     IconButton(onClick = onNavigateToPull) {
                         Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.images_pull))
                     }

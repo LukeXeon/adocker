@@ -3,10 +3,12 @@ package com.github.adocker.core.logging
 import com.google.auto.service.AutoService
 import org.slf4j.ILoggerFactory
 import org.slf4j.IMarkerFactory
+import org.slf4j.Logger
 import org.slf4j.helpers.BasicMarkerFactory
 import org.slf4j.helpers.NOPMDCAdapter
 import org.slf4j.spi.MDCAdapter
 import org.slf4j.spi.SLF4JServiceProvider
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * SLF4J 2.0 ServiceProvider implementation for Android
@@ -16,7 +18,10 @@ import org.slf4j.spi.SLF4JServiceProvider
  * The @AutoService annotation generates the required META-INF/services file.
  */
 @AutoService(SLF4JServiceProvider::class)
-class TimberServiceProvider : SLF4JServiceProvider {
+class TimberServiceProvider : BasicMarkerFactory(),
+    SLF4JServiceProvider,
+    ILoggerFactory,
+    MDCAdapter by NOPMDCAdapter() {
 
     companion object {
         /**
@@ -26,21 +31,22 @@ class TimberServiceProvider : SLF4JServiceProvider {
         const val REQUESTED_API_VERSION = "2.0.99"
     }
 
-    private lateinit var loggerFactory: ILoggerFactory
-    private lateinit var markerFactory: IMarkerFactory
-    private lateinit var mdcAdapter: MDCAdapter
+    private val loggers = ConcurrentHashMap<String, Logger>()
 
-    override fun getLoggerFactory(): ILoggerFactory = loggerFactory
+    override fun getLogger(name: String): Logger {
+        return loggers.computeIfAbsent(name) { loggerName ->
+            TimberLogger(loggerName)
+        }
+    }
 
-    override fun getMarkerFactory(): IMarkerFactory = markerFactory
+    override fun getLoggerFactory(): ILoggerFactory = this
 
-    override fun getMDCAdapter(): MDCAdapter = mdcAdapter
+    override fun getMarkerFactory(): IMarkerFactory = this
+
+    override fun getMDCAdapter(): MDCAdapter = this
 
     override fun getRequestedApiVersion(): String = REQUESTED_API_VERSION
 
     override fun initialize() {
-        loggerFactory = TimberLoggerFactory()
-        markerFactory = BasicMarkerFactory()
-        mdcAdapter = NOPMDCAdapter()
     }
 }
