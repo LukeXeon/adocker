@@ -163,6 +163,30 @@
     <string name="phantom_warning_message">Android 12+ 将后台进程限制为 32 个。这可能会影响容器运行。\n\n如果您已安装 Shizuku，可以通过设置调整此限制。</string>
     <string name="phantom_warning_open_settings">打开设置</string>
     <string name="phantom_warning_later">稍后</string>
+    <string name="phantom_ready">就绪</string>
+    <string name="phantom_disabled">已禁用</string>
+    <string name="phantom_active">已激活（限制：%1$s）</string>
+    <string name="phantom_grant_permission">授予权限</string>
+    <string name="phantom_restrictions_active">限制已激活</string>
+    <string name="phantom_restrictions_message">Android 当前正在限制子进程。这可能导致容器意外终止。</string>
+    <string name="phantom_disable_restrictions">禁用限制</string>
+    <string name="phantom_restrictions_disabled">限制已禁用</string>
+    <string name="phantom_restrictions_disabled_message">幻影进程限制已禁用。容器可以正常运行。</string>
+    <string name="phantom_restore_default">恢复默认</string>
+    <string name="phantom_how_to_use">使用方法</string>
+    <string name="phantom_step1_title">安装 Shizuku</string>
+    <string name="phantom_step1_desc">从 GitHub releases 下载并安装 Shizuku</string>
+    <string name="phantom_step2_title">启动 Shizuku</string>
+    <string name="phantom_step2_desc">将设备连接到电脑并运行：\nadb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+    <string name="phantom_step3_title">授予权限</string>
+    <string name="phantom_step3_desc">返回此应用并点击"授予权限"</string>
+    <string name="phantom_step4_title">禁用限制</string>
+    <string name="phantom_step4_desc">点击"禁用限制"以允许无限制的容器进程</string>
+    <string name="phantom_alternative_methods">替代方法</string>
+    <string name="phantom_manual_setting">手动设置（Android 14+）</string>
+    <string name="phantom_manual_setting_desc">设置 → 开发者选项 → 禁用子进程限制</string>
+    <string name="phantom_adb_command">直接 ADB 命令</string>
+    <string name="action_dismiss">关闭</string>
 
     <!-- QR 扫码 -->
     <string name="qr_title">扫描二维码</string>

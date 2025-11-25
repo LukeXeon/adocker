@@ -74,7 +74,7 @@ fun PhantomProcessScreen(
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(
                 message = error,
-                actionLabel = "Dismiss",
+                actionLabel = context.getString(R.string.action_dismiss),
                 duration = SnackbarDuration.Long
             )
             viewModel.clearError()
@@ -160,7 +160,7 @@ fun PhantomProcessScreen(
                             status = when {
                                 !uiState.shizukuAvailable -> stringResource(R.string.phantom_shizuku_not_running)
                                 !uiState.shizukuPermissionGranted -> stringResource(R.string.phantom_permission_denied)
-                                else -> "Ready"
+                                else -> stringResource(R.string.phantom_ready)
                             },
                             isGood = uiState.shizukuAvailable && uiState.shizukuPermissionGranted,
                             icon = Icons.Default.Security
@@ -171,8 +171,8 @@ fun PhantomProcessScreen(
                             label = stringResource(R.string.phantom_current_limit),
                             status = when {
                                 uiState.isChecking -> stringResource(R.string.status_loading)
-                                uiState.phantomKillerDisabled -> "Disabled"
-                                else -> "Active (limit: ${uiState.currentLimit ?: "32"})"
+                                uiState.phantomKillerDisabled -> stringResource(R.string.phantom_disabled)
+                                else -> stringResource(R.string.phantom_active, uiState.currentLimit ?: "32")
                             },
                             isGood = uiState.phantomKillerDisabled,
                             icon = Icons.Default.Block
@@ -250,7 +250,7 @@ fun PhantomProcessScreen(
                                 ) {
                                     Icon(Icons.Default.Lock, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Grant Permission")
+                                    Text(stringResource(R.string.phantom_grant_permission))
                                 }
                             }
                         }
@@ -264,11 +264,11 @@ fun PhantomProcessScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = "Restrictions Active",
+                                    text = stringResource(R.string.phantom_restrictions_active),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "Android is currently limiting child processes. This may cause containers to terminate unexpectedly.",
+                                    text = stringResource(R.string.phantom_restrictions_message),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Button(
@@ -286,7 +286,7 @@ fun PhantomProcessScreen(
                                         Icon(Icons.Default.Block, contentDescription = null)
                                     }
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Disable Restrictions")
+                                    Text(stringResource(R.string.phantom_disable_restrictions))
                                 }
                             }
                         }
@@ -313,12 +313,12 @@ fun PhantomProcessScreen(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Restrictions Disabled",
+                                        text = stringResource(R.string.phantom_restrictions_disabled),
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                 }
                                 Text(
-                                    text = "Phantom process restrictions are disabled. Containers can run normally.",
+                                    text = stringResource(R.string.phantom_restrictions_disabled_message),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 OutlinedButton(
@@ -335,7 +335,7 @@ fun PhantomProcessScreen(
                                         Icon(Icons.Default.Restore, contentDescription = null)
                                     }
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Restore Default")
+                                    Text(stringResource(R.string.phantom_restore_default))
                                 }
                             }
                         }
@@ -349,7 +349,7 @@ fun PhantomProcessScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "How to Use",
+                            text = stringResource(R.string.phantom_how_to_use),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -357,27 +357,27 @@ fun PhantomProcessScreen(
 
                         HelpStep(
                             number = "1",
-                            title = "Install Shizuku",
-                            description = "Download and install Shizuku from GitHub releases"
+                            title = stringResource(R.string.phantom_step1_title),
+                            description = stringResource(R.string.phantom_step1_desc)
                         )
 
                         HelpStep(
                             number = "2",
-                            title = "Start Shizuku",
-                            description = "Connect your device to PC and run:\nadb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh",
+                            title = stringResource(R.string.phantom_step2_title),
+                            description = stringResource(R.string.phantom_step2_desc),
                             code = true
                         )
 
                         HelpStep(
                             number = "3",
-                            title = "Grant Permission",
-                            description = "Return to this app and tap 'Grant Permission'"
+                            title = stringResource(R.string.phantom_step3_title),
+                            description = stringResource(R.string.phantom_step3_desc)
                         )
 
                         HelpStep(
                             number = "4",
-                            title = "Disable Restrictions",
-                            description = "Tap 'Disable Restrictions' to allow unlimited container processes"
+                            title = stringResource(R.string.phantom_step4_title),
+                            description = stringResource(R.string.phantom_step4_desc)
                         )
                     }
                 }
@@ -389,7 +389,7 @@ fun PhantomProcessScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "Alternative Methods",
+                            text = stringResource(R.string.phantom_alternative_methods),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -397,19 +397,19 @@ fun PhantomProcessScreen(
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             Text(
-                                text = "Manual Setting (Android 14+)",
+                                text = stringResource(R.string.phantom_manual_setting),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Settings → Developer Options → Disable child process restrictions",
+                                text = stringResource(R.string.phantom_manual_setting_desc),
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Spacer(Modifier.height(8.dp))
                         }
 
                         Text(
-                            text = "Direct ADB Command",
+                            text = stringResource(R.string.phantom_adb_command),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
