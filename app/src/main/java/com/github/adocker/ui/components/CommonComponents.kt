@@ -24,9 +24,9 @@ import com.github.adocker.R
 import com.github.adocker.core.utils.formatFileSize
 import com.github.adocker.core.database.model.ContainerEntity
 import com.github.adocker.core.database.model.ImageEntity
-import com.github.adocker.core.remote.model.SearchResult
+import com.github.adocker.core.registry.model.SearchResult
 import com.github.adocker.core.database.model.ContainerStatus
-import com.github.adocker.core.repository.model.PullProgress
+import com.github.adocker.core.image.PullProgress
 
 @Composable
 fun StatusIndicator(

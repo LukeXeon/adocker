@@ -1,4 +1,4 @@
-package com.github.adocker.core.remote.model
+package com.github.adocker.core.registry.model
 
 import com.github.adocker.core.database.model.ImageConfig
 import kotlinx.serialization.Serializable

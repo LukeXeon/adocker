@@ -1,4 +1,4 @@
-package com.github.adocker.core.repository
+package com.github.adocker.core.registry
 
 import com.github.adocker.core.database.dao.MirrorDao
 import com.github.adocker.core.database.model.MirrorEntity

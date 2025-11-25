@@ -1,4 +1,4 @@
-package com.github.adocker.core.keepalive
+package com.github.adocker.core.process
 
 import android.content.pm.PackageManager
 import android.os.Build
@@ -130,12 +130,18 @@ class PhantomProcessManager @Inject constructor() {
                 throw SecurityException("Shizuku permission not granted")
             }
 
-            val command = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
-                "settings put global settings_enable_monitor_phantom_procs true"
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                "device_config put activity_manager max_phantom_processes 32"
-            } else {
-                throw UnsupportedOperationException("Android 12+ required")
+            val command = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 -> {
+                    "settings put global settings_enable_monitor_phantom_procs true"
+                }
+
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                    "device_config put activity_manager max_phantom_processes 32"
+                }
+
+                else -> {
+                    throw UnsupportedOperationException("Android 12+ required")
+                }
             }
 
             executeShizukuCommand(command)
@@ -155,9 +161,6 @@ class PhantomProcessManager @Inject constructor() {
         // Use Shizuku's RemoteProcess via reflection or alternative method
         // Since newProcess is private, we use the ShizukuRemoteProcess through a helper
         val process = try {
-            // Try to use the public API if available
-            val processBuilder = ProcessBuilder("sh", "-c", command)
-
             // Execute via Shizuku using the shell with elevated privileges
             val shellCmd = "sh"
             val args = arrayOf("-c", command)

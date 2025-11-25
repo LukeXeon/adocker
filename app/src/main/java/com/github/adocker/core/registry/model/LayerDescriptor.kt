@@ -1,11 +1,11 @@
-package com.github.adocker.core.remote.model
+package com.github.adocker.core.registry.model
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ManifestDescriptor(
+data class LayerDescriptor(
     val mediaType: String,
     val digest: String,
     val size: Long,
-    val platform: Platform? = null
+    val urls: List<String>? = null
 )

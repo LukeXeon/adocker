@@ -3,7 +3,7 @@ package com.github.adocker
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.registry.RegistryRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking

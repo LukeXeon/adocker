@@ -4,7 +4,7 @@ import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.registry.RegistryRepository
 import com.github.adocker.core.utils.getDirectorySize
 import com.github.adocker.core.database.model.MirrorEntity
 import com.github.adocker.core.engine.PRootEngine

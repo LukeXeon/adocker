@@ -1,4 +1,4 @@
-package com.github.adocker.core.repository.model
+package com.github.adocker.core.image
 
 /**
  * Docker image reference

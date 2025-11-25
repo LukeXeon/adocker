@@ -1,19 +1,19 @@
-package com.github.adocker.core.repository
+package com.github.adocker.core.container
 
 import android.system.Os
 import android.system.OsConstants
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.utils.deleteRecursively
-import timber.log.Timber
 import com.github.adocker.core.database.dao.ContainerDao
 import com.github.adocker.core.database.dao.ImageDao
 import com.github.adocker.core.database.model.ContainerConfig
 import com.github.adocker.core.database.model.ContainerEntity
 import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.utils.deleteRecursively
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
@@ -75,7 +75,7 @@ class ContainerRepository @Inject constructor(
 
             // Create container directory structure
             val containerDir = File(appConfig.containersDir, containerId)
-            val rootfsDir = File(containerDir, AppConfig.ROOTFS_DIR)
+            val rootfsDir = File(containerDir, AppConfig.Companion.ROOTFS_DIR)
             rootfsDir.mkdirs()
 
             // Copy layers to rootfs (overlay simulation)
@@ -119,7 +119,7 @@ class ContainerRepository @Inject constructor(
             )
 
             // Save container metadata
-            val containerJson = File(containerDir, AppConfig.CONTAINER_JSON)
+            val containerJson = File(containerDir, AppConfig.Companion.CONTAINER_JSON)
             containerJson.writeText(json.encodeToString(container))
 
             containerDao.insertContainer(container)
@@ -165,11 +165,11 @@ class ContainerRepository @Inject constructor(
 
                     // Create the symlink at destination
                     Os.symlink(linkTarget, destFile.absolutePath)
-                    Timber.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
+                    Timber.Forest.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
                     return@forEach
                 }
             } catch (e: Exception) {
-                Timber.w(e, "Failed to check if ${file.name} is symlink")
+                Timber.Forest.w(e, "Failed to check if ${file.name} is symlink")
                 // Fall through to regular file handling
             }
 
@@ -183,7 +183,7 @@ class ContainerRepository @Inject constructor(
                         val stat = Os.lstat(file.absolutePath)
                         Os.chmod(destFile.absolutePath, stat.st_mode)
                     } catch (e: Exception) {
-                        Timber.w(e, "Failed to preserve permissions for ${file.name}")
+                        Timber.Forest.w(e, "Failed to preserve permissions for ${file.name}")
                     }
                 }
             }
@@ -235,7 +235,7 @@ class ContainerRepository @Inject constructor(
      * Get container rootfs directory
      */
     fun getContainerRootfs(containerId: String): File {
-        return File(appConfig.containersDir, "$containerId/${AppConfig.ROOTFS_DIR}")
+        return File(appConfig.containersDir, "$containerId/${AppConfig.Companion.ROOTFS_DIR}")
     }
 
     /**

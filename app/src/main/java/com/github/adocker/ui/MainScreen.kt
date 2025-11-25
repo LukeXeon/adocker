@@ -12,7 +12,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.github.adocker.core.keepalive.PhantomProcessManager
+import com.github.adocker.core.process.PhantomProcessManager
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.components.PhantomProcessWarningDialog
 import com.github.adocker.ui.navigation.Screen

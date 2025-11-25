@@ -1,20 +1,17 @@
-package com.github.adocker.core.repository
+package com.github.adocker.core.image
 
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.utils.copyDirectory
-import com.github.adocker.core.utils.deleteRecursively
-import com.github.adocker.core.utils.extractTar
-import com.github.adocker.core.utils.extractTarGz
-import com.github.adocker.core.utils.getDirectorySize
 import com.github.adocker.core.database.dao.ImageDao
 import com.github.adocker.core.database.dao.LayerDao
 import com.github.adocker.core.database.model.ImageConfig
 import com.github.adocker.core.database.model.ImageEntity
 import com.github.adocker.core.database.model.LayerEntity
-import com.github.adocker.core.remote.api.DockerRegistryApi
-import com.github.adocker.core.repository.model.ImageReference
-import com.github.adocker.core.repository.model.PullProgress
-import com.github.adocker.core.repository.model.PullStatus
+import com.github.adocker.core.registry.DockerRegistryApi
+import com.github.adocker.core.utils.copyDirectory
+import com.github.adocker.core.utils.deleteRecursively
+import com.github.adocker.core.utils.extractTar
+import com.github.adocker.core.utils.extractTarGz
+import com.github.adocker.core.utils.getDirectorySize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -84,32 +81,32 @@ class ImageRepository @Inject constructor(
 
             emit(PullProgress(layerDigest, 0, layerDescriptor.size, PullStatus.WAITING))
 
-            Timber.d("Processing layer ${layerDigest.take(16)}, size: ${layerDescriptor.size}")
+            Timber.Forest.d("Processing layer ${layerDigest.take(16)}, size: ${layerDescriptor.size}")
 
             val existingLayer: LayerEntity?
             val layerFile: File
             val extractedDir: File
 
             try {
-                Timber.d("About to check database for existing layer")
+                Timber.Forest.d("About to check database for existing layer")
                 // Check if layer already exists
                 existingLayer = layerDao.getLayerByDigest(layerDigest)
-                Timber.d("Database check complete: $existingLayer")
+                Timber.Forest.d("Database check complete: $existingLayer")
 
                 layerFile =
                     File(appConfig.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
                 extractedDir = File(appConfig.layersDir, layerDigest.removePrefix("sha256:"))
-                Timber.d("File paths created")
+                Timber.Forest.d("File paths created")
 
-                Timber.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
+                Timber.Forest.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
             } catch (e: Exception) {
-                Timber.e(e, "Error checking layer existence")
+                Timber.Forest.e(e, "Error checking layer existence")
                 throw e
             }
 
             if (existingLayer?.extracted == true && extractedDir.exists()) {
                 // Layer already exists, increment reference
-                Timber.i("Layer ${layerDigest.take(16)} already exists, skipping download")
+                Timber.Forest.i("Layer ${layerDigest.take(16)} already exists, skipping download")
                 layerDao.incrementRefCount(layerDigest)
                 layerIds.add(layerDigest)
                 emit(
@@ -124,7 +121,7 @@ class ImageRepository @Inject constructor(
             }
 
             // Download layer
-            Timber.d("Calling downloadLayer for ${layerDigest.take(16)}")
+            Timber.Forest.d("Calling downloadLayer for ${layerDigest.take(16)}")
             val layer = LayerEntity(
                 layerDigest,
                 layerDescriptor.size,
@@ -138,7 +135,7 @@ class ImageRepository @Inject constructor(
                     // We can't emit from inside the callback, progress is tracked externally
                 }
 
-            Timber.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
+            Timber.Forest.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
             downloadResult.getOrThrow()
 
             emit(
@@ -202,8 +199,8 @@ class ImageRepository @Inject constructor(
             repository = imageRef.repository,
             tag = imageRef.tag,
             digest = manifest.config.digest,
-            architecture = configResponse.architecture ?: AppConfig.ARCHITECTURE,
-            os = configResponse.os ?: AppConfig.DEFAULT_OS,
+            architecture = configResponse.architecture ?: AppConfig.Companion.ARCHITECTURE,
+            os = configResponse.os ?: AppConfig.Companion.DEFAULT_OS,
             size = totalSize,
             layerIds = layerIds,
             config = imageConfig
@@ -245,7 +242,7 @@ class ImageRepository @Inject constructor(
      * Get tags for an image
      */
     suspend fun getTags(imageName: String): Result<List<String>> {
-        val imageRef = ImageReference.parse(imageName)
+        val imageRef = ImageReference.Companion.parse(imageName)
         return registryApi.getTags(imageRef)
     }
 
@@ -269,8 +266,8 @@ class ImageRepository @Inject constructor(
                     repository = repository,
                     tag = tag,
                     digest = "sha256:$imageId",
-                    architecture = AppConfig.ARCHITECTURE,
-                    os = AppConfig.DEFAULT_OS,
+                    architecture = AppConfig.Companion.ARCHITECTURE,
+                    os = AppConfig.Companion.DEFAULT_OS,
                     size = size,
                     layerIds = listOf("sha256:$imageId")
                 )

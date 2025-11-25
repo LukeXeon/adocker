@@ -10,8 +10,6 @@ import dagger.hilt.android.HiltAndroidApp
  * All initialization is handled by AndroidX App Startup.
  * See the following initializers in core.startup package:
  * - TimberInitializer: Timber logging setup
- * - ConfigInitializer: Config initialization
- * - RegistrySettingsInitializer: Registry settings initialization
  */
 @HiltAndroidApp
 class ADockerApplication : Application() {
