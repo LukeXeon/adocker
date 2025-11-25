@@ -3,6 +3,9 @@ package com.github.adocker.core.container
 import com.github.adocker.core.database.model.ContainerStatus
 import com.github.adocker.core.engine.ExecResult
 import com.github.adocker.core.engine.PRootEngine
+import com.github.adocker.core.utils.await
+import com.github.adocker.core.utils.destroyForciblyCompat
+import com.github.adocker.core.utils.isActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,9 +21,9 @@ import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.DurationUnit
 
 /**
  * Container executor - manages container lifecycle and execution
@@ -111,13 +114,13 @@ class ContainerExecutor @Inject constructor(
                     ?: throw IllegalStateException("Container is not running")
 
                 if (force) {
-                    handle.process.destroyForcibly()
+                    handle.process.destroyForciblyCompat()
                 } else {
                     handle.process.destroy()
                     // Give it some time to gracefully shutdown
-                    val exited = handle.process.waitFor(10, TimeUnit.SECONDS)
+                    val exited = handle.process.await(10, DurationUnit.SECONDS)
                     if (!exited) {
-                        handle.process.destroyForcibly()
+                        handle.process.destroyForciblyCompat()
                     }
                 }
 
@@ -196,7 +199,7 @@ class ContainerExecutor @Inject constructor(
      * Check if container is running
      */
     fun isContainerRunning(containerId: String): Boolean {
-        return runningProcesses[containerId]?.process?.isAlive == true
+        return runningProcesses[containerId]?.process?.isActive == true
     }
 
     /**
@@ -204,7 +207,7 @@ class ContainerExecutor @Inject constructor(
      */
     fun getExitCode(containerId: String): Int? {
         val handle = runningProcesses[containerId]
-        return if (handle?.process?.isAlive == false) {
+        return if (handle?.process?.isActive == false) {
             handle.process.exitValue()
         } else null
     }

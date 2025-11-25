@@ -1,48 +1,71 @@
 package com.github.adocker.core.utils
 
+import android.os.Build
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import kotlin.sequences.forEach
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-suspend fun Process.awaitExitValue(
+/**
+ * Forcibly kills the process.
+ * Compatibility wrapper for Process.destroyForcibly() (API 26+)
+ */
+fun Process.destroyForciblyCompat(): Process {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // API 26+: Use the native method
+        return destroyForcibly()
+    } else {
+        // API < 26: Fallback implementation
+        destroy()
+        return this
+    }
+}
+
+/**
+ * Checks if the process is still running.
+ * Compatibility wrapper for Process.isAlive() (API 26+)
+ */
+val Process.isActive: Boolean
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        isAlive
+    } else {
+        try {
+            exitValue()
+            false // Process has exited
+        } catch (_: IllegalThreadStateException) {
+            true // Process is still running
+        }
+    }
+
+suspend fun Process.await(
     timeout: Long,
     unit: DurationUnit = DurationUnit.MILLISECONDS
-): Int = withContext(Dispatchers.IO) {
-    if (timeout > 0) {
-        val code = withTimeoutOrNull(timeout.toDuration(unit)) {
-            var code: Int = -1
-            while (isActive) {
-                try {
-                    code = exitValue()
-                    break
-                } catch (_: IllegalThreadStateException) {
-                    // Process is still running
-                    delay(100)
-                }
+): Boolean = withContext(Dispatchers.IO) {
+    withTimeoutOrNull(timeout.toDuration(unit)) {
+        var finished = false
+        while (isActive) {
+            try {
+                exitValue()
+                finished = true
+                break
+            } catch (_: IllegalThreadStateException) {
+                // Process is still running
+                delay(100)
             }
-            return@withTimeoutOrNull code
         }
-        if (code != null) {
-            return@withContext code
-        } else {
-            destroy()
-            return@withContext -1
-        }
-    } else {
-        return@withContext waitFor()
-    }
+        return@withTimeoutOrNull finished
+    } ?: false
 }
 
 /**
@@ -60,28 +83,37 @@ suspend fun execute(
         redirectErrorStream(false)
     }
     val process = processBuilder.start()
-    val stdout = StringBuilder()
-    val stderr = StringBuilder()
-    // Read stdout
-    val stdoutReader = BufferedReader(InputStreamReader(process.inputStream))
-    val stderrReader = BufferedReader(InputStreamReader(process.errorStream))
-    val stdoutThread = launch {
-        stdoutReader.useLines { lines ->
-            lines.forEach { stdout.appendLine(it) }
+    // Read
+    val jobs = sequenceOf(
+        process.inputStream,
+        process.errorStream
+    ).map {
+        BufferedReader(InputStreamReader(it))
+    }.map { reader ->
+        async {
+            reader.useLines { lines ->
+                val builder = StringBuilder()
+                lines.forEach { builder.appendLine(it) }
+                return@useLines builder
+            }
         }
-    }
-    val stderrThread = launch {
-        stderrReader.useLines { lines ->
-            lines.forEach { stderr.appendLine(it) }
+    }.toList()
+    val exitCode = if (timeout > 0) {
+        val finished = process.await(timeout, DurationUnit.MILLISECONDS)
+        if (!finished) {
+            process.destroyForciblyCompat()
+            -1
+        } else {
+            process.exitValue()
         }
+    } else {
+        process.waitFor()
     }
-    val exitCode = process.awaitExitValue(timeout)
-    stdoutThread.join()
-    stderrThread.join()
+    val outputs = jobs.awaitAll()
     ProcessResult(
         exitCode = exitCode,
-        stdout = stdout.toString().trim(),
-        stderr = stderr.toString().trim()
+        stdout = outputs[0].toString().trim(),
+        stderr = outputs[1].toString().trim()
     )
 }
 
@@ -125,7 +157,6 @@ fun startInteractiveProcess(
         environment().putAll(environment)
         redirectErrorStream(true)
     }
-
     return processBuilder.start()
 }
 

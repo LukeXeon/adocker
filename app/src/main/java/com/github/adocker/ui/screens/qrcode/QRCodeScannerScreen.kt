@@ -82,7 +82,10 @@ fun QRCodeScannerScreen(
                 title = { Text(stringResource(R.string.qr_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 actions = {
@@ -338,8 +341,6 @@ private fun CameraPreview(
 
     DisposableEffect(Unit) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        val executor = Executors.newSingleThreadExecutor()
-
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
@@ -347,7 +348,7 @@ private fun CameraPreview(
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                    it.surfaceProvider = previewView.surfaceProvider
                 }
 
             // Image analysis use case for barcode scanning
@@ -385,7 +386,6 @@ private fun CameraPreview(
         onDispose {
             cameraProviderFuture.get().unbindAll()
             barcodeScanner.close()
-            executor.shutdown()
         }
     }
 
