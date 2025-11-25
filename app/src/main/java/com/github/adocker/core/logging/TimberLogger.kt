@@ -1,10 +1,13 @@
 package com.github.adocker.core.logging
 
+import org.slf4j.ILoggerFactory
+import org.slf4j.Logger
 import org.slf4j.Marker
 import org.slf4j.event.Level
 import org.slf4j.helpers.LegacyAbstractLogger
 import org.slf4j.helpers.MessageFormatter
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * SLF4J Logger implementation that forwards to Timber

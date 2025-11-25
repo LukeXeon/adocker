@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.data.repository.RegistryRepository
-import com.github.adocker.data.local.model.MirrorEntity
+import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.database.model.MirrorEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.ktor.client.HttpClient

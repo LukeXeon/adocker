@@ -4,10 +4,10 @@ import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.data.repository.RegistryRepository
-import com.github.adocker.core.utils.FileUtils
-import com.github.adocker.data.local.model.MirrorEntity
-import com.github.adocker.engine.proot.PRootEngine
+import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.utils.getDirectorySize
+import com.github.adocker.core.database.model.MirrorEntity
+import com.github.adocker.core.engine.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +35,7 @@ class SettingsViewModel @Inject constructor(
 
     val availableMirrors: List<MirrorEntity> = RegistryRepository.AVAILABLE_MIRRORS
 
-    val architecture: String = appConfig.architecture
+    val architecture = AppConfig.ARCHITECTURE
     val baseDir: String = appConfig.baseDir.absolutePath
 
     init {
@@ -45,7 +45,7 @@ class SettingsViewModel @Inject constructor(
     private fun loadSettings() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
+                _storageUsage.value = getDirectorySize(appConfig.baseDir)
                 _prootVersion.value = prootEngine?.getVersion()
                 _currentMirror.value = registrySettings.getCurrentMirror()
             }
@@ -77,7 +77,7 @@ class SettingsViewModel @Inject constructor(
                 appConfig.tmpDir.deleteRecursively()
                 appConfig.tmpDir.mkdirs()
 
-                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
+                _storageUsage.value = getDirectorySize(appConfig.baseDir)
             }
             onComplete()
         }
@@ -86,7 +86,7 @@ class SettingsViewModel @Inject constructor(
     fun refreshStorageUsage() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _storageUsage.value = FileUtils.getDirectorySize(appConfig.baseDir)
+                _storageUsage.value = getDirectorySize(appConfig.baseDir)
             }
         }
     }

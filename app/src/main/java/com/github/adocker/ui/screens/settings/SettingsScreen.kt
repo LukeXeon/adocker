@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.utils.FileUtils
+import com.github.adocker.core.utils.formatFileSize
 import com.github.adocker.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 
@@ -73,7 +73,8 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = currentMirror?.name ?: stringResource(R.string.status_loading),
+                                text = currentMirror?.name
+                                    ?: stringResource(R.string.status_loading),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -169,7 +170,8 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Storage,
                     title = "Storage Usage",
-                    subtitle = storageUsage?.let { FileUtils.formatSize(it) } ?: stringResource(R.string.status_loading)
+                    subtitle = storageUsage?.let { formatFileSize(it) }
+                        ?: stringResource(R.string.status_loading)
                 )
                 SettingsItem(
                     icon = Icons.Default.Folder,

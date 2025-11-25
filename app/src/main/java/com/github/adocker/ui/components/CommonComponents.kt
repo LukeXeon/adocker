@@ -21,12 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.core.utils.FileUtils
-import com.github.adocker.data.local.model.ContainerEntity
-import com.github.adocker.data.local.model.ImageEntity
-import com.github.adocker.data.remote.model.SearchResult
-import com.github.adocker.data.local.model.ContainerStatus
-import com.github.adocker.data.repository.model.PullProgress
+import com.github.adocker.core.utils.formatFileSize
+import com.github.adocker.core.database.model.ContainerEntity
+import com.github.adocker.core.database.model.ImageEntity
+import com.github.adocker.core.remote.model.SearchResult
+import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.repository.model.PullProgress
 
 @Composable
 fun StatusIndicator(
@@ -225,7 +225,7 @@ fun ImageCard(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 InfoChip(
-                    label = FileUtils.formatSize(image.size)
+                    label = formatFileSize(image.size)
                 )
                 InfoChip(
                     label = image.architecture

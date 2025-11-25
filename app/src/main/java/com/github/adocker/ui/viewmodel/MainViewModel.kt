@@ -2,14 +2,15 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.data.local.model.ContainerConfig
-import com.github.adocker.data.local.model.ContainerEntity
-import com.github.adocker.data.local.model.ContainerStatus
-import com.github.adocker.data.local.model.ImageEntity
-import com.github.adocker.data.repository.ContainerRepository
-import com.github.adocker.data.repository.ImageRepository
-import com.github.adocker.data.repository.model.PullProgress
-import com.github.adocker.engine.executor.ContainerExecutor
+import com.github.adocker.core.database.model.ContainerConfig
+import com.github.adocker.core.database.model.ContainerEntity
+import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.database.model.ImageEntity
+import com.github.adocker.core.remote.model.SearchResult
+import com.github.adocker.core.repository.ContainerRepository
+import com.github.adocker.core.repository.ImageRepository
+import com.github.adocker.core.repository.model.PullProgress
+import com.github.adocker.core.engine.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -33,8 +34,8 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
-    private val _searchResults = MutableStateFlow<List<com.github.adocker.data.remote.model.SearchResult>>(emptyList())
-    val searchResults: StateFlow<List<com.github.adocker.data.remote.model.SearchResult>> = _searchResults.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
+    val searchResults: StateFlow<List<SearchResult>> = _searchResults.asStateFlow()
 
     // Pull progress
     private val _pullProgress = MutableStateFlow<Map<String, PullProgress>>(emptyMap())

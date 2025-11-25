@@ -25,18 +25,9 @@ class AppConfig @Inject constructor(
     val binDir = File(baseDir, DIR_BIN)
     val tmpDir = File(baseDir, DIR_TMP)
     val nativeLibDir = File(requireNotNull(context.applicationInfo.nativeLibraryDir))
-
     val packageInfo = requireNotNull(
         context.packageManager.getPackageInfo(context.packageName, 0)
     )
-
-    val architecture = when (Build.SUPPORTED_ABIS.firstOrNull()) {
-        "arm64-v8a" -> "arm64"
-        "armeabi-v7a" -> "arm"
-        "x86_64" -> "amd64"
-        "x86" -> "386"
-        else -> DEFAULT_ARCHITECTURE
-    }
 
     init {
         // Create directories on initialization
@@ -82,5 +73,12 @@ class AppConfig @Inject constructor(
         const val CONTAINER_JSON = "container.json"
         const val IMAGE_JSON = "image.json"
         const val ROOTFS_DIR = "ROOT"
+        val ARCHITECTURE = when (Build.SUPPORTED_ABIS.firstOrNull()) {
+            "arm64-v8a" -> "arm64"
+            "armeabi-v7a" -> "arm"
+            "x86_64" -> "amd64"
+            "x86" -> "386"
+            else -> DEFAULT_ARCHITECTURE
+        }
     }
 }

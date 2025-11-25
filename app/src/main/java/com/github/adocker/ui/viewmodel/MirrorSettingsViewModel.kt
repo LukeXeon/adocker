@@ -2,8 +2,8 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.data.repository.RegistryRepository
-import com.github.adocker.data.local.model.MirrorEntity
+import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.database.model.MirrorEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

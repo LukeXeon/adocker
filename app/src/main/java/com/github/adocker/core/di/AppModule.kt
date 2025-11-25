@@ -3,11 +3,11 @@ package com.github.adocker.core.di
 import android.content.Context
 import androidx.room.Room
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.data.local.AppDatabase
-import com.github.adocker.data.local.dao.ContainerDao
-import com.github.adocker.data.local.dao.ImageDao
-import com.github.adocker.data.local.dao.LayerDao
-import com.github.adocker.data.local.dao.MirrorDao
+import com.github.adocker.core.database.AppDatabase
+import com.github.adocker.core.database.dao.ContainerDao
+import com.github.adocker.core.database.dao.ImageDao
+import com.github.adocker.core.database.dao.LayerDao
+import com.github.adocker.core.database.dao.MirrorDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

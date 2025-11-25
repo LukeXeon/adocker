@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.data.local.model.ImageEntity
-import com.github.adocker.data.local.model.ContainerConfig
+import com.github.adocker.core.database.model.ImageEntity
+import com.github.adocker.core.database.model.ContainerConfig
 import com.github.adocker.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

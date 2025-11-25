@@ -4,15 +4,16 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.data.repository.RegistryRepository
-import com.github.adocker.data.remote.api.DockerRegistryApi
-import com.github.adocker.data.repository.ContainerRepository
-import com.github.adocker.data.repository.ImageRepository
-import com.github.adocker.data.local.model.ContainerConfig
-import com.github.adocker.data.local.model.ContainerStatus
-import com.github.adocker.data.repository.model.PullStatus
-import com.github.adocker.engine.executor.ContainerExecutor
-import com.github.adocker.engine.proot.PRootEngine
+import com.github.adocker.core.utils.execute
+import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.remote.api.DockerRegistryApi
+import com.github.adocker.core.repository.ContainerRepository
+import com.github.adocker.core.repository.ImageRepository
+import com.github.adocker.core.database.model.ContainerConfig
+import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.repository.model.PullStatus
+import com.github.adocker.core.engine.ContainerExecutor
+import com.github.adocker.core.engine.PRootEngine
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -206,7 +207,7 @@ class ImagePullAndRunTest {
             Log.i("ImagePullAndRunTest", "PRoot binary: ${prootBinary.absolutePath}")
 
             try {
-                val result = com.github.adocker.core.utils.ProcessUtils.execute(
+                val result = execute(
                     command = listOf(prootBinary.absolutePath, "--help"),
                     timeout = 5000
                 )

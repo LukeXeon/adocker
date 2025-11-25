@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.github.adocker.core.config.AppConfig
-import com.github.adocker.data.repository.RegistryRepository
-import com.github.adocker.data.repository.ImageRepository
-import com.github.adocker.data.repository.model.PullStatus
+import com.github.adocker.core.repository.RegistryRepository
+import com.github.adocker.core.repository.ImageRepository
+import com.github.adocker.core.repository.model.PullStatus
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
