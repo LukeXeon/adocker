@@ -3,8 +3,7 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.core.registry.model.ContainerConfig
-import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.container.ContainerWithStatus
 import com.github.adocker.core.database.model.ImageEntity
 import com.github.adocker.core.registry.model.SearchResult
 import com.github.adocker.core.container.ContainerRepository
@@ -29,8 +28,21 @@ class MainViewModel @Inject constructor(
     val images: StateFlow<List<ImageEntity>> = imageRepository.getAllImages()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // Containers
-    val containers: StateFlow<List<ContainerEntity>> = containerRepository.getAllContainers()
+    // Containers - combine data from Repository with runtime status from Executor
+    val containers: StateFlow<List<ContainerWithStatus>> = containerRepository.getAllContainers()
+        .map { entities ->
+            // Get runtime status for all containers from executor
+            val containerIds = entities.map { it.id }
+            val statuses = containerExecutor?.getContainerStatuses(containerIds) ?: emptyMap()
+
+            // Combine entity with its runtime status
+            entities.map { entity ->
+                ContainerWithStatus(
+                    entity = entity,
+                    status = statuses[entity.id] ?: com.github.adocker.core.database.model.ContainerStatus.CREATED
+                )
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
@@ -214,7 +226,7 @@ class MainViewModel @Inject constructor(
 
     // Get running containers count
     fun getRunningCount(): Int {
-        return containers.value.count { it.status == ContainerStatus.RUNNING }
+        return containers.value.count { it.status == com.github.adocker.core.database.model.ContainerStatus.RUNNING }
     }
 
     // Get stats
@@ -229,8 +241,8 @@ class MainViewModel @Inject constructor(
         Stats(
             totalImages = images.size,
             totalContainers = containers.size,
-            runningContainers = containers.count { it.status == ContainerStatus.RUNNING },
-            stoppedContainers = containers.count { it.status != ContainerStatus.RUNNING }
+            runningContainers = containers.count { it.status == com.github.adocker.core.database.model.ContainerStatus.RUNNING },
+            stoppedContainers = containers.count { it.status != com.github.adocker.core.database.model.ContainerStatus.RUNNING }
         )
     }.stateIn(
         viewModelScope,

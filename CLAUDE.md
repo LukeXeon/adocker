@@ -102,15 +102,49 @@ com.github.adocker/
    - `MainViewModel.createContainer()` → `ContainerRepository.createContainer()`
    - Creates directory: `containersDir/{containerId}/ROOT/`
    - Layers merged using overlay FS approach (copy files, symlinks preserved)
-   - `ContainerEntity` saved to Room database with status `CREATED`
+   - `ContainerEntity` saved to Room database (without status/pid - see Architecture Details)
 
 3. **Container Execution Flow:**
    - `MainViewModel.startContainer()` → `ContainerExecutor.startContainer()`
    - `PRootEngine.buildCommand()` constructs PRoot command with binds
    - `PRootEngine.buildEnvironment()` sets `PROOT_LOADER` and environment vars
-   - Process started with proper environment isolation
+   - Process started and tracked in `ContainerExecutor.runningProcesses` map
+
+4. **Container Status Query Flow:**
+   - UI requests containers from ViewModel
+   - ViewModel combines `ContainerEntity` from Repository with runtime status from Executor
+   - Status is computed dynamically by checking if process exists in `runningProcesses`
+   - Result wrapped in `ContainerWithStatus` for UI consumption
 
 ### Critical Architecture Details
+
+#### Container State Management (IMPORTANT!)
+
+**Design Principle:** Container runtime state (status, PID) is NOT stored in the database.
+
+**Why?**
+- App crashes would leave stale status in database
+- Android Phantom Process Killer can terminate processes without updating database
+- Matches Docker's design: status is derived, not stored
+
+**Implementation:**
+- `ContainerEntity` (database) - Only static metadata: id, name, imageId, imageName, created, config
+- `ContainerExecutor` (runtime) - Sole authority for process state via `runningProcesses` map
+- `ContainerWithStatus` (UI layer) - Lightweight wrapper combining entity + computed status
+- Status computed by: `isContainerRunning()` checks if ID exists in `runningProcesses` map
+
+**Layer Responsibilities:**
+```
+ContainerRepository  → CRUD operations, returns ContainerEntity
+ContainerExecutor    → Process management, provides getContainerStatus() API
+ViewModel            → Combines data + status into ContainerWithStatus
+UI                   → Displays ContainerWithStatus
+```
+
+**NEVER:**
+- Store status/pid in database
+- Check status in Repository layer
+- Duplicate runtime state across layers
 
 #### PRoot Execution & SELinux
 
@@ -154,10 +188,12 @@ ViewModels are annotated with `@HiltViewModel` and injected into Composables via
 Room database (`AppDatabase`) with 4 main entities:
 - `ImageEntity` - pulled images with layer references
 - `LayerEntity` - image layers (sha256 digests)
-- `ContainerEntity` - containers with config and status
+- `ContainerEntity` - containers with config (NO status/pid - see State Management above)
 - `MirrorEntity` - registry mirror configurations
 
 All DAOs expose `Flow<List<T>>` for reactive UI updates.
+
+**Note:** `container.json` file was removed - it duplicated database data.
 
 ## Testing Guidelines
 

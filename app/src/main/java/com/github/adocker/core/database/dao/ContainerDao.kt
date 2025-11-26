@@ -33,15 +33,6 @@ interface ContainerDao {
     @Query("DELETE FROM containers WHERE id = :id")
     suspend fun deleteContainerById(id: String)
 
-    @Query("UPDATE containers SET status = :status WHERE id = :id")
-    suspend fun updateContainerStatus(id: String, status: ContainerStatus)
-
-    @Query("UPDATE containers SET pid = :pid, status = :status WHERE id = :id")
-    suspend fun updateContainerRunning(id: String, pid: Int?, status: ContainerStatus)
-
     @Query("SELECT COUNT(*) FROM containers")
     suspend fun getContainerCount(): Int
-
-    @Query("SELECT COUNT(*) FROM containers WHERE status = 'RUNNING'")
-    suspend fun getRunningContainerCount(): Int
 }

@@ -31,7 +31,7 @@ fun ContainersScreen(
     val message by viewModel.message.collectAsState()
 
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<ContainerEntity?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<com.github.adocker.core.container.ContainerWithStatus?>(null) }
 
     val filteredContainers = remember(containers, filterStatus) {
         if (filterStatus == null) containers

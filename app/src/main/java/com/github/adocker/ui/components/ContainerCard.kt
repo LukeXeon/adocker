@@ -20,7 +20,7 @@ import com.github.adocker.core.database.model.ContainerStatus
 
 @Composable
 fun ContainerCard(
-    container: ContainerEntity,
+    container: com.github.adocker.core.container.ContainerWithStatus,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onDelete: () -> Unit,

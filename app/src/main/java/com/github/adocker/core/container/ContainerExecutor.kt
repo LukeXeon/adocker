@@ -59,7 +59,7 @@ class ContainerExecutor @Inject constructor(
             val container = containerRepository.getContainerById(containerId)
                 ?: throw IllegalArgumentException("Container not found: $containerId")
 
-            if (container.status == ContainerStatus.RUNNING) {
+            if (isContainerRunning(containerId)) {
                 throw IllegalStateException("Container is already running")
             }
 
@@ -76,9 +76,6 @@ class ContainerExecutor @Inject constructor(
             val stdin = BufferedWriter(OutputStreamWriter(process.outputStream))
             val stdout = BufferedReader(InputStreamReader(process.inputStream))
 
-            // Update container status - use hashCode as fallback for process identification
-            containerRepository.setContainerRunning(containerId, process.hashCode())
-
             val job = if (!detach) {
                 // Start output collection in background
                 scope.launch {
@@ -91,7 +88,6 @@ class ContainerExecutor @Inject constructor(
             // If not detached, wait for process to complete
             if (!detach) {
                 val exitCode = process.waitFor()
-                containerRepository.setContainerStopped(containerId)
                 runningProcesses.remove(containerId)
             }
         }
@@ -126,7 +122,7 @@ class ContainerExecutor @Inject constructor(
 
                 handle.job?.cancel()
                 runningProcesses.remove(containerId)
-                containerRepository.setContainerStopped(containerId)
+                Unit // Explicitly return Unit
             }
         }
 
@@ -266,5 +262,28 @@ class ContainerExecutor @Inject constructor(
      */
     fun getRunningContainerIds(): List<String> {
         return runningProcesses.keys.toList()
+    }
+
+    /**
+     * Get container status by ID
+     *
+     * This is the authoritative source of runtime container status.
+     * @param containerId Container ID
+     * @return Container status based on actual process state
+     */
+    fun getContainerStatus(containerId: String): ContainerStatus {
+        return if (isContainerRunning(containerId)) {
+            ContainerStatus.RUNNING
+        } else {
+            ContainerStatus.CREATED
+        }
+    }
+
+    /**
+     * Get status for multiple containers efficiently
+     * @param containerIds List of container IDs
+     */
+    fun getContainerStatuses(containerIds: List<String>): Map<String, ContainerStatus> {
+        return containerIds.associateWith { getContainerStatus(it) }
     }
 }
