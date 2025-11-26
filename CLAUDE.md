@@ -63,30 +63,66 @@ ls -la app/src/main/jniLibs/arm64-v8a/
 
 ## Architecture
 
-### Package Structure
+### Module Structure
 
-The codebase follows a clean architecture pattern with clear separation of concerns:
+The project uses a multi-module architecture with clear separation:
 
 ```
-com.github.adocker/
-├── core/                    # Core business logic and infrastructure
-│   ├── config/             # AppConfig - centralized app configuration
-│   ├── database/           # Room database, DAOs, and entities
-│   ├── di/                 # Hilt dependency injection modules
-│   ├── engine/             # PRootEngine - container execution engine
-│   ├── image/              # ImageRepository - image pull/storage/deletion
-│   ├── container/          # ContainerRepository & ContainerExecutor
-│   ├── registry/           # Docker Registry API client & models
-│   ├── process/            # Process management utilities
-│   ├── utils/              # File operations, extraction, execution helpers
-│   ├── logging/            # Timber logging setup
-│   └── startup/            # App initialization (App Startup library)
-└── ui/                      # UI layer (Jetpack Compose)
-    ├── screens/            # Screen composables (Home, Images, Containers, Terminal, Settings, QRCode)
-    ├── viewmodel/          # ViewModels for each screen
-    ├── components/         # Reusable UI components
-    ├── navigation/         # Navigation graph
-    └── theme/              # Material3 theme configuration
+adocker/
+├── daemon/                  # Core business logic module (Android Library)
+│   └── src/main/java/com/github/adocker/daemon/
+│       ├── config/         # AppConfig - centralized app configuration
+│       ├── database/       # Room database, DAOs, and entities
+│       ├── di/             # Hilt dependency injection modules
+│       ├── containers/     # PRootEngine, ContainerExecutor, RunningContainer
+│       ├── images/         # ImageRepository - image pull/storage/deletion
+│       ├── registry/       # Docker Registry API client & models
+│       ├── os/             # PhantomProcessManager, OS utilities
+│       ├── utils/          # File operations, extraction, execution helpers
+│       ├── slf4j/          # Timber logging integration
+│       └── startup/        # App initialization (App Startup library)
+└── app/                     # UI module (Android Application)
+    └── src/main/java/com/github/adocker/ui/
+        ├── model/          # UI-layer models (ContainerStatus)
+        ├── screens/        # Screen composables (Home, Images, Containers, Terminal, Settings, QRCode)
+        ├── viewmodel/      # ViewModels for each screen
+        ├── components/     # Reusable UI components
+        ├── navigation/     # Navigation graph
+        └── theme/          # Material3 theme configuration
+```
+
+### Package Structure (daemon module)
+
+```
+com.github.adocker.daemon/
+├── config/
+│   └── AppConfig.kt              # Centralized configuration (directories, constants)
+├── database/
+│   ├── AppDatabase.kt            # Room database definition
+│   ├── dao/                      # DAOs (ImageDao, ContainerDao, LayerDao, MirrorDao)
+│   └── model/                    # Entities (ImageEntity, ContainerEntity, LayerEntity, MirrorEntity)
+├── di/
+│   ├── AppModule.kt              # Hilt module (provides DB, HTTP client, etc.)
+│   └── AppGlobals.kt             # Hilt EntryPoint for non-Hilt contexts
+├── containers/
+│   ├── PRootEngine.kt            # PRoot command builder and execution
+│   ├── ContainerExecutor.kt      # Manages container lifecycle (start/stop)
+│   ├── RunningContainer.kt       # Represents an active container instance
+│   └── ContainerRepository.kt    # Container CRUD operations
+├── images/
+│   ├── ImageRepository.kt        # Image pull/delete/search
+│   ├── ImageReference.kt         # Image name parser
+│   └── PullProgress.kt           # Pull progress tracking
+├── registry/
+│   ├── DockerRegistryApi.kt      # Docker Registry V2 API client
+│   ├── RegistryRepository.kt     # Mirror management & health checks
+│   ├── MirrorHealthChecker.kt    # Background mirror health monitoring
+│   └── model/                    # Registry API models (manifests, auth, etc.)
+├── os/
+│   └── PhantomProcessManager.kt  # Shizuku integration for Android 12+
+└── utils/
+    ├── File.kt                   # File extraction, symlink handling
+    └── Process.kt                # Process management utilities
 ```
 
 ### Data Flow
@@ -102,15 +138,38 @@ com.github.adocker/
    - `MainViewModel.createContainer()` → `ContainerRepository.createContainer()`
    - Creates directory: `containersDir/{containerId}/ROOT/`
    - Layers merged using overlay FS approach (copy files, symlinks preserved)
-   - `ContainerEntity` saved to Room database with status `CREATED`
+   - `ContainerEntity` saved to Room database (NO status field)
 
 3. **Container Execution Flow:**
    - `MainViewModel.startContainer()` → `ContainerExecutor.startContainer()`
-   - `PRootEngine.buildCommand()` constructs PRoot command with binds
-   - `PRootEngine.buildEnvironment()` sets `PROOT_LOADER` and environment vars
-   - Process started with proper environment isolation
+   - `ContainerExecutor` creates `RunningContainer` via factory
+   - `RunningContainer` uses `PRootEngine.startProcess()` to launch main process
+   - Runtime status tracked in-memory via `RunningContainer.isActive`
 
 ### Critical Architecture Details
+
+#### Container Status Management
+
+**IMPORTANT:** Container status is NOT stored in the database.
+
+- **Database (`ContainerEntity`)**: Only stores static configuration (name, imageId, config, created timestamp)
+- **Runtime State (`RunningContainer`)**: Tracks active containers in-memory
+- **UI Layer (`ContainerStatus` enum)**: Maps runtime state to UI (CREATED, RUNNING, EXITED)
+
+**How to check container status:**
+```kotlin
+// In ViewModel
+val containerStatus = if (runningContainers.value.any { it.containerId == id && it.isActive }) {
+    ContainerStatus.RUNNING
+} else {
+    ContainerStatus.CREATED
+}
+```
+
+**Why this design:**
+- Containers don't have persistent "RUNNING" state - they're either active in memory or not
+- Prevents stale status in database (e.g., app killed while container "running")
+- Single source of truth: `RunningContainer.isActive` checks actual process state
 
 #### PRoot Execution & SELinux
 
@@ -122,13 +181,13 @@ com.github.adocker/
 - `PRootEngine` executes directly from `applicationInfo.nativeLibraryDir`
 - **Never copy PRoot to app files directory** - it will become non-executable
 
-See `PRootEngine.kt:26-32` for implementation details.
+See `PRootEngine.kt` for implementation details.
 
 #### Symlink Handling
 
 Docker images (especially Alpine Linux) rely heavily on symlinks. Standard Java `Files` API doesn't preserve them.
 
-**Solution:** Use Android `Os` API (see `ContainerRepository.kt:80-150`):
+**Solution:** Use Android `Os` API (see `ContainerRepository.kt`):
 - `Os.lstat()` + `OsConstants.S_ISLNK()` - detect symlinks
 - `Os.readlink()` - read link target
 - `Os.symlink()` - create symlink
@@ -147,6 +206,15 @@ class ImageRepository @Inject constructor(
 )
 ```
 
+**IMPORTANT:** `ContainerExecutor` and `PRootEngine` are NEVER nullable:
+```kotlin
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val containerExecutor: ContainerExecutor,  // NOT nullable!
+    // ...
+)
+```
+
 ViewModels are annotated with `@HiltViewModel` and injected into Composables via `hiltViewModel()`.
 
 #### Database Schema
@@ -154,10 +222,24 @@ ViewModels are annotated with `@HiltViewModel` and injected into Composables via
 Room database (`AppDatabase`) with 4 main entities:
 - `ImageEntity` - pulled images with layer references
 - `LayerEntity` - image layers (sha256 digests)
-- `ContainerEntity` - containers with config and status
+- `ContainerEntity` - containers with config (NO status field)
 - `MirrorEntity` - registry mirror configurations
 
 All DAOs expose `Flow<List<T>>` for reactive UI updates.
+
+#### Performance Monitoring
+
+PRootEngine logs its initialization time using `SystemClock.elapsedRealtimeNanos()`:
+```kotlin
+init {
+    val startTime = SystemClock.elapsedRealtimeNanos()
+    // ... initialization ...
+    val elapsedMs = (SystemClock.elapsedRealtimeNanos() - startTime) / 1_000_000.0
+    Timber.d("PRootEngine initialization completed in %.2fms".format(elapsedMs))
+}
+```
+
+**Always use `SystemClock` for time measurements**, not `System.currentTimeMillis()` (Android best practice).
 
 ## Testing Guidelines
 
@@ -166,7 +248,7 @@ All DAOs expose `Flow<List<T>>` for reactive UI updates.
 - **Integration Tests:** `app/src/androidTest/java/com/github/adocker/`
 
 ### HiltTestRunner
-All instrumented tests must use `HiltTestRunner` (configured in `app/build.gradle.kts:22`):
+All instrumented tests must use `HiltTestRunner` (configured in `app/build.gradle.kts`):
 ```kotlin
 @HiltAndroidTest
 class MyTest {
@@ -184,7 +266,7 @@ class MyTest {
 
 ### PRoot Test Requirements
 Tests requiring PRoot (like `ImagePullAndRunTest`) should:
-1. Check `prootEngine.isAvailable()` before running
+1. Check `prootEngine.isAvailable` before running
 2. Use `assumeTrue()` to skip tests gracefully if PRoot unavailable
 3. Log detailed diagnostics for SELinux failures
 
@@ -206,16 +288,37 @@ try {
 ## Common Development Patterns
 
 ### Adding a new Repository
-1. Create interface/class in `core/{domain}/`
+1. Create interface/class in `daemon/{domain}/`
 2. Add `@Singleton` and `@Inject constructor`
 3. Inject DAO, API client, or other dependencies
 4. Register in `AppModule` if needed (usually auto-wired by Hilt)
 
 ### Adding a new Screen
-1. Create Screen composable in `ui/screens/{feature}/`
-2. Create ViewModel in `ui/viewmodel/` with `@HiltViewModel`
+1. Create Screen composable in `app/ui/screens/{feature}/`
+2. Create ViewModel in `app/ui/viewmodel/` with `@HiltViewModel`
 3. Add route to `Navigation.kt`
 4. Use `hiltViewModel()` in composable to inject ViewModel
+
+### Working with Container Status
+```kotlin
+// In ViewModel
+val runningContainers: StateFlow<List<RunningContainer>> =
+    containerExecutor.getAllRunningContainers()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+fun getContainerStatus(containerId: String): ContainerStatus {
+    val running = runningContainers.value.find { it.containerId == containerId }
+    return if (running?.isActive == true) {
+        ContainerStatus.RUNNING
+    } else {
+        ContainerStatus.CREATED
+    }
+}
+
+// In UI
+val status = viewModel.getContainerStatus(container.id)
+ContainerCard(container = container, status = status, ...)
+```
 
 ### Working with PRoot
 - Always execute from `nativeLibraryDir`, never copy the binary
@@ -225,7 +328,7 @@ try {
 - Bind essential paths: `/dev`, `/proc`, `/sys`, `/system`, `/vendor`
 
 ### File Extraction
-- Use `extractTarGz()` from `core/utils/` for layer extraction
+- Use `extractTarGz()` from `daemon/utils/` for layer extraction
 - Use `Os.symlink()` instead of `Files.createSymbolicLink()` for Android compatibility
 - Always preserve file permissions with `Os.chmod()`
 
@@ -234,6 +337,7 @@ try {
 The app supports configurable Docker registry mirrors with Bearer token authentication. Built-in mirrors include:
 - Docker Hub (default)
 - DaoCloud (China)
+- Xuanyuan (China)
 - Aliyun (China)
 - Huawei Cloud (China)
 
@@ -257,8 +361,8 @@ Use `stringResource(R.string.key_name)` in Composables.
 ## Phantom Process Killer (Android 12+)
 
 Android 12+ kills background processes aggressively. The app integrates Shizuku to disable this:
-- `PhantomProcessManager` in `core/utils/`
-- UI in `screens/settings/PhantomProcessScreen.kt`
+- `PhantomProcessManager` in `daemon/os/`
+- UI in `app/ui/screens/settings/PhantomProcessScreen.kt`
 - Requires user to grant Shizuku permission
 
 ## Verified Images

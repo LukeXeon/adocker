@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import android.os.SystemClock
 import com.github.adocker.daemon.config.AppConfig
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.startProcess
@@ -44,6 +45,9 @@ class PRootEngine @Inject constructor(
     val version: String?
 
     init {
+        val startTime = SystemClock.elapsedRealtimeNanos()
+        Timber.d("PRootEngine initialization started")
+
         var prootAvailable = false
         var prootVersion: String? = null
         when {
@@ -100,6 +104,10 @@ class PRootEngine @Inject constructor(
         }
         isAvailable = prootAvailable
         version = prootVersion
+
+        val elapsedNanos = SystemClock.elapsedRealtimeNanos() - startTime
+        val elapsedMs = elapsedNanos / 1_000_000.0
+        Timber.d("PRootEngine initialization completed in %.2fms (isAvailable=$isAvailable, version=$prootVersion)".format(elapsedMs))
     }
 
     /**

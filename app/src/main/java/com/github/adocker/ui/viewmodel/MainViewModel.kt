@@ -22,7 +22,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
     private val containerRepository: ContainerRepository,
-    private val containerExecutor: ContainerExecutor?,
+    private val containerExecutor: ContainerExecutor,
     val json: Json
 ) : ViewModel() {
 
@@ -36,11 +36,11 @@ class MainViewModel @Inject constructor(
 
     // Running containers
     val runningContainers: StateFlow<List<RunningContainer>> =
-        containerExecutor?.getAllRunningContainers()?.stateIn(
+        containerExecutor.getAllRunningContainers().stateIn(
             viewModelScope,
             SharingStarted.Lazily,
             emptyList()
-        ) ?: MutableStateFlow(emptyList())
+        )
 
     // Search results
     private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -146,15 +146,12 @@ class MainViewModel @Inject constructor(
     // Start a container
     fun startContainer(containerId: String) {
         viewModelScope.launch {
-            containerExecutor?.startContainer(containerId)
-                ?.onSuccess {
+            containerExecutor.startContainer(containerId)
+                .onSuccess {
                     _message.value = "Container started"
                 }
-                ?.onFailure { e ->
+                .onFailure { e ->
                     _error.value = "Start failed: ${e.message}"
-                }
-                ?: run {
-                    _error.value = "PRoot engine not available"
                 }
         }
     }
@@ -162,15 +159,12 @@ class MainViewModel @Inject constructor(
     // Stop a container
     fun stopContainer(containerId: String) {
         viewModelScope.launch {
-            containerExecutor?.stopContainer(containerId)
-                ?.onSuccess {
+            containerExecutor.stopContainer(containerId)
+                .onSuccess {
                     _message.value = "Container stopped"
                 }
-                ?.onFailure { e ->
+                .onFailure { e ->
                     _error.value = "Stop failed: ${e.message}"
-                }
-                ?: run {
-                    _error.value = "PRoot engine not available"
                 }
         }
     }
@@ -197,11 +191,11 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             containerRepository.createContainer(imageId, name, config)
                 .onSuccess { container ->
-                    containerExecutor?.startContainer(container.id)
-                        ?.onSuccess {
+                    containerExecutor.startContainer(container.id)
+                        .onSuccess {
                             _message.value = "Container running: ${container.name}"
                         }
-                        ?.onFailure { e ->
+                        .onFailure { e ->
                             _error.value = "Run failed: ${e.message}"
                         }
                 }

@@ -19,7 +19,7 @@ import javax.inject.Inject
 class TerminalViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val containerRepository: ContainerRepository,
-    private val containerExecutor: ContainerExecutor?
+    private val containerExecutor: ContainerExecutor
 ) : ViewModel() {
 
     private val containerId: String = savedStateHandle.get<String>("containerId") ?: ""
@@ -54,11 +54,6 @@ class TerminalViewModel @Inject constructor(
 
         viewModelScope.launch {
             addOutput("$ $command")
-
-            if (containerExecutor == null) {
-                addOutput("Error: PRoot engine not available")
-                return@launch
-            }
 
             try {
                 // Get the running container
