@@ -114,6 +114,12 @@ fun ContainerDetailScreen(
                     label = stringResource(R.string.container_created),
                     value = formatDate(container.created)
                 )
+                container.pid?.let { pid ->
+                    DetailRow(
+                        label = stringResource(R.string.container_pid),
+                        value = pid.toString()
+                    )
+                }
             }
 
             // Configuration Card

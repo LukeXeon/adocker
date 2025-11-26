@@ -68,6 +68,10 @@ class AppConfig @Inject constructor(
         const val DIR_REPOS = "repos"
         const val DIR_BIN = "bin"
         const val DIR_TMP = "tmp"
+
+        // File names
+        const val CONTAINER_JSON = "container.json"
+        const val IMAGE_JSON = "image.json"
         const val ROOTFS_DIR = "ROOT"
         val ARCHITECTURE = when (Build.SUPPORTED_ABIS.firstOrNull()) {
             "arm64-v8a" -> "arm64"

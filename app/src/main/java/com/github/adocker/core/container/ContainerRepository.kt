@@ -29,6 +29,8 @@ class ContainerRepository @Inject constructor(
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appConfig: AppConfig,
+    private val json: Json,
+    private val database: AppDatabase,
 ) {
 
     /**
@@ -119,7 +121,10 @@ class ContainerRepository @Inject constructor(
                 config = mergedConfig
             )
 
-            // Save container to database
+            // Save container metadata
+            val containerJson = File(containerDir, AppConfig.Companion.CONTAINER_JSON)
+            containerJson.writeText(json.encodeToString(container))
+
             containerDao.insertContainer(container)
             container
         }
@@ -196,7 +201,9 @@ class ContainerRepository @Inject constructor(
             val container = containerDao.getContainerById(containerId)
                 ?: throw IllegalArgumentException("Container not found: $containerId")
 
-            // Note: Caller should ensure container is stopped before deletion
+            if (container.status == ContainerStatus.RUNNING) {
+                throw IllegalStateException("Cannot delete running container. Stop it first.")
+            }
 
             // Delete container directory
             val containerDir = File(appConfig.containersDir, containerId)
@@ -206,6 +213,26 @@ class ContainerRepository @Inject constructor(
         }
     }
 
+    /**
+     * Update container status
+     */
+    suspend fun updateContainerStatus(containerId: String, status: ContainerStatus) {
+        containerDao.updateContainerStatus(containerId, status)
+    }
+
+    /**
+     * Update container as running with PID
+     */
+    suspend fun setContainerRunning(containerId: String, pid: Int) {
+        containerDao.updateContainerRunning(containerId, pid, ContainerStatus.RUNNING)
+    }
+
+    /**
+     * Update container as stopped
+     */
+    suspend fun setContainerStopped(containerId: String) {
+        containerDao.updateContainerRunning(containerId, null, ContainerStatus.STOPPED)
+    }
 
     /**
      * Get container rootfs directory
