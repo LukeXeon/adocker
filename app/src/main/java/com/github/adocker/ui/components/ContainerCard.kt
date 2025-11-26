@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.container.ContainerStatus
 
 @Composable
 fun ContainerCard(

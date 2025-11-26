@@ -10,7 +10,7 @@ import com.github.adocker.core.registry.DockerRegistryApi
 import com.github.adocker.core.container.ContainerRepository
 import com.github.adocker.core.image.ImageRepository
 import com.github.adocker.core.registry.model.ContainerConfig
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.container.ContainerStatus
 import com.github.adocker.core.image.PullStatus
 import com.github.adocker.core.container.ContainerExecutor
 import com.github.adocker.core.engine.PRootEngine

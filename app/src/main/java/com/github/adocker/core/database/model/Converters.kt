@@ -1,6 +1,7 @@
 package com.github.adocker.core.database.model
 
 import androidx.room.TypeConverter
+import com.github.adocker.core.container.ContainerStatus
 import com.github.adocker.core.di.AppGlobals
 import com.github.adocker.core.registry.model.ContainerConfig
 import com.github.adocker.core.registry.model.ImageConfig

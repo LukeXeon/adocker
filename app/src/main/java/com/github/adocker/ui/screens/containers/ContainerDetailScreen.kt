@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.container.ContainerStatus
 import com.github.adocker.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*

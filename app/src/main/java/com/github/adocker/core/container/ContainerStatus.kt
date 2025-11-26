@@ -1,4 +1,4 @@
-package com.github.adocker.core.database.model
+package com.github.adocker.core.container
 
 import kotlinx.serialization.Serializable
 

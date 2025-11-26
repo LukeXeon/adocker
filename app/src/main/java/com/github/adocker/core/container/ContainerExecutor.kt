@@ -1,6 +1,6 @@
 package com.github.adocker.core.container
 
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.container.ContainerStatus
 import com.github.adocker.core.engine.ExecResult
 import com.github.adocker.core.engine.PRootEngine
 import com.github.adocker.core.utils.await
@@ -8,7 +8,6 @@ import com.github.adocker.core.utils.destroyForciblyCompat
 import com.github.adocker.core.utils.isActive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,15 +33,8 @@ class ContainerExecutor @Inject constructor(
     private val prootEngine: PRootEngine,
     private val containerRepository: ContainerRepository
 ) {
-    private val runningProcesses = mutableMapOf<String, ProcessHandle>()
+    private val runningProcesses = mutableMapOf<String, RunningContainer>()
     private val scope = CoroutineScope(Dispatchers.IO)
-
-    data class ProcessHandle(
-        val process: Process,
-        val stdin: BufferedWriter,
-        val stdout: BufferedReader,
-        val job: Job?
-    )
 
     private val _containerOutput = MutableStateFlow<Map<String, List<String>>>(emptyMap())
 
@@ -83,7 +75,7 @@ class ContainerExecutor @Inject constructor(
                 }
             } else null
 
-            runningProcesses[containerId] = ProcessHandle(process, stdin, stdout, job)
+            runningProcesses[containerId] = RunningContainer(process, stdin, stdout, job)
 
             // If not detached, wait for process to complete
             if (!detach) {
