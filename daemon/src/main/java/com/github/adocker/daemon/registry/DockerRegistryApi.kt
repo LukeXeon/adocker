@@ -58,13 +58,13 @@ class DockerRegistryApi @Inject constructor(
         repository: String,
         registry: String = AppConfig.Companion.DEFAULT_REGISTRY
     ): Result<String> = runCatching {
-        Timber.Forest.d("Authenticating for repository: $repository, registry: $registry")
+        Timber.d("Authenticating for repository: $repository, registry: $registry")
 
         try {
             // Check if this specific registry URL has a Bearer Token configured
             val bearerToken = registrySettings.getBearerToken(registry)
             if (!bearerToken.isNullOrEmpty()) {
-                Timber.Forest.i("Using configured Bearer Token for registry: $registry")
+                Timber.i("Using configured Bearer Token for registry: $registry")
                 authToken = bearerToken
                 tokenExpiry =
                     System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
@@ -76,11 +76,11 @@ class DockerRegistryApi @Inject constructor(
                 // Don't follow redirects, we want to see 401
             }
 
-            Timber.Forest.d("Ping response status: ${pingResponse.status}")
+            Timber.d("Ping response status: ${pingResponse.status}")
 
             // If 200 OK, no auth needed (shouldn't happen but handle it)
             if (pingResponse.status == HttpStatusCode.Companion.OK) {
-                Timber.Forest.i("Registry allows anonymous access")
+                Timber.i("Registry allows anonymous access")
                 authToken = ""
                 tokenExpiry = System.currentTimeMillis() + 3600000
                 return@runCatching ""
@@ -91,7 +91,7 @@ class DockerRegistryApi @Inject constructor(
                 ?: pingResponse.headers["WWW-Authenticate"]
                 ?: throw Exception("No WWW-Authenticate header in response")
 
-            Timber.Forest.d("WWW-Authenticate: $wwwAuth")
+            Timber.d("WWW-Authenticate: $wwwAuth")
 
             // Parse: Bearer realm="https://xxx",service="xxx",scope="..."
             val realm = Regex("realm=\"([^\"]+)\"").find(wwwAuth)?.groupValues?.get(1)
@@ -105,17 +105,17 @@ class DockerRegistryApi @Inject constructor(
                 append("&scope=repository:$repository:pull")
             }
 
-            Timber.Forest.d("Requesting token from: $authUrl")
+            Timber.d("Requesting token from: $authUrl")
 
             val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
             authToken = tokenResponse.token ?: tokenResponse.accessToken
             tokenExpiry = System.currentTimeMillis() + tokenResponse.expiresIn * 1000L
 
-            Timber.Forest.i("Successfully obtained auth token (expires in ${tokenResponse.expiresIn}s)")
+            Timber.i("Successfully obtained auth token (expires in ${tokenResponse.expiresIn}s)")
 
             authToken ?: ""
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Authentication failed for $registry: ${e.message}")
+            Timber.e(e, "Authentication failed for $registry: ${e.message}")
             throw e
         }
     }
@@ -161,8 +161,8 @@ class DockerRegistryApi @Inject constructor(
         val contentType = manifestListResponse.contentType()?.toString() ?: ""
         val bodyText = manifestListResponse.bodyAsText()
 
-        Timber.Forest.d("Manifest response - ContentType: $contentType")
-        Timber.Forest.d("Manifest response - Body: ${bodyText.take(500)}")
+        Timber.d("Manifest response - ContentType: $contentType")
+        Timber.d("Manifest response - Body: ${bodyText.take(500)}")
 
         when {
             contentType.contains("manifest.list") || contentType.contains("image.index") -> {
@@ -279,15 +279,15 @@ class DockerRegistryApi @Inject constructor(
                             downloaded += bytesRead
                             onProgress(downloaded, contentLength)
                             if (downloaded % (512 * 1024) == 0L || downloaded == contentLength) {
-                                Timber.Forest.d("Download progress: $downloaded/$contentLength bytes")
+                                Timber.d("Download progress: $downloaded/$contentLength bytes")
                             }
                         }
                     }
                 }
-                Timber.Forest.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
+                Timber.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
             }
         }.onFailure { e ->
-            Timber.Forest.e(e, "Layer download failed: ${layer.digest.take(16)}")
+            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
         }
     }
 

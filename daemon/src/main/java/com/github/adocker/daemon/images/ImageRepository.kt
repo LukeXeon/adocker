@@ -86,25 +86,25 @@ class ImageRepository @Inject constructor(
             val extractedDir: File
 
             try {
-                Timber.Forest.d("About to check database for existing layer")
+                Timber.d("About to check database for existing layer")
                 // Check if layer already exists
                 existingLayer = layerDao.getLayerByDigest(layerDigest)
-                Timber.Forest.d("Database check complete: $existingLayer")
+                Timber.d("Database check complete: $existingLayer")
 
                 layerFile =
                     File(appConfig.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
                 extractedDir = File(appConfig.layersDir, layerDigest.removePrefix("sha256:"))
-                Timber.Forest.d("File paths created")
+                Timber.d("File paths created")
 
-                Timber.Forest.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
+                Timber.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
             } catch (e: Exception) {
-                Timber.Forest.e(e, "Error checking layer existence")
+                Timber.e(e, "Error checking layer existence")
                 throw e
             }
 
             if (existingLayer?.extracted == true && extractedDir.exists()) {
                 // Layer already exists, increment reference
-                Timber.Forest.i("Layer ${layerDigest.take(16)} already exists, skipping download")
+                Timber.i("Layer ${layerDigest.take(16)} already exists, skipping download")
                 layerDao.incrementRefCount(layerDigest)
                 layerIds.add(layerDigest)
                 emit(
@@ -133,7 +133,7 @@ class ImageRepository @Inject constructor(
                     // We can't emit from inside the callback, progress is tracked externally
                 }
 
-            Timber.Forest.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
+            Timber.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
             downloadResult.getOrThrow()
 
             emit(

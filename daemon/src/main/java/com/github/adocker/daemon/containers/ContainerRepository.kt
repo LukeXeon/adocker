@@ -193,11 +193,11 @@ class ContainerRepository @Inject constructor(
 
                         // Create the symlink at destination
                         Os.symlink(linkTarget, destFile.absolutePath)
-                        Timber.Forest.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
+                        Timber.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
                         return@forEach
                     }
                 } catch (e: Exception) {
-                    Timber.Forest.w(e, "Failed to check if ${file.name} is symlink")
+                    Timber.w(e, "Failed to check if ${file.name} is symlink")
                     // Fall through to regular file handling
                 }
 
@@ -211,7 +211,7 @@ class ContainerRepository @Inject constructor(
                             val stat = Os.lstat(file.absolutePath)
                             destFile.chmod(stat.st_mode)
                         } catch (e: Exception) {
-                            Timber.Forest.w(e, "Failed to preserve permissions for ${file.name}")
+                            Timber.w(e, "Failed to preserve permissions for ${file.name}")
                         }
                     }
                 }

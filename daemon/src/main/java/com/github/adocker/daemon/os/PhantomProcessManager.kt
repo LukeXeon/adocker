@@ -28,7 +28,7 @@ class PhantomProcessManager @Inject constructor() {
         return try {
             Shizuku.pingBinder()
         } catch (e: Exception) {
-            Timber.Forest.w(e, "Shizuku is not available")
+            Timber.w(e, "Shizuku is not available")
             false
         }
     }
@@ -75,10 +75,10 @@ class PhantomProcessManager @Inject constructor() {
             }
 
             executeShizukuCommand(command)
-            Timber.Forest.i("Phantom process killer disabled successfully")
+            Timber.i("Phantom process killer disabled successfully")
             "Phantom process restrictions disabled successfully"
         }.onFailure { error ->
-            Timber.Forest.e(error, "Failed to disable phantom process killer")
+            Timber.e(error, "Failed to disable phantom process killer")
         }
     }
 
@@ -145,10 +145,10 @@ class PhantomProcessManager @Inject constructor() {
             }
 
             executeShizukuCommand(command)
-            Timber.Forest.i("Phantom process killer enabled")
+            Timber.i("Phantom process killer enabled")
             "Phantom process restrictions restored to default"
         }.onFailure { error ->
-            Timber.Forest.e(error, "Failed to enable phantom process killer")
+            Timber.e(error, "Failed to enable phantom process killer")
         }
     }
 
@@ -156,7 +156,7 @@ class PhantomProcessManager @Inject constructor() {
      * Execute a shell command via Shizuku
      */
     private fun executeShizukuCommand(command: String): String {
-        Timber.Forest.d("Executing Shizuku command: %s", command)
+        Timber.d("Executing Shizuku command: %s", command)
 
         // Use Shizuku's RemoteProcess via reflection or alternative method
         // Since newProcess is private, we use the ShizukuRemoteProcess through a helper
@@ -169,7 +169,7 @@ class PhantomProcessManager @Inject constructor() {
             val p = Runtime.getRuntime().exec(arrayOf(shellCmd, args[0], args[1]))
             p
         } catch (e: Exception) {
-            Timber.Forest.e(e, "Failed to create process")
+            Timber.e(e, "Failed to create process")
             throw RuntimeException("Failed to execute command: ${e.message}", e)
         }
 
@@ -184,11 +184,11 @@ class PhantomProcessManager @Inject constructor() {
         val exitCode = process.waitFor()
 
         if (exitCode != 0) {
-            Timber.Forest.e("Command failed with exit code %d: %s", exitCode, error)
+            Timber.e("Command failed with exit code %d: %s", exitCode, error)
             throw RuntimeException("Command execution failed (exit=$exitCode): $error")
         }
 
-        Timber.Forest.d("Command output: %s", output)
+        Timber.d("Command output: %s", output)
         return output.trim()
     }
 
