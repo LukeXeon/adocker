@@ -40,7 +40,7 @@ fun SearchResultCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = result.name,
+                        text = result.repoName ?: "Unknown",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -58,10 +58,10 @@ fun SearchResultCard(
                     }
                 }
 
-                if (!result.description.isNullOrBlank()) {
+                if (!result.shortDescription.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = result.description,
+                        text = result.shortDescription,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,

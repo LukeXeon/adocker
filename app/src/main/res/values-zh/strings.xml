@@ -28,6 +28,8 @@
     <string name="home_quick_actions">快速操作</string>
     <string name="home_pull_image">拉取镜像</string>
     <string name="home_pull_image_desc">从 Docker Hub 下载</string>
+    <string name="home_search_image">搜索镜像</string>
+    <string name="home_search_image_desc">搜索 Docker Hub 镜像</string>
     <string name="home_view_images">查看镜像</string>
     <string name="home_view_images_desc">管理本地镜像</string>
     <string name="home_view_containers_desc">管理容器</string>
@@ -68,6 +70,8 @@
     <string name="images_official">官方</string>
     <string name="images_search_hint_title">需要查找镜像？</string>
     <string name="images_search_hint_desc">在 Docker Hub 上搜索数百万个镜像</string>
+    <string name="images_search_no_results">未找到镜像</string>
+    <string name="images_search_no_results_desc">尝试使用不同的关键词</string>
 
     <!-- 拉取镜像 -->
     <string name="pull_image_title">拉取镜像</string>

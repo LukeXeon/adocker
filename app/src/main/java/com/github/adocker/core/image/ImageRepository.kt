@@ -121,7 +121,7 @@ class ImageRepository @Inject constructor(
             }
 
             // Download layer
-            Timber.Forest.d("Calling downloadLayer for ${layerDigest.take(16)}")
+            Timber.d("Calling downloadLayer for ${layerDigest.take(16)}")
             val layer = LayerEntity(
                 layerDigest,
                 layerDescriptor.size,

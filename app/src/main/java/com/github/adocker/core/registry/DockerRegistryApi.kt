@@ -66,7 +66,8 @@ class DockerRegistryApi @Inject constructor(
             if (!bearerToken.isNullOrEmpty()) {
                 Timber.Forest.i("Using configured Bearer Token for registry: $registry")
                 authToken = bearerToken
-                tokenExpiry = System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
+                tokenExpiry =
+                    System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
                 return@runCatching bearerToken
             }
 
@@ -295,13 +296,13 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun search(query: String, limit: Int = 25): Result<List<SearchResult>> =
         runCatching {
-            val response: SearchResponse =
-                client.get("https://hub.docker.com/v2/search/repositories/") {
-                    parameter("query", query)
-                    parameter("page_size", limit)
-                }.body()
-
-            response.results
+            val response = client.get("https://hub.docker.com/v2/search/repositories/") {
+                parameter("query", query)
+                parameter("page_size", limit)
+            }
+            val body = response.body<SearchResponse>()
+            // Filter out invalid results (missing name field)
+            body.results.filter { it.repoName != null }
         }
 
     /**

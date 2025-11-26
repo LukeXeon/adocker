@@ -15,13 +15,13 @@ import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.core.database.model.ImageEntity
 import com.github.adocker.ui.components.ImageCard
+import com.github.adocker.ui.components.PullImageDialog
 import com.github.adocker.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagesScreen(
     viewModel: MainViewModel,
-    onNavigateToPull: () -> Unit,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
@@ -32,6 +32,7 @@ fun ImagesScreen(
     val message by viewModel.message.collectAsState()
 
     var showDeleteDialog by remember { mutableStateOf<ImageEntity?>(null) }
+    var showPullDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredImages = remember(images, searchQuery) {
@@ -50,7 +51,7 @@ fun ImagesScreen(
                     IconButton(onClick = onNavigateToSearch) {
                         Icon(Icons.Default.Search, contentDescription = stringResource(R.string.images_tab_search))
                     }
-                    IconButton(onClick = onNavigateToPull) {
+                    IconButton(onClick = { showPullDialog = true }) {
                         Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.images_pull))
                     }
                 }
@@ -58,7 +59,7 @@ fun ImagesScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onNavigateToPull,
+                onClick = { showPullDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.images_pull))
@@ -121,7 +122,7 @@ fun ImagesScreen(
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(24.dp))
-                        Button(onClick = onNavigateToPull) {
+                        Button(onClick = { showPullDialog = true }) {
                             Icon(
                                 Icons.Default.CloudDownload,
                                 contentDescription = null,
@@ -199,6 +200,18 @@ fun ImagesScreen(
                 TextButton(onClick = { showDeleteDialog = null }) {
                     Text(stringResource(R.string.action_cancel))
                 }
+            }
+        )
+    }
+
+    // Pull Image Dialog
+    if (showPullDialog) {
+        PullImageDialog(
+            viewModel = viewModel,
+            onDismiss = { showPullDialog = false },
+            onNavigateToSearch = {
+                showPullDialog = false
+                onNavigateToSearch()
             }
         )
     }

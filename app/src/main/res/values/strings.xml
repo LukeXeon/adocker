@@ -28,6 +28,8 @@
     <string name="home_quick_actions">Quick Actions</string>
     <string name="home_pull_image">Pull Image</string>
     <string name="home_pull_image_desc">Download from Docker Hub</string>
+    <string name="home_search_image">Search Images</string>
+    <string name="home_search_image_desc">Search Docker Hub images</string>
     <string name="home_view_images">View Images</string>
     <string name="home_view_images_desc">Manage local images</string>
     <string name="home_view_containers_desc">Manage containers</string>
@@ -68,6 +70,8 @@
     <string name="images_official">Official</string>
     <string name="images_search_hint_title">Need to find an image?</string>
     <string name="images_search_hint_desc">Search millions of images on Docker Hub</string>
+    <string name="images_search_no_results">No images found</string>
+    <string name="images_search_no_results_desc">Try different keywords</string>
 
     <!-- Pull image -->
     <string name="pull_image_title">Pull Image</string>

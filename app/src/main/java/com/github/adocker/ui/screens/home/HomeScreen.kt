@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import com.github.adocker.ui.components.PullImageDialog
 import com.github.adocker.ui.components.StatCard
 import com.github.adocker.ui.viewmodel.MainViewModel
 
@@ -19,14 +20,14 @@ import com.github.adocker.ui.viewmodel.MainViewModel
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
-    onNavigateToContainers: () -> Unit,
-    onNavigateToImages: () -> Unit,
-    onNavigateToPull: () -> Unit,
+    onNavigateToSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val stats by viewModel.stats.collectAsState()
     val error by viewModel.error.collectAsState()
     val message by viewModel.message.collectAsState()
+
+    var showPullDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -153,32 +154,16 @@ fun HomeScreen(
                         title = stringResource(R.string.home_pull_image),
                         description = stringResource(R.string.home_pull_image_desc),
                         icon = Icons.Default.CloudDownload,
-                        onClick = onNavigateToPull,
+                        onClick = { showPullDialog = true },
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionCard(
-                        title = stringResource(R.string.home_view_images),
-                        description = stringResource(R.string.home_view_images_desc),
-                        icon = Icons.Default.Layers,
-                        onClick = onNavigateToImages,
+                        title = stringResource(R.string.home_search_image),
+                        description = stringResource(R.string.home_search_image_desc),
+                        icon = Icons.Default.Search,
+                        onClick = onNavigateToSearch,
                         modifier = Modifier.weight(1f)
                     )
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionCard(
-                        title = stringResource(R.string.nav_containers),
-                        description = stringResource(R.string.home_view_containers_desc),
-                        icon = Icons.Default.ViewInAr,
-                        onClick = onNavigateToContainers,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
 
@@ -222,6 +207,18 @@ fun HomeScreen(
             // Message shown via snackbar
             viewModel.clearMessage()
         }
+    }
+
+    // Pull Image Dialog
+    if (showPullDialog) {
+        PullImageDialog(
+            viewModel = viewModel,
+            onDismiss = { showPullDialog = false },
+            onNavigateToSearch = {
+                showPullDialog = false
+                onNavigateToSearch()
+            }
+        )
     }
 }
 

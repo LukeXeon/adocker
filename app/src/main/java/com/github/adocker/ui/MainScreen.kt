@@ -21,7 +21,7 @@ import com.github.adocker.ui.screens.containers.ContainersScreen
 import com.github.adocker.ui.screens.containers.CreateContainerScreen
 import com.github.adocker.ui.screens.home.HomeScreen
 import com.github.adocker.ui.screens.images.ImagesScreen
-import com.github.adocker.ui.screens.images.PullImageScreen
+import com.github.adocker.ui.screens.images.SearchImageScreen
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
 import com.github.adocker.ui.screens.settings.MirrorSettingsScreen
 import com.github.adocker.ui.screens.settings.PhantomProcessScreen
@@ -126,26 +126,8 @@ fun MainScreen() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     viewModel = mainViewModel,
-                    onNavigateToContainers = {
-                        navController.navigate(Screen.Containers.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onNavigateToImages = {
-                        navController.navigate(Screen.Images.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onNavigateToPull = {
-                        navController.navigate(Screen.PullImage.route)
+                    onNavigateToSearch = {
+                        navController.navigate(Screen.SearchImage.route)
                     }
                 )
             }
@@ -167,9 +149,6 @@ fun MainScreen() {
             composable(Screen.Images.route) {
                 ImagesScreen(
                     viewModel = mainViewModel,
-                    onNavigateToPull = {
-                        navController.navigate(Screen.PullImage.route)
-                    },
                     onNavigateToCreate = { imageId ->
                         navController.navigate(Screen.CreateContainer.createRoute(imageId))
                     },
@@ -182,11 +161,16 @@ fun MainScreen() {
                 )
             }
 
-            // Search Images - Redirect to Pull Image
+            // Search Images
             composable(Screen.SearchImage.route) {
-                PullImageScreen(
+                SearchImageScreen(
                     viewModel = mainViewModel,
                     onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToPull = { imageName ->
+                        // Show pull dialog in MainViewModel
+                        mainViewModel.pullImage(imageName)
                         navController.popBackStack()
                     }
                 )
@@ -235,34 +219,6 @@ fun MainScreen() {
                     onNavigateBack = {
                         navController.popBackStack()
                     }
-                )
-            }
-
-            // Pull Image
-            composable(Screen.PullImage.route) { backStackEntry ->
-                val scannedImage = backStackEntry.savedStateHandle
-                    .getStateFlow<String?>("scanned_image", null)
-                    .collectAsState()
-
-                // Clear scanned image after reading
-                LaunchedEffect(scannedImage.value) {
-                    if (scannedImage.value != null) {
-                        backStackEntry.savedStateHandle.remove<String>("scanned_image")
-                    }
-                }
-
-                PullImageScreen(
-                    viewModel = mainViewModel,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onNavigateToQRScanner = {
-                        navController.navigate(Screen.QRCodeScanner.route)
-                    },
-                    onNavigateToSearch = {
-                        navController.navigate(Screen.SearchImage.route)
-                    },
-                    scannedImageName = scannedImage.value
                 )
             }
 
