@@ -17,9 +17,11 @@ import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.components.PhantomProcessWarningDialog
 import com.github.adocker.ui.navigation.Screen
 import com.github.adocker.ui.navigation.bottomNavItems
+import com.github.adocker.ui.screens.containers.ContainerDetailScreen
 import com.github.adocker.ui.screens.containers.ContainersScreen
 import com.github.adocker.ui.screens.containers.CreateContainerScreen
 import com.github.adocker.ui.screens.home.HomeScreen
+import com.github.adocker.ui.screens.images.ImageDetailScreen
 import com.github.adocker.ui.screens.images.ImagesScreen
 import com.github.adocker.ui.screens.images.SearchImageScreen
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
@@ -280,6 +282,42 @@ fun MainScreen() {
                     viewModel = terminalViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
+                    }
+                )
+            }
+
+            // Image Detail
+            composable(
+                route = Screen.ImageDetail.route,
+                arguments = listOf(navArgument("imageId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val imageId = backStackEntry.arguments?.getString("imageId") ?: return@composable
+                ImageDetailScreen(
+                    imageId = imageId,
+                    viewModel = mainViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToCreate = { imgId ->
+                        navController.navigate(Screen.CreateContainer.createRoute(imgId))
+                    }
+                )
+            }
+
+            // Container Detail
+            composable(
+                route = Screen.ContainerDetail.route,
+                arguments = listOf(navArgument("containerId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val containerId = backStackEntry.arguments?.getString("containerId") ?: return@composable
+                ContainerDetailScreen(
+                    containerId = containerId,
+                    viewModel = mainViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToTerminal = { cId ->
+                        navController.navigate(Screen.Terminal.createRoute(cId))
                     }
                 )
             }

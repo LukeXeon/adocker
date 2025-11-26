@@ -61,6 +61,8 @@
     <string name="images_empty">No images</string>
     <string name="images_empty_subtitle">Pull an image from Docker Hub\nto get started</string>
     <string name="images_pull">Pull Image</string>
+    <string name="images_run">Run</string>
+    <string name="images_delete">Delete</string>
     <string name="images_delete_confirm_title">Delete Image</string>
     <string name="images_delete_confirm_message">Are you sure you want to delete image %1$s?</string>
     <string name="images_scan_qr">Scan QR</string>
@@ -72,6 +74,16 @@
     <string name="images_search_hint_desc">Search millions of images on Docker Hub</string>
     <string name="images_search_no_results">No images found</string>
     <string name="images_search_no_results_desc">Try different keywords</string>
+    <string name="images_repository">Repository</string>
+    <string name="images_tag">Tag</string>
+    <string name="images_id">Image ID</string>
+    <string name="images_digest">Digest</string>
+    <string name="images_architecture">Architecture</string>
+    <string name="images_os">Operating System</string>
+    <string name="images_size">Size</string>
+    <string name="images_created">Created</string>
+    <string name="images_layers">Layers</string>
+    <string name="images_layer_count">Total: %1$d layers</string>
 
     <!-- Pull image -->
     <string name="pull_image_title">Pull Image</string>
@@ -229,6 +241,28 @@
     <string name="action_save">Save</string>
     <string name="action_back">Back</string>
     <string name="action_close">Close</string>
+
+    <!-- Common labels -->
+    <string name="common_name">Name</string>
+    <string name="common_id">ID</string>
+    <string name="common_back">Back</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_basic_info">Basic Information</string>
+    <string name="common_system_info">System Information</string>
+    <string name="common_config">Configuration</string>
+
+    <!-- Container details -->
+    <string name="container_status">Status</string>
+    <string name="container_image">Image</string>
+    <string name="container_created">Created</string>
+    <string name="container_pid">Process ID</string>
+    <string name="container_command">Command</string>
+    <string name="container_working_dir">Working Directory</string>
+    <string name="container_hostname">Hostname</string>
+    <string name="container_env_vars">Environment Variables</string>
+    <string name="container_volumes">Volume Mounts</string>
+    <string name="container_volume_binds">Binds</string>
 
     <!-- Common status -->
     <string name="status_created">Created</string>

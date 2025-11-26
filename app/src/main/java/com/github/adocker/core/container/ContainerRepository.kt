@@ -74,7 +74,7 @@ class ContainerRepository @Inject constructor(
                 throw IllegalArgumentException("Container with name '$containerName' already exists")
             }
 
-            val containerId = UUID.randomUUID().toString().take(12)
+            val containerId = UUID.randomUUID().toString()
 
             // Create container directory structure
             val containerDir = File(appConfig.containersDir, containerId)
