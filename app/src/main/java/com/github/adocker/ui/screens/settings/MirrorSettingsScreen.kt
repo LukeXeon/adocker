@@ -15,21 +15,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -68,7 +71,7 @@ fun MirrorSettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val mirrors by viewModel.allMirrors.collectAsState()
-    val currentMirror by viewModel.currentMirror.collectAsState()
+    val isChecking by viewModel.isCheckingHealth.collectAsState()
 
     // Handle scanned mirror data
     LaunchedEffect(scannedMirrorData) {
@@ -109,6 +112,22 @@ fun MirrorSettingsScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.checkMirrorsNow() },
+                        enabled = !isChecking
+                    ) {
+                        if (isChecking) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.width(24.dp).height(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Check Health"
+                            )
+                        }
+                    }
                     IconButton(onClick = onNavigateToQRScanner) {
                         Icon(
                             Icons.Default.QrCodeScanner,
@@ -135,8 +154,8 @@ fun MirrorSettingsScreen(
         ) {
             item {
                 Text(
-                    text = stringResource(R.string.mirror_settings_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(R.string.mirror_settings_auto_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -145,13 +164,6 @@ fun MirrorSettingsScreen(
             items(mirrors, key = { it.url }) { mirror ->
                 MirrorCard(
                     mirror = mirror,
-                    isSelected = mirror.url == currentMirror?.url,
-                    onSelect = {
-                        viewModel.selectMirror(mirror)
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Mirror changed to ${mirror.name}")
-                        }
-                    },
                     onDelete = if (!mirror.isBuiltIn) {
                         { mirrorToDelete = mirror }
                     } else null
@@ -236,19 +248,12 @@ fun MirrorSettingsScreen(
 @Composable
 private fun MirrorCard(
     mirror: MirrorEntity,
-    isSelected: Boolean,
-    onSelect: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
     Card(
-        onClick = onSelect,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -257,37 +262,29 @@ private fun MirrorCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadioButton(
-                selected = isSelected,
-                onClick = onSelect
+            // Health status icon
+            Icon(
+                imageVector = if (mirror.isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
+                contentDescription = if (mirror.isHealthy) "Healthy" else "Unhealthy",
+                tint = if (mirror.isHealthy) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.error
+                }
             )
             Spacer(modifier = Modifier.width(12.dp))
+
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
                         text = mirror.name,
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (mirror.isBuiltIn && mirror.isDefault) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    "Default",
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
-                            modifier = Modifier.height(24.dp)
-                        )
-                    }
                     if (!mirror.isBuiltIn) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         AssistChip(
                             onClick = { },
                             label = { Text("Custom", style = MaterialTheme.typography.labelSmall) },
@@ -298,19 +295,45 @@ private fun MirrorCard(
                         )
                     }
                 }
+
                 Text(
                     text = mirror.url.removePrefix("https://"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (!mirror.bearerToken.isNullOrEmpty()) {
-                    Text(
-                        text = stringResource(R.string.mirror_settings_has_token),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+
+                // Health details
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (mirror.latencyMs > 0) {
+                        Text(
+                            text = "Latency: ${mirror.latencyMs}ms",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                    if (mirror.priority > 0) {
+                        Text(
+                            text = "Priority: ${mirror.priority}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (!mirror.bearerToken.isNullOrEmpty()) {
+                        AssistChip(
+                            onClick = { },
+                            label = { Text("Has Token", style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.height(20.dp),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
                 }
             }
+
             onDelete?.let {
                 IconButton(onClick = it) {
                     Icon(
@@ -332,6 +355,7 @@ private fun AddMirrorDialog(
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("https://") }
     var token by remember { mutableStateOf("") }
+    var priority by remember { mutableStateOf("50") }
     var nameError by remember { mutableStateOf<String?>(null) }
     var urlError by remember { mutableStateOf<String?>(null) }
 
@@ -375,6 +399,15 @@ private fun AddMirrorDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    value = priority,
+                    onValueChange = { priority = it },
+                    label = { Text("Priority (0-100)") },
+                    placeholder = { Text("50") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
                     label = { Text(stringResource(R.string.mirror_settings_token_label)) },
@@ -401,10 +434,12 @@ private fun AddMirrorDialog(
                         hasError = true
                     }
                     if (!hasError) {
+                        val priorityInt = priority.toIntOrNull() ?: 50
                         onAdd(
                             name.trim(),
                             url.trim().removeSuffix("/"),
-                            token.trim().takeIf { it.isNotEmpty() })
+                            token.trim().takeIf { it.isNotEmpty() }
+                        )
                     }
                 }
             ) {

@@ -121,6 +121,7 @@
     <!-- 镜像源设置 -->
     <string name="mirror_settings_title">镜像源</string>
     <string name="mirror_settings_subtitle">选择镜像源以加快镜像下载速度。中国大陆用户建议使用国内镜像源。</string>
+    <string name="mirror_settings_auto_subtitle">应用会根据健康状态和延迟自动选择镜像源。当所有镜像源失败时，会自动回退到 Docker Hub 官方源。</string>
     <string name="mirror_settings_official">官方源（Docker Hub）</string>
     <string name="mirror_settings_url">地址：%1$s</string>
     <string name="mirror_settings_add">添加镜像源</string>

@@ -10,17 +10,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MirrorDao {
-    @Query("SELECT * FROM registry_mirrors ORDER BY isDefault DESC, isBuiltIn DESC, name ASC")
+    @Query("SELECT * FROM registry_mirrors ORDER BY priority DESC, isBuiltIn DESC, name ASC")
     fun getAllMirrors(): Flow<List<MirrorEntity>>
 
     @Query("SELECT * FROM registry_mirrors WHERE url = :url")
     suspend fun getMirrorByUrl(url: String): MirrorEntity?
 
-    @Query("SELECT * FROM registry_mirrors WHERE isSelected = 1 LIMIT 1")
-    suspend fun getSelectedMirror(): MirrorEntity?
+    @Query("SELECT * FROM registry_mirrors WHERE isHealthy = 1 ORDER BY latencyMs ASC, priority DESC")
+    suspend fun getHealthyMirrors(): List<MirrorEntity>
 
-    @Query("SELECT * FROM registry_mirrors WHERE isSelected = 1 LIMIT 1")
-    fun getSelectedMirrorFlow(): Flow<MirrorEntity?>
+    @Query("SELECT * FROM registry_mirrors WHERE isHealthy = 1 ORDER BY latencyMs ASC, priority DESC LIMIT 1")
+    suspend fun getBestMirror(): MirrorEntity?
 
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertMirror(mirror: MirrorEntity)
@@ -34,11 +34,8 @@ interface MirrorDao {
     @Query("DELETE FROM registry_mirrors WHERE url = :url")
     suspend fun deleteMirrorByUrl(url: String)
 
-    @Query("UPDATE registry_mirrors SET isSelected = 0")
-    suspend fun clearAllSelected()
-
-    @Query("UPDATE registry_mirrors SET isSelected = 1 WHERE url = :url")
-    suspend fun selectMirrorByUrl(url: String)
+    @Query("UPDATE registry_mirrors SET isHealthy = :isHealthy, latencyMs = :latencyMs, lastChecked = :lastChecked WHERE url = :url")
+    suspend fun updateMirrorHealth(url: String, isHealthy: Boolean, latencyMs: Long, lastChecked: Long)
 
     @Query("DELETE FROM registry_mirrors WHERE isBuiltIn = 0")
     suspend fun deleteAllCustomMirrors()

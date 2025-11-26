@@ -9,7 +9,9 @@ data class MirrorEntity(
     val url: String,
     val name: String,
     val bearerToken: String? = null,
-    val isDefault: Boolean = false,
     val isBuiltIn: Boolean = true,
-    val isSelected: Boolean = false
+    val priority: Int = 0,
+    val isHealthy: Boolean = true,
+    val latencyMs: Long = -1,
+    val lastChecked: Long = 0
 )

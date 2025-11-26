@@ -73,7 +73,6 @@ fun SettingsScreen(
 
     val storageUsage by viewModel.storageUsage.collectAsState()
     val prootVersion by viewModel.prootVersion.collectAsState()
-    val currentMirror by viewModel.currentMirror.collectAsState()
 
     var showClearDialog by remember { mutableStateOf(false) }
 
@@ -112,12 +111,6 @@ fun SettingsScreen(
                             Text(
                                 text = stringResource(R.string.settings_registry_mirror),
                                 style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = currentMirror?.name
-                                    ?: stringResource(R.string.status_loading),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = stringResource(R.string.settings_registry_mirror_subtitle),
@@ -179,11 +172,6 @@ fun SettingsScreen(
                     icon = Icons.Default.Info,
                     title = stringResource(R.string.settings_version),
                     subtitle = viewModel.packageInfo.versionName ?: ""
-                )
-                SettingsItem(
-                    icon = Icons.Default.Sailing,
-                    title = stringResource(R.string.app_name),
-                    subtitle = viewModel.packageInfo.applicationInfo?.name ?: ""
                 )
                 SettingsItem(
                     icon = Icons.Default.Memory,

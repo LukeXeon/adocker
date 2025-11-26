@@ -61,14 +61,13 @@ class DockerRegistryApi @Inject constructor(
         Timber.Forest.d("Authenticating for repository: $repository, registry: $registry")
 
         try {
-            // Check if current mirror has a Bearer Token configured
-            val currentMirror = registrySettings.getCurrentMirror()
-            if (!currentMirror.bearerToken.isNullOrEmpty()) {
-                Timber.Forest.i("Using configured Bearer Token from mirror: ${currentMirror.name}")
-                authToken = currentMirror.bearerToken
-                tokenExpiry =
-                    System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
-                return@runCatching currentMirror.bearerToken
+            // Check if this specific registry URL has a Bearer Token configured
+            val bearerToken = registrySettings.getBearerToken(registry)
+            if (!bearerToken.isNullOrEmpty()) {
+                Timber.Forest.i("Using configured Bearer Token for registry: $registry")
+                authToken = bearerToken
+                tokenExpiry = System.currentTimeMillis() + 86400000 // 24 hours for manually configured tokens
+                return@runCatching bearerToken
             }
 
             // Step 1: Try to access /v2/ without auth to get WWW-Authenticate header
@@ -330,9 +329,32 @@ class DockerRegistryApi @Inject constructor(
     }
 
     /**
-     * Get current mirror info for display
+     * Execute operation with automatic retry across healthy mirrors
      */
-    suspend fun getCurrentMirrorName(): String {
-        return registrySettings.getCurrentMirror().name
+    private suspend fun <T> executeWithRetry(
+        operation: suspend (registryUrl: String) -> T
+    ): T {
+        val healthyMirrors = registrySettings.getHealthyMirrors()
+        val fallbackUrl = RegistryRepository.DOCKER_HUB_URL
+
+        // Try each healthy mirror
+        for (mirror in healthyMirrors) {
+            try {
+                Timber.d("Trying mirror: ${mirror.name} (${mirror.url})")
+                return operation(mirror.url)
+            } catch (e: Exception) {
+                Timber.w(e, "Mirror ${mirror.name} failed, trying next...")
+                continue
+            }
+        }
+
+        // All mirrors failed, try Docker Hub as fallback
+        try {
+            Timber.w("All mirrors failed, trying Docker Hub fallback")
+            return operation(fallbackUrl)
+        } catch (e: Exception) {
+            Timber.e(e, "Docker Hub fallback also failed")
+            throw e
+        }
     }
 }

@@ -30,11 +30,6 @@ class SettingsViewModel @Inject constructor(
     private val _prootVersion = MutableStateFlow<String?>(null)
     val prootVersion: StateFlow<String?> = _prootVersion.asStateFlow()
 
-    private val _currentMirror = MutableStateFlow<MirrorEntity?>(null)
-    val currentMirror: StateFlow<MirrorEntity?> = _currentMirror.asStateFlow()
-
-    val availableMirrors: List<MirrorEntity> = RegistryRepository.AVAILABLE_MIRRORS
-
     val architecture = AppConfig.ARCHITECTURE
     val baseDir: String = appConfig.baseDir.absolutePath
 
@@ -47,15 +42,7 @@ class SettingsViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 _storageUsage.value = getDirectorySize(appConfig.baseDir)
                 _prootVersion.value = prootEngine?.getVersion()
-                _currentMirror.value = registrySettings.getCurrentMirror()
             }
-        }
-    }
-
-    fun setRegistryMirror(mirror: MirrorEntity) {
-        viewModelScope.launch {
-            registrySettings.setMirror(mirror)
-            _currentMirror.value = mirror
         }
     }
 

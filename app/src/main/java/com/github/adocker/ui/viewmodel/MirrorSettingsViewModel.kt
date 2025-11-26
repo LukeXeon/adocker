@@ -2,6 +2,7 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.adocker.core.registry.MirrorHealthChecker
 import com.github.adocker.core.registry.RegistryRepository
 import com.github.adocker.core.database.model.MirrorEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MirrorSettingsViewModel @Inject constructor(
     private val registrySettings: RegistryRepository,
+    private val healthChecker: MirrorHealthChecker,
     val json: Json,
 ) : ViewModel() {
 
@@ -25,22 +27,16 @@ class MirrorSettingsViewModel @Inject constructor(
             initialValue = RegistryRepository.BUILT_IN_MIRRORS
         )
 
-    val currentMirror: StateFlow<MirrorEntity?> = registrySettings.getCurrentMirrorFlow()
+    val isCheckingHealth: StateFlow<Boolean> = healthChecker.isChecking
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
+            initialValue = false
         )
 
-    fun selectMirror(mirror: MirrorEntity) {
+    fun addCustomMirror(name: String, url: String, token: String? = null, priority: Int = 50) {
         viewModelScope.launch {
-            registrySettings.setMirror(mirror)
-        }
-    }
-
-    fun addCustomMirror(name: String, url: String, token: String? = null) {
-        viewModelScope.launch {
-            registrySettings.addCustomMirror(name, url, token)
+            registrySettings.addCustomMirror(name, url, token, priority)
         }
     }
 
@@ -48,5 +44,9 @@ class MirrorSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             registrySettings.deleteCustomMirror(mirror)
         }
+    }
+
+    fun checkMirrorsNow() {
+        registrySettings.checkMirrorsNow()
     }
 }

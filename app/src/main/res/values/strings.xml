@@ -121,6 +121,7 @@
     <!-- Mirror settings -->
     <string name="mirror_settings_title">Registry Mirrors</string>
     <string name="mirror_settings_subtitle">Select a registry mirror for faster image downloads. Users in mainland China are recommended to use domestic mirrors.</string>
+    <string name="mirror_settings_auto_subtitle">Mirrors are automatically selected based on health and latency. Docker Hub is used as fallback when all mirrors fail.</string>
     <string name="mirror_settings_official">Official (Docker Hub)</string>
     <string name="mirror_settings_url">URL: %1$s</string>
     <string name="mirror_settings_add">Add Mirror</string>

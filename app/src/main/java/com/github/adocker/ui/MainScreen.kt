@@ -22,7 +22,6 @@ import com.github.adocker.ui.screens.containers.CreateContainerScreen
 import com.github.adocker.ui.screens.home.HomeScreen
 import com.github.adocker.ui.screens.images.ImagesScreen
 import com.github.adocker.ui.screens.images.PullImageScreen
-import com.github.adocker.ui.screens.images.SearchImageScreen
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
 import com.github.adocker.ui.screens.settings.MirrorSettingsScreen
 import com.github.adocker.ui.screens.settings.PhantomProcessScreen
@@ -183,15 +182,11 @@ fun MainScreen() {
                 )
             }
 
-            // Search Images
+            // Search Images - Redirect to Pull Image
             composable(Screen.SearchImage.route) {
-                SearchImageScreen(
+                PullImageScreen(
                     viewModel = mainViewModel,
                     onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onNavigateToPull = { imageName ->
-                        mainViewModel.pullImage(imageName)
                         navController.popBackStack()
                     }
                 )
