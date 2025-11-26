@@ -53,7 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
-import com.github.adocker.core.database.model.MirrorEntity
+import com.github.adocker.daemon.database.model.MirrorEntity
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.viewmodel.MirrorSettingsViewModel
 import kotlinx.coroutines.launch

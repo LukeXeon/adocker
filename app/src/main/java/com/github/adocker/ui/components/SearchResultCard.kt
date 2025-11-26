@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.core.registry.model.SearchResult
+import com.github.adocker.daemon.registry.model.SearchResult
 
 @Composable
 fun SearchResultCard(

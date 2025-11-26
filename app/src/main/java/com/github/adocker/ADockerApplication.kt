@@ -22,6 +22,7 @@ class ADockerApplication : Application() {
         @Volatile
         private var _instance: Application? = null
 
+
         val instance: Application
             @SuppressLint("PrivateApi")
             get() {

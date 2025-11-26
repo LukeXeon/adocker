@@ -10,7 +10,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.core.image.PullProgress
+import com.github.adocker.daemon.images.PullProgress
 
 @Composable
 fun PullProgressCard(

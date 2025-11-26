@@ -3,11 +3,10 @@ package com.github.adocker.ui.viewmodel
 import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.core.config.AppConfig
-import com.github.adocker.core.registry.RegistryRepository
-import com.github.adocker.core.utils.getDirectorySize
-import com.github.adocker.core.database.model.MirrorEntity
-import com.github.adocker.core.engine.PRootEngine
+import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.registry.RegistryRepository
+import com.github.adocker.daemon.utils.getDirectorySize
+import com.github.adocker.daemon.engine.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

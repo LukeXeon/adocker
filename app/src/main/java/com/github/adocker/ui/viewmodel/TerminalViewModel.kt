@@ -3,9 +3,9 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.container.ContainerRepository
-import com.github.adocker.core.container.ContainerExecutor
+import com.github.adocker.daemon.database.model.ContainerEntity
+import com.github.adocker.daemon.containers.ContainerRepository
+import com.github.adocker.daemon.containers.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

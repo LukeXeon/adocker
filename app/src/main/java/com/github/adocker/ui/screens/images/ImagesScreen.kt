@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.core.database.model.ImageEntity
+import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui.components.ImageCard
 import com.github.adocker.ui.components.PullImageDialog
 import com.github.adocker.ui.viewmodel.MainViewModel

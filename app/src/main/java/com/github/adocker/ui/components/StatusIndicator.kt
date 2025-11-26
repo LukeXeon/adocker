@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.daemon.database.model.ContainerStatus
 
 @Composable
 fun StatusIndicator(

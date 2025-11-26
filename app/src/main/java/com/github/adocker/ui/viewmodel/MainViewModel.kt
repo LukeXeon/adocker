@@ -2,15 +2,15 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.core.registry.model.ContainerConfig
-import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.database.model.ContainerStatus
-import com.github.adocker.core.database.model.ImageEntity
-import com.github.adocker.core.registry.model.SearchResult
-import com.github.adocker.core.container.ContainerRepository
-import com.github.adocker.core.image.ImageRepository
-import com.github.adocker.core.image.PullProgress
-import com.github.adocker.core.container.ContainerExecutor
+import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.database.model.ContainerEntity
+import com.github.adocker.daemon.database.model.ContainerStatus
+import com.github.adocker.daemon.database.model.ImageEntity
+import com.github.adocker.daemon.registry.model.SearchResult
+import com.github.adocker.daemon.containers.ContainerRepository
+import com.github.adocker.daemon.images.ImageRepository
+import com.github.adocker.daemon.images.PullProgress
+import com.github.adocker.daemon.containers.ContainerExecutor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
