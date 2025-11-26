@@ -15,13 +15,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.daemon.containers.RunningContainer
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.daemon.database.model.ContainerStatus
+import com.github.adocker.ui.model.ContainerStatus
 
 @Composable
 fun ContainerCard(
-    container: RunningContainer,
+    container: ContainerEntity,
+    status: ContainerStatus,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onDelete: () -> Unit,
@@ -50,7 +50,7 @@ fun ContainerCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatusIndicator(status = container.status)
+                    StatusIndicator(status = status)
                     Column {
                         Text(
                             text = container.name,
@@ -83,12 +83,11 @@ fun ContainerCard(
             )
 
             Text(
-                text = container.status.name,
+                text = status.name,
                 style = MaterialTheme.typography.labelMedium,
-                color = when (container.status) {
+                color = when (status) {
                     ContainerStatus.RUNNING -> Color(0xFF4CAF50)
-                    ContainerStatus.STOPPED -> Color(0xFFF44336)
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    ContainerStatus.CREATED, ContainerStatus.EXITED -> Color(0xFFF44336)
                 }
             )
 
@@ -101,7 +100,7 @@ fun ContainerCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    if (container.status == ContainerStatus.RUNNING) {
+                    if (status == ContainerStatus.RUNNING) {
                         ActionButton(
                             icon = Icons.Default.Stop,
                             label = stringResource(R.string.action_stop),

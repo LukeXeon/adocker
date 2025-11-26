@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.daemon.database.model.ContainerStatus
+import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,6 +30,9 @@ fun ContainerDetailScreen(
 ) {
     val containers by viewModel.containers.collectAsState()
     val container = containers.find { it.id == containerId }
+
+    // Get container status from ViewModel
+    val containerStatus = container?.let { viewModel.getContainerStatus(it.id) } ?: ContainerStatus.CREATED
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -55,7 +58,7 @@ fun ContainerDetailScreen(
                 },
                 actions = {
                     // Terminal button (only for running containers)
-                    if (container.status == ContainerStatus.RUNNING) {
+                    if (containerStatus == ContainerStatus.RUNNING) {
                         IconButton(onClick = { onNavigateToTerminal(container.id) }) {
                             Icon(
                                 Icons.Default.Terminal,
@@ -64,7 +67,7 @@ fun ContainerDetailScreen(
                         }
                     }
                     // Start/Stop button
-                    if (container.status == ContainerStatus.RUNNING) {
+                    if (containerStatus == ContainerStatus.RUNNING) {
                         IconButton(onClick = { viewModel.stopContainer(container.id) }) {
                             Icon(
                                 Icons.Default.Stop,
@@ -80,7 +83,7 @@ fun ContainerDetailScreen(
                         }
                     }
                     // Delete button (only for stopped containers)
-                    if (container.status != ContainerStatus.RUNNING) {
+                    if (containerStatus != ContainerStatus.RUNNING) {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
@@ -101,24 +104,18 @@ fun ContainerDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Status badge
-            StatusChip(status = container.status)
+            StatusChip(status = containerStatus)
 
             // Basic Information Card
             DetailCard(title = stringResource(R.string.common_basic_info)) {
                 DetailRow(label = stringResource(R.string.common_name), value = container.name)
                 DetailRow(label = stringResource(R.string.common_id), value = container.id)
                 DetailRow(label = stringResource(R.string.container_image), value = container.imageName)
-                DetailRow(label = stringResource(R.string.container_status), value = getStatusText(container.status))
+                DetailRow(label = stringResource(R.string.container_status), value = getStatusText(containerStatus))
                 DetailRow(
                     label = stringResource(R.string.container_created),
                     value = formatDate(container.created)
                 )
-                container.pid?.let { pid ->
-                    DetailRow(
-                        label = stringResource(R.string.container_pid),
-                        value = pid.toString()
-                    )
-                }
             }
 
             // Configuration Card
@@ -216,8 +213,6 @@ private fun StatusChip(status: ContainerStatus) {
     val (text, color) = when (status) {
         ContainerStatus.CREATED -> stringResource(R.string.status_created) to MaterialTheme.colorScheme.secondary
         ContainerStatus.RUNNING -> stringResource(R.string.status_running) to MaterialTheme.colorScheme.primary
-        ContainerStatus.STOPPED -> stringResource(R.string.status_stopped) to MaterialTheme.colorScheme.error
-        ContainerStatus.PAUSED -> stringResource(R.string.status_paused) to MaterialTheme.colorScheme.tertiary
         ContainerStatus.EXITED -> stringResource(R.string.status_stopped) to MaterialTheme.colorScheme.error
     }
 
@@ -278,8 +273,6 @@ private fun getStatusText(status: ContainerStatus): String {
     return when (status) {
         ContainerStatus.CREATED -> stringResource(R.string.status_created)
         ContainerStatus.RUNNING -> stringResource(R.string.status_running)
-        ContainerStatus.STOPPED -> stringResource(R.string.status_stopped)
-        ContainerStatus.PAUSED -> stringResource(R.string.status_paused)
         ContainerStatus.EXITED -> stringResource(R.string.status_stopped)
     }
 }

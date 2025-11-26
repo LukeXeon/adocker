@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.daemon.database.model.ContainerStatus
+import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.components.ContainerCard
 import com.github.adocker.ui.viewmodel.MainViewModel
 
@@ -33,9 +33,15 @@ fun ContainersScreen(
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
     var showDeleteDialog by remember { mutableStateOf<ContainerEntity?>(null) }
 
+    // Filter containers based on status
     val filteredContainers = remember(containers, filterStatus) {
-        if (filterStatus == null) containers
-        else containers.filter { it.status == filterStatus }
+        if (filterStatus == null) {
+            containers
+        } else {
+            containers.filter { container ->
+                viewModel.getContainerStatus(container.id) == filterStatus
+            }
+        }
     }
 
     Scaffold(
@@ -130,8 +136,8 @@ fun ContainersScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val running = containers.count { it.status == ContainerStatus.RUNNING }
-                        val stopped = containers.count { it.status != ContainerStatus.RUNNING }
+                        val running = containers.count { viewModel.getContainerStatus(it.id) == ContainerStatus.RUNNING }
+                        val stopped = containers.size - running
 
                         FilterChip(
                             selected = filterStatus == null,
@@ -156,10 +162,10 @@ fun ContainersScreen(
                             }
                         )
                         FilterChip(
-                            selected = filterStatus == ContainerStatus.STOPPED,
+                            selected = filterStatus == ContainerStatus.CREATED,
                             onClick = {
-                                filterStatus = if (filterStatus == ContainerStatus.STOPPED) null
-                                else ContainerStatus.STOPPED
+                                filterStatus = if (filterStatus == ContainerStatus.CREATED) null
+                                else ContainerStatus.CREATED
                             },
                             label = { Text("${stringResource(R.string.containers_tab_stopped)} ($stopped)") }
                         )
@@ -169,6 +175,7 @@ fun ContainersScreen(
                 items(filteredContainers, key = { it.id }) { container ->
                     ContainerCard(
                         container = container,
+                        status = viewModel.getContainerStatus(container.id),
                         onStart = { viewModel.startContainer(container.id) },
                         onStop = { viewModel.stopContainer(container.id) },
                         onDelete = { showDeleteDialog = container },

@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.github.adocker.daemon.database.model.ContainerStatus
+import com.github.adocker.ui.model.ContainerStatus
 
 @Composable
 fun StatusIndicator(
@@ -18,8 +18,6 @@ fun StatusIndicator(
 ) {
     val color = when (status) {
         ContainerStatus.RUNNING -> Color(0xFF4CAF50)
-        ContainerStatus.STOPPED -> Color(0xFFF44336)
-        ContainerStatus.PAUSED -> Color(0xFFFF9800)
         ContainerStatus.CREATED -> Color(0xFF2196F3)
         ContainerStatus.EXITED -> Color(0xFF9E9E9E)
     }

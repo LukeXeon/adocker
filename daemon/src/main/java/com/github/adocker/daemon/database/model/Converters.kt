@@ -23,16 +23,6 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromContainerStatus(value: ContainerStatus): String {
-        return value.name
-    }
-
-    @TypeConverter
-    fun toContainerStatus(value: String): ContainerStatus {
-        return ContainerStatus.valueOf(value)
-    }
-
-    @TypeConverter
     fun fromContainerConfig(value: ContainerConfig): String {
         return json.encodeToString(value)
     }

@@ -12,7 +12,6 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.github.adocker.daemon.process.PhantomProcessManager
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.components.PhantomProcessWarningDialog
 import com.github.adocker.ui.navigation.Screen
@@ -30,6 +29,7 @@ import com.github.adocker.ui.screens.settings.PhantomProcessScreen
 import com.github.adocker.ui.screens.settings.SettingsScreen
 import com.github.adocker.ui.screens.terminal.TerminalScreen
 import com.github.adocker.ui.viewmodel.MainViewModel
+import com.github.adocker.ui.viewmodel.PhantomProcessViewModel
 import com.github.adocker.ui.viewmodel.TerminalViewModel
 import kotlinx.coroutines.launch
 
@@ -49,30 +49,34 @@ fun MainScreen() {
     }
 
     val mainViewModel = hiltViewModel<MainViewModel>()
-
-    // Create PhantomProcessManager instance
-    // Note: PhantomProcessManager is @Singleton and injected via Hilt in ViewModels
-    // Here we create a local instance for startup check
-    val phantomProcessManager = remember(context) {
-        PhantomProcessManager()
-    }
+    val phantomViewModel = hiltViewModel<PhantomProcessViewModel>()
 
     // Phantom process warning state
     var showPhantomWarning by remember { mutableStateOf(false) }
     var hasCheckedPhantomProcess by remember { mutableStateOf(false) }
 
+    // Observe phantom process UI state
+    val phantomUiState by phantomViewModel.uiState.collectAsState()
+
     // Check phantom process restrictions on first launch
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasCheckedPhantomProcess) {
             scope.launch {
-                if (phantomProcessManager.hasShizukuPermission()) {
-                    val isDisabled = phantomProcessManager.isPhantomProcessKillerDisabled()
-                    if (!isDisabled) {
-                        showPhantomWarning = true
-                    }
-                }
+                phantomViewModel.checkStatus()
                 hasCheckedPhantomProcess = true
             }
+        }
+    }
+
+    // Show warning if phantom killer is not disabled and shizuku permission granted
+    LaunchedEffect(phantomUiState) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            phantomUiState.shizukuPermissionGranted &&
+            !phantomUiState.phantomKillerDisabled &&
+            !phantomUiState.isChecking &&
+            hasCheckedPhantomProcess
+        ) {
+            showPhantomWarning = true
         }
     }
 

@@ -61,19 +61,40 @@ class TerminalViewModel @Inject constructor(
             }
 
             try {
-                val result = containerExecutor.execInContainer(
-                    containerId = containerId,
-                    command = listOf("/bin/sh", "-c", command),
-                )
+                // Get the running container
+                val runningContainer = containerExecutor.getAllRunningContainers()
+                    .first()
+                    .find { it.containerId == containerId }
 
-                result.onSuccess { execResult ->
-                    if (execResult.output.isNotBlank()) {
-                        execResult.output.lines().forEach { line ->
-                            addOutput(line)
+                if (runningContainer == null || !runningContainer.isActive) {
+                    addOutput("Error: Container is not running. Please start the container first.")
+                    return@launch
+                }
+
+                // Execute command in the running container
+                val result = runningContainer.execCommand(listOf("/bin/sh", "-c", command))
+
+                result.onSuccess { process ->
+                    withContext(Dispatchers.IO) {
+                        val output = process.inputStream.bufferedReader().use { it.readText() }
+                        val errorOutput = process.errorStream.bufferedReader().use { it.readText() }
+                        process.waitFor()
+
+                        withContext(Dispatchers.Main) {
+                            if (output.isNotBlank()) {
+                                output.lines().forEach { line ->
+                                    addOutput(line)
+                                }
+                            }
+                            if (errorOutput.isNotBlank()) {
+                                errorOutput.lines().forEach { line ->
+                                    addOutput(line)
+                                }
+                            }
+                            if (process.exitValue() != 0) {
+                                addOutput("Exit code: ${process.exitValue()}")
+                            }
                         }
-                    }
-                    if (execResult.exitCode != 0) {
-                        addOutput("Exit code: ${execResult.exitCode}")
                     }
                 }.onFailure { e ->
                     addOutput("Error: ${e.message}")

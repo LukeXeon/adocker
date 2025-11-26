@@ -4,13 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.daemon.database.model.ContainerStatus
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.registry.model.SearchResult
 import com.github.adocker.daemon.containers.ContainerRepository
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.containers.ContainerExecutor
+import com.github.adocker.daemon.containers.RunningContainer
+import com.github.adocker.ui.model.ContainerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -32,6 +33,14 @@ class MainViewModel @Inject constructor(
     // Containers
     val containers: StateFlow<List<ContainerEntity>> = containerRepository.getAllContainers()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    // Running containers
+    val runningContainers: StateFlow<List<RunningContainer>> =
+        containerExecutor?.getAllRunningContainers()?.stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            emptyList()
+        ) ?: MutableStateFlow(emptyList())
 
     // Search results
     private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -212,9 +221,19 @@ class MainViewModel @Inject constructor(
         _message.value = null
     }
 
+    // Helper function to get container status
+    fun getContainerStatus(containerId: String): ContainerStatus {
+        val running = runningContainers.value.find { it.containerId == containerId }
+        return if (running?.isActive == true) {
+            ContainerStatus.RUNNING
+        } else {
+            ContainerStatus.CREATED
+        }
+    }
+
     // Get running containers count
     fun getRunningCount(): Int {
-        return containers.value.count { it.status == ContainerStatus.RUNNING }
+        return runningContainers.value.count { it.isActive }
     }
 
     // Get stats
@@ -225,12 +244,13 @@ class MainViewModel @Inject constructor(
         val stoppedContainers: Int
     )
 
-    val stats: StateFlow<Stats> = combine(images, containers) { images, containers ->
+    val stats: StateFlow<Stats> = combine(images, containers, runningContainers) { images, containers, running ->
+        val runningCount = running.count { it.isActive }
         Stats(
             totalImages = images.size,
             totalContainers = containers.size,
-            runningContainers = containers.count { it.status == ContainerStatus.RUNNING },
-            stoppedContainers = containers.count { it.status != ContainerStatus.RUNNING }
+            runningContainers = runningCount,
+            stoppedContainers = containers.size - runningCount
         )
     }.stateIn(
         viewModelScope,

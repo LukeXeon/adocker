@@ -38,8 +38,7 @@ interface AppGlobals {
         val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
             Class.forName("android.app.ActivityThread")
                 .getDeclaredMethod(
-                    "currentApplication",
-                    Application::class.java
+                    "currentApplication"
                 ).apply {
                     isAccessible = true
                 }.invoke(null) as Application
