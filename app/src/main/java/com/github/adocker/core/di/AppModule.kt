@@ -23,12 +23,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
-import timber.log.Timber
 import javax.inject.Singleton
 
 @Module
@@ -106,14 +101,5 @@ object AppModule {
         }
     }
 
-    @Provides
-    @Singleton
-    fun scope(): CoroutineScope {
-        return CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler { context, e ->
-            if (e !is CancellationException) {
-                Timber.e(e)
-            }
-        })
-    }
 
 }

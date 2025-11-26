@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.container.ContainerStatus
+import com.github.adocker.core.database.model.ContainerStatus
 import com.github.adocker.ui.components.ContainerCard
 import com.github.adocker.ui.viewmodel.MainViewModel
 

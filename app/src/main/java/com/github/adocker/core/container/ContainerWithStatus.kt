@@ -1,7 +1,7 @@
 package com.github.adocker.core.container
 
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.container.ContainerStatus
+import com.github.adocker.core.database.model.ContainerStatus
 
 /**
  * Simple wrapper that combines a container entity with its runtime status

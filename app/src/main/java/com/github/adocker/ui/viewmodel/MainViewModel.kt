@@ -10,7 +10,6 @@ import com.github.adocker.core.container.ContainerRepository
 import com.github.adocker.core.image.ImageRepository
 import com.github.adocker.core.image.PullProgress
 import com.github.adocker.core.container.ContainerExecutor
-import com.github.adocker.core.container.ContainerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -40,7 +39,7 @@ class MainViewModel @Inject constructor(
             entities.map { entity ->
                 ContainerWithStatus(
                     entity = entity,
-                    status = statuses[entity.id] ?: ContainerStatus.CREATED
+                    status = statuses[entity.id] ?: com.github.adocker.core.database.model.ContainerStatus.CREATED
                 )
             }
         }
@@ -227,7 +226,7 @@ class MainViewModel @Inject constructor(
 
     // Get running containers count
     fun getRunningCount(): Int {
-        return containers.value.count { it.status == ContainerStatus.RUNNING }
+        return containers.value.count { it.status == com.github.adocker.core.database.model.ContainerStatus.RUNNING }
     }
 
     // Get stats
@@ -242,8 +241,8 @@ class MainViewModel @Inject constructor(
         Stats(
             totalImages = images.size,
             totalContainers = containers.size,
-            runningContainers = containers.count { it.status == ContainerStatus.RUNNING },
-            stoppedContainers = containers.count { it.status != ContainerStatus.RUNNING }
+            runningContainers = containers.count { it.status == com.github.adocker.core.database.model.ContainerStatus.RUNNING },
+            stoppedContainers = containers.count { it.status != com.github.adocker.core.database.model.ContainerStatus.RUNNING }
         )
     }.stateIn(
         viewModelScope,

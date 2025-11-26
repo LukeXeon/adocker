@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.github.adocker.core.database.model.ContainerEntity
-import com.github.adocker.core.container.ContainerStatus
+import com.github.adocker.core.database.model.ContainerStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
