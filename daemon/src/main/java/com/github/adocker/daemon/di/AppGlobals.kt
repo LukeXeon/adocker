@@ -21,11 +21,6 @@ import kotlinx.serialization.json.Json
 interface AppGlobals {
     fun json(): Json
 
-    fun engine(): PRootEngine
-
-    fun scope(): CoroutineScope
-
-
     @SuppressLint("PrivateApi")
     companion object {
         operator fun invoke(): AppGlobals {

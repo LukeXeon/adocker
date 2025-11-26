@@ -8,7 +8,7 @@
     <!-- Shizuku permission -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
-    <application>
+    <application android:extractNativeLibs="true">
         <!-- App Startup: Automatic initialization -->
         <provider
             android:name="androidx.startup.InitializationProvider"
@@ -18,9 +18,6 @@
             <!-- Timber Initializer -->
             <meta-data
                 android:name="com.github.adocker.daemon.startup.TimberInitializer"
-                android:value="androidx.startup" />
-            <meta-data
-                android:name="com.github.adocker.daemon.startup.PRootInitializer"
                 android:value="androidx.startup" />
             <!-- Config and RegistrySettings are now handled by Hilt DI -->
         </provider>

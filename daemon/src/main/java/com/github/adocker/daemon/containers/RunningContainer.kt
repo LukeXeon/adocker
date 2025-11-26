@@ -6,6 +6,8 @@ import com.github.adocker.daemon.utils.isActive
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Singleton
 
@@ -14,12 +16,10 @@ class RunningContainer @AssistedInject constructor(
     private val engine: PRootEngine,
     private val containerRepository: ContainerRepository,
     appConfig: AppConfig,
+    scope: CoroutineScope,
 ) {
     val containerDir = File(appConfig.containersDir, containerId)
     val rootfsDir = File(containerDir, AppConfig.Companion.ROOTFS_DIR)
-
-    private val lock = Any()
-    private var isDestroyed = false
 
     private fun startProcess(command: List<String>? = null): Result<Process> {
         if (!rootfsDir.exists()) {
@@ -35,12 +35,26 @@ class RunningContainer @AssistedInject constructor(
     }
 
     private val mainProcess = startProcess().getOrThrow()
-
     private val otherProcesses = ArrayList<Process>()
 
+    val input = mainProcess.inputStream.bufferedReader()
+    val output = mainProcess.outputStream.bufferedWriter()
+
+    init {
+        scope.launch {
+            mainProcess.waitFor()
+            synchronized(otherProcesses) {
+                otherProcesses.forEach {
+                    it.destroy()
+                }
+                otherProcesses.clear()
+            }
+        }
+    }
+
     fun execCommand(command: List<String>): Result<Process> {
-        synchronized(lock) {
-            if (isDestroyed) {
+        synchronized(otherProcesses) {
+            if (mainProcess.isActive) {
                 return Result.failure(IllegalStateException("The container has stopped: $containerId"))
             }
             val process = startProcess(command)
@@ -52,22 +66,10 @@ class RunningContainer @AssistedInject constructor(
     }
 
     val isActive: Boolean
-        get() = synchronized(lock) {
-            !isDestroyed && mainProcess.isActive
-        }
+        get() = mainProcess.isActive
 
     fun destroy() {
-        synchronized(lock) {
-            if (!isDestroyed) {
-                isDestroyed = true
-                mainProcess.destroy()
-                synchronized(otherProcesses) {
-                    otherProcesses.forEach {
-                        it.destroy()
-                    }
-                }
-            }
-        }
+        mainProcess.destroy()
     }
 
     @Singleton
