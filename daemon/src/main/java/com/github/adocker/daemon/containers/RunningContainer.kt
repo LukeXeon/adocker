@@ -2,11 +2,12 @@ package com.github.adocker.daemon.containers
 
 import androidx.annotation.WorkerThread
 import com.github.adocker.daemon.config.AppConfig
-import com.github.adocker.daemon.utils.isActive
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Singleton
@@ -36,14 +37,16 @@ class RunningContainer @AssistedInject constructor(
 
     private val mainProcess = startProcess().getOrThrow()
     private val otherProcesses = ArrayList<Process>()
-
+    private val active = MutableStateFlow(true)
     val input = mainProcess.inputStream.bufferedReader()
+
     val output = mainProcess.outputStream.bufferedWriter()
 
     init {
         scope.launch {
             mainProcess.waitFor()
             synchronized(otherProcesses) {
+                active.value = false
                 otherProcesses.forEach {
                     it.destroy()
                 }
@@ -54,7 +57,7 @@ class RunningContainer @AssistedInject constructor(
 
     fun execCommand(command: List<String>): Result<Process> {
         synchronized(otherProcesses) {
-            if (mainProcess.isActive) {
+            if (!active.value) {
                 return Result.failure(IllegalStateException("The container has stopped: $containerId"))
             }
             val process = startProcess(command)
@@ -65,8 +68,7 @@ class RunningContainer @AssistedInject constructor(
         }
     }
 
-    val isActive: Boolean
-        get() = mainProcess.isActive
+    val isActive = active.asStateFlow()
 
     fun destroy() {
         mainProcess.destroy()

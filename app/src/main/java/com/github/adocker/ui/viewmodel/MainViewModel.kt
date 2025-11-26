@@ -218,7 +218,7 @@ class MainViewModel @Inject constructor(
     // Helper function to get container status
     fun getContainerStatus(containerId: String): ContainerStatus {
         val running = runningContainers.value.find { it.containerId == containerId }
-        return if (running?.isActive == true) {
+        return if (running?.isActive?.value == true) {
             ContainerStatus.RUNNING
         } else {
             ContainerStatus.CREATED
@@ -227,7 +227,7 @@ class MainViewModel @Inject constructor(
 
     // Get running containers count
     fun getRunningCount(): Int {
-        return runningContainers.value.count { it.isActive }
+        return runningContainers.value.count { it.isActive.value }
     }
 
     // Get stats
@@ -238,17 +238,18 @@ class MainViewModel @Inject constructor(
         val stoppedContainers: Int
     )
 
-    val stats: StateFlow<Stats> = combine(images, containers, runningContainers) { images, containers, running ->
-        val runningCount = running.count { it.isActive }
-        Stats(
-            totalImages = images.size,
-            totalContainers = containers.size,
-            runningContainers = runningCount,
-            stoppedContainers = containers.size - runningCount
+    val stats: StateFlow<Stats> =
+        combine(images, containers, runningContainers) { images, containers, running ->
+            val runningCount = running.count { it.isActive }
+            Stats(
+                totalImages = images.size,
+                totalContainers = containers.size,
+                runningContainers = runningCount,
+                stoppedContainers = containers.size - runningCount
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            Stats(0, 0, 0, 0)
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.Lazily,
-        Stats(0, 0, 0, 0)
-    )
 }

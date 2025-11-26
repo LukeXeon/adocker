@@ -31,7 +31,7 @@ class ContainerExecutor @Inject constructor(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             mutex.withLock {
-                if (runningContainers.value[containerId]?.isActive == true) {
+                if (runningContainers.value[containerId]?.isActive?.value == true) {
                     throw IllegalStateException("Container is already running")
                 }
                 val runningContainer = factory.create(containerId)
