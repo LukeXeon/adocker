@@ -15,12 +15,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import com.github.adocker.daemon.containers.RunningContainer
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.database.model.ContainerStatus
 
 @Composable
 fun ContainerCard(
-    container: ContainerEntity,
+    container: RunningContainer,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onDelete: () -> Unit,

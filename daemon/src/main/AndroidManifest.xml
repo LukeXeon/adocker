@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Network permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Shizuku permission -->
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
+    <application>
+        <!-- App Startup: Automatic initialization -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <!-- Timber Initializer -->
+            <meta-data
+                android:name="com.github.adocker.daemon.startup.TimberInitializer"
+                android:value="androidx.startup" />
+            <meta-data
+                android:name="com.github.adocker.daemon.startup.PRootInitializer"
+                android:value="androidx.startup" />
+            <!-- Config and RegistrySettings are now handled by Hilt DI -->
+        </provider>
+
+        <!-- Shizuku Provider -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+    </application>
+</manifest>

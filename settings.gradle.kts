@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "adocker"
 include(":app")
+include(":daemon")

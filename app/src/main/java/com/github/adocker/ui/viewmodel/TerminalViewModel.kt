@@ -49,41 +49,6 @@ class TerminalViewModel @Inject constructor(
             _container.value = containerRepository.getContainerById(containerId)
         }
     }
-
-    fun startShell() {
-        if (containerExecutor == null) {
-            _error.value = "PRoot engine not available"
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                _isRunning.value = true
-                addOutput("Starting shell...")
-
-                val container = _container.value ?: run {
-                    _error.value = "Container not found"
-                    _isRunning.value = false
-                    return@launch
-                }
-
-                // Execute shell command
-                containerExecutor.execStreaming(containerId, listOf("/bin/sh"))
-                    ?.collect { line ->
-                        addOutput(line)
-                    }
-                    ?: run {
-                        _error.value = "Failed to start shell"
-                    }
-
-            } catch (e: Exception) {
-                _error.value = "Error: ${e.message}"
-            } finally {
-                _isRunning.value = false
-            }
-        }
-    }
-
     fun executeCommand(command: String) {
         if (command.isBlank()) return
 
@@ -99,7 +64,6 @@ class TerminalViewModel @Inject constructor(
                 val result = containerExecutor.execInContainer(
                     containerId = containerId,
                     command = listOf("/bin/sh", "-c", command),
-                    timeout = 30000
                 )
 
                 result.onSuccess { execResult ->

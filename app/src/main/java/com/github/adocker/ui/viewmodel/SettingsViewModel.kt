@@ -4,9 +4,8 @@ import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.config.AppConfig
-import com.github.adocker.daemon.registry.RegistryRepository
+import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.utils.getDirectorySize
-import com.github.adocker.daemon.engine.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,9 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val prootEngine: PRootEngine?,
+    private val prootEngine: PRootEngine,
     private val appConfig: AppConfig,
-    private val registrySettings: RegistryRepository
 ) : ViewModel() {
 
     private val _storageUsage = MutableStateFlow<Long?>(null)
@@ -40,7 +38,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 _storageUsage.value = getDirectorySize(appConfig.baseDir)
-                _prootVersion.value = prootEngine?.getVersion()
+                _prootVersion.value = prootEngine.version
             }
         }
     }
