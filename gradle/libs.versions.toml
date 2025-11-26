@@ -13,7 +13,7 @@ composeBom = "2025.11.01"
 activityCompose = "1.12.0"
 lifecycleRuntimeKtx = "2.10.0"
 navigationCompose = "2.9.6"
-composeCompiler = "1.5.15"
+lifecycleViewmodelCompose = "2.10.0"
 
 # Hilt
 hilt = "2.57.2"
@@ -27,9 +27,6 @@ kotlinxCoroutines = "1.10.2"
 # Archive handling
 commonsCompress = "1.28.0"
 xz = "1.11"
-
-# ViewModel
-lifecycleViewmodelCompose = "2.10.0"
 
 # Coil for image loading
 coil = "3.3.0"
