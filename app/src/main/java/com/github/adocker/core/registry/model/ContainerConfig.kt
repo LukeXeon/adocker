@@ -1,6 +1,5 @@
 package com.github.adocker.core.registry.model
 
-import com.github.adocker.core.registry.model.VolumeBinding
 import kotlinx.serialization.Serializable
 
 /**

@@ -3,11 +3,13 @@ package com.github.adocker.core.container
 import android.system.Os
 import android.system.OsConstants
 import com.github.adocker.core.config.AppConfig
+import com.github.adocker.core.database.AppDatabase
 import com.github.adocker.core.database.dao.ContainerDao
 import com.github.adocker.core.database.dao.ImageDao
 import com.github.adocker.core.registry.model.ContainerConfig
 import com.github.adocker.core.database.model.ContainerEntity
 import com.github.adocker.core.database.model.ContainerStatus
+import com.github.adocker.core.utils.chmod
 import com.github.adocker.core.utils.deleteRecursively
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +30,7 @@ class ContainerRepository @Inject constructor(
     private val imageDao: ImageDao,
     private val appConfig: AppConfig,
     private val json: Json,
+    private val database: AppDatabase,
 ) {
 
     /**
@@ -181,7 +184,7 @@ class ContainerRepository @Inject constructor(
                     // Preserve permissions using Os.chmod
                     try {
                         val stat = Os.lstat(file.absolutePath)
-                        Os.chmod(destFile.absolutePath, stat.st_mode)
+                        destFile.chmod(stat.st_mode)
                     } catch (e: Exception) {
                         Timber.Forest.w(e, "Failed to preserve permissions for ${file.name}")
                     }
@@ -263,18 +266,24 @@ class ContainerRepository @Inject constructor(
             }
         }
 
-    /**
-     * Generate a random container name
-     */
-    private fun generateContainerName(): String {
-        val adjectives = listOf(
+    companion object {
+        /**
+         * Generate a random container name
+         */
+        private fun generateContainerName(): String {
+            val adj = ADJECTIVES.random()
+            val noun = NOUNS.random()
+            val num = (1000..9999).random()
+            return "${adj}_${noun}_$num"
+        }
+
+        private val NOUNS = listOf(
+            "panda", "tiger", "eagle", "dolphin", "falcon", "wolf", "bear", "lion"
+        )
+
+        private val ADJECTIVES = listOf(
             "happy", "sleepy", "brave", "clever", "swift", "calm", "eager", "fancy"
         )
-        val nouns = listOf("panda", "tiger", "eagle", "dolphin", "falcon", "wolf", "bear", "lion")
-        val adj = adjectives.random()
-        val noun = nouns.random()
-        val num = (1000..9999).random()
-        return "${adj}_${noun}_$num"
     }
 
 }
