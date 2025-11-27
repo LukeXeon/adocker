@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Android Robot scale up animation -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:ordering="together">
+    <objectAnimator
+        android:duration="500"
+        android:interpolator="@android:interpolator/overshoot"
+        android:propertyName="scaleX"
+        android:valueFrom="0.5"
+        android:valueTo="1.0" />
+    <objectAnimator
+        android:duration="500"
+        android:interpolator="@android:interpolator/overshoot"
+        android:propertyName="scaleY"
+        android:valueFrom="0.5"
+        android:valueTo="1.0" />
+    <objectAnimator
+        android:duration="250"
+        android:interpolator="@android:interpolator/accelerate_decelerate"
+        android:propertyName="translateY"
+        android:valueFrom="200"
+        android:valueTo="0" />
+</set>

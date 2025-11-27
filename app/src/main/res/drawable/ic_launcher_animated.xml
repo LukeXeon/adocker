@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_foreground">
+    <!-- Android Robot scale up animation -->
+    <target
+        android:name="RobotGroup"
+        android:animation="@animator/robot_scale" />
+
+    <!-- Docker container scale up animation with delay -->
+    <target
+        android:name="DockerGroup"
+        android:animation="@animator/docker_scale" />
+</animated-vector>
