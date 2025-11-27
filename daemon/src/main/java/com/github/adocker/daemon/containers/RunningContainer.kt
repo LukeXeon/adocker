@@ -79,7 +79,7 @@ class RunningContainer @AssistedInject constructor(
         }
         return engine.startProcess(
             checkNotNull(
-                containerRepository.getContainerById(containerId)
+                containerRepository.getContainerByIdSync(containerId)
             ) { "Container not found: $containerId" }.config,
             rootfsDir,
             command

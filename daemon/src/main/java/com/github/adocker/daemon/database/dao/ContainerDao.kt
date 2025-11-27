@@ -15,7 +15,10 @@ interface ContainerDao {
     fun getAllContainers(): Flow<List<ContainerEntity>>
 
     @Query("SELECT * FROM containers WHERE id = :id")
-    fun getContainerById(id: String): ContainerEntity?
+    suspend fun getContainerById(id: String): ContainerEntity?
+
+    @Query("SELECT * FROM containers WHERE id = :id")
+    fun getContainerByIdSync(id: String): ContainerEntity?
 
     @Query("SELECT * FROM containers WHERE name = :name")
     suspend fun getContainerByName(name: String): ContainerEntity?

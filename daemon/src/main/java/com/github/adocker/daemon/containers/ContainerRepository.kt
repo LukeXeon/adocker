@@ -37,8 +37,15 @@ class ContainerRepository @Inject constructor(
     /**
      * Get container by ID
      */
-    fun getContainerById(id: String): ContainerEntity? {
+    suspend fun getContainerById(id: String): ContainerEntity? {
         return containerDao.getContainerById(id)
+    }
+
+    /**
+     * Get container by ID
+     */
+    fun getContainerByIdSync(id: String): ContainerEntity? {
+        return containerDao.getContainerByIdSync(id)
     }
 
     /**
@@ -77,7 +84,8 @@ class ContainerRepository @Inject constructor(
 
             // Extract layers directly to rootfs
             image.layerIds.forEach { digest ->
-                val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                val layerFile =
+                    File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                 if (layerFile.exists()) {
                     Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
                     FileInputStream(layerFile).use { fis ->
