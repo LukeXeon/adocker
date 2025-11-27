@@ -14,7 +14,7 @@
     <style name="Theme.Adocker.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#DCEDC8</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_animated</item>
-        <item name="windowSplashScreenAnimationDuration">500</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
         <item name="postSplashScreenTheme">@style/Theme.Adocker</item>
     </style>
 </resources>
