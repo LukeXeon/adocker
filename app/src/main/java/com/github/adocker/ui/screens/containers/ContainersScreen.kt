@@ -2,6 +2,7 @@ package com.github.adocker.ui.screens.containers
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,11 +28,22 @@ fun ContainersScreen(
     modifier: Modifier = Modifier
 ) {
     val containers by viewModel.containers.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val message by viewModel.message.collectAsState()
 
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
     var showDeleteDialog by remember { mutableStateOf<ContainerEntity?>(null) }
+
+    // Calculate counts for each status
+    val statusCounts = remember(containers) {
+        val running = containers.count { viewModel.getContainerStatus(it) == ContainerStatus.RUNNING }
+        val created = containers.count { viewModel.getContainerStatus(it) == ContainerStatus.CREATED }
+        val exited = containers.count { viewModel.getContainerStatus(it) == ContainerStatus.EXITED }
+        mapOf(
+            null to containers.size,
+            ContainerStatus.CREATED to created,
+            ContainerStatus.RUNNING to running,
+            ContainerStatus.EXITED to exited
+        )
+    }
 
     // Filter containers based on status
     val filteredContainers = remember(containers, filterStatus) {
@@ -47,141 +59,157 @@ fun ContainersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.containers_title)) },
-                actions = {
-                    // Filter dropdown
-                    var expanded by remember { mutableStateOf(false) }
-                    IconButton(onClick = { expanded = true }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.containers_tab_all)) },
-                            onClick = {
-                                filterStatus = null
-                                expanded = false
-                            },
-                            leadingIcon = {
-                                if (filterStatus == null) {
-                                    Icon(Icons.Default.Check, contentDescription = null)
-                                }
-                            }
-                        )
-                        ContainerStatus.entries.forEach { status ->
-                            DropdownMenuItem(
-                                text = { Text(status.name) },
-                                onClick = {
-                                    filterStatus = status
-                                    expanded = false
-                                },
-                                leadingIcon = {
-                                    if (filterStatus == status) {
-                                        Icon(Icons.Default.Check, contentDescription = null)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
+                title = { Text(stringResource(R.string.containers_title)) }
             )
         },
         modifier = modifier
     ) { padding ->
-        if (containers.isEmpty()) {
-            // Empty state
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // Filter chips
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ViewInAr,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                // All filter
+                item {
+                    FilterChip(
+                        selected = filterStatus == null,
+                        onClick = { filterStatus = null },
+                        label = {
+                            Text("${stringResource(R.string.containers_tab_all)} (${statusCounts[null] ?: 0})")
+                        },
+                        leadingIcon = if (filterStatus == null) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                        } else null
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.containers_empty),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                // Created filter
+                item {
+                    FilterChip(
+                        selected = filterStatus == ContainerStatus.CREATED,
+                        onClick = {
+                            filterStatus = if (filterStatus == ContainerStatus.CREATED) null
+                            else ContainerStatus.CREATED
+                        },
+                        label = {
+                            Text("${stringResource(R.string.containers_tab_created)} (${statusCounts[ContainerStatus.CREATED] ?: 0})")
+                        },
+                        leadingIcon = if (filterStatus == ContainerStatus.CREATED) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                        } else null
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.containers_empty_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
+                }
+
+                // Running filter
+                item {
+                    FilterChip(
+                        selected = filterStatus == ContainerStatus.RUNNING,
+                        onClick = {
+                            filterStatus = if (filterStatus == ContainerStatus.RUNNING) null
+                            else ContainerStatus.RUNNING
+                        },
+                        label = {
+                            Text("${stringResource(R.string.containers_tab_running)} (${statusCounts[ContainerStatus.RUNNING] ?: 0})")
+                        },
+                        leadingIcon = if (filterStatus == ContainerStatus.RUNNING) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                        } else null
+                    )
+                }
+
+                // Exited filter
+                item {
+                    FilterChip(
+                        selected = filterStatus == ContainerStatus.EXITED,
+                        onClick = {
+                            filterStatus = if (filterStatus == ContainerStatus.EXITED) null
+                            else ContainerStatus.EXITED
+                        },
+                        label = {
+                            Text("${stringResource(R.string.containers_tab_exited)} (${statusCounts[ContainerStatus.EXITED] ?: 0})")
+                        },
+                        leadingIcon = if (filterStatus == ContainerStatus.EXITED) {
+                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                        } else null
                     )
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Status summary
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val running = containers.count { viewModel.getContainerStatus(it) == ContainerStatus.RUNNING }
-                        val stopped = containers.size - running
 
-                        FilterChip(
-                            selected = filterStatus == null,
-                            onClick = { filterStatus = null },
-                            label = { Text("${stringResource(R.string.containers_tab_all)} (${containers.size})") }
+            if (containers.isEmpty()) {
+                // Empty state
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ViewInAr,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        FilterChip(
-                            selected = filterStatus == ContainerStatus.RUNNING,
-                            onClick = {
-                                filterStatus = if (filterStatus == ContainerStatus.RUNNING) null
-                                else ContainerStatus.RUNNING
-                            },
-                            label = { Text("${stringResource(R.string.containers_tab_running)} ($running)") },
-                            leadingIcon = {
-                                if (filterStatus == ContainerStatus.RUNNING) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.containers_empty),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        FilterChip(
-                            selected = filterStatus == ContainerStatus.CREATED,
-                            onClick = {
-                                filterStatus = if (filterStatus == ContainerStatus.CREATED) null
-                                else ContainerStatus.CREATED
-                            },
-                            label = { Text("${stringResource(R.string.containers_tab_stopped)} ($stopped)") }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.containers_empty_subtitle),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
-
-                items(filteredContainers, key = { it.id }) { container ->
-                    ContainerCard(
-                        container = container,
-                        status = viewModel.getContainerStatus(container),
-                        onStart = { viewModel.startContainer(container.id) },
-                        onStop = { viewModel.stopContainer(container.id) },
-                        onDelete = { showDeleteDialog = container },
-                        onTerminal = { onNavigateToTerminal(container.id) },
-                        onClick = { onNavigateToDetail(container.id) }
-                    )
+            } else if (filteredContainers.isEmpty()) {
+                // No results for filter
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterListOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.containers_filter_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(filteredContainers, key = { it.id }) { container ->
+                        ContainerCard(
+                            container = container,
+                            status = viewModel.getContainerStatus(container),
+                            onStart = { viewModel.startContainer(container.id) },
+                            onStop = { viewModel.stopContainer(container.id) },
+                            onDelete = { showDeleteDialog = container },
+                            onTerminal = { onNavigateToTerminal(container.id) },
+                            onClick = { onNavigateToDetail(container.id) }
+                        )
+                    }
                 }
             }
         }
@@ -215,18 +243,5 @@ fun ContainersScreen(
                 }
             }
         )
-    }
-
-    // Snackbar for errors/messages
-    error?.let { errorMessage ->
-        LaunchedEffect(errorMessage) {
-            viewModel.clearError()
-        }
-    }
-
-    message?.let { msg ->
-        LaunchedEffect(msg) {
-            viewModel.clearMessage()
-        }
     }
 }

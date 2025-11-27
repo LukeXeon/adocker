@@ -1,7 +1,6 @@
 package com.github.adocker.ui.screens.settings
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.ui.viewmodel.PhantomProcessViewModel
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -215,7 +215,7 @@ fun PhantomProcessScreen(
                                     onClick = {
                                         val intent = Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("https://github.com/RikkaApps/Shizuku/releases")
+                                            "https://github.com/RikkaApps/Shizuku/releases".toUri()
                                         )
                                         context.startActivity(intent)
                                     },

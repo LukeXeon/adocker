@@ -14,29 +14,49 @@ ADocker 是一个在 Android 上运行 Docker 容器的应用，基于 udocker �
 - **无需 Root** - 基于 PRoot 技术，无需 root 权限
 - **Shizuku 集成** - 可选使用 Shizuku 禁用 Phantom Process Killer，提升稳定性
 
+## 界面预览
+
+应用采用 5 个底部标签页的现代化设计：
+
+| 标签页 | 功能描述 |
+|-------|---------|
+| **主页** | 欢迎页面、统计概览、快捷操作入口 |
+| **发现** | 搜索 Docker Hub 镜像，支持分页浏览 |
+| **容器** | 容器列表，按状态筛选（全部/已创建/运行中/已退出） |
+| **镜像** | 本地镜像管理，扫码添加，一键运行 |
+| **设置** | 镜像源配置、后台进程管理、存储管理 |
+
 ## 项目架构
 
 项目采用多模块架构，清晰分离业务逻辑和UI层：
 
 ```
 adocker/
-├── daemon/              # 核心业务逻辑模块 (Android Library)
-│   ├── config/         # 配置管理
-│   ├── database/       # Room数据库、DAO、Entity
-│   ├── di/             # 依赖注入
-│   ├── containers/     # 容器执行和管理
-│   ├── images/         # 镜像仓库
-│   ├── registry/       # Docker Registry API
-│   ├── os/             # 系统集成 (PhantomProcessManager)
-│   ├── utils/          # 工具类
-│   └── startup/        # 应用初始化
-└── app/                 # UI模块 (Android Application)
-    ├── model/          # UI层数据模型
-    ├── screens/        # 页面
-    ├── viewmodel/      # ViewModel层
-    ├── components/     # 通用UI组件
-    ├── navigation/     # 导航配置
-    └── theme/          # Material3 主题
+├── daemon/                  # 核心业务逻辑模块 (Android Library)
+│   ├── config/             # 配置管理
+│   ├── database/           # Room数据库、DAO、Entity
+│   ├── di/                 # 依赖注入
+│   ├── containers/         # 容器执行和管理
+│   ├── images/             # 镜像仓库
+│   ├── registry/           # Docker Registry API
+│   ├── os/                 # 系统集成 (PhantomProcessManager)
+│   ├── utils/              # 工具类
+│   └── startup/            # 应用初始化
+└── app/                     # UI模块 (Android Application)
+    └── ui/
+        ├── model/          # UI层数据模型
+        ├── screens/        # 页面
+        │   ├── home/       # 主页
+        │   ├── discover/   # 发现页
+        │   ├── containers/ # 容器页
+        │   ├── images/     # 镜像页
+        │   ├── settings/   # 设置页
+        │   ├── terminal/   # 终端页
+        │   └── qrcode/     # 二维码扫描
+        ├── viewmodel/      # ViewModel层
+        ├── components/     # 通用UI组件
+        ├── navigation/     # 导航配置
+        └── theme/          # Material3 主题
 ```
 
 ## 技术栈
@@ -76,7 +96,7 @@ cd adocker
 
 ### 1. 配置镜像加速（可选）
 
-进入 **Settings → Docker Registry Mirror**:
+进入 **设置 → Docker 镜像源**:
 - 选择内置镜像源（Docker Hub, DaoCloud, Xuanyuan, Aliyun, Huawei）
 - 添加自定义镜像源（支持 Bearer Token 认证）
 - **二维码导入**：扫描二维码快速导入镜像配置
@@ -90,40 +110,48 @@ cd adocker
 }
 ```
 
-### 2. 拉取镜像
+### 2. 搜索和拉取镜像
 
-**方式一：手动输入**
-- 进入 **Images** 页面 → 点击 **+** 按钮（或从主页进入 Pull Image）
-- 输入镜像名称（如 `alpine:latest`）
-- 点击 **Pull** 开始下载
+**方式一：发现页搜索**
+- 进入 **发现** 标签页
+- 输入关键词搜索 Docker Hub（如 `alpine`, `nginx`）
+- 点击搜索结果中的下载按钮拉取镜像
 
-**方式二：搜索镜像**
-- 进入 **Pull Image** 页面 → 点击搜索图标
-- 在搜索页面输入关键词（如 `nginx`）
-- 从搜索结果中选择镜像并拉取
+**方式二：直接拉取**
+- 进入 **镜像** 标签页 → 点击 **+** 按钮
+- 输入完整镜像名称（如 `alpine:latest`）
+- 点击 **拉取** 开始下载
 
 **方式三：扫描二维码**
-- 进入 **Pull Image** 页面 → 点击二维码图标
-- 扫描包含镜像名称的二维码（如 `alpine:latest`）
-- 自动填充并开始拉取
+- 进入 **镜像** 标签页 → 点击扫码图标
+- 扫描包含镜像配置的二维码
 
 ### 3. 运行容器
 
-- 在 **Images** 页面选择镜像 → 点击 **Run** 按钮
+- 在 **镜像** 页面选择镜像 → 点击 **运行** 按钮
 - 配置容器参数（名称、环境变量、工作目录等）
-- 点击 **Create & Run** 启动容器
+- 点击 **创建** 启动容器
+- 容器创建成功后自动跳转到 **容器** 页面
 
-### 4. 使用终端
+### 4. 管理容器
 
-- 在 **Containers** 页面点击运行中容器的 **Terminal** 按钮
+在 **容器** 页面可以：
+- 使用筛选器按状态查看容器（全部/已创建/运行中/已退出）
+- 启动或停止容器
+- 打开终端执行命令
+- 删除不需要的容器
+
+### 5. 使用终端
+
+- 在 **容器** 页面点击运行中容器的 **终端** 按钮
 - 在终端界面输入命令并执行
 
-### 5. Phantom Process Killer（Android 12+）
+### 6. Phantom Process Killer（Android 12+）
 
 在 Android 12+ 设备上，系统可能会杀死后台进程。使用 Shizuku 可以禁用此限制：
 1. 安装 [Shizuku](https://shizuku.rikka.app/)
 2. 启动 Shizuku 服务
-3. 进入 ADocker **Settings → Phantom Process** 授权并禁用 Killer
+3. 进入 **设置 → 后台进程限制** 授权并禁用限制
 
 ## 架构亮点
 
@@ -163,7 +191,7 @@ Android 10+ 禁止从 `app_data_file` 目录执行二进制文件。解决方案
 
 - 无 root 权限限制：部分系统调用可能不可用
 - 网络隔离：不支持 Docker 网络功能
-- 存储限制：受 Android 应用沙箱限制
+- 存储限制：所有数据存储在内部存储中
 - 架构限制：仅支持设备原生架构的容器
 
 ## 已验证镜像

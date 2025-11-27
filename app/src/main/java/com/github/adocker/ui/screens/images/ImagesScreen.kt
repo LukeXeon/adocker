@@ -16,6 +16,7 @@ import com.github.adocker.R
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui.components.ImageCard
 import com.github.adocker.ui.components.PullImageDialog
+import com.github.adocker.ui.components.PullProgressDialog
 import com.github.adocker.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,22 +25,29 @@ fun ImagesScreen(
     viewModel: MainViewModel,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    onNavigateToSearch: () -> Unit,
+    onNavigateToQRScanner: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val images by viewModel.images.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val message by viewModel.message.collectAsState()
+    val pullProgress by viewModel.pullProgress.collectAsState()
+    val isPulling by viewModel.isPulling.collectAsState()
 
     var showDeleteDialog by remember { mutableStateOf<ImageEntity?>(null) }
     var showPullDialog by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
+    var showProgressDialog by remember { mutableStateOf(false) }
 
-    val filteredImages = remember(images, searchQuery) {
-        if (searchQuery.isBlank()) images
-        else images.filter {
-            it.repository.contains(searchQuery, ignoreCase = true) ||
-                    it.tag.contains(searchQuery, ignoreCase = true)
+    // When pulling starts, switch to progress dialog
+    LaunchedEffect(isPulling) {
+        if (isPulling && showPullDialog) {
+            showPullDialog = false
+            showProgressDialog = true
+        }
+    }
+
+    // When pulling completes, close progress dialog
+    LaunchedEffect(isPulling, pullProgress) {
+        if (!isPulling && showProgressDialog && pullProgress.isEmpty()) {
+            showProgressDialog = false
         }
     }
 
@@ -48,127 +56,80 @@ fun ImagesScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.images_title)) },
                 actions = {
-                    IconButton(onClick = onNavigateToSearch) {
-                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.images_tab_search))
+                    IconButton(onClick = onNavigateToQRScanner) {
+                        Icon(
+                            Icons.Default.QrCodeScanner,
+                            contentDescription = stringResource(R.string.images_scan_qr)
+                        )
                     }
                     IconButton(onClick = { showPullDialog = true }) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.images_pull))
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.images_pull)
+                        )
                     }
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showPullDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.images_pull))
-            }
-        },
         modifier = modifier
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Search bar
-            if (images.isNotEmpty()) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text(stringResource(R.string.images_search_placeholder)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.action_close))
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
+        if (images.isEmpty()) {
+            // Empty state
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Layers,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.images_empty),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.images_empty_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = { showPullDialog = true }) {
+                        Icon(
+                            Icons.Default.CloudDownload,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.images_pull))
+                    }
+                }
             }
-
-            if (images.isEmpty()) {
-                // Empty state
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Layers,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.images_empty),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.images_empty_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(onClick = { showPullDialog = true }) {
-                            Icon(
-                                Icons.Default.CloudDownload,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.images_pull))
-                        }
-                    }
-                }
-            } else if (filteredImages.isEmpty()) {
-                // No search results
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SearchOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No results for '$searchQuery'",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(filteredImages, key = { it.id }) { image ->
-                        ImageCard(
-                            image = image,
-                            onRun = { onNavigateToCreate(image.id) },
-                            onDelete = { showDeleteDialog = image },
-                            onClick = { onNavigateToDetail(image.id) }
-                        )
-                    }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(images, key = { it.id }) { image ->
+                    ImageCard(
+                        image = image,
+                        onRun = { onNavigateToCreate(image.id) },
+                        onDelete = { showDeleteDialog = image },
+                        onClick = { onNavigateToDetail(image.id) }
+                    )
                 }
             }
         }
@@ -209,9 +170,22 @@ fun ImagesScreen(
         PullImageDialog(
             viewModel = viewModel,
             onDismiss = { showPullDialog = false },
-            onNavigateToSearch = {
-                showPullDialog = false
-                onNavigateToSearch()
+            onNavigateToSearch = { showPullDialog = false }
+        )
+    }
+
+    // Pull Progress Dialog
+    if (showProgressDialog) {
+        PullProgressDialog(
+            pullProgress = pullProgress,
+            onCancel = {
+                // Close dialog but continue pulling in background
+                showProgressDialog = false
+            },
+            onDismiss = {
+                if (!isPulling) {
+                    showProgressDialog = false
+                }
             }
         )
     }

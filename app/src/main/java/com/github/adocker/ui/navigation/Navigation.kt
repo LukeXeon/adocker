@@ -20,6 +20,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Home
     )
 
+    data object Discover : Screen(
+        route = "discover",
+        titleResId = R.string.nav_discover,
+        selectedIcon = Icons.Filled.Explore,
+        unselectedIcon = Icons.Outlined.Explore
+    )
+
     data object Containers : Screen(
         route = "containers",
         titleResId = R.string.nav_containers,
@@ -68,13 +75,6 @@ sealed class Screen(
         fun createRoute(containerId: String) = "container/$containerId"
     }
 
-    data object PullImage : Screen(
-        route = "pull",
-        titleResId = R.string.nav_pull_image,
-        selectedIcon = Icons.Filled.CloudDownload,
-        unselectedIcon = Icons.Outlined.CloudDownload
-    )
-
     data object CreateContainer : Screen(
         route = "create/{imageId}",
         titleResId = R.string.nav_create_container,
@@ -104,17 +104,11 @@ sealed class Screen(
         selectedIcon = Icons.Filled.Block,
         unselectedIcon = Icons.Outlined.Block
     )
-
-    data object SearchImage : Screen(
-        route = "search_image",
-        titleResId = R.string.images_tab_search,
-        selectedIcon = Icons.Filled.Search,
-        unselectedIcon = Icons.Outlined.Search
-    )
 }
 
 val bottomNavItems = listOf(
     Screen.Home,
+    Screen.Discover,
     Screen.Containers,
     Screen.Images,
     Screen.Settings

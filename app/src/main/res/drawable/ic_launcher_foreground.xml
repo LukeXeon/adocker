@@ -5,65 +5,82 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Docker whale/container icon - simplified -->
-    <!-- Container boxes on top -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M28,38h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,38h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M48,38h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M58,38h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M68,38h8v8h-8z" />
+    <!-- ADocker Logo: Docker whale with Android-style design -->
 
-    <!-- Second row containers -->
+    <!-- Whale body -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M28,48h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,48h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M48,48h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M58,48h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M68,48h8v8h-8z" />
+        android:pathData="M20,58 Q16,52 20,46 L26,46 L26,56 Q26,64 34,64 L74,64 Q82,64 82,56 L82,46 L26,46 L26,56" />
 
-    <!-- Third row (on whale body) -->
+    <!-- Whale main body rounded -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M38,58h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M48,58h8v8h-8z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M58,58h8v8h-8z" />
-
-    <!-- Whale body outline -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M22,67 Q22,74 30,74 L78,74 Q86,74 86,67 L86,58 L78,58 L78,67 L30,67 L30,58 L22,58 Z" />
+        android:pathData="M26,46 L82,46 L82,56 Q82,66 72,66 L36,66 Q26,66 26,56 Z" />
 
     <!-- Whale tail -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M18,60 Q14,55 18,50 L22,50 L22,60 Z" />
+        android:pathData="M16,54 Q10,48 16,42 L22,42 Q20,48 22,54 Z" />
 
-    <!-- Water splash / Android accent -->
+    <!-- Containers - Row 1 (5 containers) -->
     <path
         android:fillColor="#FFFFFF"
-        android:alpha="0.5"
-        android:pathData="M20,30 Q24,26 28,30 Q32,34 36,30" />
+        android:pathData="M28,32 h8 v10 h-8 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,32 h8 v10 h-8 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,32 h8 v10 h-8 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M58,32 h8 v10 h-8 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,32 h8 v10 h-8 z" />
+
+    <!-- Container separators - Row 1 -->
+    <path
+        android:strokeColor="#0DB7ED"
+        android:strokeWidth="1.5"
+        android:pathData="M36,32 L36,42" />
+    <path
+        android:strokeColor="#0DB7ED"
+        android:strokeWidth="1.5"
+        android:pathData="M46,32 L46,42" />
+    <path
+        android:strokeColor="#0DB7ED"
+        android:strokeWidth="1.5"
+        android:pathData="M56,32 L56,42" />
+    <path
+        android:strokeColor="#0DB7ED"
+        android:strokeWidth="1.5"
+        android:pathData="M66,32 L66,42" />
+
+    <!-- Android-style eyes on whale (making it Android-like) -->
+    <path
+        android:fillColor="#0DB7ED"
+        android:pathData="M62,52 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+    <path
+        android:fillColor="#0DB7ED"
+        android:pathData="M74,52 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+
+    <!-- Android antennas on whale -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M64,46 L62,38" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M72,46 L74,38" />
+
+    <!-- Water splash / wave under whale -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:alpha="0.4"
+        android:pathData="M22,72 Q30,68 38,72 Q46,76 54,72 Q62,68 70,72 Q78,76 86,72 L86,78 L22,78 Z" />
+
 </vector>

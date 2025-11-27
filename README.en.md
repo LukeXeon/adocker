@@ -14,29 +14,49 @@ ADocker is an Android application that runs Docker containers without root privi
 - **Rootless** - PRoot-based technology, no root required
 - **Shizuku Integration** - Optional Shizuku support to disable Phantom Process Killer
 
+## UI Overview
+
+The app features a modern 5-tab bottom navigation design:
+
+| Tab | Description |
+|-----|-------------|
+| **Home** | Welcome page, statistics overview, quick action shortcuts |
+| **Discover** | Search Docker Hub images with pagination |
+| **Containers** | Container list with status filtering (All/Created/Running/Exited) |
+| **Images** | Local image management, QR scan, one-click run |
+| **Settings** | Registry mirrors, background process management, storage |
+
 ## Project Architecture
 
 Multi-module architecture with clear separation of business logic and UI:
 
 ```
 adocker/
-├── daemon/              # Core business logic module (Android Library)
-│   ├── config/         # Configuration management
-│   ├── database/       # Room database, DAOs, Entities
-│   ├── di/             # Dependency injection
-│   ├── containers/     # Container execution & management
-│   ├── images/         # Image repository
-│   ├── registry/       # Docker Registry API
-│   ├── os/             # OS integration (PhantomProcessManager)
-│   ├── utils/          # Utilities
-│   └── startup/        # App initialization
-└── app/                 # UI module (Android Application)
-    ├── model/          # UI-layer data models
-    ├── screens/        # Screen composables
-    ├── viewmodel/      # ViewModels
-    ├── components/     # Reusable UI components
-    ├── navigation/     # Navigation configuration
-    └── theme/          # Material3 theme
+├── daemon/                  # Core business logic module (Android Library)
+│   ├── config/             # Configuration management
+│   ├── database/           # Room database, DAOs, Entities
+│   ├── di/                 # Dependency injection
+│   ├── containers/         # Container execution & management
+│   ├── images/             # Image repository
+│   ├── registry/           # Docker Registry API
+│   ├── os/                 # OS integration (PhantomProcessManager)
+│   ├── utils/              # Utilities
+│   └── startup/            # App initialization
+└── app/                     # UI module (Android Application)
+    └── ui/
+        ├── model/          # UI-layer data models
+        ├── screens/        # Screen composables
+        │   ├── home/       # Home screen
+        │   ├── discover/   # Discover screen
+        │   ├── containers/ # Containers screen
+        │   ├── images/     # Images screen
+        │   ├── settings/   # Settings screen
+        │   ├── terminal/   # Terminal screen
+        │   └── qrcode/     # QR code scanner
+        ├── viewmodel/      # ViewModels
+        ├── components/     # Reusable UI components
+        ├── navigation/     # Navigation configuration
+        └── theme/          # Material3 theme
 ```
 
 ## Tech Stack
@@ -90,40 +110,48 @@ Navigate to **Settings → Docker Registry Mirror**:
 }
 ```
 
-### 2. Pull Images
+### 2. Search and Pull Images
 
-**Method 1: Manual Input**
-- Go to **Images** → tap **+** button (or Pull Image from Home)
-- Enter image name (e.g., `alpine:latest`)
+**Method 1: Discover Search**
+- Go to **Discover** tab
+- Enter keywords to search Docker Hub (e.g., `alpine`, `nginx`)
+- Tap download button on search results to pull
+
+**Method 2: Direct Pull**
+- Go to **Images** tab → tap **+** button
+- Enter full image name (e.g., `alpine:latest`)
 - Tap **Pull** to download
 
-**Method 2: Search Images**
-- Go to **Pull Image** → tap search icon
-- Enter keywords (e.g., `nginx`)
-- Select image from search results and pull
-
 **Method 3: QR Code Scan**
-- Go to **Pull Image** → tap QR code icon
-- Scan QR code containing image name (e.g., `alpine:latest`)
-- Auto-fill and start pulling
+- Go to **Images** tab → tap QR scan icon
+- Scan QR code containing image configuration
 
 ### 3. Run Containers
 
-- Select image in **Images** → tap **Run** button
+- Select image in **Images** page → tap **Run** button
 - Configure container parameters (name, env vars, working dir, etc.)
-- Tap **Create & Run** to start
+- Tap **Create** to start container
+- Automatically navigates to **Containers** page after creation
 
-### 4. Use Terminal
+### 4. Manage Containers
+
+In **Containers** page you can:
+- Use status filter to view containers (All/Created/Running/Exited)
+- Start or stop containers
+- Open terminal to execute commands
+- Delete unwanted containers
+
+### 5. Use Terminal
 
 - Tap **Terminal** button on running container in **Containers** page
 - Enter commands in terminal interface
 
-### 5. Phantom Process Killer (Android 12+)
+### 6. Phantom Process Killer (Android 12+)
 
 On Android 12+ devices, the system may kill background processes. Use Shizuku to disable:
 1. Install [Shizuku](https://shizuku.rikka.app/)
 2. Start Shizuku service
-3. Navigate to ADocker **Settings → Phantom Process** to grant permission and disable
+3. Navigate to **Settings → Background Process Limit** to grant permission and disable
 
 ## Architecture Highlights
 
@@ -163,7 +191,7 @@ Ensures Alpine Linux and other symlink-heavy images work correctly.
 
 - Rootless restrictions: Some system calls unavailable
 - Network isolation: Docker networking features not supported
-- Storage limits: Constrained by Android app sandbox
+- Storage limits: All data stored in internal storage
 - Architecture limits: Only native device architecture supported
 
 ## Verified Images

@@ -73,7 +73,7 @@ fun PullImageDialog(
                             }) {
                                 Icon(
                                     Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.images_tab_search)
+                                    contentDescription = stringResource(R.string.action_search)
                                 )
                             }
                         }

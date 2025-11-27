@@ -1,5 +1,6 @@
 package com.github.adocker.ui.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,12 +22,10 @@ import com.github.adocker.ui.viewmodel.MainViewModel
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
-    onNavigateToSearch: () -> Unit,
+    onNavigateToImages: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val stats by viewModel.stats.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val message by viewModel.message.collectAsState()
 
     var showPullDialog by remember { mutableStateOf(false) }
 
@@ -37,12 +37,12 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Sailing,
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(32.dp)
                         )
-                        Text(stringResource(R.string.home_title))
+                        Text(stringResource(R.string.app_name))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -86,7 +86,7 @@ fun HomeScreen(
                 }
             }
 
-            // Stats grid
+            // Overview section
             item {
                 Text(
                     text = stringResource(R.string.home_overview),
@@ -95,6 +95,7 @@ fun HomeScreen(
                 )
             }
 
+            // Stats grid - row 1
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -115,6 +116,7 @@ fun HomeScreen(
                 }
             }
 
+            // Stats grid - row 2
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -135,7 +137,7 @@ fun HomeScreen(
                 }
             }
 
-            // Quick actions
+            // Quick actions section
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -158,16 +160,16 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionCard(
-                        title = stringResource(R.string.home_search_image),
-                        description = stringResource(R.string.home_search_image_desc),
-                        icon = Icons.Default.Search,
-                        onClick = onNavigateToSearch,
+                        title = stringResource(R.string.home_add_image),
+                        description = stringResource(R.string.home_add_image_desc),
+                        icon = Icons.Default.Add,
+                        onClick = onNavigateToImages,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Info section
+            // About section
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -184,28 +186,25 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        InfoRow(label = stringResource(R.string.home_engine), value = stringResource(R.string.home_engine_proot))
-                        InfoRow(label = stringResource(R.string.home_architecture), value = android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: stringResource(R.string.home_unknown))
-                        InfoRow(label = stringResource(R.string.home_android_version), value = stringResource(R.string.home_api_level, android.os.Build.VERSION.SDK_INT))
+                        InfoRow(
+                            label = stringResource(R.string.home_engine),
+                            value = stringResource(R.string.home_engine_value)
+                        )
+                        InfoRow(
+                            label = stringResource(R.string.home_architecture),
+                            value = android.os.Build.SUPPORTED_ABIS.firstOrNull()
+                                ?: stringResource(R.string.home_unknown)
+                        )
+                        InfoRow(
+                            label = stringResource(R.string.home_android_version),
+                            value = stringResource(
+                                R.string.home_api_level,
+                                android.os.Build.VERSION.SDK_INT
+                            )
+                        )
                     }
                 }
             }
-        }
-    }
-
-    // Show error snackbar
-    error?.let { errorMessage ->
-        LaunchedEffect(errorMessage) {
-            // Error shown via snackbar
-            viewModel.clearError()
-        }
-    }
-
-    // Show success snackbar
-    message?.let { msg ->
-        LaunchedEffect(msg) {
-            // Message shown via snackbar
-            viewModel.clearMessage()
         }
     }
 
@@ -216,7 +215,7 @@ fun HomeScreen(
             onDismiss = { showPullDialog = false },
             onNavigateToSearch = {
                 showPullDialog = false
-                onNavigateToSearch()
+                // Navigate to Discover tab would be handled at MainScreen level
             }
         )
     }

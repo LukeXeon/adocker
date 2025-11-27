@@ -21,7 +21,8 @@ import com.github.adocker.daemon.registry.model.SearchResult
 fun SearchResultCard(
     result: SearchResult,
     onPull: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isPulling: Boolean = false
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -88,11 +89,15 @@ fun SearchResultCard(
                 }
             }
 
-            IconButton(onClick = onPull) {
+            IconButton(
+                onClick = onPull,
+                enabled = !isPulling
+            ) {
                 Icon(
                     imageVector = Icons.Default.CloudDownload,
                     contentDescription = stringResource(R.string.action_pull),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (isPulling) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.primary
                 )
             }
         }
