@@ -130,14 +130,15 @@ com.github.adocker.daemon/
 1. **Image Pull Flow:**
    - `MainViewModel.pullImage()` → `ImageRepository.pullImage()`
    - `DockerRegistryApi` fetches manifest and layers
-   - Each layer downloaded to `layersDir/{digest}.tar.gz`
-   - Extracted to `layersDir/{digest}/` with proper symlink handling
-   - `ImageEntity` saved to Room database
+   - Each layer downloaded to `layersDir/{digest}.tar.gz` (compressed)
+   - **Layers are kept compressed** to save storage space (~70% savings)
+   - `ImageEntity` saved to Room database with layer references
 
 2. **Container Creation Flow:**
    - `MainViewModel.createContainer()` → `ContainerRepository.createContainer()`
    - Creates directory: `containersDir/{containerId}/ROOT/`
-   - Layers merged using overlay FS approach (copy files, symlinks preserved)
+   - **Layers extracted directly from compressed files** to container rootfs
+   - `extractTarGz()` handles symlinks, permissions, and whiteout files during extraction
    - `ContainerEntity` saved to Room database (NO status field)
 
 3. **Container Execution Flow:**
@@ -183,15 +184,38 @@ val containerStatus = if (runningContainers.value.any { it.containerId == id && 
 
 See `PRootEngine.kt` for implementation details.
 
+#### Layer Storage Strategy
+
+**Design Decision:** Store compressed layers only, extract on-demand during container creation.
+
+**Storage Structure:**
+```
+layersDir/
+└── {sha256-digest}.tar.gz  # Compressed layer (2-5 MB)
+
+containersDir/
+└── {containerId}/
+    └── ROOT/               # Extracted container filesystem (7-15 MB)
+```
+
+**Benefits:**
+- **70% storage savings** (Alpine: 3MB compressed vs 10MB if both stored)
+- Faster image pulls (no extraction during pull)
+- Simpler layer management (no deduplication needed)
+
+**Trade-off:** Container creation is slower due to extraction, but happens only once per container.
+
 #### Symlink Handling
 
 Docker images (especially Alpine Linux) rely heavily on symlinks. Standard Java `Files` API doesn't preserve them.
 
-**Solution:** Use Android `Os` API (see `ContainerRepository.kt`):
+**Solution:** Use Android `Os` API in `utils/File.kt` during tar extraction:
 - `Os.lstat()` + `OsConstants.S_ISLNK()` - detect symlinks
 - `Os.readlink()` - read link target
 - `Os.symlink()` - create symlink
 - `Os.chmod()` - preserve permissions
+
+All symlink/permission handling is done by `extractTarGz()` during container creation.
 
 #### Dependency Injection Pattern
 
@@ -219,13 +243,25 @@ ViewModels are annotated with `@HiltViewModel` and injected into Composables via
 
 #### Database Schema
 
-Room database (`AppDatabase`) with 4 main entities:
+Room database (`AppDatabase`, version 2) with 4 main entities:
 - `ImageEntity` - pulled images with layer references
-- `LayerEntity` - image layers (sha256 digests)
+- `LayerEntity` - layer metadata (digest, size, downloaded flag, refCount)
 - `ContainerEntity` - containers with config (NO status field)
 - `MirrorEntity` - registry mirror configurations
 
+**LayerEntity fields:**
+- `digest` - sha256 digest (primary key)
+- `size` - layer file size in bytes
+- `mediaType` - MIME type (e.g., `application/vnd.docker.image.rootfs.diff.tar.gzip`)
+- `downloaded` - whether the .tar.gz file exists
+- `refCount` - number of images referencing this layer
+
+**Note:** LayerEntity does NOT have an `extracted` field. Layers are stored compressed only.
+
 All DAOs expose `Flow<List<T>>` for reactive UI updates.
+
+**Database Migrations:**
+- v1 → v2: Removed `extracted` column from `layers` table (see `AppDatabase.MIGRATION_1_2`)
 
 #### Performance Monitoring
 
@@ -327,10 +363,28 @@ ContainerCard(container = container, status = status, ...)
 - Use `-0` flag for root emulation (fake root user)
 - Bind essential paths: `/dev`, `/proc`, `/sys`, `/system`, `/vendor`
 
-### File Extraction
-- Use `extractTarGz()` from `daemon/utils/` for layer extraction
-- Use `Os.symlink()` instead of `Files.createSymbolicLink()` for Android compatibility
-- Always preserve file permissions with `Os.chmod()`
+### Working with Layers and Images
+**Storage locations:**
+```kotlin
+// Compressed layer files (kept after pull)
+File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+
+// Container rootfs (extracted during createContainer)
+File(appConfig.containersDir, "$containerId/ROOT/")
+```
+
+**Extract layers during container creation:**
+```kotlin
+FileInputStream(layerFile).use { fis ->
+    extractTarGz(fis, rootfsDir).getOrThrow()
+}
+```
+
+**Key points:**
+- Use `extractTarGz()` from `daemon/utils/File.kt` for layer extraction
+- Extraction automatically handles symlinks, permissions, and whiteout files
+- Never manually extract layers during image pull - keep them compressed
+- `Os.symlink()` is used internally by `extractTarGz()` for Android compatibility
 
 ## Registry Mirror Configuration
 
