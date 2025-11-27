@@ -2,85 +2,118 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="250"
+    android:viewportHeight="250">
 
-    <!-- ADocker Logo: Docker whale with Android-style design -->
+    <!-- Merged ADocker Logo: Android robot with Docker containers inside -->
+    <!-- Based on android_cropped.xml (345x345) scaled to fit 50-200 (150dp area) -->
+    <!-- And docker_cropped.xml (140x140) scaled to fit 100-155 (55dp area) -->
 
-    <!-- Whale body -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M20,58 Q16,52 20,46 L26,46 L26,56 Q26,64 34,64 L74,64 Q82,64 82,56 L82,46 L26,46 L26,56" />
+    <!-- Android Robot (scaled from 345x345 to 150x150, positioned at 50,50) -->
+    <group
+        android:scaleX="0.4348"
+        android:scaleY="0.4348"
+        android:translateX="50"
+        android:translateY="50">
 
-    <!-- Whale main body rounded -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M26,46 L82,46 L82,56 Q82,66 72,66 L36,66 Q26,66 26,56 Z" />
+        <!-- Android Head (ellipse with stroke) -->
+        <path
+            android:pathData="M81.5,111a91,84 0,1 0,182 0a91,84 0,1 0,-182 0z"
+            android:strokeWidth="14.4"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Whale tail -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M16,54 Q10,48 16,42 L22,42 Q20,48 22,54 Z" />
+        <!-- Android Body (rounded rectangle with stroke) -->
+        <path
+            android:pathData="M103.5,90L241.5,90A22,22 0,0 1,263.5 112L263.5,250A22,22 0,0 1,241.5 272L103.5,272A22,22 0,0 1,81.5 250L81.5,112A22,22 0,0 1,103.5 90z"
+            android:strokeWidth="14.4"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Containers - Row 1 (5 containers) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M28,32 h8 v10 h-8 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,32 h8 v10 h-8 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M48,32 h8 v10 h-8 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M58,32 h8 v10 h-8 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M68,32 h8 v10 h-8 z" />
+        <!-- Left Antenna -->
+        <path
+            android:pathData="M112.88,4.72L112.88,4.72A6.5,6.5 106.75,0 0,110.34 13.56L145.73,77.4A6.5,6.5 92.61,0 0,154.57 79.94L154.57,79.94A6.5,6.5 92.61,0 0,157.1 71.1L121.71,7.26A6.5,6.5 106.75,0 0,112.88 4.72z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Container separators - Row 1 -->
-    <path
-        android:strokeColor="#0DB7ED"
-        android:strokeWidth="1.5"
-        android:pathData="M36,32 L36,42" />
-    <path
-        android:strokeColor="#0DB7ED"
-        android:strokeWidth="1.5"
-        android:pathData="M46,32 L46,42" />
-    <path
-        android:strokeColor="#0DB7ED"
-        android:strokeWidth="1.5"
-        android:pathData="M56,32 L56,42" />
-    <path
-        android:strokeColor="#0DB7ED"
-        android:strokeWidth="1.5"
-        android:pathData="M66,32 L66,42" />
+        <!-- Right Arm -->
+        <path
+            android:pathData="M291.5,111L291.5,111A24,24 0,0 0,267.5 135L267.5,220A24,24 0,0 0,291.5 244L291.5,244A24,24 0,0 0,315.5 220L315.5,135A24,24 0,0 0,291.5 111z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Android-style eyes on whale (making it Android-like) -->
-    <path
-        android:fillColor="#0DB7ED"
-        android:pathData="M62,52 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
-    <path
-        android:fillColor="#0DB7ED"
-        android:pathData="M74,52 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0" />
+        <!-- Right Leg -->
+        <path
+            android:pathData="M206.5,208L206.5,208A24,24 0,0 0,182.5 232L182.5,317A24,24 0,0 0,206.5 341L206.5,341A24,24 0,0 0,230.5 317L230.5,232A24,24 0,0 0,206.5 208z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Android antennas on whale -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:pathData="M64,46 L62,38" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:pathData="M72,46 L74,38" />
+        <!-- Right Antenna -->
+        <path
+            android:pathData="M232.12,4.72L232.12,4.72A6.5,6.5 118.21,0 1,234.66 13.56L199.27,77.4A6.5,6.5 87.39,0 1,190.43 79.94L190.43,79.94A6.5,6.5 87.39,0 1,187.9 71.1L223.29,7.26A6.5,6.5 118.21,0 1,232.12 4.72z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
 
-    <!-- Water splash / wave under whale -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:alpha="0.4"
-        android:pathData="M22,72 Q30,68 38,72 Q46,76 54,72 Q62,68 70,72 Q78,76 86,72 L86,78 L22,78 Z" />
+        <!-- Left Arm -->
+        <path
+            android:pathData="M53.5,111L53.5,111A24,24 0,0 1,77.5 135L77.5,220A24,24 0,0 1,53.5 244L53.5,244A24,24 0,0 1,29.5 220L29.5,135A24,24 0,0 1,53.5 111z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
+
+        <!-- Left Leg -->
+        <path
+            android:pathData="M138.5,208L138.5,208A24,24 0,0 1,162.5 232L162.5,317A24,24 0,0 1,138.5 341L138.5,341A24,24 0,0 1,114.5 317L114.5,232A24,24 0,0 1,138.5 208z"
+            android:strokeWidth="7.2"
+            android:fillColor="#a4c639"
+            android:strokeColor="#FFF"/>
+
+        <!-- Android Head Fill -->
+        <path
+            android:pathData="M81.5,111a91,84 0,1 0,182 0a91,84 0,1 0,-182 0z"
+            android:fillColor="#a4c639"/>
+
+        <!-- Android Body Fill -->
+        <path
+            android:pathData="M103.5,90L241.5,90A22,22 0,0 1,263.5 112L263.5,250A22,22 0,0 1,241.5 272L103.5,272A22,22 0,0 1,81.5 250L81.5,112A22,22 0,0 1,103.5 90z"
+            android:fillColor="#a4c639"/>
+
+        <!-- Head separator line -->
+        <path
+            android:pathData="m77.5,114.5h190"
+            android:strokeWidth="7.2"
+            android:fillColor="#FFF"
+            android:strokeColor="#FFF"/>
+
+        <!-- Left Eye -->
+        <path
+            android:pathData="M130.5,70m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+            android:strokeWidth="7.2"
+            android:fillColor="#FFF"
+            android:strokeColor="#FFF"/>
+
+        <!-- Right Eye -->
+        <path
+            android:pathData="M214.5,70m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+            android:strokeWidth="7.2"
+            android:fillColor="#FFF"
+            android:strokeColor="#FFF"/>
+    </group>
+
+    <!-- Docker Containers (scaled from 140x140 to 55x55, positioned at 100,105) -->
+    <group
+        android:scaleX="0.3929"
+        android:scaleY="0.3929"
+        android:translateX="100"
+        android:translateY="105">
+
+        <path
+            android:pathData="M137.98,55.2C134.54,52.89 125.52,51.91 118.97,53.67C118.62,47.17 115.25,41.69 109.09,36.91L106.81,35.39L105.29,37.67C102.3,42.19 101.04,48.2 101.48,53.67C101.84,57.04 103.01,60.83 105.29,63.57C96.75,68.5 88.89,67.38 54.05,67.38L0.26,67.38C0.1,75.22 1.36,90.28 10.99,102.54C12.05,103.89 13.21,105.2 14.48,106.47C22.3,114.27 34.13,119.98 51.8,120C78.77,120.02 101.87,105.51 115.93,70.43C120.55,70.51 132.76,71.26 138.73,59.77C138.88,59.57 140.26,56.72 140.26,56.72L137.98,55.2L137.98,55.2ZM35.36,48.03L20.23,48.03L20.23,63.09L35.36,63.09L35.36,48.03ZM54.9,48.03L39.77,48.03L39.77,63.09L54.9,63.09L54.9,48.03ZM74.44,48.03L59.32,48.03L59.32,63.09L74.44,63.09L74.44,48.03ZM93.98,48.03L78.86,48.03L78.86,63.09L93.98,63.09L93.98,48.03ZM15.82,48.03L0.69,48.03L0.69,63.09L15.82,63.09L15.82,48.03ZM35.36,29.02L20.23,29.02L20.23,44.07L35.36,44.07L35.36,29.02ZM54.9,29.02L39.77,29.02L39.77,44.07L54.9,44.07L54.9,29.02ZM74.44,29.02L59.32,29.02L59.32,44.07L74.44,44.07L74.44,29.02ZM74.44,10L59.32,10L59.32,25.06L74.44,25.06L74.44,10Z"
+            android:fillColor="#1D63ED"/>
+    </group>
 
 </vector>
