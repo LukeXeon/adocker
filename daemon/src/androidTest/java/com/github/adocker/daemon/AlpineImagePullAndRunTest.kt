@@ -6,7 +6,6 @@ import com.github.adocker.daemon.containers.ContainerRepository
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.containers.RunningContainer
 import com.github.adocker.daemon.images.ImageRepository
-import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.images.PullStatus
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -24,8 +23,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import timber.log.Timber
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.UnknownHostException
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
@@ -161,18 +158,22 @@ class AlpineImagePullAndRunTest {
                             } else 0
                             Timber.d("  Downloading ${progress.layerDigest.take(12)}: $percent% (${progress.downloaded}/${progress.total} bytes)")
                         }
+
                         PullStatus.EXTRACTING -> {
                             Timber.d("  Extracting ${progress.layerDigest.take(12)}")
                         }
+
                         PullStatus.DONE -> {
                             if (progress.layerDigest == "image") {
                                 Timber.d("  Image pull completed successfully!")
                             }
                         }
+
                         PullStatus.ERROR -> {
                             Timber.e("  Image pull failed for layer ${progress.layerDigest}")
                             throw AssertionError("Failed to pull image layer: ${progress.layerDigest}")
                         }
+
                         else -> {
                             Timber.d("  ${progress.status}: ${progress.layerDigest.take(12)}")
                         }
@@ -219,7 +220,10 @@ class AlpineImagePullAndRunTest {
             config = containerConfig
         )
 
-        assertTrue("Failed to create container: ${createResult.exceptionOrNull()?.message}", createResult.isSuccess)
+        assertTrue(
+            "Failed to create container: ${createResult.exceptionOrNull()?.message}",
+            createResult.isSuccess
+        )
         val container = createResult.getOrThrow()
         createdContainerId = container.id
         Timber.d("Container created successfully")
@@ -233,7 +237,10 @@ class AlpineImagePullAndRunTest {
         Timber.d("")
         Timber.d("STEP 3: Starting container...")
         val startResult = containerExecutor.startContainer(container.id)
-        assertTrue("Failed to start container: ${startResult.exceptionOrNull()?.message}", startResult.isSuccess)
+        assertTrue(
+            "Failed to start container: ${startResult.exceptionOrNull()?.message}",
+            startResult.isSuccess
+        )
         Timber.d("Container started successfully")
 
         // Give container a moment to start
@@ -250,7 +257,7 @@ class AlpineImagePullAndRunTest {
 
         assertNotNull("Running container not found: ${container.id}", runningContainer)
         Timber.d("Running container found")
-        Timber.d("  Active: ${runningContainer!!.isActive}")
+        Timber.d("  Active: ${runningContainer!!.job.isActive}")
 
         // ========================================
         // STEP 5: Read and verify output
@@ -308,13 +315,13 @@ class AlpineImagePullAndRunTest {
         // Wait for process to complete or timeout
         val exitCode = withTimeoutOrNull(timeoutSeconds.seconds) {
             var attempts = 0
-            while (container.isActive && attempts < timeoutSeconds * 10) {
+            while (container.job.isActive && attempts < timeoutSeconds * 10) {
                 delay(100)
                 attempts++
             }
 
             // Process has exited
-            if (!container.isActive) {
+            if (!container.job.isActive) {
                 0 // Assume successful exit
             } else {
                 null
@@ -325,10 +332,10 @@ class AlpineImagePullAndRunTest {
 
         // Read output using the exposed input reader
         try {
-            var line: String? = container.input.readLine()
-            while (line != null) {
-                output.appendLine(line)
-                line = container.input.readLine()
+            container.stdout.useLines { lines ->
+                lines.forEach { line ->
+                    output.appendLine(line)
+                }
             }
         } catch (e: Exception) {
             Timber.w("Error reading container output: ${e.message}")

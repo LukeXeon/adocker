@@ -61,7 +61,7 @@ class TerminalViewModel @Inject constructor(
                     .first()
                     .find { it.containerId == containerId }
 
-                if (runningContainer == null || !runningContainer.isActive.value) {
+                if (runningContainer == null || !runningContainer.job.isActive) {
                     addOutput("Error: Container is not running. Please start the container first.")
                     return@launch
                 }

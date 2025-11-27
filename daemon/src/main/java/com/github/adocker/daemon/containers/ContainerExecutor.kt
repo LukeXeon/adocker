@@ -1,6 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -31,7 +32,7 @@ class ContainerExecutor @Inject constructor(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             mutex.withLock {
-                if (runningContainers.value[containerId]?.isActive?.value == true) {
+                if (runningContainers.value[containerId]?.job?.isActive == true) {
                     throw IllegalStateException("Container is already running")
                 }
                 val runningContainer = factory.create(containerId)
@@ -52,7 +53,7 @@ class ContainerExecutor @Inject constructor(
                 mutex.withLock {
                     val container = runningContainers.value[containerId]
                         ?: throw IllegalStateException("Container is not running")
-                    container.destroy()
+                    container.job.cancelAndJoin()
                     runningContainers.value = buildMap {
                         putAll(runningContainers.value)
                         remove(containerId)
