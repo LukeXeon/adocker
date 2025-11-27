@@ -58,166 +58,159 @@ fun ContainersScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.containers_title)) }
-            )
-        },
-        modifier = modifier
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    Column(modifier = modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text(stringResource(R.string.containers_title)) }
+        )
+
+        // Filter chips
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
-            // Filter chips
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+            // All filter
+            item {
+                FilterChip(
+                    selected = filterStatus == null,
+                    onClick = { filterStatus = null },
+                    label = {
+                        Text("${stringResource(R.string.containers_tab_all)} (${statusCounts[null] ?: 0})")
+                    },
+                    leadingIcon = if (filterStatus == null) {
+                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
+                    } else null
+                )
+            }
+
+            // Created filter
+            item {
+                FilterChip(
+                    selected = filterStatus == ContainerStatus.CREATED,
+                    onClick = {
+                        filterStatus = if (filterStatus == ContainerStatus.CREATED) null
+                        else ContainerStatus.CREATED
+                    },
+                    label = {
+                        Text("${stringResource(R.string.containers_tab_created)} (${statusCounts[ContainerStatus.CREATED] ?: 0})")
+                    },
+                    leadingIcon = if (filterStatus == ContainerStatus.CREATED) {
+                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
+                    } else null
+                )
+            }
+
+            // Running filter
+            item {
+                FilterChip(
+                    selected = filterStatus == ContainerStatus.RUNNING,
+                    onClick = {
+                        filterStatus = if (filterStatus == ContainerStatus.RUNNING) null
+                        else ContainerStatus.RUNNING
+                    },
+                    label = {
+                        Text("${stringResource(R.string.containers_tab_running)} (${statusCounts[ContainerStatus.RUNNING] ?: 0})")
+                    },
+                    leadingIcon = if (filterStatus == ContainerStatus.RUNNING) {
+                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
+                    } else null
+                )
+            }
+
+            // Exited filter
+            item {
+                FilterChip(
+                    selected = filterStatus == ContainerStatus.EXITED,
+                    onClick = {
+                        filterStatus = if (filterStatus == ContainerStatus.EXITED) null
+                        else ContainerStatus.EXITED
+                    },
+                    label = {
+                        Text("${stringResource(R.string.containers_tab_exited)} (${statusCounts[ContainerStatus.EXITED] ?: 0})")
+                    },
+                    leadingIcon = if (filterStatus == ContainerStatus.EXITED) {
+                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
+                    } else null
+                )
+            }
+        }
+
+        if (containers.isEmpty()) {
+            // Empty state
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                // All filter
-                item {
-                    FilterChip(
-                        selected = filterStatus == null,
-                        onClick = { filterStatus = null },
-                        label = {
-                            Text("${stringResource(R.string.containers_tab_all)} (${statusCounts[null] ?: 0})")
-                        },
-                        leadingIcon = if (filterStatus == null) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                        } else null
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ViewInAr,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.Huge),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
-                }
-
-                // Created filter
-                item {
-                    FilterChip(
-                        selected = filterStatus == ContainerStatus.CREATED,
-                        onClick = {
-                            filterStatus = if (filterStatus == ContainerStatus.CREATED) null
-                            else ContainerStatus.CREATED
-                        },
-                        label = {
-                            Text("${stringResource(R.string.containers_tab_created)} (${statusCounts[ContainerStatus.CREATED] ?: 0})")
-                        },
-                        leadingIcon = if (filterStatus == ContainerStatus.CREATED) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                        } else null
+                    Spacer(modifier = Modifier.height(Spacing.Medium))
+                    Text(
+                        text = stringResource(R.string.containers_empty),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-
-                // Running filter
-                item {
-                    FilterChip(
-                        selected = filterStatus == ContainerStatus.RUNNING,
-                        onClick = {
-                            filterStatus = if (filterStatus == ContainerStatus.RUNNING) null
-                            else ContainerStatus.RUNNING
-                        },
-                        label = {
-                            Text("${stringResource(R.string.containers_tab_running)} (${statusCounts[ContainerStatus.RUNNING] ?: 0})")
-                        },
-                        leadingIcon = if (filterStatus == ContainerStatus.RUNNING) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                        } else null
-                    )
-                }
-
-                // Exited filter
-                item {
-                    FilterChip(
-                        selected = filterStatus == ContainerStatus.EXITED,
-                        onClick = {
-                            filterStatus = if (filterStatus == ContainerStatus.EXITED) null
-                            else ContainerStatus.EXITED
-                        },
-                        label = {
-                            Text("${stringResource(R.string.containers_tab_exited)} (${statusCounts[ContainerStatus.EXITED] ?: 0})")
-                        },
-                        leadingIcon = if (filterStatus == ContainerStatus.EXITED) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                        } else null
+                    Spacer(modifier = Modifier.height(Spacing.Small))
+                    Text(
+                        text = stringResource(R.string.containers_empty_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-
-            if (containers.isEmpty()) {
-                // Empty state
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+        } else if (filteredContainers.isEmpty()) {
+            // No results for filter
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ViewInAr,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.Huge),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Medium))
-                        Text(
-                            text = stringResource(R.string.containers_empty),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Small))
-                        Text(
-                            text = stringResource(R.string.containers_empty_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.FilterListOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.ExtraLarge),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.Medium))
+                    Text(
+                        text = stringResource(R.string.containers_filter_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-            } else if (filteredContainers.isEmpty()) {
-                // No results for filter
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterListOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.ExtraLarge),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Medium))
-                        Text(
-                            text = stringResource(R.string.containers_filter_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = PaddingValues(
-                        horizontal = Spacing.ScreenPadding,
-                        vertical = Spacing.Medium
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                ) {
-                    items(filteredContainers, key = { it.id }) { container ->
-                        ContainerCard(
-                            container = container,
-                            status = viewModel.getContainerStatus(container),
-                            onStart = { viewModel.startContainer(container.id) },
-                            onStop = { viewModel.stopContainer(container.id) },
-                            onDelete = { showDeleteDialog = container },
-                            onTerminal = { onNavigateToTerminal(container.id) },
-                            onClick = { onNavigateToDetail(container.id) }
-                        )
-                    }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(
+                    start = Spacing.ScreenPadding,
+                    top = Spacing.Medium,
+                    end = Spacing.ScreenPadding,
+                    bottom = Spacing.Medium
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+            ) {
+                items(filteredContainers, key = { it.id }) { container ->
+                    ContainerCard(
+                        container = container,
+                        status = viewModel.getContainerStatus(container),
+                        onStart = { viewModel.startContainer(container.id) },
+                        onStop = { viewModel.stopContainer(container.id) },
+                        onDelete = { showDeleteDialog = container },
+                        onTerminal = { onNavigateToTerminal(container.id) },
+                        onClick = { onNavigateToDetail(container.id) }
+                    )
                 }
             }
         }

@@ -36,36 +36,33 @@ fun HomeScreen(
 
     var showPullDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Text(stringResource(R.string.app_name))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+    Column(modifier = modifier.fillMaxSize()) {
+        TopAppBar(
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Text(stringResource(R.string.app_name))
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
-        },
-        modifier = modifier
-    ) { padding ->
+        )
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                horizontal = Spacing.ScreenPadding,
-                vertical = Spacing.Medium
+                start = Spacing.ScreenPadding,
+                top = Spacing.Medium,
+                end = Spacing.ScreenPadding,
+                bottom = Spacing.Medium
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.ContentSpacing)
         ) {

@@ -35,99 +35,103 @@ fun SettingsScreen(
 
     var showClearDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) }
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = modifier
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Network section
-            SettingsSection(title = stringResource(R.string.settings_network)) {
-                SettingsClickableItem(
-                    icon = Icons.Default.Cloud,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    title = stringResource(R.string.settings_registry_mirror),
-                    subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
-                    onClick = onNavigateToMirrorSettings
-                )
-            }
 
-            // System section
-            SettingsSection(title = stringResource(R.string.settings_system)) {
-                // Phantom Process (Android 12+ only)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Network section
+                SettingsSection(title = stringResource(R.string.settings_network)) {
                     SettingsClickableItem(
-                        icon = Icons.Default.Block,
+                        icon = Icons.Default.Cloud,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        title = stringResource(R.string.settings_registry_mirror),
+                        subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
+                        onClick = onNavigateToMirrorSettings
+                    )
+                }
+
+                // System section
+                SettingsSection(title = stringResource(R.string.settings_system)) {
+                    // Phantom Process (Android 12+ only)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        SettingsClickableItem(
+                            icon = Icons.Default.Block,
+                            iconTint = MaterialTheme.colorScheme.error,
+                            title = stringResource(R.string.settings_phantom_process),
+                            subtitle = stringResource(R.string.settings_phantom_process_subtitle),
+                            onClick = onNavigateToPhantomProcess,
+                            isWarning = true
+                        )
+                    }
+
+                    SettingsItem(
+                        icon = Icons.Default.PhoneAndroid,
+                        title = stringResource(R.string.settings_platform),
+                        subtitle = stringResource(
+                            R.string.settings_platform_value,
+                            android.os.Build.VERSION.RELEASE,
+                            android.os.Build.VERSION.SDK_INT
+                        )
+                    )
+
+                    SettingsItem(
+                        icon = Icons.Default.Memory,
+                        title = stringResource(R.string.settings_architecture),
+                        subtitle = viewModel.architecture
+                    )
+                }
+
+                // Storage section
+                SettingsSection(title = stringResource(R.string.settings_storage)) {
+                    SettingsItem(
+                        icon = Icons.Default.Storage,
+                        title = stringResource(R.string.settings_storage_usage),
+                        subtitle = storageUsage?.let { formatFileSize(it) }
+                            ?: stringResource(R.string.status_loading)
+                    )
+
+                    SettingsClickableItem(
+                        icon = Icons.Default.DeleteSweep,
                         iconTint = MaterialTheme.colorScheme.error,
-                        title = stringResource(R.string.settings_phantom_process),
-                        subtitle = stringResource(R.string.settings_phantom_process_subtitle),
-                        onClick = onNavigateToPhantomProcess,
+                        title = stringResource(R.string.settings_clear_data),
+                        subtitle = stringResource(R.string.settings_clear_data_subtitle),
+                        onClick = { showClearDialog = true },
                         isWarning = true
                     )
                 }
 
-                SettingsItem(
-                    icon = Icons.Default.PhoneAndroid,
-                    title = stringResource(R.string.settings_platform),
-                    subtitle = stringResource(
-                        R.string.settings_platform_value,
-                        android.os.Build.VERSION.RELEASE,
-                        android.os.Build.VERSION.SDK_INT
+                // About section
+                SettingsSection(title = stringResource(R.string.settings_about)) {
+                    SettingsItem(
+                        icon = Icons.Default.Info,
+                        title = stringResource(R.string.settings_version),
+                        subtitle = viewModel.packageInfo.versionName ?: ""
                     )
-                )
 
-                SettingsItem(
-                    icon = Icons.Default.Memory,
-                    title = stringResource(R.string.settings_architecture),
-                    subtitle = viewModel.architecture
-                )
+                    SettingsItem(
+                        icon = Icons.Default.Terminal,
+                        title = stringResource(R.string.settings_engine),
+                        subtitle = prootVersion ?: stringResource(R.string.terminal_unavailable)
+                    )
+                }
+
+                // 呼吸空间
+                Spacer(modifier = Modifier.height(Spacing.Medium))
             }
-
-            // Storage section
-            SettingsSection(title = stringResource(R.string.settings_storage)) {
-                SettingsItem(
-                    icon = Icons.Default.Storage,
-                    title = stringResource(R.string.settings_storage_usage),
-                    subtitle = storageUsage?.let { formatFileSize(it) }
-                        ?: stringResource(R.string.status_loading)
-                )
-
-                SettingsClickableItem(
-                    icon = Icons.Default.DeleteSweep,
-                    iconTint = MaterialTheme.colorScheme.error,
-                    title = stringResource(R.string.settings_clear_data),
-                    subtitle = stringResource(R.string.settings_clear_data_subtitle),
-                    onClick = { showClearDialog = true },
-                    isWarning = true
-                )
-            }
-
-            // About section
-            SettingsSection(title = stringResource(R.string.settings_about)) {
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(R.string.settings_version),
-                    subtitle = viewModel.packageInfo.versionName ?: ""
-                )
-
-                SettingsItem(
-                    icon = Icons.Default.Terminal,
-                    title = stringResource(R.string.settings_engine),
-                    subtitle = prootVersion ?: stringResource(R.string.terminal_unavailable)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
+
+        // Snackbar - 放在底部中央
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 
     // Clear data confirmation dialog

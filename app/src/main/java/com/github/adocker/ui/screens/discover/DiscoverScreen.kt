@@ -49,18 +49,14 @@ fun DiscoverScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.nav_discover)) }
-            )
-        },
-        modifier = modifier
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text(stringResource(R.string.nav_discover)) }
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(Spacing.Small))
@@ -117,7 +113,7 @@ fun DiscoverScreen(
 
                     LazyColumn(
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(bottom = Spacing.Medium),
+                        contentPadding = PaddingValues(bottom = Spacing.Medium),  // 呼吸空间
                         verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         items(paginatedResults, key = { it.repoName ?: it.hashCode() }) { result ->

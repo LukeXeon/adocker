@@ -53,34 +53,29 @@ fun ImagesScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.images_title)) },
-                actions = {
-                    IconButton(onClick = onNavigateToQRScanner) {
-                        Icon(
-                            Icons.Default.QrCodeScanner,
-                            contentDescription = stringResource(R.string.images_scan_qr)
-                        )
-                    }
-                    IconButton(onClick = { showPullDialog = true }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.images_pull)
-                        )
-                    }
+    Column(modifier = modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text(stringResource(R.string.images_title)) },
+            actions = {
+                IconButton(onClick = onNavigateToQRScanner) {
+                    Icon(
+                        Icons.Default.QrCodeScanner,
+                        contentDescription = stringResource(R.string.images_scan_qr)
+                    )
                 }
-            )
-        },
-        modifier = modifier
-    ) { padding ->
+                IconButton(onClick = { showPullDialog = true }) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.images_pull)
+                    )
+                }
+            }
+        )
+
         if (images.isEmpty()) {
             // Empty state
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -126,12 +121,12 @@ fun ImagesScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    horizontal = Spacing.ScreenPadding,
-                    vertical = Spacing.Medium
+                    start = Spacing.ScreenPadding,
+                    top = Spacing.Medium,
+                    end = Spacing.ScreenPadding,
+                    bottom = Spacing.Medium
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
             ) {
