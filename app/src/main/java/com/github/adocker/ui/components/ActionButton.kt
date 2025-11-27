@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 
 @Composable
 fun ActionButton(
@@ -25,7 +27,7 @@ fun ActionButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clickable(onClick = onClick)
-            .padding(8.dp)
+            .padding(Spacing.Small)
     ) {
         Icon(
             imageVector = icon,

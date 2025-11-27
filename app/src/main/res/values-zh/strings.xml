@@ -29,9 +29,10 @@
     <string name="home_pull_image_desc">从 Docker Hub 下载</string>
     <string name="home_add_image">添加镜像</string>
     <string name="home_add_image_desc">从本地添加镜像</string>
+    <string name="home_mirror_settings">Docker镜像源</string>
+    <string name="home_mirror_settings_desc">配置镜像加速源</string>
     <string name="home_about">关于</string>
     <string name="home_engine">引擎</string>
-    <string name="home_engine_value">RRoot + PRoot</string>
     <string name="home_architecture">架构</string>
     <string name="home_android_version">Android 版本</string>
     <string name="home_api_level">API %1$d</string>

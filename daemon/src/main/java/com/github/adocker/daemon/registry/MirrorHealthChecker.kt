@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,6 +28,10 @@ class MirrorHealthChecker @Inject constructor(
 ) {
     private val _isChecking = MutableStateFlow(false)
     val isChecking: Flow<Boolean> = _isChecking.asStateFlow()
+
+    // Track checking state for each mirror URL
+    private val _checkingMirrors = MutableStateFlow<Set<String>>(emptySet())
+    val checkingMirrors: Flow<Set<String>> = _checkingMirrors.asStateFlow()
 
     companion object {
         private const val HEALTH_CHECK_INTERVAL = 5 * 60 * 1000L // 5 minutes
@@ -47,7 +52,7 @@ class MirrorHealthChecker @Inject constructor(
     }
 
     /**
-     * Check health of all mirrors
+     * Check health of all mirrors concurrently
      */
     suspend fun checkAllMirrors() {
         if (_isChecking.value) {
@@ -57,22 +62,38 @@ class MirrorHealthChecker @Inject constructor(
 
         _isChecking.value = true
         try {
-            val mirrors = mutableListOf<MirrorEntity>()
-            mirrorDao.getAllMirrors().collect { list ->
-                mirrors.addAll(list)
-            }
+            // Get current snapshot of mirrors using first()
+            val mirrors = mirrorDao.getAllMirrors().first()
 
             Timber.d("Starting health check for ${mirrors.size} mirrors")
 
+            // Check all mirrors concurrently
             mirrors.forEach { mirror ->
-                checkMirror(mirror)
+                scope.launch {
+                    checkMirrorWithTracking(mirror)
+                }
             }
 
-            Timber.d("Health check completed")
+            Timber.d("Health check initiated for all mirrors")
         } catch (e: Exception) {
             Timber.e(e, "Error during health check")
         } finally {
             _isChecking.value = false
+        }
+    }
+
+    /**
+     * Check mirror health with state tracking
+     */
+    private suspend fun checkMirrorWithTracking(mirror: MirrorEntity) {
+        // Add to checking set
+        _checkingMirrors.value = _checkingMirrors.value + mirror.url
+
+        try {
+            checkMirror(mirror)
+        } finally {
+            // Remove from checking set
+            _checkingMirrors.value = _checkingMirrors.value - mirror.url
         }
     }
 

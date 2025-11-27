@@ -13,6 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui.components.ImageCard
 import com.github.adocker.ui.components.PullImageDialog
@@ -82,35 +84,42 @@ fun ImagesScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(Spacing.Large)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Layers,
                         contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        modifier = Modifier.size(IconSize.Huge),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Spacing.Large))
                     Text(
                         text = stringResource(R.string.images_empty),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Spacing.Small))
                     Text(
                         text = stringResource(R.string.images_empty_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = { showPullDialog = true }) {
+                    Spacer(modifier = Modifier.height(Spacing.Large))
+                    FilledTonalButton(
+                        onClick = { showPullDialog = true },
+                        contentPadding = PaddingValues(
+                            horizontal = Spacing.Large,
+                            vertical = Spacing.Medium
+                        )
+                    ) {
                         Icon(
                             Icons.Default.CloudDownload,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(IconSize.Small)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.Small))
                         Text(stringResource(R.string.images_pull))
                     }
                 }
@@ -120,8 +129,11 @@ fun ImagesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(
+                    horizontal = Spacing.ScreenPadding,
+                    vertical = Spacing.Medium
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
             ) {
                 items(images, key = { it.id }) { image ->
                     ImageCard(

@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.ui.viewmodel.MainViewModel
 
@@ -57,7 +59,7 @@ fun PullImageDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
             ) {
                 OutlinedTextField(
                     value = imageName,
@@ -116,7 +118,7 @@ fun PullImageDialog(
                         strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.Small))
                 }
                 Text(
                     text = if (isPulling) {

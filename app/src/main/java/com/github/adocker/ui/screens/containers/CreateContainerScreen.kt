@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
@@ -86,8 +88,8 @@ fun CreateContainerScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(Spacing.Medium),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 // Image info card
                 Card(
@@ -97,9 +99,9 @@ fun CreateContainerScreen(
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(Spacing.Medium),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Layers,
@@ -200,7 +202,7 @@ fun CreateContainerScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 // Create button
                 Button(
@@ -231,9 +233,9 @@ fun CreateContainerScreen(
                     Icon(
                         imageVector = if (autoStart) Icons.Default.PlayArrow else Icons.Default.Add,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(IconSize.Small)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.Small))
                     Text(stringResource(if (autoStart) R.string.action_run else R.string.create_container_button))
                 }
             }

@@ -34,6 +34,14 @@ class MirrorSettingsViewModel @Inject constructor(
             initialValue = false
         )
 
+    // Track which mirrors are currently being checked
+    val checkingMirrors: StateFlow<Set<String>> = healthChecker.checkingMirrors
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptySet()
+        )
+
     fun addCustomMirror(name: String, url: String, token: String? = null, priority: Int = 50) {
         viewModelScope.launch {
             registrySettings.addCustomMirror(name, url, token, priority)

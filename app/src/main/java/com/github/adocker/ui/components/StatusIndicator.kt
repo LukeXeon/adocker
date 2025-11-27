@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.model.ContainerStatus
 
 @Composable

@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.utils.formatFileSize
@@ -195,7 +197,7 @@ private fun SettingsItem(
 ) {
     Surface(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Spacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -233,7 +235,7 @@ private fun SettingsClickableItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Spacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

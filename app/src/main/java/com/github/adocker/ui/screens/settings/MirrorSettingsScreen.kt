@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -51,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.database.model.MirrorEntity
@@ -71,7 +74,7 @@ fun MirrorSettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val mirrors by viewModel.allMirrors.collectAsState()
-    val isChecking by viewModel.isCheckingHealth.collectAsState()
+    val checkingMirrors by viewModel.checkingMirrors.collectAsState()
 
     // Handle scanned mirror data
     LaunchedEffect(scannedMirrorData) {
@@ -112,21 +115,11 @@ fun MirrorSettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { viewModel.checkMirrorsNow() },
-                        enabled = !isChecking
-                    ) {
-                        if (isChecking) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.width(24.dp).height(24.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Check Health"
-                            )
-                        }
+                    IconButton(onClick = { viewModel.checkMirrorsNow() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Check Health"
+                        )
                     }
                     IconButton(onClick = onNavigateToQRScanner) {
                         Icon(
@@ -149,8 +142,8 @@ fun MirrorSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(horizontal = Spacing.ScreenPadding, vertical = Spacing.Medium),
+            verticalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
             item {
                 Text(
@@ -164,6 +157,7 @@ fun MirrorSettingsScreen(
             items(mirrors, key = { it.url }) { mirror ->
                 MirrorCard(
                     mirror = mirror,
+                    isChecking = checkingMirrors.contains(mirror.url),
                     onDelete = if (!mirror.isBuiltIn) {
                         { mirrorToDelete = mirror }
                     } else null
@@ -171,7 +165,7 @@ fun MirrorSettingsScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
                     onClick = { showAddDialog = true },
                     modifier = Modifier.fillMaxWidth()
@@ -179,7 +173,7 @@ fun MirrorSettingsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(Spacing.Medium),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -188,7 +182,7 @@ fun MirrorSettingsScreen(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.Small))
                         Text(
                             stringResource(R.string.mirror_settings_add),
                             color = MaterialTheme.colorScheme.primary
@@ -248,6 +242,7 @@ fun MirrorSettingsScreen(
 @Composable
 private fun MirrorCard(
     mirror: MirrorEntity,
+    isChecking: Boolean,
     onDelete: (() -> Unit)?
 ) {
     Card(
@@ -259,25 +254,33 @@ private fun MirrorCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Health status icon
-            Icon(
-                imageVector = if (mirror.isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
-                contentDescription = if (mirror.isHealthy) "Healthy" else "Unhealthy",
-                tint = if (mirror.isHealthy) {
-                    MaterialTheme.colorScheme.tertiary
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
-            )
+            // Health status icon - show spinner if checking, otherwise show health status
+            if (isChecking) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Icon(
+                    imageVector = if (mirror.isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
+                    contentDescription = if (mirror.isHealthy) "Healthy" else "Unhealthy",
+                    tint = if (mirror.isHealthy) {
+                        MaterialTheme.colorScheme.tertiary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
                     Text(
                         text = mirror.name,
@@ -288,7 +291,7 @@ private fun MirrorCard(
                         AssistChip(
                             onClick = { },
                             label = { Text("Custom", style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.height(24.dp),
+                            modifier = Modifier.height(Spacing.Large),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
                             )
@@ -304,7 +307,7 @@ private fun MirrorCard(
 
                 // Health details
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (mirror.latencyMs > 0) {
@@ -383,7 +386,7 @@ private fun AddMirrorDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
@@ -397,7 +400,7 @@ private fun AddMirrorDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 OutlinedTextField(
                     value = priority,
                     onValueChange = { priority = it },
@@ -406,7 +409,7 @@ private fun AddMirrorDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },

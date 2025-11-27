@@ -53,6 +53,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.ui.viewmodel.PhantomProcessViewModel
@@ -112,8 +114,8 @@ fun PhantomProcessScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(Spacing.Medium),
+            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
         ) {
             // Info card
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
@@ -125,8 +127,8 @@ fun PhantomProcessScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            .padding(Spacing.Medium),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -144,8 +146,8 @@ fun PhantomProcessScreen(
                 // Status overview card
                 Card {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(Spacing.Medium),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                     ) {
                         Text(
                             text = stringResource(R.string.phantom_status),
@@ -190,11 +192,11 @@ fun PhantomProcessScreen(
                             )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.padding(Spacing.Medium),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                             ) {
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
@@ -222,7 +224,7 @@ fun PhantomProcessScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Icon(Icons.Default.Download, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(Spacing.Small))
                                     Text(stringResource(R.string.phantom_shizuku_install))
                                 }
                             }
@@ -233,8 +235,8 @@ fun PhantomProcessScreen(
                         // Shizuku permission needed
                         Card {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.padding(Spacing.Medium),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                             ) {
                                 Text(
                                     text = stringResource(R.string.phantom_permission_denied),
@@ -249,7 +251,7 @@ fun PhantomProcessScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Icon(Icons.Default.Lock, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(Spacing.Small))
                                     Text(stringResource(R.string.phantom_grant_permission))
                                 }
                             }
@@ -260,8 +262,8 @@ fun PhantomProcessScreen(
                         // Phantom killer active - offer to disable
                         Card {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.padding(Spacing.Medium),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                             ) {
                                 Text(
                                     text = stringResource(R.string.phantom_restrictions_active),
@@ -278,14 +280,14 @@ fun PhantomProcessScreen(
                                 ) {
                                     if (uiState.isProcessing) {
                                         CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
+                                            modifier = Modifier.size(IconSize.Small),
                                             strokeWidth = 2.dp,
                                             color = MaterialTheme.colorScheme.onPrimary
                                         )
                                     } else {
                                         Icon(Icons.Default.Block, contentDescription = null)
                                     }
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(Spacing.Small))
                                     Text(stringResource(R.string.phantom_disable_restrictions))
                                 }
                             }
@@ -300,11 +302,11 @@ fun PhantomProcessScreen(
                             )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.padding(Spacing.Medium),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                             ) {
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
@@ -328,13 +330,13 @@ fun PhantomProcessScreen(
                                 ) {
                                     if (uiState.isProcessing) {
                                         CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
+                                            modifier = Modifier.size(IconSize.Small),
                                             strokeWidth = 2.dp
                                         )
                                     } else {
                                         Icon(Icons.Default.Restore, contentDescription = null)
                                     }
-                                    Spacer(Modifier.width(8.dp))
+                                    Spacer(Modifier.width(Spacing.Small))
                                     Text(stringResource(R.string.phantom_restore_default))
                                 }
                             }
@@ -345,8 +347,8 @@ fun PhantomProcessScreen(
                 // Help section
                 Card {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(Spacing.Medium),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                     ) {
                         Text(
                             text = stringResource(R.string.phantom_how_to_use),
@@ -385,8 +387,8 @@ fun PhantomProcessScreen(
                 // Alternative methods card
                 Card {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(Spacing.Medium),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                     ) {
                         Text(
                             text = stringResource(R.string.phantom_alternative_methods),
@@ -405,7 +407,7 @@ fun PhantomProcessScreen(
                                 text = stringResource(R.string.phantom_manual_setting_desc),
                                 style = MaterialTheme.typography.bodySmall
                             )
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(Spacing.Small))
                         }
 
                         Text(
@@ -424,7 +426,7 @@ fun PhantomProcessScreen(
                         ) {
                             Text(
                                 text = adbCommand,
-                                modifier = Modifier.padding(12.dp),
+                                modifier = Modifier.padding(Spacing.ListItemSpacing),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = FontFamily.Monospace
                             )
@@ -449,7 +451,7 @@ private fun StatusRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -475,7 +477,7 @@ private fun StatusRow(
                 } else {
                     MaterialTheme.colorScheme.error
                 },
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(IconSize.Small)
             )
             Text(
                 text = status,
@@ -498,12 +500,12 @@ private fun HelpStep(
     code: Boolean = false
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
     ) {
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
             shape = MaterialTheme.shapes.small,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(IconSize.Medium)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
@@ -527,7 +529,7 @@ private fun HelpStep(
                 ) {
                     Text(
                         text = description,
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(Spacing.Small),
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace
                     )

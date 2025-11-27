@@ -321,6 +321,238 @@ try {
 }
 ```
 
+## UI Design System (Material Design 3)
+
+ADocker follows **Google's Material Design 3** specifications with a complete design system for consistency and maintainability.
+
+### Design Tokens
+
+**File:** `app/src/main/java/com/github/adocker/ui/theme/Dimensions.kt`
+
+All spacing, sizes, and dimensions follow the 8dp grid system:
+
+```kotlin
+object Spacing {
+    val ExtraSmall = 4.dp     // Tight spacing
+    val Small = 8.dp          // Default small gaps
+    val Medium = 16.dp        // Standard padding
+    val Large = 24.dp         // Section spacing
+    val ExtraLarge = 32.dp    // Large margins
+    val Huge = 48.dp          // Extra large spacing
+
+    // Semantic spacing
+    val CardPadding = 16.dp
+    val ScreenPadding = 16.dp
+    val ListItemSpacing = 12.dp
+    val SectionSpacing = 24.dp
+}
+
+object IconSize {
+    val Small = 16.dp         // Small icons in chips
+    val Medium = 24.dp        // Standard icons
+    val Large = 32.dp         // Prominent icons
+    val ExtraLarge = 48.dp    // Hero icons
+    val Huge = 64.dp          // Empty state icons
+}
+```
+
+**Usage:** Always use these constants instead of hardcoded dp values:
+```kotlin
+// ❌ Bad
+modifier = Modifier.padding(16.dp)
+Icon(modifier = Modifier.size(24.dp))
+
+// ✅ Good
+modifier = Modifier.padding(Spacing.Medium)
+Icon(modifier = Modifier.size(IconSize.Medium))
+```
+
+### Theme System
+
+**File:** `app/src/main/java/com/github/adocker/ui/theme/Theme.kt`
+
+#### Color Roles
+Uses complete Material Design 3 color system:
+- **primary/onPrimary**: Main brand color (Docker blue)
+- **primaryContainer/onPrimaryContainer**: Subtle primary backgrounds
+- **secondary/onSecondary**: Secondary actions
+- **secondaryContainer/onSecondaryContainer**: Neutral containers
+- **tertiary/onTertiary**: Accent color (teal)
+- **tertiaryContainer/onTertiaryContainer**: Success/active states
+- **error/onError**: Error states
+- **errorContainer/onErrorContainer**: Error backgrounds
+- **surface/onSurface**: Default surfaces
+- **surfaceVariant/onSurfaceVariant**: Subtle backgrounds
+- **outline/outlineVariant**: Borders and dividers
+
+**Semantic Usage:**
+```kotlin
+// Running containers - success/active
+containerColor = MaterialTheme.colorScheme.tertiaryContainer
+contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+
+// Created containers - neutral
+containerColor = MaterialTheme.colorScheme.primaryContainer
+contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+
+// Exited containers - error
+containerColor = MaterialTheme.colorScheme.errorContainer
+contentColor = MaterialTheme.colorScheme.onErrorContainer
+```
+
+#### Typography Scale
+Complete MD3 typography system defined with proper line heights and letter spacing:
+- **Display** (Large/Medium/Small): Large, attention-grabbing text
+- **Headline** (Large/Medium/Small): High-emphasis text
+- **Title** (Large/Medium/Small): Medium-emphasis text
+- **Body** (Large/Medium/Small): Main content text
+- **Label** (Large/Medium/Small): Buttons, tabs, labels
+
+### Component Patterns
+
+#### Icon with Background
+Standard pattern for prominent icons:
+```kotlin
+Surface(
+    shape = MaterialTheme.shapes.small,
+    color = MaterialTheme.colorScheme.primaryContainer,
+    modifier = Modifier.size(IconSize.Large)
+) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        Icon(
+            imageVector = Icons.Default.Layers,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(IconSize.Medium)
+        )
+    }
+}
+```
+
+#### Chip-Style Labels
+For tags, status indicators, and metadata:
+```kotlin
+Surface(
+    shape = MaterialTheme.shapes.extraSmall,
+    color = MaterialTheme.colorScheme.secondaryContainer
+) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.padding(
+            horizontal = Spacing.Small,
+            vertical = Spacing.ExtraSmall
+        )
+    )
+}
+```
+
+#### Button Hierarchy
+- **FilledTonalButton**: Primary actions (run, start, terminal)
+- **OutlinedButton**: Secondary actions (stop)
+- **TextButton**: Tertiary actions (cancel, dismiss)
+- **error contentColor**: Dangerous actions (delete)
+
+```kotlin
+// Primary action
+FilledTonalButton(onClick = { }) {
+    Icon(Icons.Default.PlayArrow, null, Modifier.size(IconSize.Small))
+    Spacer(Modifier.width(Spacing.Small))
+    Text("Run")
+}
+
+// Dangerous action
+OutlinedButton(
+    onClick = { },
+    colors = ButtonDefaults.outlinedButtonColors(
+        contentColor = MaterialTheme.colorScheme.error
+    )
+) {
+    Icon(Icons.Default.Delete, null, Modifier.size(IconSize.Small))
+    Spacer(Modifier.width(Spacing.Small))
+    Text("Delete")
+}
+```
+
+### Screen Structure
+
+All screens follow this pattern:
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyScreen(
+    viewModel: MyViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Title") }) },
+        modifier = modifier
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(Spacing.ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+        ) {
+            // Content items
+        }
+    }
+}
+```
+
+### Empty States
+All list screens should have empty state with:
+- Large icon (IconSize.Huge, 40% opacity)
+- Title (titleLarge)
+- Description (bodyMedium)
+- Call-to-action button (FilledTonalButton)
+
+```kotlin
+Column(
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.padding(Spacing.Large)
+) {
+    Icon(
+        imageVector = Icons.Default.Layers,
+        contentDescription = null,
+        modifier = Modifier.size(IconSize.Huge),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+    )
+    Spacer(Modifier.height(Spacing.Large))
+    Text(
+        text = "No images yet",
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+    Spacer(Modifier.height(Spacing.Small))
+    Text(
+        text = "Pull an image to get started",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(Modifier.height(Spacing.Large))
+    FilledTonalButton(onClick = { }) {
+        Icon(Icons.Default.CloudDownload, null)
+        Spacer(Modifier.width(Spacing.Small))
+        Text("Pull Image")
+    }
+}
+```
+
+### Status Color Coding
+- **RUNNING**: tertiaryContainer (teal/cyan - active)
+- **CREATED**: primaryContainer (blue - neutral)
+- **EXITED**: errorContainer (red - stopped)
+
+Apply consistently across:
+- Container cards background
+- Status indicators
+- Status chips
+- Icon backgrounds
+
 ## Common Development Patterns
 
 ### Adding a new Repository

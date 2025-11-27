@@ -13,11 +13,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.github.adocker.R
 import com.github.adocker.daemon.utils.formatFileSize
 import com.github.adocker.daemon.database.model.ImageEntity
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
+/**
+ * Material Design 3 镜像卡片组件
+ * 可展开的镜像信息卡片,显示镜像名称、标签、大小、架构等信息
+ * 展开后显示完整ID和操作按钮
+ */
 @Composable
 fun ImageCard(
     image: ImageEntity,
@@ -33,11 +39,17 @@ fun ImageCard(
             .fillMaxWidth()
             .animateContentSize()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = Spacing.ExtraSmall
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(Spacing.Medium)
         ) {
+            // 标题行: 图标 + 名称/标签 + 展开按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -45,78 +57,149 @@ fun ImageCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Layers,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Column {
+                    // 镜像图标 - 带背景圆形
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(IconSize.Large)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Layers,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(IconSize.Medium)
+                            )
+                        }
+                    }
+
+                    // 名称和标签
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
                             text = image.repository.removePrefix("library/"),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Text(
-                            text = image.tag,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Text(
+                                text = image.tag,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(
+                                    horizontal = Spacing.Small,
+                                    vertical = Spacing.ExtraSmall
+                                )
+                            )
+                        }
                     }
                 }
 
+                // 展开按钮
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null
+                        contentDescription = if (expanded) "Collapse" else "Expand"
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
+            // 信息标签行: 大小 + 架构
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
             ) {
                 InfoChip(
-                    label = formatFileSize(image.size)
+                    label = formatFileSize(image.size),
+                    icon = Icons.Default.Storage
                 )
                 InfoChip(
-                    label = image.architecture
+                    label = image.architecture,
+                    icon = Icons.Default.Memory
                 )
             }
 
+            // 展开内容: 完整ID + 操作按钮
             if (expanded) {
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "ID: ${image.id.take(12)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace
+                Spacer(modifier = Modifier.height(Spacing.Medium))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant
                 )
+                Spacer(modifier = Modifier.height(Spacing.Medium))
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // 镜像ID
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Fingerprint,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(IconSize.Small)
+                    )
+                    Text(
+                        text = "ID: ${image.id.take(12)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
+                Spacer(modifier = Modifier.height(Spacing.Medium))
+
+                // 操作按钮行
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
-                    ActionButton(
-                        icon = Icons.Default.PlayArrow,
-                        label = stringResource(R.string.action_run),
-                        onClick = onRun
-                    )
-                    ActionButton(
-                        icon = Icons.Default.Delete,
-                        label = stringResource(R.string.action_delete),
+                    // 运行按钮 - 填充样式
+                    FilledTonalButton(
+                        onClick = onRun,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(Spacing.Medium)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.Small)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.Small))
+                        Text(stringResource(R.string.action_run))
+                    }
+
+                    // 删除按钮 - 轮廓样式
+                    OutlinedButton(
                         onClick = onDelete,
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        contentPadding = PaddingValues(Spacing.Medium)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.Small)
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.Small))
+                        Text(stringResource(R.string.action_delete))
+                    }
                 }
             }
         }

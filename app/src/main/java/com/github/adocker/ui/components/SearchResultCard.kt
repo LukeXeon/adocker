@@ -14,6 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.daemon.registry.model.SearchResult
 
@@ -31,14 +33,14 @@ fun SearchResultCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.Medium),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
                     Text(
                         text = result.repoName ?: "Unknown",
@@ -74,12 +76,12 @@ fun SearchResultCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(IconSize.Small),
                         tint = Color(0xFFFFB300)
                     )
                     Text(

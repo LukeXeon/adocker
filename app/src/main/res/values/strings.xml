@@ -29,9 +29,10 @@
     <string name="home_pull_image_desc">Download from Docker Hub</string>
     <string name="home_add_image">Add Image</string>
     <string name="home_add_image_desc">Add image from local</string>
+    <string name="home_mirror_settings">Docker Registry</string>
+    <string name="home_mirror_settings_desc">Configure registry mirrors</string>
     <string name="home_about">About</string>
     <string name="home_engine">Engine</string>
-    <string name="home_engine_value">RRoot + PRoot</string>
     <string name="home_architecture">Architecture</string>
     <string name="home_android_version">Android Version</string>
     <string name="home_api_level">API %1$d</string>

@@ -14,18 +14,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.adocker.ui.components.PullImageDialog
 import com.github.adocker.ui.components.StatCard
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.viewmodel.MainViewModel
+import com.github.adocker.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
     onNavigateToImages: () -> Unit,
-    modifier: Modifier = Modifier
+    onNavigateToMirrorSettings: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val stats by viewModel.stats.collectAsState()
+    val prootVersion by settingsViewModel.prootVersion.collectAsState()
 
     var showPullDialog by remember { mutableStateOf(false) }
 
@@ -55,33 +62,52 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(padding),
+            contentPadding = PaddingValues(
+                horizontal = Spacing.ScreenPadding,
+                vertical = Spacing.Medium
+            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.ContentSpacing)
         ) {
-            // Welcome card
+            // Welcome card - 突出的欢迎卡片
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = Spacing.Small
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp)
+                        modifier = Modifier.padding(Spacing.Large)
                     ) {
-                        Text(
-                            text = stringResource(R.string.home_welcome),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.home_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Rocket,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(IconSize.Large)
+                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.home_welcome),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
+                                Text(
+                                    text = stringResource(R.string.home_subtitle),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -95,11 +121,11 @@ fun HomeScreen(
                 )
             }
 
-            // Stats grid - row 1
+            // Stats grid - 2x2网格布局
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
                     StatCard(
                         title = stringResource(R.string.home_images_count),
@@ -116,11 +142,10 @@ fun HomeScreen(
                 }
             }
 
-            // Stats grid - row 2
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
                     StatCard(
                         title = stringResource(R.string.home_running_count),
@@ -139,10 +164,10 @@ fun HomeScreen(
 
             // Quick actions section
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 Text(
                     text = stringResource(R.string.home_quick_actions),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -150,7 +175,7 @@ fun HomeScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
                     QuickActionCard(
                         title = stringResource(R.string.home_pull_image),
@@ -160,10 +185,10 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionCard(
-                        title = stringResource(R.string.home_add_image),
-                        description = stringResource(R.string.home_add_image_desc),
-                        icon = Icons.Default.Add,
-                        onClick = onNavigateToImages,
+                        title = stringResource(R.string.home_mirror_settings),
+                        description = stringResource(R.string.home_mirror_settings_desc),
+                        icon = Icons.Default.Public,
+                        onClick = onNavigateToMirrorSettings,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -171,36 +196,50 @@ fun HomeScreen(
 
             // About section
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 Text(
                     text = stringResource(R.string.home_about),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(Spacing.Medium),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         InfoRow(
                             label = stringResource(R.string.home_engine),
-                            value = stringResource(R.string.home_engine_value)
+                            value = prootVersion
+                                ?: stringResource(R.string.terminal_unavailable),
+                            icon = Icons.Default.Settings
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = Spacing.ExtraSmall)
                         )
                         InfoRow(
                             label = stringResource(R.string.home_architecture),
                             value = android.os.Build.SUPPORTED_ABIS.firstOrNull()
-                                ?: stringResource(R.string.home_unknown)
+                                ?: stringResource(R.string.home_unknown),
+                            icon = Icons.Default.Memory
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = Spacing.ExtraSmall)
                         )
                         InfoRow(
                             label = stringResource(R.string.home_android_version),
                             value = stringResource(
                                 R.string.home_api_level,
                                 android.os.Build.VERSION.SDK_INT
-                            )
+                            ),
+                            icon = Icons.Default.Android
                         )
                     }
                 }
@@ -231,28 +270,52 @@ private fun QuickActionCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = Spacing.ExtraSmall
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(Spacing.Medium),
+            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // 图标 - 圆形背景
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                modifier = Modifier.size(IconSize.ExtraLarge)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(IconSize.Large)
+                    )
+                }
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(Spacing.ExtraSmall)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
@@ -260,23 +323,35 @@ private fun QuickActionCard(
 @Composable
 private fun InfoRow(
     label: String,
-    value: String
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(IconSize.Medium)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

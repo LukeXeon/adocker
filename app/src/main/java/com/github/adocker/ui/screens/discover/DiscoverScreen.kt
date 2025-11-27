@@ -17,6 +17,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.ui.components.SearchResultCard
 import com.github.adocker.ui.viewmodel.MainViewModel
@@ -61,12 +63,12 @@ fun DiscoverScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.Small))
 
             // Search bar with button
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -93,7 +95,7 @@ fun DiscoverScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             // Content
             when {
@@ -114,8 +116,9 @@ fun DiscoverScreen(
                     val paginatedResults = searchResults.subList(startIndex, endIndex)
 
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(bottom = Spacing.Medium),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         items(paginatedResults, key = { it.repoName ?: it.hashCode() }) { result ->
                             SearchResultCard(
@@ -132,13 +135,13 @@ fun DiscoverScreen(
 
                     // Pagination
                     if (totalPages > 1) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.Small))
                         PaginationBar(
                             currentPage = currentPage,
                             totalPages = totalPages,
                             onPageChange = { currentPage = it }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.Small))
                     }
                 }
 
@@ -152,16 +155,16 @@ fun DiscoverScreen(
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
+                                modifier = Modifier.size(IconSize.Huge),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
                             Text(
                                 text = stringResource(R.string.images_search_no_results),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Spacing.Small))
                             Text(
                                 text = stringResource(R.string.images_search_no_results_desc),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -181,16 +184,16 @@ fun DiscoverScreen(
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp),
+                                modifier = Modifier.size(IconSize.Huge),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
                             Text(
                                 text = stringResource(R.string.images_search_hint_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(Spacing.Small))
                             Text(
                                 text = stringResource(R.string.images_search_hint_desc),
                                 style = MaterialTheme.typography.bodyMedium,

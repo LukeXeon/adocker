@@ -11,6 +11,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.images.PullStatus
@@ -44,14 +46,14 @@ fun PullProgressDialog(
                     text = stringResource(R.string.pull_progress_overall, completedLayers, totalLayers),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 LinearProgressIndicator(
                     progress = { overallProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp),
+                        .height(Spacing.Small),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 // Layer progress list
                 if (progressList.isNotEmpty()) {
@@ -59,7 +61,7 @@ fun PullProgressDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 200.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         items(progressList) { layerProgress ->
                             LayerProgressItem(layerProgress)
@@ -90,7 +92,7 @@ private fun LayerProgressItem(progress: PullProgress) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Layer digest (shortened)

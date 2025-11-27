@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.ui.model.ContainerStatus
@@ -73,7 +75,7 @@ fun ContainersScreen(
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
             ) {
                 // All filter
                 item {
@@ -84,7 +86,7 @@ fun ContainersScreen(
                             Text("${stringResource(R.string.containers_tab_all)} (${statusCounts[null] ?: 0})")
                         },
                         leadingIcon = if (filterStatus == null) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
                         } else null
                     )
                 }
@@ -101,7 +103,7 @@ fun ContainersScreen(
                             Text("${stringResource(R.string.containers_tab_created)} (${statusCounts[ContainerStatus.CREATED] ?: 0})")
                         },
                         leadingIcon = if (filterStatus == ContainerStatus.CREATED) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
                         } else null
                     )
                 }
@@ -118,7 +120,7 @@ fun ContainersScreen(
                             Text("${stringResource(R.string.containers_tab_running)} (${statusCounts[ContainerStatus.RUNNING] ?: 0})")
                         },
                         leadingIcon = if (filterStatus == ContainerStatus.RUNNING) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
                         } else null
                     )
                 }
@@ -135,7 +137,7 @@ fun ContainersScreen(
                             Text("${stringResource(R.string.containers_tab_exited)} (${statusCounts[ContainerStatus.EXITED] ?: 0})")
                         },
                         leadingIcon = if (filterStatus == ContainerStatus.EXITED) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(18.dp)) }
+                            { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
                         } else null
                     )
                 }
@@ -153,16 +155,16 @@ fun ContainersScreen(
                         Icon(
                             imageVector = Icons.Default.ViewInAr,
                             contentDescription = null,
-                            modifier = Modifier.size(64.dp),
+                            modifier = Modifier.size(IconSize.Huge),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Spacing.Medium))
                         Text(
                             text = stringResource(R.string.containers_empty),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.Small))
                         Text(
                             text = stringResource(R.string.containers_empty_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
@@ -183,10 +185,10 @@ fun ContainersScreen(
                         Icon(
                             imageVector = Icons.Default.FilterListOff,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(IconSize.ExtraLarge),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Spacing.Medium))
                         Text(
                             text = stringResource(R.string.containers_filter_empty),
                             style = MaterialTheme.typography.bodyMedium,
@@ -196,8 +198,14 @@ fun ContainersScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(
+                        horizontal = Spacing.ScreenPadding,
+                        vertical = Spacing.Medium
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
                     items(filteredContainers, key = { it.id }) { container ->
                         ContainerCard(

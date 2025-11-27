@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.github.adocker.ui.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
 import androidx.compose.ui.unit.sp
 import com.github.adocker.R
 import com.github.adocker.ui.viewmodel.TerminalViewModel
@@ -134,7 +136,7 @@ fun TerminalScreen(
                     color = MaterialTheme.colorScheme.errorContainer
                 ) {
                     Row(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(Spacing.Small),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -142,7 +144,7 @@ fun TerminalScreen(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onErrorContainer
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.Small))
                         Text(
                             text = errorMsg,
                             color = MaterialTheme.colorScheme.onErrorContainer,
@@ -167,7 +169,7 @@ fun TerminalScreen(
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(8.dp)
+                        .padding(Spacing.Small)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -243,7 +245,7 @@ fun TerminalScreen(
                     modifier = Modifier
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
                     QuickCommandChip("ls -la") { viewModel.executeCommand(it) }
                     QuickCommandChip("pwd") { viewModel.executeCommand(it) }

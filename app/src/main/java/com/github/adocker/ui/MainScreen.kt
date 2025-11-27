@@ -140,6 +140,9 @@ fun MainScreen() {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onNavigateToMirrorSettings = {
+                        navController.navigate(Screen.MirrorSettings.route)
                     }
                 )
             }
