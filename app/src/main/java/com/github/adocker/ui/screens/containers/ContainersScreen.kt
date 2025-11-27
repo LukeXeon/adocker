@@ -39,7 +39,7 @@ fun ContainersScreen(
             containers
         } else {
             containers.filter { container ->
-                viewModel.getContainerStatus(container.id) == filterStatus
+                viewModel.getContainerStatus(container) == filterStatus
             }
         }
     }
@@ -136,7 +136,7 @@ fun ContainersScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val running = containers.count { viewModel.getContainerStatus(it.id) == ContainerStatus.RUNNING }
+                        val running = containers.count { viewModel.getContainerStatus(it) == ContainerStatus.RUNNING }
                         val stopped = containers.size - running
 
                         FilterChip(
@@ -175,7 +175,7 @@ fun ContainersScreen(
                 items(filteredContainers, key = { it.id }) { container ->
                     ContainerCard(
                         container = container,
-                        status = viewModel.getContainerStatus(container.id),
+                        status = viewModel.getContainerStatus(container),
                         onStart = { viewModel.startContainer(container.id) },
                         onStop = { viewModel.stopContainer(container.id) },
                         onDelete = { showDeleteDialog = container },

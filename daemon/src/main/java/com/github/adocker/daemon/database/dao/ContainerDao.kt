@@ -37,4 +37,7 @@ interface ContainerDao {
 
     @Query("SELECT COUNT(*) FROM containers")
     suspend fun getContainerCount(): Int
+
+    @Query("UPDATE containers SET hasRun = 1 WHERE id = :id")
+    suspend fun markContainerAsRun(id: String)
 }

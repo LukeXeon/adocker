@@ -32,7 +32,7 @@ fun ContainerDetailScreen(
     val container = containers.find { it.id == containerId }
 
     // Get container status from ViewModel
-    val containerStatus = container?.let { viewModel.getContainerStatus(it.id) } ?: ContainerStatus.CREATED
+    val containerStatus = container?.let { viewModel.getContainerStatus(it) } ?: ContainerStatus.CREATED
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 

@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import com.github.adocker.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class ContainerExecutor @Inject constructor(
     private val factory: RunningContainer.Factory,
+    private val containerDao: ContainerDao,
 ) {
     private val mutex = Mutex()
     private val runningContainers = MutableStateFlow<Map<String, RunningContainer>>(emptyMap())
@@ -40,6 +42,8 @@ class ContainerExecutor @Inject constructor(
                     putAll(runningContainers.value)
                     put(containerId, runningContainer)
                 }
+                // Mark container as having been run
+                containerDao.markContainerAsRun(containerId)
             }
         }
     }

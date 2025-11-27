@@ -216,12 +216,12 @@ class MainViewModel @Inject constructor(
     }
 
     // Helper function to get container status
-    fun getContainerStatus(containerId: String): ContainerStatus {
-        val running = runningContainers.value.find { it.containerId == containerId }
-        return if (running?.job?.isActive == true) {
-            ContainerStatus.RUNNING
-        } else {
-            ContainerStatus.CREATED
+    fun getContainerStatus(container: ContainerEntity): ContainerStatus {
+        val running = runningContainers.value.find { it.containerId == container.id }
+        return when {
+            running?.job?.isActive == true -> ContainerStatus.RUNNING
+            container.hasRun -> ContainerStatus.EXITED
+            else -> ContainerStatus.CREATED
         }
     }
 
