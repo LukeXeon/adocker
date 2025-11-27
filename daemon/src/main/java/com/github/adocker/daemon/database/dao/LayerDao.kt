@@ -17,9 +17,6 @@ interface LayerDao {
     @Query("UPDATE layers SET downloaded = :downloaded WHERE digest = :digest")
     suspend fun updateLayerDownloaded(digest: String, downloaded: Boolean)
 
-    @Query("UPDATE layers SET extracted = :extracted WHERE digest = :digest")
-    suspend fun updateLayerExtracted(digest: String, extracted: Boolean)
-
     @Query("UPDATE layers SET refCount = refCount + 1 WHERE digest = :digest")
     suspend fun incrementRefCount(digest: String)
 

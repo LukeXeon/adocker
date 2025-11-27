@@ -42,7 +42,8 @@ object AppModule {
             context.applicationContext,
             AppDatabase::class.java,
             "shared_database"
-        ).build()
+        )
+            .build()
     }
 
     @Provides

@@ -10,6 +10,5 @@ data class LayerEntity(
     val size: Long,
     val mediaType: String,
     val downloaded: Boolean,
-    val extracted: Boolean,
     val refCount: Int = 1
 )

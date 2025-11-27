@@ -159,10 +159,6 @@ class AlpineImagePullAndRunTest {
                             Timber.d("  Downloading ${progress.layerDigest.take(12)}: $percent% (${progress.downloaded}/${progress.total} bytes)")
                         }
 
-                        PullStatus.EXTRACTING -> {
-                            Timber.d("  Extracting ${progress.layerDigest.take(12)}")
-                        }
-
                         PullStatus.DONE -> {
                             if (progress.layerDigest == "image") {
                                 Timber.d("  Image pull completed successfully!")

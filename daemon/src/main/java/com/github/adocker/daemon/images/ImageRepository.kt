@@ -102,7 +102,7 @@ class ImageRepository @Inject constructor(
                 throw e
             }
 
-            if (existingLayer?.extracted == true && extractedDir.exists()) {
+            if (existingLayer?.downloaded == true && layerFile.exists()) {
                 // Layer already exists, increment reference
                 Timber.i("Layer ${layerDigest.take(16)} already exists, skipping download")
                 layerDao.incrementRefCount(layerDigest)
@@ -124,8 +124,8 @@ class ImageRepository @Inject constructor(
                 layerDigest,
                 layerDescriptor.size,
                 layerDescriptor.mediaType,
-                false,
-                false
+                downloaded = false,
+                refCount = 0
             )
 
             val downloadResult =
@@ -136,31 +136,13 @@ class ImageRepository @Inject constructor(
             Timber.d("downloadLayer returned: success=${downloadResult.isSuccess}, failure=${downloadResult.isFailure}")
             downloadResult.getOrThrow()
 
-            emit(
-                PullProgress(
-                    layerDigest,
-                    layerDescriptor.size,
-                    layerDescriptor.size,
-                    PullStatus.EXTRACTING
-                )
-            )
-
-            // Extract layer
-            FileInputStream(layerFile).use { fis ->
-                extractTarGz(fis, extractedDir).getOrThrow()
-            }
-
-            // Clean up compressed file
-            layerFile.delete()
-
-            // Save layer info
+            // Save layer info (keep compressed file only)
             layerDao.insertLayer(
                 LayerEntity(
                     digest = layerDigest,
                     size = layerDescriptor.size,
                     mediaType = layerDescriptor.mediaType,
                     downloaded = true,
-                    extracted = true,
                     refCount = 1
                 )
             )
@@ -176,11 +158,11 @@ class ImageRepository @Inject constructor(
             )
         }
 
-        // Calculate total size
+        // Calculate total size (compressed files)
         var totalSize = 0L
         layerIds.forEach { digest ->
-            val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
-            totalSize += getDirectorySize(layerDir)
+            val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+            totalSize += layerFile.length()
         }
 
         // Create image config
@@ -226,8 +208,8 @@ class ImageRepository @Inject constructor(
                 // Delete layer if no longer referenced
                 val layer = layerDao.getLayerByDigest(digest)
                 if (layer != null && layer.refCount <= 1) {
-                    val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
-                    deleteRecursively(layerDir)
+                    val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                    layerFile.delete()
                     layerDao.deleteUnreferencedLayer(digest)
                 }
             }
@@ -277,7 +259,6 @@ class ImageRepository @Inject constructor(
                         size = size,
                         mediaType = "application/vnd.docker.image.rootfs.diff.tar",
                         downloaded = true,
-                        extracted = true,
                         refCount = 1
                     )
                 )

@@ -1,19 +1,18 @@
 package com.github.adocker.daemon.containers
 
-import android.system.Os
-import android.system.OsConstants
 import com.github.adocker.daemon.config.AppConfig
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
-import com.github.adocker.daemon.utils.chmod
 import com.github.adocker.daemon.utils.deleteRecursively
+import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.io.FileInputStream
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -76,11 +75,17 @@ class ContainerRepository @Inject constructor(
             val rootfsDir = File(containerDir, AppConfig.Companion.ROOTFS_DIR)
             rootfsDir.mkdirs()
 
-            // Copy layers to rootfs (overlay simulation)
+            // Extract layers directly to rootfs
             image.layerIds.forEach { digest ->
-                val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
-                if (layerDir.exists()) {
-                    copyLayerToRootfs(layerDir, rootfsDir)
+                val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                if (layerFile.exists()) {
+                    Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
+                    FileInputStream(layerFile).use { fis ->
+                        extractTarGz(fis, rootfsDir).getOrThrow()
+                    }
+                    Timber.d("Layer ${digest.take(16)} extracted successfully")
+                } else {
+                    Timber.w("Layer file not found: ${layerFile.absolutePath}")
                 }
             }
 
@@ -155,69 +160,6 @@ class ContainerRepository @Inject constructor(
         }
 
     companion object {
-        /**
-         * Copy layer contents to rootfs
-         */
-        private fun copyLayerToRootfs(layerDir: File, rootfsDir: File) {
-            layerDir.walkTopDown().forEach { file ->
-                if (file == layerDir) return@forEach
-
-                val relativePath = file.relativeTo(layerDir).path
-                val destFile = File(rootfsDir, relativePath)
-
-                // Handle whiteout files (Docker layer deletion markers)
-                if (file.name.startsWith(".wh.")) {
-                    val targetName = file.name.removePrefix(".wh.")
-                    val targetFile = File(destFile.parentFile, targetName)
-                    targetFile.deleteRecursively()
-                    return@forEach
-                }
-
-                // Handle opaque whiteout (replace entire directory)
-                if (file.name == ".wh..wh..opq") {
-                    destFile.parentFile?.listFiles()?.forEach { it.deleteRecursively() }
-                    return@forEach
-                }
-                // Check if it's a symbolic link using Os.lstat
-                try {
-                    val stat = Os.lstat(file.absolutePath)
-                    if (OsConstants.S_ISLNK(stat.st_mode)) {
-                        // It's a symbolic link - read the target and recreate it
-                        val linkTarget = Os.readlink(file.absolutePath)
-                        destFile.parentFile?.mkdirs()
-
-                        // Delete existing file/link if it exists
-                        if (destFile.exists()) {
-                            destFile.delete()
-                        }
-
-                        // Create the symlink at destination
-                        Os.symlink(linkTarget, destFile.absolutePath)
-                        Timber.d("✓ Copied symlink: ${destFile.name} -> $linkTarget")
-                        return@forEach
-                    }
-                } catch (e: Exception) {
-                    Timber.w(e, "Failed to check if ${file.name} is symlink")
-                    // Fall through to regular file handling
-                }
-
-                when {
-                    file.isDirectory -> destFile.mkdirs()
-                    file.isFile -> {
-                        destFile.parentFile?.mkdirs()
-                        file.copyTo(destFile, overwrite = true)
-                        // Preserve permissions using Os.chmod
-                        try {
-                            val stat = Os.lstat(file.absolutePath)
-                            destFile.chmod(stat.st_mode)
-                        } catch (e: Exception) {
-                            Timber.w(e, "Failed to preserve permissions for ${file.name}")
-                        }
-                    }
-                }
-            }
-        }
-
         /**
          * Generate a random container name
          */
