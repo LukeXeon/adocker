@@ -4,16 +4,30 @@
 
 package com.github.adocker.daemon.aio.backend
 
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.server.cio.*
+import io.ktor.network.sockets.ServerSocket
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.awaitClosed
+import io.ktor.network.sockets.openReadChannel
+import io.ktor.network.sockets.openWriteChannel
+import io.ktor.server.cio.HttpRequestHandler
+import io.ktor.server.cio.HttpServer
+import io.ktor.server.cio.UnixSocketServerSettings
 import io.ktor.server.cio.backend.ServerIncomingConnection
 import io.ktor.server.cio.backend.startServerConnectionPipeline
-import io.ktor.server.engine.*
-import io.ktor.server.engine.internal.*
-import io.ktor.util.logging.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.*
+import io.ktor.server.engine.DefaultUncaughtExceptionHandler
+import io.ktor.server.engine.internal.ClosedChannelException
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.utils.io.InternalAPI
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -42,7 +56,6 @@ fun CoroutineScope.unixSocketServer(
         serverLatch.join()
     }
 
-    val selector = SelectorManager(coroutineContext)
     val timeout = settings.connectionIdleTimeoutSeconds.seconds
 
     val acceptJob = launch(serverJob + CoroutineName("accept-$settings")) {
@@ -50,8 +63,7 @@ fun CoroutineScope.unixSocketServer(
         if (SystemFileSystem.exists(socketFile)) {
             SystemFileSystem.delete(socketFile)
         }
-
-        val serverSocket = aSocket(selector).tcp().bind(UnixSocketAddress(settings.socketPath))
+        val serverSocket = ServerSocketImpl(settings.socketPath)
 
         serverSocket.use { server ->
             socket.complete(server)
@@ -107,10 +119,5 @@ fun CoroutineScope.unixSocketServer(
         cause?.let { socket.completeExceptionally(it) }
         serverLatch.complete()
     }
-
-    serverJob.invokeOnCompletion {
-        selector.close()
-    }
-
     return HttpServer(serverJob, acceptJob, socket)
 }
