@@ -12,7 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
 
         testInstrumentationRunner = "com.github.adocker.daemon.HiltTestRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -62,9 +62,7 @@ dependencies {
 
     // Ktor Server for Docker API
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.host.common)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.http.cio)
+    implementation(libs.ktor.server.cio)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)

@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.github.adocker"
-        minSdk = 26  // Android 8.0+, allows removal of WebP icons
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
