@@ -4,6 +4,7 @@ import android.net.LocalServerSocket
 import android.net.LocalSocket
 import android.net.LocalSocketAddress
 import android.net.LocalSocketAddress.Namespace
+import com.github.adocker.daemon.utils.chmod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +32,10 @@ class UnixHttp4kServer(
         private fun LocalSocket.closeSafely() {
             try {
                 close()
+                val address = localSocketAddress
+                if (address.namespace == Namespace.FILESYSTEM) {
+                    File(address.name).delete()
+                }
             } catch (e: IOException) {
                 Timber.e(e, "Error closing Unix server socket")
             }
@@ -48,8 +53,9 @@ class UnixHttp4kServer(
             Timber.w("Unix server already running on socket ${namespace}:${name}")
             return this
         }
+        var socketFile: File? = null
         if (namespace == Namespace.FILESYSTEM) {
-            val socketFile = File(name)
+            socketFile = File(name)
             if (socketFile.exists() && !socketFile.delete()) {
                 throw IOException("Failed to delete old socket file ${namespace}:${name}")
             }
@@ -62,6 +68,7 @@ class UnixHttp4kServer(
                     namespace
                 )
             )
+            socketFile?.chmod("660".toInt(8))
             LocalServerSocket(localSocket.fileDescriptor)
         } catch (e: IOException) {
             localSocket.closeSafely()
@@ -104,13 +111,6 @@ class UnixHttp4kServer(
         Timber.i("Stopping Unix server on socket ${namespace}:${name}")
         scope.cancel()
         this.scope = null
-        if (namespace == Namespace.FILESYSTEM) {
-            val socketFile = File(name)
-            if (socketFile.exists()) {
-                socketFile.delete()
-                Timber.d("Deleted socket file: $name")
-            }
-        }
         return this
     }
 }
