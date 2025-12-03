@@ -23,8 +23,7 @@ object DatabaseModule {
             context.applicationContext,
             AppDatabase::class.java,
             "shared_database"
-        )
-            .build()
+        ).build()
     }
 
 
