@@ -3,14 +3,15 @@ package com.github.adocker.daemon.http
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kServer
 import timber.log.Timber
+import java.io.IOException
 import java.net.ServerSocket
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Http4kServer implementation using java.net.ServerSocket as the backend.
@@ -22,63 +23,60 @@ class TcpHttp4kServer(
 ) : Http4kServer {
     private val processor = HttpProcessor(httpHandler)
     private var serverSocket: ServerSocket? = null
-    private val running = AtomicBoolean(false)
     private var scope: CoroutineScope? = null
 
-    override fun port(): Int = serverSocket?.localPort ?: port
+    @Synchronized
+    override fun port(): Int = serverSocket?.localPort ?: -1
 
+    @Synchronized
     override fun start(): Http4kServer {
-        if (running.getAndSet(true)) {
+        if (scope?.isActive == true) {
             Timber.w("TCP server already running on port $port")
             return this
         }
-
-        serverSocket = ServerSocket(port)
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val serverSocket = ServerSocket(port)
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         Timber.i("TCP server started on port ${port()}")
-
-        scope?.launch {
-            acceptConnections()
-        }
-
-        return this
-    }
-
-    private fun acceptConnections() {
-        val socket = serverSocket ?: return
-        val currentScope = scope ?: return
-
-        while (running.get() && !socket.isClosed && currentScope.isActive) {
+        scope.launch {
             try {
-                val clientSocket = socket.accept()
-                currentScope.launch {
-                    processor.process(TcpClientConnection(clientSocket))
-                }
-            } catch (e: Exception) {
-                if (running.get()) {
-                    Timber.e(e, "Error accepting TCP connection")
+                awaitCancellation()
+            } finally {
+                try {
+                    serverSocket.close()
+                } catch (e: IOException) {
+                    Timber.e(e, "Error closing server socket")
                 }
             }
         }
+        scope.launch {
+            while (!serverSocket.isClosed && isActive) {
+                try {
+                    val clientSocket = serverSocket.accept()
+                    scope.launch {
+                        processor.process(TcpClientConnection(clientSocket))
+                    }
+                } catch (e: Exception) {
+                    if (isActive) {
+                        Timber.e(e, "Error accepting TCP connection")
+                    }
+                }
+            }
+        }
+        this.serverSocket = serverSocket
+        this.scope = scope
+        return this
     }
 
+    @Synchronized
     override fun stop(): Http4kServer {
-        if (!running.getAndSet(false)) {
+        val scope = this.scope
+        if (scope == null || scope.isActive) {
             return this
         }
-
         Timber.i("Stopping TCP server on port $port")
-
-        try {
-            serverSocket?.close()
-        } catch (e: Exception) {
-            Timber.e(e, "Error closing server socket")
-        }
-
-        scope?.cancel()
+        scope.cancel()
         serverSocket = null
-        scope = null
-
+        this.scope = null
         return this
     }
 }

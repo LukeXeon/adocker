@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * HTTP/1.1 protocol parser for parsing requests and writing responses.
+ * HTTP/1.1 protocol processor for parsing requests and writing responses.
  * Shared between TCP and Unix socket implementations.
  */
 class HttpProcessor(

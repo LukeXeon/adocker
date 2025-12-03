@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.api
 
+import android.net.LocalSocketAddress
 import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.http.TcpServerConfig
 import com.github.adocker.daemon.http.UnixServerConfig
@@ -29,7 +30,8 @@ object ApiModule {
                 File(
                     appConfig.tmpDir,
                     "docker.sock"
-                ).absolutePath
+                ).absolutePath,
+                LocalSocketAddress.Namespace.FILESYSTEM
             )
         )
     }
