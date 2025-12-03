@@ -2,6 +2,7 @@ package com.github.adocker.daemon.di
 
 import android.content.Context
 import androidx.room.Room
+import com.github.adocker.daemon.api.DockerApiServer
 import com.github.adocker.daemon.config.AppConfig
 import com.github.adocker.daemon.database.AppDatabase
 import com.github.adocker.daemon.database.dao.ContainerDao
@@ -31,10 +32,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
-import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import timber.log.Timber
+import java.io.File
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -127,14 +128,24 @@ object AppModule {
     @Provides
     @Singleton
     @Named("unix")
-    fun unixHttpServer(handler: HttpHandler): Http4kServer {
-        return handler.asServer(UnixServerConfig(""))
+    fun unixHttpServer(
+        handler: DockerApiServer,
+        appConfig: AppConfig
+    ): Http4kServer {
+        return handler.asServer(
+            UnixServerConfig(
+                File(
+                    appConfig.tmpDir,
+                    "docker.sock"
+                ).absolutePath
+            )
+        )
     }
 
     @Provides
     @Singleton
     @Named("tcp")
-    fun tcpHttpServer(handler: HttpHandler): Http4kServer {
-        return handler.asServer(TcpServerConfig(8888))
+    fun tcpHttpServer(handler: DockerApiServer): Http4kServer {
+        return handler.asServer(TcpServerConfig(0))
     }
 }
