@@ -7,10 +7,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import java.io.File
-import javax.inject.Named
 import javax.inject.Singleton
 
 
@@ -19,7 +19,7 @@ import javax.inject.Singleton
 object ApiModule {
     @Provides
     @Singleton
-    @Named("unix")
+    @IntoSet
     fun unixHttpServer(
         handler: DockerApiServer,
         appConfig: AppConfig
@@ -36,7 +36,7 @@ object ApiModule {
 
     @Provides
     @Singleton
-    @Named("tcp")
+    @IntoSet
     fun tcpHttpServer(handler: DockerApiServer): Http4kServer {
         return handler.asServer(TcpServerConfig(0))
     }

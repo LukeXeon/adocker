@@ -2,20 +2,27 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.containers.ContainerExecutor
+import com.github.adocker.daemon.containers.ContainerRepository
+import com.github.adocker.daemon.containers.RunningContainer
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.database.model.ImageEntity
-import com.github.adocker.daemon.registry.model.SearchResult
-import com.github.adocker.daemon.containers.ContainerRepository
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
-import com.github.adocker.daemon.containers.ContainerExecutor
-import com.github.adocker.daemon.containers.RunningContainer
+import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.registry.model.SearchResult
 import com.github.adocker.ui.model.ContainerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.http4k.server.Http4kServer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,8 +30,13 @@ class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
     private val containerRepository: ContainerRepository,
     private val containerExecutor: ContainerExecutor,
-    val json: Json
+    val json: Json,
+    servers: Set<@JvmSuppressWildcards Http4kServer>,
 ) : ViewModel() {
+
+    init {
+        servers.forEach { it.start() }
+    }
 
     // Images
     val images: StateFlow<List<ImageEntity>> = imageRepository.getAllImages()

@@ -21,13 +21,11 @@ import javax.inject.Singleton
 class DockerApiServer @Inject constructor(
     routes: Set<RoutingHttpHandler>
 ) : HttpHandler {
-
-    private val handler = ServerFilters.CatchAll()
-        .then(
-            routes(
-                routes.toList()
-            )
+    private val handler = ServerFilters.CatchAll().then(
+        routes(
+            routes.toList()
         )
+    )
 
     override fun invoke(request: Request): Response {
         val response = handler(request)

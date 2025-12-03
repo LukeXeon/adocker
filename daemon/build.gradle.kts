@@ -92,7 +92,7 @@ dependencies {
     implementation(libs.shizuku.provider)
 
     // http4k
-    implementation(libs.http4k.core)
+    api(libs.http4k.core)
 
     // Testing
     testImplementation(libs.junit)
