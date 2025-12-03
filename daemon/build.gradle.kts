@@ -34,13 +34,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     kotlin {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }
 }
@@ -90,6 +90,9 @@ dependencies {
     // Shizuku
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+
+    // http4k
+    implementation(libs.http4k.core)
 
     // Testing
     testImplementation(libs.junit)

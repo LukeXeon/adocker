@@ -57,6 +57,9 @@ startup = "1.2.0"
 # Shizuku
 shizuku = "13.1.5"
 
+# http4k
+http4k = "6.9.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -141,6 +144,9 @@ androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime
 # Shizuku
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
+
+# http4k
+http4k-core = { group = "org.http4k", name = "http4k-core", version.ref = "http4k" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
