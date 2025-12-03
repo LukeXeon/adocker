@@ -1,10 +1,13 @@
 package com.github.adocker.daemon.http
 
 import org.http4k.core.Body
+import org.http4k.core.HttpHandler
 import org.http4k.core.MemoryBody
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status
+import timber.log.Timber
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -23,7 +26,7 @@ object HttpParser {
      * Parses an HTTP/1.1 request from the input stream.
      * Returns null if the connection was closed or the request is invalid.
      */
-    fun parseRequest(inputStream: InputStream): Request? {
+    private fun parseRequest(inputStream: InputStream): Request? {
         val reader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
 
         // Read request line
@@ -63,7 +66,11 @@ object HttpParser {
             val bodyBytes = ByteArray(contentLength.toInt())
             var bytesRead = 0
             while (bytesRead < contentLength) {
-                val read = inputStream.read(bodyBytes, bytesRead, (contentLength - bytesRead).toInt())
+                val read = inputStream.read(
+                    bodyBytes,
+                    bytesRead,
+                    (contentLength - bytesRead).toInt()
+                )
                 if (read == -1) break
                 bytesRead += read
             }
@@ -80,7 +87,7 @@ object HttpParser {
     /**
      * Writes an HTTP/1.1 response to the output stream.
      */
-    fun writeResponse(response: Response, outputStream: OutputStream) {
+    private fun writeResponse(response: Response, outputStream: OutputStream) {
         val statusLine = "$HTTP_VERSION ${response.status.code} ${response.status.description}$CRLF"
         outputStream.write(statusLine.toByteArray(Charsets.UTF_8))
 
@@ -107,5 +114,38 @@ object HttpParser {
         }
 
         outputStream.flush()
+    }
+
+    /**
+     * Handles a single client connection.
+     * Supports HTTP/1.1 keep-alive connections.
+     */
+    fun handle(connection: ClientConnection, httpHandler: HttpHandler) {
+        connection.use { conn ->
+            try {
+                // For simplicity, handle one request per connection
+                // Keep-alive can be added later if needed
+                val request = parseRequest(conn.inputStream)
+
+                if (request != null) {
+                    Timber.d("Received request: ${request.method} ${request.uri}")
+                    val response = try {
+                        httpHandler(request)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Error handling request")
+                        Response(Status.INTERNAL_SERVER_ERROR)
+                            .body("Internal Server Error: ${e.message}")
+                    }
+                    writeResponse(response, conn.outputStream)
+                } else {
+                    Timber.w("Failed to parse request")
+                    val errorResponse = Response(Status.BAD_REQUEST)
+                        .body("Bad Request")
+                    writeResponse(errorResponse, conn.outputStream)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in connection handler")
+            }
+        }
     }
 }

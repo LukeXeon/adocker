@@ -18,13 +18,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class UnixHttp4kServer(
     private val socketName: String,
-    httpHandler: HttpHandler
+    private val httpHandler: HttpHandler
 ) : Http4kServer {
 
     private var serverSocket: LocalServerSocket? = null
     private val running = AtomicBoolean(false)
     private var scope: CoroutineScope? = null
-    private val connectionHandler = ConnectionHandler(httpHandler)
 
     override fun port(): Int = -1 // Unix sockets don't have ports
 
@@ -55,7 +54,7 @@ class UnixHttp4kServer(
                 if (clientSocket != null) {
                     currentScope.launch {
                         val connection = UnixClientConnection(clientSocket)
-                        connectionHandler.handle(connection)
+                        HttpParser.handle(connection, httpHandler)
                     }
                 }
             } catch (e: Exception) {

@@ -18,13 +18,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class TcpHttp4kServer(
     private val port: Int,
-    httpHandler: HttpHandler
+    private val httpHandler: HttpHandler
 ) : Http4kServer {
 
     private var serverSocket: ServerSocket? = null
     private val running = AtomicBoolean(false)
     private var scope: CoroutineScope? = null
-    private val connectionHandler = ConnectionHandler(httpHandler)
 
     override fun port(): Int = serverSocket?.localPort ?: port
 
@@ -54,7 +53,7 @@ class TcpHttp4kServer(
                 val clientSocket = socket.accept()
                 currentScope.launch {
                     val connection = TcpClientConnection(clientSocket)
-                    connectionHandler.handle(connection)
+                    HttpParser.handle(connection, httpHandler)
                 }
             } catch (e: Exception) {
                 if (running.get()) {
