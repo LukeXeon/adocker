@@ -27,8 +27,7 @@ object HttpParser {
      * Returns null if the connection was closed or the request is invalid.
      */
     private fun parseRequest(inputStream: InputStream): Request? {
-        val reader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
-
+        val reader = inputStream.bufferedReader()
         // Read request line
         val requestLine = reader.readLine() ?: return null
         val requestParts = requestLine.split(" ")
