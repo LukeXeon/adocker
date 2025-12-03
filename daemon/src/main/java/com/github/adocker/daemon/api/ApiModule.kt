@@ -1,6 +1,5 @@
 package com.github.adocker.daemon.api
 
-import android.net.LocalSocketAddress
 import android.net.LocalSocketAddress.Namespace
 import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.http.TcpServerConfig
