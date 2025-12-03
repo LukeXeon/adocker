@@ -104,6 +104,13 @@ class UnixHttp4kServer(
         Timber.i("Stopping Unix server on socket ${namespace}:${name}")
         scope.cancel()
         this.scope = null
+        if (namespace == Namespace.FILESYSTEM) {
+            val socketFile = File(name)
+            if (socketFile.exists()) {
+                socketFile.delete()
+                Timber.d("Deleted socket file: $name")
+            }
+        }
         return this
     }
 }
