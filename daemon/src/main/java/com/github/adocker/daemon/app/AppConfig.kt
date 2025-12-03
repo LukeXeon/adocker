@@ -24,6 +24,8 @@ class AppConfig @Inject constructor(
     val tmpDir = requireNotNull(context.cacheDir)
     val logDir = File(tmpDir, LOG_DIR)
     val nativeLibDir = File(requireNotNull(context.applicationInfo.nativeLibraryDir))
+
+    val socketFile = File(tmpDir, DOCKER_SOCK)
     val packageInfo = requireNotNull(
         context.packageManager.getPackageInfo(context.packageName, 0)
     )
@@ -65,6 +67,9 @@ class AppConfig @Inject constructor(
         const val DIR_LAYERS = "layers"
         const val ROOTFS_DIR = "rootfs"
         const val LOG_DIR = "log"
+
+        const val DOCKER_SOCK = "docker.sock"
+
         const val STDOUT = "stdout"
         const val STDERR = "stderr"
 

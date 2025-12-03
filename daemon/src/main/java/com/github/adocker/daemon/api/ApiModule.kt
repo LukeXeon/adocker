@@ -11,7 +11,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
-import java.io.File
 import javax.inject.Singleton
 
 
@@ -27,10 +26,7 @@ object ApiModule {
     ): Http4kServer {
         return handler.asServer(
             UnixServerConfig(
-                File(
-                    appConfig.tmpDir,
-                    "docker.sock"
-                ).absolutePath,
+                appConfig.socketFile.absolutePath,
                 Namespace.FILESYSTEM
             )
         )
