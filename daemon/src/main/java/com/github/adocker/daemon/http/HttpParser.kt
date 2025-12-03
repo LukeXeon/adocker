@@ -33,7 +33,7 @@ object HttpParser {
 
         val method = try {
             Method.valueOf(requestParts[0])
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             return null
         }
         val uri = requestParts[1]
