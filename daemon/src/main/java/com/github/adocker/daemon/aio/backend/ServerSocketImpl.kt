@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.net.UnixDomainSocketAddress
 
 internal class ServerSocketImpl(
     path: String,
@@ -50,6 +51,7 @@ internal class ServerSocketImpl(
     }
 
     override suspend fun accept(): Socket {
+        UnixDomainSocketAddress::class
         return channel.receive()
     }
 
