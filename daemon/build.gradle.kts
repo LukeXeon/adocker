@@ -60,10 +60,6 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
 
-    // Ktor Server for Docker API
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.cio)
-
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
@@ -94,7 +90,6 @@ dependencies {
     // Shizuku
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
-    implementation(project(":patch"))
 
     // Testing
     testImplementation(libs.junit)
