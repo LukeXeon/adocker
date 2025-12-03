@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.registry
 
-import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.images.ImageReference
 import com.github.adocker.daemon.registry.model.AuthTokenResponse

@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.database.model
 
 import androidx.room.TypeConverter
-import com.github.adocker.daemon.di.AppGlobals
+import com.github.adocker.daemon.app.AppGlobals
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.registry.model.ImageConfig
 
@@ -10,7 +10,7 @@ class Converters {
      * Get Json instance from Hilt dependency graph
      * Using EntryPoint pattern since Room TypeConverters cannot use constructor injection
      */
-    private val json = AppGlobals().json()
+    private val json = AppGlobals.json()
 
     @TypeConverter
     fun fromStringList(value: List<String>): String {

@@ -1,4 +1,4 @@
-package com.github.adocker.daemon.config
+package com.github.adocker.daemon.app
 
 import android.content.Context
 import android.os.Build
@@ -41,7 +41,7 @@ class AppConfig @Inject constructor(
             }
         }
 
-        Timber.d("AppConfig initialized: baseDir=${baseDir.absolutePath}")
+        Timber.Forest.d("AppConfig initialized: baseDir=${baseDir.absolutePath}")
     }
 
 

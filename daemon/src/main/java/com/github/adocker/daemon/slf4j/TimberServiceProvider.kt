@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * It's automatically discovered via Java's ServiceLoader mechanism.
  * The @AutoService annotation generates the required META-INF/services file.
  */
+@Suppress("unused")
 @AutoService(SLF4JServiceProvider::class)
 class TimberServiceProvider : BasicMarkerFactory(),
     SLF4JServiceProvider,

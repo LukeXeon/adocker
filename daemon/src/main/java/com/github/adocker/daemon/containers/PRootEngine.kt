@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import android.os.SystemClock
-import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.startProcess
 import kotlinx.coroutines.Dispatchers

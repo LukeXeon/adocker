@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import androidx.annotation.WorkerThread
-import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.app.AppConfig
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

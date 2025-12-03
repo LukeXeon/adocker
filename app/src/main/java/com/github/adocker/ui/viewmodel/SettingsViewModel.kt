@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.utils.getDirectorySize
 import dagger.hilt.android.lifecycle.HiltViewModel

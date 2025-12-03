@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.containers
 
-import com.github.adocker.daemon.config.AppConfig
+import com.github.adocker.daemon.app.AppConfig
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
