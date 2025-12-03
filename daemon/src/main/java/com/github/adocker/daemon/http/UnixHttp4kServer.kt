@@ -18,8 +18,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class UnixHttp4kServer(
     private val socketName: String,
-    private val httpHandler: HttpHandler
+    httpHandler: HttpHandler
 ) : Http4kServer {
+
+    private val processor = HttpProcessor(httpHandler)
 
     private var serverSocket: LocalServerSocket? = null
     private val running = AtomicBoolean(false)
@@ -53,8 +55,7 @@ class UnixHttp4kServer(
                 val clientSocket = socket.accept()
                 if (clientSocket != null) {
                     currentScope.launch {
-                        val connection = UnixClientConnection(clientSocket)
-                        HttpParser.handle(connection, httpHandler)
+                        processor.process(UnixClientConnection(clientSocket))
                     }
                 }
             } catch (e: Exception) {
