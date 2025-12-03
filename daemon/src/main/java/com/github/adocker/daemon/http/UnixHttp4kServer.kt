@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import org.http4k.core.HttpHandler
 import org.http4k.server.Http4kServer
 import timber.log.Timber
+import java.io.File
 import java.io.IOException
 
 /**
@@ -46,6 +47,12 @@ class UnixHttp4kServer(
         if (scope?.isActive == true) {
             Timber.w("Unix server already running on socket $name")
             return this
+        }
+        if (namespace == Namespace.FILESYSTEM) {
+            val socketFile = File(name)
+            if (socketFile.exists() && !socketFile.delete()) {
+                throw IOException("Failed to delete old socket file $name")
+            }
         }
         val localSocket = LocalSocket(LocalSocket.SOCKET_STREAM)
         val serverSocket = try {
