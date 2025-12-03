@@ -8,6 +8,8 @@ import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.dao.LayerDao
 import com.github.adocker.daemon.database.dao.MirrorDao
+import com.github.adocker.daemon.http.TcpServerConfig
+import com.github.adocker.daemon.http.UnixServerConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,7 +31,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
+import org.http4k.core.HttpHandler
+import org.http4k.server.Http4kServer
+import org.http4k.server.asServer
 import timber.log.Timber
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -118,4 +124,17 @@ object AppModule {
         })
     }
 
+    @Provides
+    @Singleton
+    @Named("unix")
+    fun unixHttpServer(handler: HttpHandler): Http4kServer {
+        return handler.asServer(UnixServerConfig(""))
+    }
+
+    @Provides
+    @Singleton
+    @Named("tcp")
+    fun tcpHttpServer(handler: HttpHandler): Http4kServer {
+        return handler.asServer(TcpServerConfig(8888))
+    }
 }
