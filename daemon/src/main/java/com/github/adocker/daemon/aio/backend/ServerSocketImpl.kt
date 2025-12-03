@@ -4,6 +4,7 @@ import android.net.LocalServerSocket
 import io.ktor.network.sockets.ServerSocket
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.SocketAddress
+import io.ktor.network.sockets.UnixSocketAddress
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +12,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.net.UnixDomainSocketAddress
 
 internal class ServerSocketImpl(
     path: String,
@@ -51,10 +51,8 @@ internal class ServerSocketImpl(
     }
 
     override suspend fun accept(): Socket {
-        UnixDomainSocketAddress::class
         return channel.receive()
     }
 
-    override val localAddress: SocketAddress
-        get() = TODO("Not yet implemented")
+    override val localAddress: SocketAddress = UnixSocketAddress(path)
 }
