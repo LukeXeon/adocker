@@ -45,13 +45,13 @@ class UnixHttp4kServer(
     @Synchronized
     override fun start(): Http4kServer {
         if (scope?.isActive == true) {
-            Timber.w("Unix server already running on socket $name")
+            Timber.w("Unix server already running on socket ${namespace}:${name}")
             return this
         }
         if (namespace == Namespace.FILESYSTEM) {
             val socketFile = File(name)
             if (socketFile.exists() && !socketFile.delete()) {
-                throw IOException("Failed to delete old socket file $name")
+                throw IOException("Failed to delete old socket file ${namespace}:${name}")
             }
         }
         val localSocket = LocalSocket(LocalSocket.SOCKET_STREAM)
@@ -101,7 +101,7 @@ class UnixHttp4kServer(
         if (scope == null || !scope.isActive) {
             return this
         }
-        Timber.i("Stopping Unix server on socket $name")
+        Timber.i("Stopping Unix server on socket ${namespace}:${name}")
         scope.cancel()
         this.scope = null
         return this
