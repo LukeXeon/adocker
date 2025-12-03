@@ -71,10 +71,11 @@ The project uses a multi-module architecture with clear separation:
 adocker/
 ├── daemon/                  # Core business logic module (Android Library)
 │   └── src/main/java/com/github/adocker/daemon/
-│       ├── config/         # AppConfig - centralized app configuration
+│       ├── api/            # Docker-compatible REST API (http4k routes)
+│       ├── app/            # AppConfig, AppGlobals, AppModule
 │       ├── database/       # Room database, DAOs, and entities
-│       ├── di/             # Hilt dependency injection modules
 │       ├── containers/     # PRootEngine, ContainerExecutor, RunningContainer
+│       ├── http/           # UnixHttp4kServer - Unix domain socket server
 │       ├── images/         # ImageRepository - image pull/storage/deletion
 │       ├── registry/       # Docker Registry API client & models
 │       ├── os/             # PhantomProcessManager, OS utilities
@@ -95,20 +96,31 @@ adocker/
 
 ```
 com.github.adocker.daemon/
-├── config/
-│   └── AppConfig.kt              # Centralized configuration (directories, constants)
+├── api/
+│   ├── DockerApiServer.kt        # Main Docker-compatible API server
+│   └── routes/                   # http4k route modules (Hilt multibinding)
+│       ├── ContainerRoutes.kt    # Container API endpoints
+│       ├── ImageRoutes.kt        # Image API endpoints
+│       ├── SystemRoutes.kt       # System/info endpoints
+│       ├── VolumeRoutes.kt       # Volume API endpoints
+│       └── ...                   # Other Docker API route modules
+├── app/
+│   ├── AppConfig.kt              # Centralized configuration (directories, constants)
+│   ├── AppModule.kt              # Hilt module (provides DB, HTTP client, etc.)
+│   └── AppGlobals.kt             # Hilt EntryPoint for non-Hilt contexts
 ├── database/
 │   ├── AppDatabase.kt            # Room database definition
 │   ├── dao/                      # DAOs (ImageDao, ContainerDao, LayerDao, MirrorDao)
 │   └── model/                    # Entities (ImageEntity, ContainerEntity, LayerEntity, MirrorEntity)
-├── di/
-│   ├── AppModule.kt              # Hilt module (provides DB, HTTP client, etc.)
-│   └── AppGlobals.kt             # Hilt EntryPoint for non-Hilt contexts
 ├── containers/
 │   ├── PRootEngine.kt            # PRoot command builder and execution
 │   ├── ContainerExecutor.kt      # Manages container lifecycle (start/stop)
 │   ├── RunningContainer.kt       # Represents an active container instance
 │   └── ContainerRepository.kt    # Container CRUD operations
+├── http/
+│   ├── UnixHttp4kServer.kt       # Unix domain socket HTTP server (supports FILESYSTEM & ABSTRACT)
+│   ├── HttpProcessor.kt          # HTTP/1.1 request/response processor
+│   └── UnixClientConnection.kt   # LocalSocket client wrapper
 ├── images/
 │   ├── ImageRepository.kt        # Image pull/delete/search
 │   ├── ImageReference.kt         # Image name parser
@@ -216,6 +228,126 @@ Docker images (especially Alpine Linux) rely heavily on symlinks. Standard Java 
 - `Os.chmod()` - preserve permissions
 
 All symlink/permission handling is done by `extractTarGz()` during container creation.
+
+#### Unix Domain Socket HTTP Server
+
+**UnixHttp4kServer** (`daemon/http/UnixHttp4kServer.kt`) provides a Unix domain socket-based HTTP server using Android's `LocalServerSocket`.
+
+**Key Features:**
+- **Dual Namespace Support**: Supports both `FILESYSTEM` and `ABSTRACT` namespaces
+- **http4k Integration**: Implements `Http4kServer` interface for seamless http4k integration
+- **Coroutine-based**: Uses Kotlin coroutines for concurrent request handling
+- **HTTP/1.1 Protocol**: Full HTTP/1.1 support via `HttpProcessor`
+
+**Implementation Details:**
+
+```kotlin
+// Create server with FILESYSTEM namespace (creates socket file)
+val server = UnixHttp4kServer(
+    name = "/data/data/com.github.adocker/files/docker.sock",
+    namespace = Namespace.FILESYSTEM,
+    httpHandler = myHandler
+)
+server.start()
+
+// Or use ABSTRACT namespace (no file, memory-only)
+val server = UnixHttp4kServer(
+    name = "docker-api",
+    namespace = Namespace.ABSTRACT,
+    httpHandler = myHandler
+)
+```
+
+**Technical Approach:**
+
+The implementation uses a clever workaround to support both namespaces:
+
+```kotlin
+// 1. Create LocalSocket and bind to desired namespace
+val localSocket = LocalSocket(LocalSocket.SOCKET_STREAM)
+localSocket.bind(LocalSocketAddress(name, namespace))
+
+// 2. Create LocalServerSocket from FileDescriptor
+val serverSocket = LocalServerSocket(localSocket.fileDescriptor)
+```
+
+This bypasses `LocalServerSocket(String)`'s limitation of only supporting FILESYSTEM namespace.
+
+**Namespace Comparison:**
+
+| Feature | FILESYSTEM | ABSTRACT |
+|---------|-----------|----------|
+| **File Creation** | ✅ Creates socket file | ❌ No file (memory-only) |
+| **Path** | Absolute or relative path | Simple name |
+| **Visibility** | `ls`, `stat` can see file | Not visible in filesystem |
+| **Cleanup** | ⚠️ Must delete manually | ✅ Auto-cleaned on close |
+| **Permissions** | Subject to file permissions | N/A |
+| **Use Case** | Debugging, CLI tools | App-internal IPC |
+
+**FILESYSTEM Socket Management:**
+
+When using `Namespace.FILESYSTEM`, the server automatically:
+1. **Deletes old socket file** before starting (line 51-56)
+2. **Creates new socket file** at specified path
+3. **Should delete on stop** (currently missing - see note below)
+
+```kotlin
+// On start (current implementation)
+if (namespace == Namespace.FILESYSTEM) {
+    val socketFile = File(name)
+    if (socketFile.exists() && !socketFile.delete()) {
+        throw IOException("Failed to delete old socket file")
+    }
+}
+
+// On stop (recommended addition)
+if (namespace == Namespace.FILESYSTEM) {
+    File(name).delete()
+}
+```
+
+**Docker API Server Integration:**
+
+`DockerApiServer` uses `UnixHttp4kServer` to expose Docker-compatible REST API:
+
+```kotlin
+@Singleton
+class DockerApiServer @Inject constructor(
+    private val appConfig: AppConfig,
+    @AllRoutes private val routes: Set<@JvmSuppressWildcards RoutingHttpHandler>
+) {
+    private val server = UnixHttp4kServer(
+        name = File(appConfig.filesDir, "docker.sock").absolutePath,
+        namespace = Namespace.FILESYSTEM,
+        httpHandler = routes.reduce { acc, handler -> acc.then(handler) }
+    )
+}
+```
+
+**Route Modules:**
+
+All route modules in `daemon/api/routes/` use Hilt multibinding:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object ContainerRoutes {
+    @IntoSet
+    @Provides
+    fun routes(): RoutingHttpHandler = routes(
+        "/containers/json" bind GET to { Response(NOT_IMPLEMENTED) },
+        // ... more routes
+    )
+}
+```
+
+Routes are automatically collected into `Set<RoutingHttpHandler>` and combined.
+
+**Important Notes:**
+- Socket files created by FILESYSTEM namespace must be cleaned up manually
+- Default `LocalServerSocket(String)` always uses FILESYSTEM namespace
+- ABSTRACT namespace is Android-specific (Linux abstract namespace sockets)
+- File permissions apply to FILESYSTEM sockets but not ABSTRACT
 
 #### Dependency Injection Pattern
 
