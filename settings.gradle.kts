@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "adocker"
 include(":app")
 include(":daemon")
-include(":stub")
+include(":patch")

@@ -94,8 +94,7 @@ dependencies {
     // Shizuku
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
-
-    implementation(project(":stub"))
+    implementation(project(":patch"))
 
     // Testing
     testImplementation(libs.junit)

@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="1.8" />
+    <bytecodeTargetLevel target="11" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="adocker.patch" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
+      <module name="adocker.patch.main" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
+      <module name="adocker.patch.test" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
+    </option>
   </component>
 </project>
