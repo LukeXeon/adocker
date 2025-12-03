@@ -63,7 +63,7 @@ fun CoroutineScope.unixSocketServer(
         if (SystemFileSystem.exists(socketFile)) {
             SystemFileSystem.delete(socketFile)
         }
-        val serverSocket = ServerSocketImpl(settings.socketPath)
+        val serverSocket = UnixServerSocketImpl(settings.socketPath)
 
         serverSocket.use { server ->
             socket.complete(server)

@@ -13,7 +13,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-internal class ServerSocketImpl(
+internal class UnixServerSocketImpl(
     path: String,
 ) : ServerSocket {
 
@@ -35,7 +35,7 @@ internal class ServerSocketImpl(
                         continue
                     }
                 }
-                channel.send(SocketImpl(socket))
+                channel.send(UnixSocketImpl(socket))
             }
         }
     }

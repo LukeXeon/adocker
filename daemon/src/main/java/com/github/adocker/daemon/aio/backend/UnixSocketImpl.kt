@@ -3,6 +3,7 @@ package com.github.adocker.daemon.aio.backend
 import android.net.LocalSocket
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.SocketAddress
+import io.ktor.network.sockets.UnixSocketAddress
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.ReaderJob
 import io.ktor.utils.io.WriterJob
@@ -10,7 +11,7 @@ import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-internal class SocketImpl(
+internal class UnixSocketImpl(
     private val socket: LocalSocket,
 ) : Socket {
 
@@ -31,7 +32,8 @@ internal class SocketImpl(
     override val socketContext: Job
         get() = TODO("Not yet implemented")
     override val localAddress: SocketAddress
-        get() = TODO("Not yet implemented")
+        get() = UnixSocketAddress(socket.localSocketAddress.name)
+
     override val remoteAddress: SocketAddress
-        get() = TODO("Not yet implemented")
+        get() = UnixSocketAddress("")
 }
