@@ -12,10 +12,10 @@ class TcpClientConnection(
 ) : ClientConnection {
 
     override val inputStream: InputStream
-        get() = socket.getInputStream()
+        get() = socket.inputStream
 
     override val outputStream: OutputStream
-        get() = socket.getOutputStream()
+        get() = socket.outputStream
 
     override fun close() {
         socket.close()
