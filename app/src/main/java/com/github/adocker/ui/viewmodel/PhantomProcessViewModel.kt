@@ -3,6 +3,7 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.os.PhantomProcessManager
+import com.github.adocker.daemon.os.RemoteProcessBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PhantomProcessViewModel @Inject constructor(
+    private val remoteProcessBuilder: RemoteProcessBuilder,
     private val phantomProcessManager: PhantomProcessManager
 ) : ViewModel() {
 
@@ -32,8 +34,8 @@ class PhantomProcessViewModel @Inject constructor(
             )
 
             try {
-                val shizukuAvailable = phantomProcessManager.isAvailable()
-                val shizukuPermissionGranted = phantomProcessManager.hasPermission()
+                val shizukuAvailable = remoteProcessBuilder.isAvailable
+                val shizukuPermissionGranted = remoteProcessBuilder.hasPermission
 
                 val phantomKillerDisabled = if (shizukuPermissionGranted) {
                     phantomProcessManager.isUnrestricted()
@@ -65,9 +67,9 @@ class PhantomProcessViewModel @Inject constructor(
     }
 
     fun requestShizukuPermission() {
-        phantomProcessManager.requestPermission()
-        // Delay to allow permission dialog result
         viewModelScope.launch {
+            remoteProcessBuilder.requestPermission()
+            // Delay to allow permission dialog result
             kotlinx.coroutines.delay(500)
             checkStatus()
         }
@@ -99,28 +101,7 @@ class PhantomProcessViewModel @Inject constructor(
     }
 
     fun enablePhantomKiller() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isProcessing = true,
-                error = null,
-                successMessage = null
-            )
 
-            phantomProcessManager.enablePhantomProcessKiller()
-                .onSuccess { message ->
-                    _uiState.value = _uiState.value.copy(
-                        isProcessing = false,
-                        successMessage = message
-                    )
-                    checkStatus()
-                }
-                .onFailure { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isProcessing = false,
-                        error = error.message ?: "Unknown error occurred"
-                    )
-                }
-        }
     }
 
     fun clearError() {

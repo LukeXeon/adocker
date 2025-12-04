@@ -1,23 +1,13 @@
 package com.github.adocker.daemon.os
 
-import android.content.ComponentName
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Build
-import com.github.adocker.daemon.app.AppContext
-import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
-import rikka.shizuku.Shizuku.UserServiceArgs
 import timber.log.Timber
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
 
 
 /**
@@ -25,90 +15,8 @@ import kotlin.coroutines.resume
  */
 @Singleton
 class PhantomProcessManager @Inject constructor(
-    appContext: AppContext
+    private val remoteProcessBuilder: RemoteProcessBuilder
 ) {
-    private val nextCode = AtomicInteger(1)
-
-//    private val userServiceArgs = UserServiceArgs(
-//        ComponentName(
-//            appContext.applicationInfo.packageName,
-//            CommandService::class.java.name
-//        )
-//    ).daemon(true)
-//        .processNameSuffix("adb_service")
-//        .debuggable(appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
-//        .version(
-//            @Suppress("DEPRECATION") appContext.packageInfo.versionCode
-//        )
-
-    /**
-     * Check if Shizuku is available
-     */
-    fun isAvailable(): Boolean {
-        if (Shizuku.isPreV11()) {
-            Timber.w("Shizuku is pre v11")
-            return false
-        }
-        return try {
-            Shizuku.pingBinder()
-        } catch (e: Exception) {
-            Timber.w(e, "Shizuku is not available")
-            false
-        }
-    }
-
-    /**
-     * Check if we have Shizuku permission
-     */
-    fun hasPermission(): Boolean {
-        return if (isAvailable()) {
-            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Request Shizuku permission
-     */
-    suspend fun requestPermission(): Boolean {
-        when {
-            isAvailable() -> {
-                return false
-            }
-
-            hasPermission() -> {
-                val code = nextCode.getAndIncrement()
-                if (code == UShort.MAX_VALUE.toInt()) {
-                    throw OutOfMemoryError("The request code is tired")
-                }
-                return suspendCancellableCoroutine { con ->
-                    val l = object : Shizuku.OnRequestPermissionResultListener, CompletionHandler {
-                        override fun onRequestPermissionResult(
-                            requestCode: Int,
-                            grantResult: Int
-                        ) {
-                            if (requestCode == code) {
-                                con.resume(grantResult == PackageManager.PERMISSION_GRANTED)
-                                Shizuku.removeRequestPermissionResultListener(this)
-                            }
-                        }
-
-                        override fun invoke(p1: Throwable?) {
-                            Shizuku.removeRequestPermissionResultListener(this)
-                        }
-                    }
-                    Shizuku.addRequestPermissionResultListener(l)
-                    con.invokeOnCancellation(l)
-                    Shizuku.requestPermission(code)
-                }
-            }
-
-            else -> {
-                return true
-            }
-        }
-    }
 
     /**
      * Disable phantom process killer
@@ -116,7 +24,7 @@ class PhantomProcessManager @Inject constructor(
      */
     suspend fun disablePhantomProcessKiller(): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            if (!hasPermission()) {
+            if (!remoteProcessBuilder.hasPermission) {
                 throw SecurityException("Shizuku permission not granted")
             }
 
@@ -144,7 +52,7 @@ class PhantomProcessManager @Inject constructor(
      */
     suspend fun isUnrestricted(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
-            if (!hasPermission()) {
+            if (!remoteProcessBuilder.hasPermission) {
                 return@withContext false
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
@@ -168,7 +76,7 @@ class PhantomProcessManager @Inject constructor(
      */
     suspend fun getCurrentPhantomProcessLimit(): Int? = withContext(Dispatchers.IO) {
         runCatching {
-            if (!hasPermission()) return@withContext null
+            if (!remoteProcessBuilder.hasPermission) return@withContext null
 
             val result = executeCommand(
                 "dumpsys activity settings | grep max_phantom_processes"
@@ -177,36 +85,6 @@ class PhantomProcessManager @Inject constructor(
             // Parse output: "max_phantom_processes=32"
             result.substringAfter("=", "").trim().toIntOrNull()
         }.getOrNull()
-    }
-
-    /**
-     * Enable phantom process killer (restore default)
-     */
-    suspend fun enablePhantomProcessKiller(): Result<String> = withContext(Dispatchers.IO) {
-        runCatching {
-            if (!hasPermission()) {
-                throw SecurityException("Shizuku permission not granted")
-            }
-            val command = when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 -> {
-                    "settings put global settings_enable_monitor_phantom_procs true"
-                }
-
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                    "device_config put activity_manager max_phantom_processes 32"
-                }
-
-                else -> {
-                    throw UnsupportedOperationException("Android 12+ required")
-                }
-            }
-
-            executeCommand(command)
-            Timber.i("Phantom process killer enabled")
-            "Phantom process restrictions restored to default"
-        }.onFailure { error ->
-            Timber.e(error, "Failed to enable phantom process killer")
-        }
     }
 
     /**
