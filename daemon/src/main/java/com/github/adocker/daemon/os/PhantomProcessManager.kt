@@ -1,31 +1,54 @@
 package com.github.adocker.daemon.os
 
+import android.content.ComponentName
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
-import com.github.adocker.daemon.utils.startProcess
+import com.github.adocker.daemon.app.AppContext
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
+import rikka.shizuku.Shizuku.UserServiceArgs
 import timber.log.Timber
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-import kotlin.random.Random
+
 
 /**
  * Manager for handling Android 12+ phantom process restrictions using Shizuku
  */
 @Singleton
-class PhantomProcessManager @Inject constructor() {
+class PhantomProcessManager @Inject constructor(
+    appContext: AppContext
+) {
+    private val nextCode = AtomicInteger(1)
+
+//    private val userServiceArgs = UserServiceArgs(
+//        ComponentName(
+//            appContext.applicationInfo.packageName,
+//            CommandService::class.java.name
+//        )
+//    ).daemon(true)
+//        .processNameSuffix("adb_service")
+//        .debuggable(appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
+//        .version(
+//            @Suppress("DEPRECATION") appContext.packageInfo.versionCode
+//        )
 
     /**
      * Check if Shizuku is available
      */
     fun isAvailable(): Boolean {
+        if (Shizuku.isPreV11()) {
+            Timber.w("Shizuku is pre v11")
+            return false
+        }
         return try {
             Shizuku.pingBinder()
         } catch (e: Exception) {
@@ -55,8 +78,11 @@ class PhantomProcessManager @Inject constructor() {
             }
 
             hasPermission() -> {
+                val code = nextCode.getAndIncrement()
+                if (code == UShort.MAX_VALUE.toInt()) {
+                    throw OutOfMemoryError("The request code is tired")
+                }
                 return suspendCancellableCoroutine { con ->
-                    val code = Random.nextInt(1000, 10000)
                     val l = object : Shizuku.OnRequestPermissionResultListener, CompletionHandler {
                         override fun onRequestPermissionResult(
                             requestCode: Int,

@@ -32,6 +32,10 @@ class AppContext @Inject constructor(
         context.packageManager.getPackageInfo(context.packageName, 0)
     )
 
+    val applicationInfo = requireNotNull(
+        packageInfo.applicationInfo
+    )
+
     init {
         logDir.deleteRecursively()
         // Create directories on initialization

@@ -43,7 +43,7 @@ object RegistryModule {
             defaultRequest {
                 header(
                     HttpHeaders.UserAgent,
-                    "${requireNotNull(appContext.packageInfo.applicationInfo).name}/${appContext.packageInfo.versionName}"
+                    "${appContext.applicationInfo.name}/${appContext.packageInfo.versionName}"
                 )
             }
         }

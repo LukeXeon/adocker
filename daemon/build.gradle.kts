@@ -38,6 +38,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    buildFeatures {
+        aidl = true
+    }
+
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
