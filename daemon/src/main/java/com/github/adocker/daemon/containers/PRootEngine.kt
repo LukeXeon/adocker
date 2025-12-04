@@ -13,6 +13,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -32,6 +33,8 @@ import javax.inject.Singleton
 @Singleton
 class PRootEngine @Inject constructor(
     private val appContext: AppContext,
+    @param:Named("redirect")
+    private val mapping: Map<String, String>
 ) {
     private val nativeLibDir = appContext.nativeLibDir
 
@@ -107,7 +110,11 @@ class PRootEngine @Inject constructor(
 
         val elapsedNanos = SystemClock.elapsedRealtimeNanos() - startTime
         val elapsedMs = elapsedNanos / 1_000_000.0
-        Timber.d("PRootEngine initialization completed in %.2fms (isAvailable=$isAvailable, version=$prootVersion)".format(elapsedMs))
+        Timber.d(
+            "PRootEngine initialization completed in %.2fms (isAvailable=$isAvailable, version=$prootVersion)".format(
+                elapsedMs
+            )
+        )
     }
 
     /**
@@ -172,12 +179,7 @@ class PRootEngine @Inject constructor(
         // Bind mounts
         container.binds.forEach { bind ->
             cmd.add("-b")
-            // Replace /var/run/docker.sock with Android socket path
-            val hostPath = if (bind.hostPath == DOCKER_SOCK_PATH) {
-                appContext.socketFile.absolutePath
-            } else {
-                bind.hostPath
-            }
+            val hostPath = mapping.getOrElse(bind.hostPath) { bind.hostPath }
             val bindStr = if (bind.readOnly) {
                 "${hostPath}:${bind.containerPath}:ro"
             } else {
@@ -270,8 +272,6 @@ class PRootEngine @Inject constructor(
     }
 
     companion object {
-        /** Standard Docker socket path on Linux */
-        private const val DOCKER_SOCK_PATH = "/var/run/docker.sock"
 
         /**
          * Build the execution command from container config

@@ -32,11 +32,11 @@ class PhantomProcessViewModel @Inject constructor(
             )
 
             try {
-                val shizukuAvailable = phantomProcessManager.isShizukuAvailable()
-                val shizukuPermissionGranted = phantomProcessManager.hasShizukuPermission()
+                val shizukuAvailable = phantomProcessManager.isAvailable()
+                val shizukuPermissionGranted = phantomProcessManager.hasPermission()
 
                 val phantomKillerDisabled = if (shizukuPermissionGranted) {
-                    phantomProcessManager.isPhantomProcessKillerDisabled()
+                    phantomProcessManager.isUnrestricted()
                 } else {
                     false
                 }
@@ -65,7 +65,7 @@ class PhantomProcessViewModel @Inject constructor(
     }
 
     fun requestShizukuPermission() {
-        phantomProcessManager.requestShizukuPermission()
+        phantomProcessManager.requestPermission()
         // Delay to allow permission dialog result
         viewModelScope.launch {
             kotlinx.coroutines.delay(500)
@@ -129,9 +129,5 @@ class PhantomProcessViewModel @Inject constructor(
 
     fun clearSuccessMessage() {
         _uiState.value = _uiState.value.copy(successMessage = null)
-    }
-
-    fun needsPhantomProcessManagement(): Boolean {
-        return phantomProcessManager.needsPhantomProcessManagement()
     }
 }

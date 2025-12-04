@@ -13,7 +13,7 @@ object EmptyObjectSerializer : KSerializer<Unit> {
     override fun serialize(encoder: Encoder, value: Unit) {
         encoder.beginStructure(descriptor).endStructure(descriptor)
     }
-    override fun deserialize(decoder: Decoder): Unit {
+    override fun deserialize(decoder: Decoder) {
         decoder.beginStructure(descriptor).endStructure(descriptor)
     }
 }
