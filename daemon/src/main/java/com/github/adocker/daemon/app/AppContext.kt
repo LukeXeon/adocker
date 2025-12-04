@@ -45,7 +45,7 @@ class AppContext @Inject constructor(
             }
         }
 
-        Timber.Forest.d("AppConfig initialized: baseDir=${baseDir.absolutePath}")
+        Timber.d("AppConfig initialized: baseDir=${baseDir.absolutePath}")
     }
 
 
