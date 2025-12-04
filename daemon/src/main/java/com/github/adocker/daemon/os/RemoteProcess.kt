@@ -2,33 +2,12 @@ package com.github.adocker.daemon.os
 
 import android.os.ParcelFileDescriptor
 import android.os.RemoteException
-import timber.log.Timber
 import java.io.InputStream
 import java.io.OutputStream
 
 class RemoteProcess(
     private val session: IRemoteProcessSession
 ) : Process() {
-    companion object {
-        private val processes = HashSet<Process>()
-    }
-
-    init {
-        try {
-            session.asBinder().linkToDeath({
-                synchronized(Companion) {
-                    processes.remove(this)
-                }
-            }, 0)
-            // The reference to the binder object must be hold
-            synchronized(Companion) {
-                processes.add(this)
-            }
-        } catch (e: RemoteException) {
-            Timber.e(e, "linkToDeath")
-        }
-    }
-
     private val output by lazy {
         ParcelFileDescriptor.AutoCloseOutputStream(session.outputStream)
     }

@@ -67,7 +67,7 @@ class RemoteProcessBuilder @Inject constructor(
     suspend fun newProcess(
         cmd: Array<String>,
         env: Array<String>,
-        dir: String
+        dir: String?
     ): RemoteProcess {
         return RemoteProcess(getService().newProcess(cmd, env, dir))
     }

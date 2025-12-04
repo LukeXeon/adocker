@@ -11,38 +11,61 @@ import java.io.File
 class RemoteProcessSession(
     cmd: Array<String>,
     env: Array<String>,
-    dir: String
+    dir: String?
 ) : IRemoteProcessSession.Stub() {
-    private val process = Runtime.getRuntime().exec(cmd, env, File(dir))
-
-    override fun getOutputStream(): ParcelFileDescriptor {
+    private val process = Runtime.getRuntime().exec(
+        cmd,
+        env,
+        if (dir == null) {
+            null
+        } else {
+            File(dir)
+        }
+    )
+    private val output by lazy {
         val (read, write) = ParcelFileDescriptor.createReliablePipe()
         GlobalScope.launch(Dispatchers.IO) {
-            ParcelFileDescriptor.AutoCloseInputStream(read).use { input ->
-                input.copyTo(process.outputStream)
+            process.outputStream.use { output ->
+                ParcelFileDescriptor.AutoCloseInputStream(read).use { input ->
+                    input.copyTo(output)
+                }
             }
         }
-        return write
+        return@lazy write
+    }
+    private val input by lazy {
+        val (read, write) = ParcelFileDescriptor.createReliablePipe()
+        GlobalScope.launch(Dispatchers.IO) {
+            ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
+                process.inputStream.use { input ->
+                    input.copyTo(output)
+                }
+            }
+        }
+        return@lazy read
+    }
+    private val error by lazy {
+        val (read, write) = ParcelFileDescriptor.createReliablePipe()
+        GlobalScope.launch(Dispatchers.IO) {
+            ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
+                process.errorStream.use { input ->
+                    input.copyTo(output)
+                }
+            }
+        }
+        return@lazy read
+    }
+
+    override fun getOutputStream(): ParcelFileDescriptor {
+        return output
     }
 
     override fun getInputStream(): ParcelFileDescriptor {
-        val (read, write) = ParcelFileDescriptor.createReliablePipe()
-        GlobalScope.launch(Dispatchers.IO) {
-            ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
-                process.inputStream.copyTo(output)
-            }
-        }
-        return read
+        return input
     }
 
     override fun getErrorStream(): ParcelFileDescriptor {
-        val (read, write) = ParcelFileDescriptor.createReliablePipe()
-        GlobalScope.launch(Dispatchers.IO) {
-            ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
-                process.errorStream.copyTo(output)
-            }
-        }
-        return read
+        return error
     }
 
     override fun waitFor(): Int {
