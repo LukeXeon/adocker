@@ -70,11 +70,12 @@ class RunningContainer @AssistedInject constructor(
             if (!job.isActive) {
                 return Result.failure(IllegalStateException("The container has stopped: $containerId"))
             }
-            val process = context.startProcess(command)
-            if (process.isSuccess) {
-                otherProcesses.add(process.getOrThrow())
+            val result = context.startProcess(command)
+            val process = result.getOrNull()
+            if (process != null) {
+                otherProcesses.add(process)
             }
-            return process
+            return result
         }
     }
 
