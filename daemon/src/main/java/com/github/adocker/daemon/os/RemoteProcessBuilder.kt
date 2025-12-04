@@ -107,11 +107,11 @@ class RemoteProcessBuilder @Inject constructor(
      */
     suspend fun requestPermission(): Boolean {
         when {
-            isAvailable -> {
+            !isAvailable -> {
                 return false
             }
 
-            hasPermission -> {
+            !hasPermission -> {
                 val code = nextCode.getAndIncrement()
                 if (code == UShort.MAX_VALUE.toInt()) {
                     throw OutOfMemoryError("The request code is tired")
