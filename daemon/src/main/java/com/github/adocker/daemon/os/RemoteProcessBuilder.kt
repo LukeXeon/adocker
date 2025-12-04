@@ -7,6 +7,9 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import com.github.adocker.daemon.app.AppContext
 import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.suspendCancellableCoroutine
 import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
@@ -34,27 +37,31 @@ class RemoteProcessBuilder @Inject constructor(
             @Suppress("DEPRECATION") appContext.packageInfo.versionCode
         )
 
-    private var connected: IRemoteProcessBuilderService? = null
+    private val connected = MutableStateFlow<IRemoteProcessBuilderService?>(null)
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(
             name: ComponentName,
             service: IBinder
         ) {
-            connected = IRemoteProcessBuilderService.Stub.asInterface(service)
+            connected.value = IRemoteProcessBuilderService.Stub.asInterface(service)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            connected = null
+            connected.value = null
         }
     }
 
     private suspend fun getService(): IRemoteProcessBuilderService {
+        val service = connected.value
+        if (service != null) {
+            return service
+        }
         Shizuku.bindUserService(
             userServiceArgs,
             connection
         )
-        TODO()
+        return connected.filterNotNull().first()
     }
 
     suspend fun newProcess(
