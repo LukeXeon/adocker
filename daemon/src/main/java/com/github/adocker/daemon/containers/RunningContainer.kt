@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import androidx.annotation.WorkerThread
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,14 +20,14 @@ import javax.inject.Singleton
 class RunningContainer @AssistedInject constructor(
     @Assisted val context: ContainerContext,
     @Assisted val mainProcess: Process,
-    appConfig: AppConfig,
+    appContext: AppContext,
     scope: CoroutineScope,
 ) {
     val containerId
         get() = context.containerId
-    private val logDir = File(appConfig.logDir, containerId)
-    val stdout = File(logDir, AppConfig.STDOUT)
-    val stderr = File(logDir, AppConfig.STDERR)
+    private val logDir = File(appContext.logDir, containerId)
+    val stdout = File(logDir, AppContext.STDOUT)
+    val stderr = File(logDir, AppContext.STDERR)
 
     val stdin = mainProcess.outputStream.bufferedWriter()
     private val mutex = Mutex()

@@ -18,7 +18,7 @@ interface AppGlobals {
     fun json(): Json
 
     companion object : AppGlobals by EntryPointAccessors.fromApplication(
-        AppModule.application,
+        AppContext.application,
         AppGlobals::class.java
     )
 }

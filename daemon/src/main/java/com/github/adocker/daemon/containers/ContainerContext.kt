@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.containers
 
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -10,12 +10,12 @@ import javax.inject.Singleton
 class ContainerContext @AssistedInject constructor(
     @Assisted
     val containerId: String,
-    appConfig: AppConfig,
+    appContext: AppContext,
     private val containerRepository: ContainerRepository,
     private val engine: PRootEngine,
 ) {
-    val containerDir = File(appConfig.containersDir, containerId)
-    val rootfsDir = File(containerDir, AppConfig.ROOTFS_DIR)
+    val containerDir = File(appContext.containersDir, containerId)
+    val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
 
     suspend fun startProcess(command: List<String>? = null): Result<Process> {
         if (!rootfsDir.exists()) {

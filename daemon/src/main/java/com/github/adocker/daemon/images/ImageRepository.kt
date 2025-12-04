@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.images
 
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.dao.LayerDao
 import com.github.adocker.daemon.database.model.ImageEntity
@@ -32,7 +32,7 @@ class ImageRepository @Inject constructor(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
     private val registryApi: DockerRegistryApi,
-    private val appConfig: AppConfig
+    private val appContext: AppContext
 ) {
     /**
      * Get all local images
@@ -90,8 +90,8 @@ class ImageRepository @Inject constructor(
                 Timber.d("Database check complete: $existingLayer")
 
                 layerFile =
-                    File(appConfig.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
-                extractedDir = File(appConfig.layersDir, layerDigest.removePrefix("sha256:"))
+                    File(appContext.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
+                extractedDir = File(appContext.layersDir, layerDigest.removePrefix("sha256:"))
                 Timber.d("File paths created")
 
                 Timber.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
@@ -159,7 +159,7 @@ class ImageRepository @Inject constructor(
         // Calculate total size (compressed files)
         var totalSize = 0L
         layerIds.forEach { digest ->
-            val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+            val layerFile = File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
             totalSize += layerFile.length()
         }
 
@@ -177,8 +177,8 @@ class ImageRepository @Inject constructor(
             repository = imageRef.repository,
             tag = imageRef.tag,
             digest = manifest.config.digest,
-            architecture = configResponse.architecture ?: AppConfig.Companion.ARCHITECTURE,
-            os = configResponse.os ?: AppConfig.Companion.DEFAULT_OS,
+            architecture = configResponse.architecture ?: AppContext.Companion.ARCHITECTURE,
+            os = configResponse.os ?: AppContext.Companion.DEFAULT_OS,
             size = totalSize,
             layerIds = layerIds,
             config = imageConfig
@@ -206,7 +206,7 @@ class ImageRepository @Inject constructor(
                 // Delete layer if no longer referenced
                 val layer = layerDao.getLayerByDigest(digest)
                 if (layer != null && layer.refCount <= 1) {
-                    val layerFile = File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                    val layerFile = File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                     layerFile.delete()
                     layerDao.deleteUnreferencedLayer(digest)
                 }
@@ -231,7 +231,7 @@ class ImageRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             runCatching {
                 val imageId = UUID.randomUUID().toString()
-                val extractDir = File(appConfig.layersDir, imageId)
+                val extractDir = File(appContext.layersDir, imageId)
 
                 FileInputStream(tarFile).use { fis ->
                     extractTar(fis, extractDir).getOrThrow()
@@ -244,8 +244,8 @@ class ImageRepository @Inject constructor(
                     repository = repository,
                     tag = tag,
                     digest = "sha256:$imageId",
-                    architecture = AppConfig.Companion.ARCHITECTURE,
-                    os = AppConfig.Companion.DEFAULT_OS,
+                    architecture = AppContext.Companion.ARCHITECTURE,
+                    os = AppContext.Companion.DEFAULT_OS,
                     size = size,
                     layerIds = listOf("sha256:$imageId")
                 )
@@ -276,12 +276,12 @@ class ImageRepository @Inject constructor(
                     ?: throw IllegalArgumentException("Image not found: $imageId")
 
                 // Create tar from layers
-                val tempDir = File(appConfig.tmpDir, "export_$imageId")
+                val tempDir = File(appContext.tmpDir, "export_$imageId")
                 tempDir.mkdirs()
 
                 // Copy all layers
                 image.layerIds.forEach { digest ->
-                    val layerDir = File(appConfig.layersDir, digest.removePrefix("sha256:"))
+                    val layerDir = File(appContext.layersDir, digest.removePrefix("sha256:"))
                     if (layerDir.exists()) {
                         copyDirectory(layerDir, File(tempDir, "layer"))
                     }

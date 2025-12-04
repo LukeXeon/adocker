@@ -39,14 +39,4 @@ object AppModule {
             }
         })
     }
-
-    val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
-        Class.forName("android.app.ActivityThread")
-            .getDeclaredMethod(
-                "currentApplication"
-            ).apply {
-                isAccessible = true
-            }.invoke(null) as Application
-    }
 }

@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.registry
 
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +26,7 @@ object RegistryModule {
     @Singleton
     fun httpClient(
         json: Json,
-        appConfig: AppConfig
+        appContext: AppContext
     ): HttpClient {
         return HttpClient(OkHttp) {
             install(ContentNegotiation) {
@@ -36,14 +36,14 @@ object RegistryModule {
                 level = LogLevel.HEADERS
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = AppConfig.NETWORK_TIMEOUT
-                connectTimeoutMillis = AppConfig.NETWORK_TIMEOUT
-                socketTimeoutMillis = AppConfig.DOWNLOAD_TIMEOUT
+                requestTimeoutMillis = AppContext.NETWORK_TIMEOUT
+                connectTimeoutMillis = AppContext.NETWORK_TIMEOUT
+                socketTimeoutMillis = AppContext.DOWNLOAD_TIMEOUT
             }
             defaultRequest {
                 header(
                     HttpHeaders.UserAgent,
-                    "${requireNotNull(appConfig.packageInfo.applicationInfo).name}/${appConfig.packageInfo.versionName}"
+                    "${requireNotNull(appContext.packageInfo.applicationInfo).name}/${appContext.packageInfo.versionName}"
                 )
             }
         }

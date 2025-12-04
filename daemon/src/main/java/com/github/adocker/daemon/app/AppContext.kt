@@ -1,5 +1,7 @@
 package com.github.adocker.daemon.app
 
+import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -14,7 +16,7 @@ import javax.inject.Singleton
  * All configuration is now properly managed through Hilt DI
  */
 @Singleton
-class AppConfig @Inject constructor(
+class AppContext @Inject constructor(
     @ApplicationContext context: Context
 ) {
     // Directories
@@ -81,6 +83,16 @@ class AppConfig @Inject constructor(
             "x86_64" -> "amd64"
             "x86" -> "386"
             else -> DEFAULT_ARCHITECTURE
+        }
+
+        val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
+            @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
+            Class.forName("android.app.ActivityThread")
+                .getDeclaredMethod(
+                    "currentApplication"
+                ).apply {
+                    isAccessible = true
+                }.invoke(null) as Application
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import android.os.SystemClock
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.startProcess
 import kotlinx.coroutines.Dispatchers
@@ -31,9 +31,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class PRootEngine @Inject constructor(
-    private val appConfig: AppConfig,
+    private val appContext: AppContext,
 ) {
-    private val nativeLibDir = appConfig.nativeLibDir
+    private val nativeLibDir = appContext.nativeLibDir
 
     /**
      * Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
@@ -138,7 +138,7 @@ class PRootEngine @Inject constructor(
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
-        val tmpDir = appConfig.tmpDir
+        val tmpDir = appContext.tmpDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
         Timber.d("PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
@@ -174,7 +174,7 @@ class PRootEngine @Inject constructor(
             cmd.add("-b")
             // Replace /var/run/docker.sock with Android socket path
             val hostPath = if (bind.hostPath == DOCKER_SOCK_PATH) {
-                appConfig.socketFile.absolutePath
+                appContext.socketFile.absolutePath
             } else {
                 bind.hostPath
             }
@@ -223,7 +223,7 @@ class PRootEngine @Inject constructor(
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
         // Use app's tmp directory which has write permissions
-        val tmpDir = appConfig.tmpDir
+        val tmpDir = appContext.tmpDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
 

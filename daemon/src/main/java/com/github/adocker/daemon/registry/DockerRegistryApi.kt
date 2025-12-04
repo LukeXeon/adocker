@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.registry
 
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.images.ImageReference
 import com.github.adocker.daemon.registry.model.AuthTokenResponse
@@ -56,7 +56,7 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun authenticate(
         repository: String,
-        registry: String = AppConfig.Companion.DEFAULT_REGISTRY
+        registry: String = AppContext.Companion.DEFAULT_REGISTRY
     ): Result<String> = runCatching {
         Timber.d("Authenticating for repository: $repository, registry: $registry")
 
@@ -132,7 +132,7 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun getManifest(
         imageRef: ImageReference,
-        architecture: String = AppConfig.Companion.ARCHITECTURE
+        architecture: String = AppContext.Companion.ARCHITECTURE
     ): Result<ImageManifestV2> = runCatching {
         val registry = getRegistryUrl(imageRef.registry)
 
@@ -170,7 +170,7 @@ class DockerRegistryApi @Inject constructor(
                 val manifestList: ManifestListResponse = json.decodeFromString(bodyText)
                 val platformManifest = manifestList.manifests?.find { manifest ->
                     manifest.platform?.architecture == architecture &&
-                            manifest.platform.os == AppConfig.Companion.DEFAULT_OS
+                            manifest.platform.os == AppContext.Companion.DEFAULT_OS
                 } ?: manifestList.manifests?.firstOrNull()
                 ?: throw Exception("No suitable manifest found for $architecture")
 
@@ -261,7 +261,7 @@ class DockerRegistryApi @Inject constructor(
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
                 timeout {
-                    requestTimeoutMillis = AppConfig.Companion.DOWNLOAD_TIMEOUT
+                    requestTimeoutMillis = AppContext.Companion.DOWNLOAD_TIMEOUT
                 }
             }.execute { response ->
                 Timber.d("Layer download response status: ${response.status}")
@@ -271,7 +271,7 @@ class DockerRegistryApi @Inject constructor(
                 destFile.parentFile?.mkdirs()
                 FileOutputStream(destFile).use { fos ->
                     val channel: ByteReadChannel = response.body()
-                    val buffer = ByteArray(AppConfig.Companion.DOWNLOAD_BUFFER_SIZE)
+                    val buffer = ByteArray(AppContext.Companion.DOWNLOAD_BUFFER_SIZE)
                     while (!channel.isClosedForRead) {
                         val bytesRead = channel.readAvailable(buffer)
                         if (bytesRead > 0) {

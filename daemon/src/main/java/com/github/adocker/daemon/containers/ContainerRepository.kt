@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.containers
 
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
@@ -24,7 +24,7 @@ import javax.inject.Singleton
 class ContainerRepository @Inject constructor(
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
-    private val appConfig: AppConfig,
+    private val appContext: AppContext,
 ) {
 
     /**
@@ -71,14 +71,14 @@ class ContainerRepository @Inject constructor(
             val containerId = UUID.randomUUID().toString()
 
             // Create container directory structure
-            val containerDir = File(appConfig.containersDir, containerId)
-            val rootfsDir = File(containerDir, AppConfig.Companion.ROOTFS_DIR)
+            val containerDir = File(appContext.containersDir, containerId)
+            val rootfsDir = File(containerDir, AppContext.Companion.ROOTFS_DIR)
             rootfsDir.mkdirs()
 
             // Extract layers directly to rootfs
             image.layerIds.forEach { digest ->
                 val layerFile =
-                    File(appConfig.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                    File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                 if (layerFile.exists()) {
                     Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
                     FileInputStream(layerFile).use { fis ->
@@ -135,7 +135,7 @@ class ContainerRepository @Inject constructor(
             containerDao.getContainerById(containerId)
                 ?: throw IllegalArgumentException("Container not found: $containerId")
             // Delete container directory
-            val containerDir = File(appConfig.containersDir, containerId)
+            val containerDir = File(appContext.containersDir, containerId)
             deleteRecursively(containerDir)
             containerDao.deleteContainerById(containerId)
         }

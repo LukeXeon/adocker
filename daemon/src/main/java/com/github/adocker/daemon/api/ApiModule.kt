@@ -1,7 +1,7 @@
 package com.github.adocker.daemon.api
 
 import android.net.LocalSocketAddress.Namespace
-import com.github.adocker.daemon.app.AppConfig
+import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.http.TcpServerConfig
 import com.github.adocker.daemon.http.UnixServerConfig
 import dagger.Module
@@ -22,11 +22,11 @@ object ApiModule {
     @IntoSet
     fun unixHttpServer(
         handler: DockerApiServer,
-        appConfig: AppConfig
+        appContext: AppContext
     ): Http4kServer {
         return handler.asServer(
             UnixServerConfig(
-                appConfig.socketFile.absolutePath,
+                appContext.socketFile.absolutePath,
                 Namespace.FILESYSTEM
             )
         )
