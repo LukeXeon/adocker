@@ -164,10 +164,16 @@ class PRootEngine @Inject constructor(
         // Bind mounts
         container.binds.forEach { bind ->
             cmd.add("-b")
-            val bindStr = if (bind.readOnly) {
-                "${bind.hostPath}:${bind.containerPath}:ro"
+            // Replace /var/run/docker.sock with Android socket path
+            val hostPath = if (bind.hostPath == DOCKER_SOCK_PATH) {
+                appConfig.socketFile.absolutePath
             } else {
-                "${bind.hostPath}:${bind.containerPath}"
+                bind.hostPath
+            }
+            val bindStr = if (bind.readOnly) {
+                "${hostPath}:${bind.containerPath}:ro"
+            } else {
+                "${hostPath}:${bind.containerPath}"
             }
             cmd.add(bindStr)
         }
@@ -250,6 +256,9 @@ class PRootEngine @Inject constructor(
     }
 
     companion object {
+        /** Standard Docker socket path on Linux */
+        private const val DOCKER_SOCK_PATH = "/var/run/docker.sock"
+
         /**
          * Build the execution command from container config
          */
