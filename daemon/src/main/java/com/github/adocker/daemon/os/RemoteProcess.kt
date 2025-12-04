@@ -14,7 +14,6 @@ class RemoteProcess(
     private val input by lazy {
         ParcelFileDescriptor.AutoCloseInputStream(session.inputStream)
     }
-
     private val error by lazy {
         ParcelFileDescriptor.AutoCloseInputStream(session.errorStream)
     }
@@ -26,7 +25,6 @@ class RemoteProcess(
     override fun getInputStream(): InputStream {
         return input
     }
-
 
     override fun getErrorStream(): InputStream {
         return error

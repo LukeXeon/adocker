@@ -101,7 +101,7 @@ class PhantomProcessManager @Inject constructor(
             val args = arrayOf("-c", command)
 
             // Use the newer API: execute command via shell
-            val p = Runtime.getRuntime().exec(arrayOf(shellCmd, args[0], args[1]))
+            val p = Runtime.getRuntime().exec(arrayOf(shellCmd, *args))
             p
         } catch (e: Exception) {
             Timber.e(e, "Failed to create process")
