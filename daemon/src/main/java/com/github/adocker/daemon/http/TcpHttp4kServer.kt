@@ -75,7 +75,7 @@ class TcpHttp4kServer(
         }
         Timber.i("Stopping TCP server on port $port")
         scope.cancel()
-        serverSocket = null
+        this.serverSocket = null
         this.scope = null
         return this
     }
