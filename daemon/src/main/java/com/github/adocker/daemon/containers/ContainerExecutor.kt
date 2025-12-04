@@ -17,7 +17,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class ContainerExecutor @Inject constructor(
-    private val factory: RunningContainer.Factory,
+    private val launcher: RunningContainer.Launcher,
     private val containerDao: ContainerDao,
 ) {
     private val mutex = Mutex()
@@ -37,7 +37,7 @@ class ContainerExecutor @Inject constructor(
                 if (runningContainers.value[containerId]?.job?.isActive == true) {
                     throw IllegalStateException("Container is already running")
                 }
-                val runningContainer = factory.create(containerId)
+                val runningContainer = launcher.start(containerId)
                 runningContainers.value = buildMap {
                     putAll(runningContainers.value)
                     put(containerId, runningContainer)

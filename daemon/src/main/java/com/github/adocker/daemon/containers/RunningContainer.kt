@@ -6,29 +6,32 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
+import javax.inject.Inject
 import javax.inject.Singleton
 
 class RunningContainer @AssistedInject constructor(
-    @Assisted val containerId: String,
-    private val engine: PRootEngine,
-    private val containerRepository: ContainerRepository,
+    @Assisted val context: ContainerContext,
+    @Assisted val mainProcess: Process,
     appConfig: AppConfig,
     scope: CoroutineScope,
 ) {
-    val containerDir = File(appConfig.containersDir, containerId)
-    val rootfsDir = File(containerDir, AppConfig.ROOTFS_DIR)
-
-    val logDir = File(appConfig.logDir, containerId)
-    private val mainProcess = startProcess().getOrThrow()
-    private val otherProcesses = ArrayList<Process>()
-
-    val stdin = mainProcess.outputStream.bufferedWriter()
+    val containerId
+        get() = context.containerId
+    private val logDir = File(appConfig.logDir, containerId)
     val stdout = File(logDir, AppConfig.STDOUT)
     val stderr = File(logDir, AppConfig.STDERR)
+
+    val stdin = mainProcess.outputStream.bufferedWriter()
+    private val mutex = Mutex()
+    private val otherProcesses = ArrayList<Process>()
     val job = scope.launch {
         logDir.mkdirs()
         val jobs = mapOf(
@@ -49,23 +52,25 @@ class RunningContainer @AssistedInject constructor(
                 mainProcess.waitFor()
             }
         } finally {
-            mainProcess.destroy()
-            jobs.joinAll()
-            synchronized(otherProcesses) {
-                otherProcesses.forEach {
-                    it.destroy()
+            withContext(NonCancellable) {
+                mainProcess.destroy()
+                jobs.joinAll()
+                mutex.withLock {
+                    otherProcesses.forEach {
+                        it.destroy()
+                    }
+                    otherProcesses.clear()
                 }
-                otherProcesses.clear()
             }
         }
     }
 
-    fun execCommand(command: List<String>): Result<Process> {
-        synchronized(otherProcesses) {
+    suspend fun execCommand(command: List<String>): Result<Process> {
+        mutex.withLock {
             if (!job.isActive) {
                 return Result.failure(IllegalStateException("The container has stopped: $containerId"))
             }
-            val process = startProcess(command)
+            val process = context.startProcess(command)
             if (process.isSuccess) {
                 otherProcesses.add(process.getOrThrow())
             }
@@ -73,23 +78,25 @@ class RunningContainer @AssistedInject constructor(
         }
     }
 
-    private fun startProcess(command: List<String>? = null): Result<Process> {
-        if (!rootfsDir.exists()) {
-            return Result.failure(IllegalStateException("Container rootfs not found"))
+    @Singleton
+    class Launcher @Inject constructor(
+        private val contextFactory: ContainerContext.Factory,
+        private val containerFactory: Factory,
+    ) {
+        suspend fun start(containerId: String): RunningContainer {
+            val context = contextFactory.create(containerId)
+            val process = context.startProcess().getOrThrow()
+            return containerFactory.create(context, process)
         }
-        return engine.startProcess(
-            checkNotNull(
-                containerRepository.getContainerByIdSync(containerId)
-            ) { "Container not found: $containerId" }.config,
-            rootfsDir,
-            command
-        )
     }
 
     @Singleton
     @AssistedFactory
     interface Factory {
         @WorkerThread
-        fun create(@Assisted containerId: String): RunningContainer
+        fun create(
+            @Assisted context: ContainerContext,
+            @Assisted mainProcess: Process,
+        ): RunningContainer
     }
 }

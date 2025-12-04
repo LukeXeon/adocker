@@ -42,13 +42,6 @@ class ContainerRepository @Inject constructor(
     }
 
     /**
-     * Get container by ID
-     */
-    fun getContainerByIdSync(id: String): ContainerEntity? {
-        return containerDao.getContainerByIdSync(id)
-    }
-
-    /**
      * Get container by name
      */
     suspend fun getContainerByName(name: String): ContainerEntity? {

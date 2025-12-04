@@ -17,9 +17,6 @@ interface ContainerDao {
     @Query("SELECT * FROM containers WHERE id = :id")
     suspend fun getContainerById(id: String): ContainerEntity?
 
-    @Query("SELECT * FROM containers WHERE id = :id")
-    fun getContainerByIdSync(id: String): ContainerEntity?
-
     @Query("SELECT * FROM containers WHERE name = :name")
     suspend fun getContainerByName(name: String): ContainerEntity?
 
