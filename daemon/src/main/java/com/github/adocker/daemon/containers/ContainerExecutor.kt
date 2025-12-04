@@ -2,6 +2,7 @@ package com.github.adocker.daemon.containers
 
 import com.github.adocker.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,13 +38,15 @@ class ContainerExecutor @Inject constructor(
                 if (runningContainers.value[containerId]?.job?.isActive == true) {
                     throw IllegalStateException("Container is already running")
                 }
-                val runningContainer = launcher.start(containerId)
-                runningContainers.value = buildMap {
-                    putAll(runningContainers.value)
-                    put(containerId, runningContainer)
+                withContext(NonCancellable) {
+                    val runningContainer = launcher.start(containerId)
+                    runningContainers.value = buildMap {
+                        putAll(runningContainers.value)
+                        put(containerId, runningContainer)
+                    }
+                    // Mark container as having been run
+                    containerDao.markContainerAsRun(containerId)
                 }
-                // Mark container as having been run
-                containerDao.markContainerAsRun(containerId)
             }
         }
     }
@@ -53,16 +56,19 @@ class ContainerExecutor @Inject constructor(
      */
     suspend fun stopContainer(containerId: String): Result<Unit> =
         withContext(Dispatchers.IO) {
-            runCatching {
-                mutex.withLock {
-                    val container = runningContainers.value[containerId]
-                        ?: throw IllegalStateException("Container is not running")
+            mutex.withLock {
+                val container = runningContainers.value[containerId]
+                if (container == null) {
+                    return@withLock Result.failure(IllegalStateException("Container is not running"))
+                }
+                withContext(NonCancellable) {
                     container.job.cancelAndJoin()
                     runningContainers.value = buildMap {
                         putAll(runningContainers.value)
                         remove(containerId)
                     }
                 }
+                return@withLock Result.success(Unit)
             }
         }
 }
