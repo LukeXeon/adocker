@@ -120,13 +120,21 @@ class PRootEngine @Inject constructor(
      */
     private fun buildProotEnvironment(): Map<String, String> {
         val env = mutableMapOf<String, String>()
-        // The loader is packaged as libproot_loader.so in jniLibs
+
+        // 64-bit loader
         val loaderPath = File(nativeLibDir, "libproot_loader.so")
         if (loaderPath.exists()) {
             env["PROOT_LOADER"] = loaderPath.absolutePath
             Timber.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
         } else {
             Timber.w("PRoot loader not found at: ${loaderPath.absolutePath}")
+        }
+
+        // 32-bit loader (for running 32-bit programs on 64-bit devices)
+        val loader32Path = File(nativeLibDir, "libproot_loader32.so")
+        if (loader32Path.exists()) {
+            env["PROOT_LOADER_32"] = loader32Path.absolutePath
+            Timber.d("PROOT_LOADER_32 set to: ${loader32Path.absolutePath}")
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
@@ -201,10 +209,16 @@ class PRootEngine @Inject constructor(
     private fun buildEnvironment(container: ContainerConfig): Map<String, String> {
         val env = mutableMapOf<String, String>()
 
-        // Set PROOT_LOADER - must point to loader in native lib dir
+        // 64-bit loader
         val loaderPath = File(nativeLibDir, "libproot_loader.so")
         if (loaderPath.exists()) {
             env["PROOT_LOADER"] = loaderPath.absolutePath
+        }
+
+        // 32-bit loader (for running 32-bit programs on 64-bit devices)
+        val loader32Path = File(nativeLibDir, "libproot_loader32.so")
+        if (loader32Path.exists()) {
+            env["PROOT_LOADER_32"] = loader32Path.absolutePath
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
