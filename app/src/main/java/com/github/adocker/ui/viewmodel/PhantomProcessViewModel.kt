@@ -2,7 +2,7 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.os.PhantomProcessManager
+import com.github.adocker.daemon.os.PhantomProcessKillerCompat
 import com.github.adocker.daemon.os.RemoteProcessBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PhantomProcessViewModel @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
-    private val phantomProcessManager: PhantomProcessManager
+    private val phantomProcessKillerCompat: PhantomProcessKillerCompat
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PhantomProcessUiState())
@@ -38,13 +38,13 @@ class PhantomProcessViewModel @Inject constructor(
                 val shizukuPermissionGranted = remoteProcessBuilder.hasPermission
 
                 val phantomKillerDisabled = if (shizukuPermissionGranted) {
-                    phantomProcessManager.isUnrestricted()
+                    phantomProcessKillerCompat.isUnrestricted()
                 } else {
                     false
                 }
 
                 val currentLimit = if (shizukuPermissionGranted) {
-                    phantomProcessManager.getCurrentPhantomProcessLimit()
+                    phantomProcessKillerCompat.getMaxCount()
                 } else {
                     null
                 }
@@ -83,11 +83,11 @@ class PhantomProcessViewModel @Inject constructor(
                 successMessage = null
             )
 
-            phantomProcessManager.disablePhantomProcessKiller()
+            phantomProcessKillerCompat.unrestrict()
                 .onSuccess { message ->
                     _uiState.value = _uiState.value.copy(
                         isProcessing = false,
-                        successMessage = message
+                        successMessage = "Phantom process restrictions disabled successfully"
                     )
                     checkStatus()
                 }

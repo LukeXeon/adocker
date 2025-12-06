@@ -3,6 +3,7 @@ package com.github.adocker.daemon.app
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
@@ -35,6 +36,11 @@ class AppContext @Inject constructor(
     val applicationInfo = requireNotNull(
         packageInfo.applicationInfo
     )
+
+    val isDebuggable: Boolean
+        get() {
+            return applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        }
 
     init {
         logDir.deleteRecursively()

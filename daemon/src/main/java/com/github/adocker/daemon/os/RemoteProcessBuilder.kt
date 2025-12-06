@@ -2,7 +2,6 @@ package com.github.adocker.daemon.os
 
 import android.content.ComponentName
 import android.content.ServiceConnection
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.IBinder
 import com.github.adocker.daemon.app.AppContext
@@ -24,15 +23,14 @@ class RemoteProcessBuilder @Inject constructor(
     appContext: AppContext
 ) {
     private val nextCode = AtomicInteger(1)
-
     private val userServiceArgs = UserServiceArgs(
         ComponentName(
             appContext.applicationInfo.packageName,
             RemoteProcessBuilderService::class.java.name
         )
     ).daemon(false)
-        .processNameSuffix("process_launch_service")
-        .debuggable(appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
+        .processNameSuffix("process_builder_service")
+        .debuggable(appContext.isDebuggable)
         .version(
             @Suppress("DEPRECATION") appContext.packageInfo.versionCode
         )
@@ -66,8 +64,8 @@ class RemoteProcessBuilder @Inject constructor(
 
     suspend fun newProcess(
         cmd: Array<String>,
-        env: Array<String>,
-        dir: String?
+        env: Array<String> = emptyArray(),
+        dir: String? = null
     ): RemoteProcess {
         return RemoteProcess(getService().newProcess(cmd, env, dir))
     }
