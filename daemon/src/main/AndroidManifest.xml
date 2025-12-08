@@ -17,7 +17,7 @@
             tools:node="merge">
             <!-- Timber Initializer -->
             <meta-data
-                android:name="com.github.adocker.daemon.startup.TimberInitializer"
+                android:name="com.github.adocker.daemon.logging.TimberInitializer"
                 android:value="androidx.startup" />
             <!-- Config and RegistrySettings are now handled by Hilt DI -->
         </provider>

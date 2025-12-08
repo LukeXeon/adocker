@@ -18,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class ContainerExecutor @Inject constructor(
-    private val launcher: RunningContainer.Launcher,
+    private val contextFactory: ContainerContext.Factory,
+    private val containerFactory: RunningContainer.Factory,
     private val containerDao: ContainerDao,
 ) {
     private val mutex = Mutex()
@@ -30,6 +31,12 @@ class ContainerExecutor @Inject constructor(
         }
     }
 
+    private suspend fun startContainerProcess(containerId: String): RunningContainer {
+        val context = contextFactory.create(containerId)
+        val process = context.startProcess().getOrThrow()
+        return containerFactory.create(context, process)
+    }
+
     suspend fun startContainer(
         containerId: String,
     ): Result<Unit> = withContext(Dispatchers.IO) {
@@ -39,7 +46,7 @@ class ContainerExecutor @Inject constructor(
                     throw IllegalStateException("Container is already running")
                 }
                 withContext(NonCancellable) {
-                    val runningContainer = launcher.start(containerId)
+                    val runningContainer = startContainerProcess(containerId)
                     runningContainers.value = buildMap {
                         putAll(runningContainers.value)
                         put(containerId, runningContainer)

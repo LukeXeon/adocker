@@ -3,7 +3,6 @@ package com.github.adocker.daemon.containers
 import android.os.SystemClock
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.registry.model.ContainerConfig
-import com.github.adocker.daemon.utils.startProcess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -373,5 +372,23 @@ class PRootEngine @Inject constructor(
             // Last fallback: just return that PRoot is available
             return "PRoot (version unknown)"
         }
+
+        /**
+         * Start an interactive process
+         */
+        private fun startProcess(
+            command: List<String>,
+            workingDir: File? = null,
+            environment: Map<String, String> = emptyMap(),
+            redirectErrorStream: Boolean = true
+        ): Process {
+            val processBuilder = ProcessBuilder(command).apply {
+                workingDir?.let { directory(it) }
+                environment().putAll(environment)
+                redirectErrorStream(redirectErrorStream)
+            }
+            return processBuilder.start()
+        }
+
     }
 }

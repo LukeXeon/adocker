@@ -1,4 +1,4 @@
-package com.github.adocker.daemon.startup
+package com.github.adocker.daemon.logging
 
 import android.content.Context
 import android.content.pm.ApplicationInfo

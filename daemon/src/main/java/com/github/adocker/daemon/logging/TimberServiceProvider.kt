@@ -1,4 +1,4 @@
-package com.github.adocker.daemon.slf4j
+package com.github.adocker.daemon.logging
 
 import com.google.auto.service.AutoService
 import org.slf4j.ILoggerFactory

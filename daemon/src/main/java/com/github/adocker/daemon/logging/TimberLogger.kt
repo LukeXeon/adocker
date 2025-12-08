@@ -1,4 +1,4 @@
-package com.github.adocker.daemon.slf4j
+package com.github.adocker.daemon.logging
 
 import org.slf4j.Marker
 import org.slf4j.event.Level

@@ -1,6 +1,5 @@
 package com.github.adocker.daemon.containers
 
-import androidx.annotation.WorkerThread
 import com.github.adocker.daemon.app.AppContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -14,7 +13,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
-import javax.inject.Inject
 import javax.inject.Singleton
 
 class RunningContainer @AssistedInject constructor(
@@ -80,21 +78,8 @@ class RunningContainer @AssistedInject constructor(
     }
 
     @Singleton
-    class Launcher @Inject constructor(
-        private val contextFactory: ContainerContext.Factory,
-        private val containerFactory: Factory,
-    ) {
-        suspend fun start(containerId: String): RunningContainer {
-            val context = contextFactory.create(containerId)
-            val process = context.startProcess().getOrThrow()
-            return containerFactory.create(context, process)
-        }
-    }
-
-    @Singleton
     @AssistedFactory
     interface Factory {
-        @WorkerThread
         fun create(
             @Assisted context: ContainerContext,
             @Assisted mainProcess: Process,
