@@ -2,10 +2,8 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.containers.ContainerExecutor
-import com.github.adocker.daemon.containers.ContainerRepository
-import com.github.adocker.daemon.containers.RunningContainer
-import com.github.adocker.daemon.database.model.ContainerEntity
+import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
@@ -18,7 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -28,8 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
-    private val containerRepository: ContainerRepository,
-    private val containerExecutor: ContainerExecutor,
+    private val containerManager: ContainerManager,
     val json: Json,
     servers: Set<@JvmSuppressWildcards Http4kServer>,
 ) : ViewModel() {
@@ -43,16 +40,8 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers: StateFlow<List<ContainerEntity>> = containerRepository.getAllContainers()
+    val containers: StateFlow<List<Container>> = containerManager.getAllContainers()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    // Running containers
-    val runningContainers: StateFlow<List<RunningContainer>> =
-        containerExecutor.getAllRunningContainers().stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            emptyList()
-        )
 
     // Search results
     private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -145,7 +134,7 @@ class MainViewModel @Inject constructor(
         config: ContainerConfig = ContainerConfig()
     ) {
         viewModelScope.launch {
-            containerRepository.createContainer(imageId, name, config)
+            containerManager.createContainer(imageId, name, config)
                 .onSuccess { container ->
                     _message.value = "Container created: ${container.name}"
                 }
@@ -158,7 +147,7 @@ class MainViewModel @Inject constructor(
     // Start a container
     fun startContainer(containerId: String) {
         viewModelScope.launch {
-            containerExecutor.startContainer(containerId)
+            containerManager.startContainer(containerId)
                 .onSuccess {
                     _message.value = "Container started"
                 }
@@ -171,7 +160,7 @@ class MainViewModel @Inject constructor(
     // Stop a container
     fun stopContainer(containerId: String) {
         viewModelScope.launch {
-            containerExecutor.stopContainer(containerId)
+            containerManager.stopContainer(containerId)
                 .onSuccess {
                     _message.value = "Container stopped"
                 }
@@ -184,7 +173,7 @@ class MainViewModel @Inject constructor(
     // Delete a container
     fun deleteContainer(containerId: String) {
         viewModelScope.launch {
-            containerRepository.deleteContainer(containerId)
+            containerManager.deleteContainer(containerId)
                 .onSuccess {
                     _message.value = "Container deleted"
                 }
@@ -201,9 +190,9 @@ class MainViewModel @Inject constructor(
         config: ContainerConfig = ContainerConfig()
     ) {
         viewModelScope.launch {
-            containerRepository.createContainer(imageId, name, config)
+            containerManager.createContainer(imageId, name, config)
                 .onSuccess { container ->
-                    containerExecutor.startContainer(container.id)
+                    containerManager.startContainer(container.id)
                         .onSuccess {
                             _message.value = "Container running: ${container.name}"
                         }
@@ -227,19 +216,21 @@ class MainViewModel @Inject constructor(
         _message.value = null
     }
 
-    // Helper function to get container status
-    fun getContainerStatus(container: ContainerEntity): ContainerStatus {
-        val running = runningContainers.value.find { it.containerId == container.id }
-        return when {
-            running?.job?.isActive == true -> ContainerStatus.RUNNING
-            container.hasRun -> ContainerStatus.EXITED
-            else -> ContainerStatus.CREATED
+    // Helper function to convert Container state to UI ContainerStatus
+    fun getContainerStatus(container: Container): ContainerStatus {
+        return when (container.state) {
+            com.github.adocker.daemon.containers.ContainerState.Created -> ContainerStatus.CREATED
+            com.github.adocker.daemon.containers.ContainerState.Running -> ContainerStatus.RUNNING
+            com.github.adocker.daemon.containers.ContainerState.Exited -> ContainerStatus.EXITED
+            else -> ContainerStatus.EXITED // For Paused, Restarting, Removing, Dead
         }
     }
 
     // Get running containers count
     fun getRunningCount(): Int {
-        return runningContainers.value.count { it.job.isActive }
+        return containers.value.count {
+            it.state == com.github.adocker.daemon.containers.ContainerState.Running
+        }
     }
 
     // Get stats
@@ -250,18 +241,19 @@ class MainViewModel @Inject constructor(
         val stoppedContainers: Int
     )
 
-    val stats: StateFlow<Stats> =
-        combine(images, containers, runningContainers) { images, containers, running ->
-            val runningCount = running.count { it.job.isActive }
-            Stats(
-                totalImages = images.size,
-                totalContainers = containers.size,
-                runningContainers = runningCount,
-                stoppedContainers = containers.size - runningCount
-            )
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            Stats(0, 0, 0, 0)
+    val stats: StateFlow<Stats> = containers.map { containers ->
+        val runningCount = containers.count {
+            it.state == com.github.adocker.daemon.containers.ContainerState.Running
+        }
+        Stats(
+            totalImages = images.value.size,
+            totalContainers = containers.size,
+            runningContainers = runningCount,
+            stoppedContainers = containers.size - runningCount
         )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        Stats(0, 0, 0, 0)
+    )
 }

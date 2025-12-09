@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ContainerDao {
-    @Query("SELECT * FROM containers ORDER BY created DESC")
+    @Query("SELECT * FROM containers ORDER BY createdAt DESC")
     fun getAllContainers(): Flow<List<ContainerEntity>>
 
     @Query("SELECT * FROM containers WHERE id = :id")
@@ -35,6 +35,6 @@ interface ContainerDao {
     @Query("SELECT COUNT(*) FROM containers")
     suspend fun getContainerCount(): Int
 
-    @Query("UPDATE containers SET hasRun = 1 WHERE id = :id")
-    suspend fun markContainerAsRun(id: String)
+    @Query("UPDATE containers SET lastRunAt = :timestamp WHERE id = :id")
+    suspend fun setContainerLastRun(id: String, timestamp: Long)
 }

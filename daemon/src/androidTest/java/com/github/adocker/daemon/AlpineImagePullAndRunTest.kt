@@ -1,8 +1,7 @@
 package com.github.adocker.daemon
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.adocker.daemon.containers.ContainerExecutor
-import com.github.adocker.daemon.containers.ContainerRepository
+import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.containers.RunningContainer
 import com.github.adocker.daemon.images.ImageRepository
@@ -58,10 +57,7 @@ class AlpineImagePullAndRunTest {
     lateinit var imageRepository: ImageRepository
 
     @Inject
-    lateinit var containerRepository: ContainerRepository
-
-    @Inject
-    lateinit var containerExecutor: ContainerExecutor
+    lateinit var containerManager: ContainerManager
 
     @Inject
     lateinit var prootEngine: PRootEngine
@@ -97,14 +93,14 @@ class AlpineImagePullAndRunTest {
         createdContainerId?.let { containerId ->
             try {
                 Timber.d("Stopping container: $containerId")
-                containerExecutor.stopContainer(containerId)
+                containerManager.stopContainer(containerId)
                     .onSuccess { Timber.d("Container stopped successfully") }
                     .onFailure { Timber.w("Failed to stop container (may already be stopped): ${it.message}") }
 
                 delay(500) // Give it time to stop
 
                 Timber.d("Deleting container: $containerId")
-                containerRepository.deleteContainer(containerId)
+                containerManager.deleteContainer(containerId)
                     .onSuccess { Timber.d("Container deleted successfully") }
                     .onFailure { Timber.e("Failed to delete container: ${it.message}") }
             } catch (e: Exception) {
@@ -210,7 +206,7 @@ class AlpineImagePullAndRunTest {
             )
         )
 
-        val createResult = containerRepository.createContainer(
+        val createResult = containerManager.createContainer(
             imageId = imageId,
             name = "alpine-test-${System.currentTimeMillis()}",
             config = containerConfig
@@ -225,14 +221,13 @@ class AlpineImagePullAndRunTest {
         Timber.d("Container created successfully")
         Timber.d("  ID: ${container.id}")
         Timber.d("  Name: ${container.name}")
-        Timber.d("  Command: ${container.config.cmd}")
 
         // ========================================
         // STEP 3: Start container
         // ========================================
         Timber.d("")
         Timber.d("STEP 3: Starting container...")
-        val startResult = containerExecutor.startContainer(container.id)
+        val startResult = containerManager.startContainer(container.id)
         assertTrue(
             "Failed to start container: ${startResult.exceptionOrNull()?.message}",
             startResult.isSuccess
@@ -247,9 +242,7 @@ class AlpineImagePullAndRunTest {
         // ========================================
         Timber.d("")
         Timber.d("STEP 4: Getting running container instance...")
-        val runningContainer = containerExecutor.getAllRunningContainers()
-            .first()
-            .find { it.containerId == container.id }
+        val runningContainer = containerManager.getRunningContainer(container.id)
 
         assertNotNull("Running container not found: ${container.id}", runningContainer)
         Timber.d("Running container found")

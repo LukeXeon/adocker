@@ -3,9 +3,8 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.daemon.containers.ContainerRepository
-import com.github.adocker.daemon.containers.ContainerExecutor
+import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.ContainerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -18,14 +17,13 @@ import javax.inject.Inject
 @HiltViewModel
 class TerminalViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val containerRepository: ContainerRepository,
-    private val containerExecutor: ContainerExecutor
+    private val containerManager: ContainerManager
 ) : ViewModel() {
 
     private val containerId: String = savedStateHandle.get<String>("containerId") ?: ""
 
-    private val _container = MutableStateFlow<ContainerEntity?>(null)
-    val container: StateFlow<ContainerEntity?> = _container.asStateFlow()
+    private val _container = MutableStateFlow<Container?>(null)
+    val container: StateFlow<Container?> = _container.asStateFlow()
 
     private val _outputLines = MutableStateFlow<List<String>>(emptyList())
     val outputLines: StateFlow<List<String>> = _outputLines.asStateFlow()
@@ -46,9 +44,10 @@ class TerminalViewModel @Inject constructor(
 
     private fun loadContainer() {
         viewModelScope.launch {
-            _container.value = containerRepository.getContainerById(containerId)
+            _container.value = containerManager.getContainerById(containerId)
         }
     }
+
     fun executeCommand(command: String) {
         if (command.isBlank()) return
 
@@ -57,17 +56,15 @@ class TerminalViewModel @Inject constructor(
 
             try {
                 // Get the running container
-                val runningContainer = containerExecutor.getAllRunningContainers()
-                    .first()
-                    .find { it.containerId == containerId }
+                val runningContainer = containerManager.getRunningContainer(containerId)
 
-                if (runningContainer == null || !runningContainer.job.isActive) {
+                if (runningContainer == null) {
                     addOutput("Error: Container is not running. Please start the container first.")
                     return@launch
                 }
 
                 // Execute command in the running container
-                val result = runningContainer.execCommand(listOf("/bin/sh", "-c", command))
+                val result = containerManager.execCommand(containerId, listOf("/bin/sh", "-c", command))
 
                 result.onSuccess { process ->
                     withContext(Dispatchers.IO) {

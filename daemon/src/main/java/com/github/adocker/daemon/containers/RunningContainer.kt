@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 class RunningContainer @AssistedInject constructor(
     @Assisted val context: ContainerContext,
-    @Assisted val mainProcess: Process,
+    @Assisted internal val mainProcess: Process,
     appContext: AppContext,
     scope: CoroutineScope,
 ) {

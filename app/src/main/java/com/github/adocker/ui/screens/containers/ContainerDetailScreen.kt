@@ -114,7 +114,7 @@ fun ContainerDetailScreen(
                 DetailRow(label = stringResource(R.string.container_status), value = getStatusText(containerStatus))
                 DetailRow(
                     label = stringResource(R.string.container_created),
-                    value = formatDate(container.created)
+                    value = formatDate(container.createdAt)
                 )
             }
 

@@ -1,6 +1,7 @@
 package com.github.adocker.daemon.containers
 
 import com.github.adocker.daemon.app.AppContext
+import com.github.adocker.daemon.database.dao.ContainerDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -11,7 +12,7 @@ class ContainerContext @AssistedInject constructor(
     @Assisted
     val containerId: String,
     appContext: AppContext,
-    private val containerRepository: ContainerRepository,
+    private val containerDao: ContainerDao,
     private val engine: PRootEngine,
 ) {
     val containerDir = File(appContext.containersDir, containerId)
@@ -21,7 +22,7 @@ class ContainerContext @AssistedInject constructor(
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }
-        val config = containerRepository.getContainerById(containerId)?.config
+        val config = containerDao.getContainerById(containerId)?.config
         if (config == null) {
             return Result.failure(IllegalStateException("Container not found: $containerId"))
         }
