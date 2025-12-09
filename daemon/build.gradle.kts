@@ -101,6 +101,9 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
 
+    // Flow Redux
+    implementation(libs.flowredux)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)
