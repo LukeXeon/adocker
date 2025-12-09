@@ -1,10 +1,16 @@
 package com.github.adocker.daemon.containers
 
+import com.github.adocker.daemon.registry.model.ContainerConfig
 import java.io.BufferedWriter
 import java.io.File
 
 sealed class ContainerState() {
     object None : ContainerState()
+    data class Creating(
+        val imageId: String,
+        val name: String?,
+        val config: ContainerConfig
+    ) : ContainerState()
 
     data class Loading(
         val containerId: String
@@ -30,8 +36,6 @@ sealed class ContainerState() {
     data class Stopping(
         val containerId: String,
         val processes: List<Process>,
-        val stdout: File,
-        val stderr: File,
     ) : ContainerState()
 
     data class Removing(
@@ -45,5 +49,9 @@ sealed class ContainerState() {
     data class Dead(
         val containerId: String,
         val throwable: Throwable,
+    ) : ContainerState()
+
+    data class Terminated(
+        val throwable: Throwable? = null,
     ) : ContainerState()
 }
