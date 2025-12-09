@@ -8,6 +8,8 @@ sealed class ContainerOperation {
     class Stop : ContainerOperation()
 
     class Remove : ContainerOperation()
-
-    class Exec(val command: List<String>) : ContainerOperation()
+    class Exec(
+        val command: List<String>,
+        val callback: (Result<Process>) -> Unit
+    ) : ContainerOperation()
 }

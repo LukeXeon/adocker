@@ -1,97 +1,48 @@
 package com.github.adocker.daemon.containers
 
+import java.io.BufferedWriter
+import java.io.File
 
-/**
- * Docker-compatible container states.
- *
- * Represents the full lifecycle of a container following Docker's state model.
- * These states match Docker's official container states for API compatibility.
- *
- * State transitions:
- * ```
- * Created → Running → Paused → Running
- *    ↓         ↓                   ↓
- * Exited ← Exited ← Restarting ← Exited
- *    ↓
- * Removing → (deleted)
- *    ↓
- *  Dead (error state)
- * ```
- *
- * @see <a href="https://docs.docker.com/engine/api/v1.43/#tag/Container">Docker API - Container States</a>
- */
 sealed class ContainerState() {
-
     object None : ContainerState()
 
-    /**
-     * Container has been created but never started.
-     * - Created via `docker create` or similar
-     * - Filesystem is ready, but no process is running
-     * - Can be started with `docker start`
-     */
-    class Created(containerId: String) : ContainerState(containerId)
+    data class Loading(
+        val containerId: String
+    ) : ContainerState()
 
-    /**
-     * Container is currently running.
-     * - Main process (PID 1) is active
-     * - Started via `docker start` or `docker run`
-     * - Can be paused, stopped, or restarted
-     */
-    class Running(containerId: String) : ContainerState(containerId)
+    class Created(
+        val containerId: String
+    ) : ContainerState()
 
-    /**
-     * Container processes are paused (frozen).
-     * - Uses cgroups freezer to suspend all processes
-     * - Process state remains in memory but doesn't consume CPU
-     * - Can be unpaused to resume execution
-     * - Triggered by `docker pause`
-     */
-    class Paused(containerId: String) : ContainerState(containerId)
+    data class Starting(
+        val containerId: String
+    ) : ContainerState()
 
-    /**
-     * Container is in the process of restarting.
-     * - Transitional state, typically brief
-     * - Triggered by restart policy (e.g., `--restart=always`)
-     * - Will become Running or Exited shortly
-     */
-    class Restarting(containerId: String) : ContainerState(containerId)
+    data class Running(
+        val containerId: String,
+        val mainProcess: Process,
+        val stdin: BufferedWriter,
+        val stdout: File,
+        val stderr: File,
+        val otherProcesses: List<Process>,
+    ) : ContainerState()
 
-    /**
-     * Container is being removed.
-     * - Transitional state during `docker rm`
-     * - Resources are being cleaned up
-     * - Container will be deleted soon
-     */
-    class Removing(containerId: String) : ContainerState(containerId)
+    data class Stopping(
+        val containerId: String,
+        val mainProcess: Process,
+        val otherProcesses: List<Process>,
+    ) : ContainerState()
 
-    /**
-     * Container has stopped running.
-     * - Main process has terminated (normally or abnormally)
-     * - Exit code and logs are preserved
-     * - Can be restarted with `docker start`
-     * - Triggered by `docker stop` or process completion
-     *
-     * Note: This is the official Docker state. There is no "Stopped" state.
-     */
-    class Exited(
-        containerId: String,
-    ) : ContainerState(containerId)
+    data class Removing(
+        val containerId: String
+    ) : ContainerState()
 
-    /**
-     * Container is in an unrecoverable error state.
-     * - Resource cleanup failed after stopping
-     * - Typically caused by:
-     *   - Network namespace deletion failure
-     *   - Mount point unmount failure (device busy)
-     *   - cgroup cleanup failure
-     *   - Storage driver errors
-     * - Container cannot be started or removed normally
-     * - Requires manual intervention or Docker daemon restart
-     * - Rare in user-space implementations like ADocker
-     */
-    class Dead(
-        containerId: String,
-        throwable: Throwable,
-    ) : ContainerState(containerId)
+    data class Exited(
+        val containerId: String,
+    ) : ContainerState()
+
+    data class Dead(
+        val containerId: String,
+        val throwable: Throwable,
+    ) : ContainerState()
 }
