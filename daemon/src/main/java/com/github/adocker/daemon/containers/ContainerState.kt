@@ -29,8 +29,9 @@ sealed class ContainerState() {
 
     data class Stopping(
         val containerId: String,
-        val mainProcess: Process,
-        val otherProcesses: List<Process>,
+        val processes: List<Process>,
+        val stdout: File,
+        val stderr: File,
     ) : ContainerState()
 
     data class Removing(

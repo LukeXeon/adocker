@@ -136,16 +136,22 @@ class StateMachineFactory @Inject constructor(
                     }
                 }
                 on<ContainerOperation.Stop> {
-                    snapshot.mainProcess.destroy()
-                    noChange()
+                    override {
+                        ContainerState.Stopping(
+                            containerId,
+                            buildList {
+                                add(mainProcess)
+                                addAll(otherProcesses)
+                            },
+                            stdout,
+                            stderr,
+                        )
+                    }
                 }
             }
             inState<ContainerState.Stopping> {
                 onEnter {
-                    buildList {
-                        add(snapshot.mainProcess)
-                        addAll(snapshot.otherProcesses)
-                    }.onEach {
+                    snapshot.processes.onEach {
                         it.destroy()
                     }.forEach {
                         runInterruptible {
