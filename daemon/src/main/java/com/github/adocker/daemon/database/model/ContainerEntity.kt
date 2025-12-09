@@ -24,4 +24,5 @@ data class ContainerEntity(
      * Used to distinguish CREATED (never run) from EXITED (ran and stopped).
      */
     val lastRunAt: Long? = null,
+
 )

@@ -1,6 +1,5 @@
 package com.github.adocker.daemon.containers
 
-
 /**
  * Docker-compatible container states.
  *
@@ -20,17 +19,14 @@ package com.github.adocker.daemon.containers
  *
  * @see <a href="https://docs.docker.com/engine/api/v1.43/#tag/Container">Docker API - Container States</a>
  */
-sealed class ContainerState() {
-
-    object None : ContainerState()
-
+enum class ContainerState2 {
     /**
      * Container has been created but never started.
      * - Created via `docker create` or similar
      * - Filesystem is ready, but no process is running
      * - Can be started with `docker start`
      */
-    class Created(containerId: String) : ContainerState(containerId)
+    Created,
 
     /**
      * Container is currently running.
@@ -38,7 +34,7 @@ sealed class ContainerState() {
      * - Started via `docker start` or `docker run`
      * - Can be paused, stopped, or restarted
      */
-    class Running(containerId: String) : ContainerState(containerId)
+    Running,
 
     /**
      * Container processes are paused (frozen).
@@ -47,7 +43,7 @@ sealed class ContainerState() {
      * - Can be unpaused to resume execution
      * - Triggered by `docker pause`
      */
-    class Paused(containerId: String) : ContainerState(containerId)
+    Paused,
 
     /**
      * Container is in the process of restarting.
@@ -55,7 +51,7 @@ sealed class ContainerState() {
      * - Triggered by restart policy (e.g., `--restart=always`)
      * - Will become Running or Exited shortly
      */
-    class Restarting(containerId: String) : ContainerState(containerId)
+    Restarting,
 
     /**
      * Container is being removed.
@@ -63,7 +59,7 @@ sealed class ContainerState() {
      * - Resources are being cleaned up
      * - Container will be deleted soon
      */
-    class Removing(containerId: String) : ContainerState(containerId)
+    Removing,
 
     /**
      * Container has stopped running.
@@ -74,9 +70,7 @@ sealed class ContainerState() {
      *
      * Note: This is the official Docker state. There is no "Stopped" state.
      */
-    class Exited(
-        containerId: String,
-    ) : ContainerState(containerId)
+    Exited,
 
     /**
      * Container is in an unrecoverable error state.
@@ -90,8 +84,5 @@ sealed class ContainerState() {
      * - Requires manual intervention or Docker daemon restart
      * - Rare in user-space implementations like ADocker
      */
-    class Dead(
-        containerId: String,
-        throwable: Throwable,
-    ) : ContainerState(containerId)
+    Dead
 }

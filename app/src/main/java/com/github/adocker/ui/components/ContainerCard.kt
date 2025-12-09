@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
-import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.Container2
 import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
@@ -27,7 +27,7 @@ import com.github.adocker.ui.theme.Spacing
 
 @Composable
 fun ContainerCard(
-    container: Container,
+    container: Container2,
     status: ContainerStatus,
     onStart: () -> Unit,
     onStop: () -> Unit,

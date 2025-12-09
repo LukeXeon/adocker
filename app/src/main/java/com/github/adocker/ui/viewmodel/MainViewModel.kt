@@ -2,7 +2,7 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.Container2
 import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.images.ImageRepository
@@ -40,7 +40,7 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers: StateFlow<List<Container>> = containerManager.getAllContainers()
+    val containers: StateFlow<List<Container2>> = containerManager.getAllContainers()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
@@ -217,11 +217,11 @@ class MainViewModel @Inject constructor(
     }
 
     // Helper function to convert Container state to UI ContainerStatus
-    fun getContainerStatus(container: Container): ContainerStatus {
+    fun getContainerStatus(container: Container2): ContainerStatus {
         return when (container.state) {
-            com.github.adocker.daemon.containers.ContainerState.Created -> ContainerStatus.CREATED
-            com.github.adocker.daemon.containers.ContainerState.Running -> ContainerStatus.RUNNING
-            com.github.adocker.daemon.containers.ContainerState.Exited -> ContainerStatus.EXITED
+            com.github.adocker.daemon.containers.ContainerState2.Created -> ContainerStatus.CREATED
+            com.github.adocker.daemon.containers.ContainerState2.Running -> ContainerStatus.RUNNING
+            com.github.adocker.daemon.containers.ContainerState2.Exited -> ContainerStatus.EXITED
             else -> ContainerStatus.EXITED // For Paused, Restarting, Removing, Dead
         }
     }
@@ -229,7 +229,7 @@ class MainViewModel @Inject constructor(
     // Get running containers count
     fun getRunningCount(): Int {
         return containers.value.count {
-            it.state == com.github.adocker.daemon.containers.ContainerState.Running
+            it.state == com.github.adocker.daemon.containers.ContainerState2.Running
         }
     }
 
@@ -243,7 +243,7 @@ class MainViewModel @Inject constructor(
 
     val stats: StateFlow<Stats> = containers.map { containers ->
         val runningCount = containers.count {
-            it.state == com.github.adocker.daemon.containers.ContainerState.Running
+            it.state == com.github.adocker.daemon.containers.ContainerState2.Running
         }
         Stats(
             totalImages = images.value.size,

@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
-import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.Container2
 import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.components.ContainerCard
 import com.github.adocker.ui.viewmodel.MainViewModel
@@ -32,7 +32,7 @@ fun ContainersScreen(
     val containers by viewModel.containers.collectAsState()
 
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<Container2?>(null) }
 
     // Calculate counts for each status
     val statusCounts = remember(containers) {

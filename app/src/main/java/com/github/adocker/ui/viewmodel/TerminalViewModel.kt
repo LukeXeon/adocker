@@ -3,7 +3,7 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.Container2
 import com.github.adocker.daemon.containers.ContainerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -22,8 +22,8 @@ class TerminalViewModel @Inject constructor(
 
     private val containerId: String = savedStateHandle.get<String>("containerId") ?: ""
 
-    private val _container = MutableStateFlow<Container?>(null)
-    val container: StateFlow<Container?> = _container.asStateFlow()
+    private val _container = MutableStateFlow<Container2?>(null)
+    val container: StateFlow<Container2?> = _container.asStateFlow()
 
     private val _outputLines = MutableStateFlow<List<String>>(emptyList())
     val outputLines: StateFlow<List<String>> = _outputLines.asStateFlow()

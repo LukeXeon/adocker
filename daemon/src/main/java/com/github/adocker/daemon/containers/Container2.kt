@@ -9,17 +9,17 @@ import java.io.File
  *
  * This is the unified container model exposed to the UI layer, combining:
  * - Static configuration from [ContainerEntity]
- * - Runtime state from [ContainerState]
+ * - Runtime state from [ContainerState2]
  * - Process information
  */
-data class Container(
+data class Container2(
     val id: String,
     val name: String,
     val imageId: String,
     val imageName: String,
     val createdAt: Long,
     val config: ContainerConfig,
-    val state: ContainerState,
+    val state: ContainerState2,
     val lastRunAt: Long?,
     val stdout: File?,
     val stderr: File?,

@@ -60,7 +60,7 @@ class ContainerManager @Inject constructor(
      *
      * @return Flow of containers with runtime state information
      */
-    fun getAllContainers(): Flow<List<Container>> {
+    fun getAllContainers(): Flow<List<Container2>> {
         return combine(
             containerDao.getAllContainers(),
             runtimeStates
@@ -74,7 +74,7 @@ class ContainerManager @Inject constructor(
     /**
      * Get a specific container by ID.
      */
-    suspend fun getContainerById(id: String): Container? {
+    suspend fun getContainerById(id: String): Container2? {
         val entity = containerDao.getContainerById(id) ?: return null
         val state = runtimeStates.value[id]
         return toContainer(entity, state)
@@ -92,7 +92,7 @@ class ContainerManager @Inject constructor(
         imageId: String,
         name: String? = null,
         config: ContainerConfig = ContainerConfig()
-    ): Result<Container> = withContext(Dispatchers.IO) {
+    ): Result<Container2> = withContext(Dispatchers.IO) {
         runCatching {
             val image = imageDao.getImageById(imageId)
                 ?: throw IllegalArgumentException("Image not found: $imageId")
@@ -399,16 +399,16 @@ class ContainerManager @Inject constructor(
     /**
      * Convert entity and runtime state to Container model.
      */
-    private fun toContainer(entity: ContainerEntity, state: RuntimeState?): Container {
+    private fun toContainer(entity: ContainerEntity, state: RuntimeState?): Container2 {
         val containerState = when (state) {
-            null -> if (entity.lastRunAt != null) ContainerState.Exited else ContainerState.Created
-            is RuntimeState.Running -> ContainerState.Running
-            is RuntimeState.Exited -> ContainerState.Exited
-            is RuntimeState.Removing -> ContainerState.Removing
-            is RuntimeState.Dead -> ContainerState.Dead
+            null -> if (entity.lastRunAt != null) ContainerState2.Exited else ContainerState2.Created
+            is RuntimeState.Running -> ContainerState2.Running
+            is RuntimeState.Exited -> ContainerState2.Exited
+            is RuntimeState.Removing -> ContainerState2.Removing
+            is RuntimeState.Dead -> ContainerState2.Dead
         }
 
-        return Container(
+        return Container2(
             id = entity.id,
             name = entity.name,
             imageId = entity.imageId,
