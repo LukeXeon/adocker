@@ -9,12 +9,13 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Mutex
@@ -24,6 +25,7 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,34 +43,33 @@ import javax.inject.Singleton
 @Singleton
 class ContainerManager @Inject constructor(
     private val containerDao: ContainerDao,
-    private val imageDao: ImageDao,
-    private val appContext: AppContext,
-    private val contextFactory: ContainerContext.Factory,
-    private val containerFactory: RunningContainer.Factory,
+    private val stateMachineFactory: StateMachineFactory,
     private val scope: CoroutineScope,
 ) {
     private val mutex = Mutex()
-
-    /**
-     * Maps container ID to its runtime state.
-     * Only contains entries for containers that are currently running or being removed.
-     */
-    private val runtimeStates = MutableStateFlow<Map<String, RuntimeState>>(emptyMap())
 
     /**
      * Get all containers with their current state.
      *
      * @return Flow of containers with runtime state information
      */
-    fun getAllContainers(): Flow<List<Container2>> {
-        return combine(
-            containerDao.getAllContainers(),
-            runtimeStates
-        ) { entities, states ->
-            entities.map { entity ->
-                toContainer(entity, states[entity.id])
+    fun getAllContainers(): Flow<List<Container>> {
+        return containerDao.getAllContainers()
+            .scan(HashMap<String, Container>()) { cache, newList ->
+                val keysToRemove = cache.keys - newList.asSequence().map { it.id }.toSet()
+                keysToRemove.forEach { cache.remove(it) }
+                newList.forEach { item ->
+                    cache.getOrPut(item.id) {
+                        Container(
+                            item.id,
+                            stateMachineFactory.launchIn(scope)
+                        )
+                    }
+                }
+                HashMap(cache)
+            }.map {
+                it.values.toList()
             }
-        }
     }
 
     /**
@@ -76,8 +77,7 @@ class ContainerManager @Inject constructor(
      */
     suspend fun getContainerById(id: String): Container2? {
         val entity = containerDao.getContainerById(id) ?: return null
-        val state = runtimeStates.value[id]
-        return toContainer(entity, state)
+        val state = containers.value[id]
     }
 
     /**
@@ -92,76 +92,17 @@ class ContainerManager @Inject constructor(
         imageId: String,
         name: String? = null,
         config: ContainerConfig = ContainerConfig()
-    ): Result<Container2> = withContext(Dispatchers.IO) {
-        runCatching {
-            val image = imageDao.getImageById(imageId)
-                ?: throw IllegalArgumentException("Image not found: $imageId")
-
-            // Generate container name if not provided
-            val containerName = name ?: generateContainerName()
-
-            // Check if name already exists
-            if (containerDao.getContainerByName(containerName) != null) {
-                throw IllegalArgumentException("Container with name '$containerName' already exists")
-            }
-
-            val containerId = UUID.randomUUID().toString()
-
-            // Create container directory structure
-            val containerDir = File(appContext.containersDir, containerId)
-            val rootfsDir = File(containerDir, AppContext.Companion.ROOTFS_DIR)
-            rootfsDir.mkdirs()
-
-            // Extract layers directly to rootfs
-            image.layerIds.forEach { digest ->
-                val layerFile =
-                    File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
-                if (layerFile.exists()) {
-                    Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
-                    FileInputStream(layerFile).use { fis ->
-                        extractTarGz(fis, rootfsDir).getOrThrow()
-                    }
-                    Timber.d("Layer ${digest.take(16)} extracted successfully")
-                } else {
-                    Timber.w("Layer file not found: ${layerFile.absolutePath}")
-                }
-            }
-
-            // Merge image config with provided config
-            val imageConfig = image.config
-            val mergedConfig = config.copy(
-                cmd = if (config.cmd == listOf("/bin/sh")) {
-                    imageConfig?.cmd ?: imageConfig?.entrypoint ?: config.cmd
-                } else config.cmd,
-                entrypoint = config.entrypoint ?: imageConfig?.entrypoint,
-                env = buildMap {
-                    imageConfig?.env?.forEach { envStr ->
-                        val parts = envStr.split("=", limit = 2)
-                        if (parts.size == 2) {
-                            put(parts[0], parts[1])
-                        }
-                    }
-                    putAll(config.env)
-                },
-                workingDir = if (config.workingDir == "/") {
-                    imageConfig?.workingDir ?: config.workingDir
-                } else config.workingDir,
-                user = if (config.user == "root") {
-                    imageConfig?.user ?: config.user
-                } else config.user
+    ): Result<Container> {
+        val stateMachine = stateMachineFactory.launchIn(scope)
+        stateMachine.dispatch(
+            ContainerOperation.Create(
+                imageId,
+                name,
+                config,
             )
+        )
 
-            val entity = ContainerEntity(
-                id = containerId,
-                name = containerName,
-                imageId = image.id,
-                imageName = "${image.repository}:${image.tag}",
-                config = mergedConfig
-            )
-            containerDao.insertContainer(entity)
 
-            toContainer(entity, null)
-        }
     }
 
     /**
@@ -173,7 +114,7 @@ class ContainerManager @Inject constructor(
     suspend fun startContainer(containerId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             mutex.withLock {
-                val currentState = runtimeStates.value[containerId]
+                val currentState = containers.value[containerId]
 
                 // Check if already running
                 if (currentState is RuntimeState.Running && currentState.job.isActive) {
@@ -196,7 +137,7 @@ class ContainerManager @Inject constructor(
                     )
 
                     // Update runtime states
-                    runtimeStates.value = runtimeStates.value + (containerId to runtimeState)
+                    containers.value = containers.value + (containerId to runtimeState)
 
                     // Mark container as having been run with current timestamp
                     containerDao.setContainerLastRun(containerId, System.currentTimeMillis())
@@ -233,7 +174,7 @@ class ContainerManager @Inject constructor(
     suspend fun stopContainer(containerId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             mutex.withLock {
-                val state = runtimeStates.value[containerId]
+                val state = containers.value[containerId]
 
                 if (state !is RuntimeState.Running) {
                     throw IllegalStateException("Container is not running")
@@ -291,7 +232,7 @@ class ContainerManager @Inject constructor(
                 val entity = containerDao.getContainerById(containerId)
                     ?: throw IllegalArgumentException("Container not found: $containerId")
 
-                val state = runtimeStates.value[containerId]
+                val state = containers.value[containerId]
 
                 // Cannot delete a running container
                 if (state is RuntimeState.Running && state.job.isActive) {
@@ -301,8 +242,8 @@ class ContainerManager @Inject constructor(
                 withContext(NonCancellable) {
                     try {
                         // Mark as removing
-                        runtimeStates.value =
-                            runtimeStates.value + (containerId to RuntimeState.Removing)
+                        containers.value =
+                            containers.value + (containerId to RuntimeState.Removing)
 
                         // Delete container directory
                         val containerDir = File(appContext.containersDir, containerId)
@@ -312,13 +253,13 @@ class ContainerManager @Inject constructor(
                         containerDao.deleteContainerById(containerId)
 
                         // Remove from runtime states
-                        runtimeStates.value = runtimeStates.value - containerId
+                        containers.value = containers.value - containerId
 
                     } catch (e: Exception) {
                         // If cleanup fails, mark as Dead
                         Timber.e(e, "Failed to delete container $containerId")
-                        runtimeStates.value =
-                            runtimeStates.value + (containerId to RuntimeState.Dead(e.message))
+                        containers.value =
+                            containers.value + (containerId to RuntimeState.Dead(e.message))
                         throw e
                     }
                 }
@@ -359,7 +300,7 @@ class ContainerManager @Inject constructor(
      */
     suspend fun execCommand(containerId: String, command: List<String>): Result<Process> {
         return mutex.withLock {
-            val state = runtimeStates.value[containerId]
+            val state = containers.value[containerId]
 
             if (state !is RuntimeState.Running || !state.job.isActive) {
                 return Result.failure(IllegalStateException("Container is not running"))
@@ -377,7 +318,7 @@ class ContainerManager @Inject constructor(
      */
     suspend fun getRunningContainer(containerId: String): RunningContainer? {
         return mutex.withLock {
-            val state = runtimeStates.value[containerId]
+            val state = containers.value[containerId]
             if (state is RuntimeState.Running && state.job.isActive) {
                 state.runningContainer
             } else {
@@ -386,77 +327,5 @@ class ContainerManager @Inject constructor(
         }
     }
 
-    /**
-     * Update container state to Exited.
-     */
-    private suspend fun updateStateToExited(containerId: String, exitCode: Int?) {
-        mutex.withLock {
-            runtimeStates.value =
-                runtimeStates.value + (containerId to RuntimeState.Exited(exitCode))
-        }
-    }
 
-    /**
-     * Convert entity and runtime state to Container model.
-     */
-    private fun toContainer(entity: ContainerEntity, state: RuntimeState?): Container2 {
-        val containerState = when (state) {
-            null -> if (entity.lastRunAt != null) ContainerState2.Exited else ContainerState2.Created
-            is RuntimeState.Running -> ContainerState2.Running
-            is RuntimeState.Exited -> ContainerState2.Exited
-            is RuntimeState.Removing -> ContainerState2.Removing
-            is RuntimeState.Dead -> ContainerState2.Dead
-        }
-
-        return Container2(
-            id = entity.id,
-            name = entity.name,
-            imageId = entity.imageId,
-            imageName = entity.imageName,
-            createdAt = entity.createdAt,
-            config = entity.config,
-            state = containerState,
-            lastRunAt = entity.lastRunAt,
-            stdout = (state as? RuntimeState.Running)?.stdout,
-            stderr = (state as? RuntimeState.Running)?.stderr,
-            exitCode = (state as? RuntimeState.Exited)?.exitCode
-        )
-    }
-
-    /**
-     * Internal runtime state representation.
-     */
-    private sealed interface RuntimeState {
-        data class Running(
-            val runningContainer: RunningContainer,
-            val job: Job,
-            val stdout: File,
-            val stderr: File,
-            val startedAt: Long
-        ) : RuntimeState
-
-        data class Exited(val exitCode: Int?) : RuntimeState
-        data object Removing : RuntimeState
-        data class Dead(val error: String?) : RuntimeState
-    }
-
-    companion object {
-        /**
-         * Generate a random container name
-         */
-        private fun generateContainerName(): String {
-            val adj = ADJECTIVES.random()
-            val noun = NOUNS.random()
-            val num = (1000..9999).random()
-            return "${adj}_${noun}_$num"
-        }
-
-        private val NOUNS = listOf(
-            "panda", "tiger", "eagle", "dolphin", "falcon", "wolf", "bear", "lion"
-        )
-
-        private val ADJECTIVES = listOf(
-            "happy", "sleepy", "brave", "clever", "swift", "calm", "eager", "fancy"
-        )
-    }
 }
