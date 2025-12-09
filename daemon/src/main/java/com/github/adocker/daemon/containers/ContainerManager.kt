@@ -1,19 +1,13 @@
 package com.github.adocker.daemon.containers
 
-import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
-import com.github.adocker.daemon.database.dao.ImageDao
-import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.deleteRecursively
-import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
@@ -23,9 +17,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
-import java.io.FileInputStream
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,13 +47,13 @@ class ContainerManager @Inject constructor(
     fun getAllContainers(): Flow<List<Container>> {
         return containerDao.getAllContainers()
             .scan(HashMap<String, Container>()) { cache, newList ->
-                val keysToRemove = cache.keys - newList.asSequence().map { it.id }.toSet()
-                keysToRemove.forEach { cache.remove(it) }
+                val toRemove = cache.keys - newList.asSequence().map { it.id }.toSet()
+                toRemove.forEach { cache.remove(it) }
                 newList.forEach { item ->
                     cache.getOrPut(item.id) {
                         Container(
                             item.id,
-                            stateMachineFactory.launchIn(scope)
+                            stateMachineFactory.newInstance()
                         )
                     }
                 }

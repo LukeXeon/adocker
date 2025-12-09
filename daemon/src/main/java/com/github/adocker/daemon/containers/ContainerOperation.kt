@@ -5,25 +5,24 @@ import kotlinx.coroutines.CompletableDeferred
 
 sealed class ContainerOperation {
 
-    class Create(
+    data class Create(
         val imageId: String,
         val name: String?,
         val config: ContainerConfig
     ) : ContainerOperation()
 
-    class Load(
+    data class Load(
         val containerId: String
     ) : ContainerOperation()
 
-    class Start : ContainerOperation()
+    object Start : ContainerOperation()
 
-    class Stop : ContainerOperation()
+    object Stop : ContainerOperation()
 
-    class Remove : ContainerOperation()
+    object Remove : ContainerOperation()
 
-    class Exec(
-        val command: List<String>
-    ) : ContainerOperation() {
-        val process = CompletableDeferred<Process>()
-    }
+    data class Exec(
+        val command: List<String>,
+        val deferred: CompletableDeferred<Process>? = null
+    ) : ContainerOperation()
 }
