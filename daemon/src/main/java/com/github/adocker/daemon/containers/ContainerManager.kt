@@ -201,12 +201,15 @@ class ContainerManager @Inject constructor(
                 val idsToAdd = newIds - oldIds
                 idsToAdd.forEach { id ->
                     val result = loadContainer(id)
-                    result.fold(onSuccess = { container ->
-                        table[id] = container
-                        Timber.d("Added container to cache: $id")
-                    }, onFailure = { error ->
-                        Timber.e(error, "Failed to load container: $id")
-                    })
+                    result.fold(
+                        { container ->
+                            table[id] = container
+                            Timber.d("Added container to cache: $id")
+                        },
+                        { error ->
+                            Timber.e(error, "Failed to load container: $id")
+                        }
+                    )
                 }
                 table.asSequence().sortedBy { it.key }.map { it.value }.toList()
             }
