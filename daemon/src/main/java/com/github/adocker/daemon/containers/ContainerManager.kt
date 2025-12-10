@@ -188,18 +188,18 @@ class ContainerManager @Inject constructor(
             // Use mutex to ensure atomic cache updates
             containersMutex.withLock {
                 // Get current cached IDs
-                val cachedIds = containers.keys.toSet()
+                val oldIds = containers.keys
                 val newIds = containerIds.toSet()
 
                 // Remove containers that no longer exist
-                val idsToRemove = cachedIds - newIds
+                val idsToRemove = oldIds - newIds
                 idsToRemove.forEach { id ->
                     containers.remove(id)
                     Timber.d("Removed container from cache: $id")
                 }
 
                 // Add new containers
-                val idsToAdd = newIds - cachedIds
+                val idsToAdd = newIds - oldIds
                 for (id in idsToAdd) {
                     val result = loadContainer(id)
                     result.fold(
