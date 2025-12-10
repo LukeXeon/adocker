@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import com.freeletics.flowredux2.ExecutionPolicy
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.adocker.daemon.app.AppContext
@@ -79,7 +80,9 @@ class StateMachineFactory @AssistedInject constructor(
                         )
                     }
                 }
-                on<ContainerOperation.Exec> {
+                on<ContainerOperation.Exec>(
+                    ExecutionPolicy.Ordered
+                ) {
                     val process = startProcess(snapshot.containerId, it.command)
                     it.deferred?.completeWith(process)
                     process.fold(
