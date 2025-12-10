@@ -9,8 +9,11 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.completeWith
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
 
@@ -26,6 +29,35 @@ class StateMachineFactory @AssistedInject constructor(
     init {
         initializeWith { initialState }
         spec {
+            inState<ContainerState> {
+                on<ContainerOperation.Exec>(ExecutionPolicy.Ordered) {
+                    val state = snapshot
+                    if (state is ContainerState.Running) {
+                        val process = startProcess(snapshot.containerId, it.command)
+                        it.deferred.completeWith(process)
+                        process.fold(
+                            { process ->
+                                mutate {
+                                    state.copy(
+                                        otherProcesses = buildList(state.otherProcesses.size + 1) {
+                                            addAll(state.otherProcesses)
+                                            add(process)
+                                        }
+                                    )
+                                }
+                            },
+                            {
+                                noChange()
+                            }
+                        )
+                    } else {
+                        it.deferred.completeExceptionally(
+                            IllegalStateException("Cannot exec: container is not running")
+                        )
+                        noChange()
+                    }
+                }
+            }
             inState<ContainerState.Created> {
                 on<ContainerOperation.Start> {
                     override {
@@ -69,8 +101,10 @@ class StateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    runInterruptible {
-                        snapshot.mainProcess.waitFor()
+                    withContext(Dispatchers.IO) {
+                        runInterruptible {
+                            snapshot.mainProcess.waitFor()
+                        }
                     }
                     override {
                         ContainerState.Stopping(
@@ -78,26 +112,6 @@ class StateMachineFactory @AssistedInject constructor(
                             otherProcesses,
                         )
                     }
-                }
-                on<ContainerOperation.Exec>(
-                    ExecutionPolicy.Ordered
-                ) {
-                    val process = startProcess(snapshot.containerId, it.command)
-                    process.fold(
-                        { process ->
-                            mutate {
-                                copy(
-                                    otherProcesses = buildList(otherProcesses.size + 1) {
-                                        addAll(otherProcesses)
-                                        add(process)
-                                    }
-                                )
-                            }
-                        },
-                        {
-                            noChange()
-                        }
-                    )
                 }
                 on<ContainerOperation.Stop> {
                     override {
