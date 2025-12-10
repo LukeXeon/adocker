@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ContainerDao {
-    @Query("SELECT * FROM containers ORDER BY createdAt DESC")
-    fun getAllContainers(): Flow<List<ContainerEntity>>
+    @Query("SELECT id FROM containers ORDER BY createdAt DESC")
+    fun getAllContainers(): Flow<List<String>>
 
     @Query("SELECT * FROM containers WHERE id = :id")
     suspend fun getContainerById(id: String): ContainerEntity?

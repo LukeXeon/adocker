@@ -12,8 +12,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -32,6 +33,11 @@ class ContainerManager @Inject constructor(
 ) {
     private val adjectives = application.resources.getStringArray(R.array.adjectives).asList()
     private val nouns = application.resources.getStringArray(R.array.nouns).asList()
+
+    // Cache for Container instances (protected by mutex for thread safety)
+    private val containers = mutableMapOf<String, Container>()
+    // Mutex to ensure atomic updates to the cache
+    private val containersMutex = Mutex()
 
     /**
      * Generate a random container name
@@ -172,19 +178,47 @@ class ContainerManager @Inject constructor(
         )
     }
 
+    /**
+     * Get all containers as a Flow that reuses Container instances.
+     * Only creates/removes Container instances when the ID set changes.
+     * Thread-safe implementation using Mutex.
+     */
     fun getAllContainers(): Flow<List<Container>> {
-        return containerDao.getAllContainers()
-            .scan(HashMap<String, Container>()) { cache, newList ->
-                val toRemove = cache.keys - newList.asSequence().map { it.id }.toSet()
-                toRemove.forEach { cache.remove(it) }
-                newList.forEach { item ->
-                    cache.getOrPut(item.id) {
-                        loadContainer(item.id).getOrThrow()
-                    }
+        return containerDao.getAllContainers().map { containerIds ->
+            // Use mutex to ensure atomic cache updates
+            containersMutex.withLock {
+                // Get current cached IDs
+                val cachedIds = containers.keys.toSet()
+                val newIds = containerIds.toSet()
+
+                // Remove containers that no longer exist
+                val idsToRemove = cachedIds - newIds
+                idsToRemove.forEach { id ->
+                    containers.remove(id)
+                    Timber.d("Removed container from cache: $id")
                 }
-                HashMap(cache)
-            }.map {
-                it.values.toList()
+
+                // Add new containers
+                val idsToAdd = newIds - cachedIds
+                for (id in idsToAdd) {
+                    val result = loadContainer(id)
+                    result.fold(
+                        onSuccess = { container ->
+                            containers[id] = container
+                            Timber.d("Added container to cache: $id")
+                        },
+                        onFailure = { error ->
+                            Timber.e(error, "Failed to load container: $id")
+                        }
+                    )
+                }
+
+                // Return containers in the order from database
+                containerIds.mapNotNull { id ->
+                    containers[id] // Returns null if load failed
+                }
             }
+        }
     }
 }
+
