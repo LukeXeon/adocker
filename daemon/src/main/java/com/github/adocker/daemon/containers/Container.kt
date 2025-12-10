@@ -17,15 +17,15 @@ class Container(
         deferred.await()
     }
 
-    suspend fun start() {
-        stateMachine.dispatch(ContainerOperation.Start)
+    fun start() {
+        stateMachine.dispatchAction(ContainerOperation.Start)
     }
 
-    suspend fun stop() {
-        stateMachine.dispatch(ContainerOperation.Stop)
+    fun stop() {
+        stateMachine.dispatchAction(ContainerOperation.Stop)
     }
 
-    suspend fun remove() {
-        stateMachine.dispatch(ContainerOperation.Remove)
+    fun remove() {
+        stateMachine.dispatchAction(ContainerOperation.Remove)
     }
 }

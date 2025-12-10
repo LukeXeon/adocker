@@ -11,7 +11,8 @@ import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
@@ -70,8 +71,7 @@ class ContainerManager @Inject constructor(
             entity.lastRunAt != null -> {
                 Result.success(
                     Container(
-                        containerId,
-                        stateMachineFactory.create(
+                        containerId, stateMachineFactory.create(
                             ContainerState.Exited(containerId)
                         ).launchIn(scope)
                     )
@@ -81,8 +81,7 @@ class ContainerManager @Inject constructor(
             else -> {
                 Result.success(
                     Container(
-                        containerId,
-                        stateMachineFactory.create(
+                        containerId, stateMachineFactory.create(
                             ContainerState.Created(containerId)
                         ).launchIn(scope)
                     )
@@ -125,13 +124,16 @@ class ContainerManager @Inject constructor(
                 Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
                 FileInputStream(layerFile).use { fis ->
                     extractTarGz(fis, rootfsDir)
-                }.fold({
-                    Timber.d("Layer ${digest.take(16)} extracted successfully")
-                }, {
-                    return Result.failure(
-                        it
-                    )
-                })
+                }.fold(
+                    {
+                        Timber.d("Layer ${digest.take(16)} extracted successfully")
+                    },
+                    {
+                        return Result.failure(
+                            it
+                        )
+                    }
+                )
             } else {
                 Timber.w("Layer file not found: ${layerFile.absolutePath}")
             }
@@ -173,50 +175,44 @@ class ContainerManager @Inject constructor(
         containerDao.insertContainer(entity)
         return Result.success(
             Container(
-                containerId,
-                stateMachineFactory.create(
+                containerId, stateMachineFactory.create(
                     ContainerState.Created(containerId)
                 ).launchIn(scope)
             )
         )
     }
 
-    val allContainers = run {
-        val cache = HashMap<String, Container>()
+    val allContainers = flow {
+        val table = HashMap<String, Container>()
         val mutex = Mutex()
-        containerDao.getAllContainers().map { containerIds ->
+        containerDao.getAllContainers().collectLatest { containerIds ->
             // Use mutex to ensure atomic cache updates
-            mutex.withLock {
+            val newList = mutex.withLock {
                 // Get current cached IDs
-                val oldIds = cache.keys
+                val oldIds = table.keys
                 val newIds = containerIds.toSet()
                 // Remove containers that no longer exist
                 val idsToRemove = oldIds - newIds
                 idsToRemove.forEach { id ->
-                    cache.remove(id)?.stop()
+                    table.remove(id)?.stop()
                     Timber.d("Removed container from cache: $id")
                 }
                 // Add new containers
                 val idsToAdd = newIds - oldIds
-                for (id in idsToAdd) {
+                idsToAdd.forEach { id ->
                     val result = loadContainer(id)
-                    result.fold(
-                        onSuccess = { container ->
-                            cache[id] = container
-                            Timber.d("Added container to cache: $id")
-                        },
-                        onFailure = { error ->
-                            Timber.e(error, "Failed to load container: $id")
-                        }
-                    )
+                    result.fold(onSuccess = { container ->
+                        table[id] = container
+                        Timber.d("Added container to cache: $id")
+                    }, onFailure = { error ->
+                        Timber.e(error, "Failed to load container: $id")
+                    })
                 }
-                cache.asSequence()
-                    .sortedBy { it.key }
-                    .map { it.value }
-                    .toList()
+                table.asSequence().sortedBy { it.key }.map { it.value }.toList()
             }
-        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
-    }
+            emit(newList)
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
 }
 
