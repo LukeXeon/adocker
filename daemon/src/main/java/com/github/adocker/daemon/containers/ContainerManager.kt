@@ -186,7 +186,7 @@ class ContainerManager @Inject constructor(
                 // Remove containers that no longer exist
                 val idsToRemove = oldIds - newIds
                 idsToRemove.forEach { id ->
-                    cache.remove(id)
+                    cache.remove(id)?.stop()
                     Timber.d("Removed container from cache: $id")
                 }
                 // Add new containers
