@@ -216,12 +216,9 @@ class StateMachineFactory @Inject constructor(
 
     private suspend fun createContainer(state: ContainerState.Creating): ContainerState {
         val (imageId, inputName, config) = state
-        val image = imageDao.getImageById(imageId)
-        if (image == null) {
-            return ContainerState.Terminated(
-                IllegalArgumentException("Image not found: $imageId")
-            )
-        }
+        val image = imageDao.getImageById(imageId) ?: return ContainerState.Terminated(
+            IllegalArgumentException("Image not found: $imageId")
+        )
         val containerName = if (inputName == null) {
             generateContainerSafeName()
         } else {
