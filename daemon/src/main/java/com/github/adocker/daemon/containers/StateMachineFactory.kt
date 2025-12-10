@@ -127,11 +127,13 @@ class StateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Stopping> {
                 onEnter {
-                    snapshot.processes.onEach {
-                        it.destroy()
-                    }.forEach {
-                        runInterruptible {
-                            it.waitFor()
+                    withContext(Dispatchers.IO) {
+                        snapshot.processes.onEach {
+                            it.destroy()
+                        }.forEach {
+                            runInterruptible {
+                                it.waitFor()
+                            }
                         }
                     }
                     override {
