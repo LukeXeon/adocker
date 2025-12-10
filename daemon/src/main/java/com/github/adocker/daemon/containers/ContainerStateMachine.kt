@@ -246,7 +246,7 @@ class ContainerStateMachine @AssistedInject constructor(
         exec: ContainerOperation.Exec
     ): FlowReduxStateMachineFactory<SubProcessState, Unit> {
         return subStateMachineFactory.create(
-            SubProcessState.Creating(
+            SubProcessState.Starting(
                 snapshot.containerId,
                 exec.command,
                 exec.deferred

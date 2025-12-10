@@ -20,7 +20,7 @@ class SubProcessStateMachine @AssistedInject constructor(
     init {
         initializeWith { initialState }
         spec {
-            inState<SubProcessState.Creating> {
+            inState<SubProcessState.Starting> {
                 onEnter {
                     val process = processBuilder.startProcess(
                         snapshot.containerId,

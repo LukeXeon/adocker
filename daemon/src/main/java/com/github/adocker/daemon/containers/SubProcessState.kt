@@ -3,7 +3,7 @@ package com.github.adocker.daemon.containers
 import kotlinx.coroutines.CompletableDeferred
 
 sealed interface SubProcessState {
-    data class Creating(
+    data class Starting(
         val containerId: String,
         val command: List<String>,
         val deferred: CompletableDeferred<Process>
