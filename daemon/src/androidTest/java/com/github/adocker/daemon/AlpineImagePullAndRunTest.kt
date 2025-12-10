@@ -1,7 +1,6 @@
 package com.github.adocker.daemon
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullStatus
