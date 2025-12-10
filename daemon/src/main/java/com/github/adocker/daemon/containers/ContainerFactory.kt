@@ -117,14 +117,15 @@ class ContainerFactory @Inject constructor(
                 FileInputStream(layerFile).use { fis ->
                     extractTarGz(fis, rootfsDir)
                 }.fold(
-                    {},
+                    {
+                        Timber.d("Layer ${digest.take(16)} extracted successfully")
+                    },
                     {
                         return Result.failure(
                             it
                         )
                     }
                 )
-                Timber.d("Layer ${digest.take(16)} extracted successfully")
             } else {
                 Timber.w("Layer file not found: ${layerFile.absolutePath}")
             }
