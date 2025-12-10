@@ -10,8 +10,9 @@ import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -33,11 +34,6 @@ class ContainerManager @Inject constructor(
 ) {
     private val adjectives = application.resources.getStringArray(R.array.adjectives).asList()
     private val nouns = application.resources.getStringArray(R.array.nouns).asList()
-
-    // Cache for Container instances (protected by mutex for thread safety)
-    private val containers = mutableMapOf<String, Container>()
-    // Mutex to ensure atomic updates to the cache
-    private val containersMutex = Mutex()
 
     /**
      * Generate a random container name
@@ -178,33 +174,28 @@ class ContainerManager @Inject constructor(
         )
     }
 
-    /**
-     * Get all containers as a Flow that reuses Container instances.
-     * Only creates/removes Container instances when the ID set changes.
-     * Thread-safe implementation using Mutex.
-     */
-    fun getAllContainers(): Flow<List<Container>> {
-        return containerDao.getAllContainers().map { containerIds ->
+    val allContainers = run {
+        val cache = HashMap<String, Container>()
+        val mutex = Mutex()
+        containerDao.getAllContainers().map { containerIds ->
             // Use mutex to ensure atomic cache updates
-            containersMutex.withLock {
+            mutex.withLock {
                 // Get current cached IDs
-                val oldIds = containers.keys
+                val oldIds = cache.keys
                 val newIds = containerIds.toSet()
-
                 // Remove containers that no longer exist
                 val idsToRemove = oldIds - newIds
                 idsToRemove.forEach { id ->
-                    containers.remove(id)
+                    cache.remove(id)
                     Timber.d("Removed container from cache: $id")
                 }
-
                 // Add new containers
                 val idsToAdd = newIds - oldIds
                 for (id in idsToAdd) {
                     val result = loadContainer(id)
                     result.fold(
                         onSuccess = { container ->
-                            containers[id] = container
+                            cache[id] = container
                             Timber.d("Added container to cache: $id")
                         },
                         onFailure = { error ->
@@ -212,13 +203,10 @@ class ContainerManager @Inject constructor(
                         }
                     )
                 }
-
-                // Return containers in the order from database
-                containerIds.mapNotNull { id ->
-                    containers[id] // Returns null if load failed
-                }
+                cache.values.toList()
             }
-        }
+        }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     }
+
 }
 
