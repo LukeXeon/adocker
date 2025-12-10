@@ -2,7 +2,6 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.containers.Container2
 import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.images.ImageRepository
