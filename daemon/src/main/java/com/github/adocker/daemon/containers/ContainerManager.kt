@@ -25,7 +25,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ContainerManager @Inject constructor(
-    private val factory: StateMachineFactory.Factory,
+    private val stateMachineFactory: ContainerStateMachine.Factory,
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appContext: AppContext,
@@ -71,7 +71,9 @@ class ContainerManager @Inject constructor(
                 Result.success(
                     Container(
                         containerId,
-                        factory.create(ContainerState.Exited(containerId)).launchIn(scope)
+                        stateMachineFactory.create(
+                            ContainerState.Exited(containerId)
+                        ).launchIn(scope)
                     )
                 )
             }
@@ -80,7 +82,9 @@ class ContainerManager @Inject constructor(
                 Result.success(
                     Container(
                         containerId,
-                        factory.create(ContainerState.Created(containerId)).launchIn(scope)
+                        stateMachineFactory.create(
+                            ContainerState.Created(containerId)
+                        ).launchIn(scope)
                     )
                 )
             }
@@ -169,7 +173,10 @@ class ContainerManager @Inject constructor(
         containerDao.insertContainer(entity)
         return Result.success(
             Container(
-                containerId, factory.create(ContainerState.Created(containerId)).launchIn(scope)
+                containerId,
+                stateMachineFactory.create(
+                    ContainerState.Created(containerId)
+                ).launchIn(scope)
             )
         )
     }
@@ -203,7 +210,10 @@ class ContainerManager @Inject constructor(
                         }
                     )
                 }
-                cache.values.toList()
+                cache.asSequence()
+                    .sortedBy { it.key }
+                    .map { it.value }
+                    .toList()
             }
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
     }
