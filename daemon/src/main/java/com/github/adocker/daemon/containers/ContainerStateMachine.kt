@@ -22,7 +22,7 @@ import javax.inject.Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
 class ContainerStateMachine @AssistedInject constructor(
     @Assisted
-    private val initialState: ContainerState,
+    initialState: ContainerState,
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val processBuilder: ContainerProcessBuilder,
