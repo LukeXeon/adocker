@@ -1,7 +1,6 @@
 package com.github.adocker.daemon.containers
 
 import android.app.Application
-import com.freeletics.flowredux2.FlowReduxStateMachine
 import com.github.adocker.daemon.R
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
@@ -10,7 +9,8 @@ import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -27,8 +27,8 @@ class ContainerFactory @Inject constructor(
     private val scope: CoroutineScope,
     application: Application,
 ) {
-    private val adjectives = application.resources.getStringArray(R.array.adjectives)
-    private val nouns = application.resources.getStringArray(R.array.nouns).random()
+    private val adjectives = application.resources.getStringArray(R.array.adjectives).asList()
+    private val nouns = application.resources.getStringArray(R.array.nouns).asList()
 
     /**
      * Generate a random container name
@@ -42,7 +42,7 @@ class ContainerFactory @Inject constructor(
 
     private suspend fun generateContainerSafeName(): String {
         var name = generateContainerName()
-        while (true) {
+        while (currentCoroutineContext().isActive) {
             if (containerDao.getContainerByName(name) != null) {
                 name = generateContainerName()
             } else {
@@ -52,7 +52,7 @@ class ContainerFactory @Inject constructor(
         return name
     }
 
-    suspend fun loadContainer(containerId: String): Result<FlowReduxStateMachine<StateFlow<ContainerState>, ContainerOperation>> {
+    suspend fun loadContainer(containerId: String): Result<Container> {
         val entity = containerDao.getContainerById(containerId)
         return when {
             entity == null -> {
@@ -63,13 +63,19 @@ class ContainerFactory @Inject constructor(
 
             entity.lastRunAt != null -> {
                 Result.success(
-                    factory.create(ContainerState.Exited(containerId)).launchIn(scope)
+                    Container(
+                        containerId,
+                        factory.create(ContainerState.Exited(containerId)).launchIn(scope)
+                    )
                 )
             }
 
             else -> {
                 Result.success(
-                    factory.create(ContainerState.Created(containerId)).launchIn(scope)
+                    Container(
+                        containerId,
+                        factory.create(ContainerState.Created(containerId)).launchIn(scope)
+                    )
                 )
             }
         }
@@ -79,7 +85,7 @@ class ContainerFactory @Inject constructor(
         imageId: String,
         inputName: String?,
         config: ContainerConfig
-    ): Result<FlowReduxStateMachine<StateFlow<ContainerState>, ContainerOperation>> {
+    ): Result<Container> {
         val image = imageDao.getImageById(imageId) ?: return Result.failure(
             IllegalArgumentException("Image not found: $imageId")
         )
@@ -101,14 +107,23 @@ class ContainerFactory @Inject constructor(
         val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
         rootfsDir.mkdirs()
         // Extract layers directly to rootfs
-        image.layerIds.forEach { digest ->
-            val layerFile =
-                File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+        for (digest in image.layerIds) {
+            val layerFile = File(
+                appContext.layersDir,
+                "${digest.removePrefix("sha256:")}.tar.gz"
+            )
             if (layerFile.exists()) {
                 Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
                 FileInputStream(layerFile).use { fis ->
-                    extractTarGz(fis, rootfsDir).getOrThrow()
-                }
+                    extractTarGz(fis, rootfsDir)
+                }.fold(
+                    {},
+                    {
+                        return Result.failure(
+                            it
+                        )
+                    }
+                )
                 Timber.d("Layer ${digest.take(16)} extracted successfully")
             } else {
                 Timber.w("Layer file not found: ${layerFile.absolutePath}")
@@ -150,7 +165,10 @@ class ContainerFactory @Inject constructor(
         )
         containerDao.insertContainer(entity)
         return Result.success(
-            factory.create(ContainerState.Created(containerId)).launchIn(scope)
+            Container(
+                containerId,
+                factory.create(ContainerState.Created(containerId)).launchIn(scope)
+            )
         )
     }
 }
