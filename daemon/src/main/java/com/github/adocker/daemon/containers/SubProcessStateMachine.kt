@@ -35,7 +35,7 @@ class SubProcessStateMachine @AssistedInject constructor(
                         },
                         { exception ->
                             override {
-                                SubProcessState.Error(exception)
+                                SubProcessState.Abort(exception)
                             }
                         }
                     )

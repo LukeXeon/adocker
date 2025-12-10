@@ -72,7 +72,7 @@ class ContainerStateMachine @AssistedInject constructor(
                     },
                     actionMapper = {},
                     cancelOnState = {
-                        it is SubProcessState.Exited || it is SubProcessState.Error
+                        it is SubProcessState.Exited || it is SubProcessState.Abort
                     }
                 ) {
                     subProcessStateChanged(it)

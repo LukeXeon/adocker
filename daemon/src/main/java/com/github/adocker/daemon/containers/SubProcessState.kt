@@ -11,6 +11,5 @@ sealed interface SubProcessState {
 
     data class Running(val process: Process) : SubProcessState
     data class Exited(val process: Process) : SubProcessState
-
-    data class Error(val throwable: Throwable) : SubProcessState
+    data class Abort(val throwable: Throwable) : SubProcessState
 }
