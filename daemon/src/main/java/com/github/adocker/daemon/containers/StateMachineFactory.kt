@@ -84,7 +84,6 @@ class StateMachineFactory @AssistedInject constructor(
                     ExecutionPolicy.Ordered
                 ) {
                     val process = startProcess(snapshot.containerId, it.command)
-                    it.deferred?.completeWith(process)
                     process.fold(
                         {
                             mutate {
