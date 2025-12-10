@@ -10,7 +10,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.completeWith
 import kotlinx.coroutines.runInterruptible
 import java.io.File
 import javax.inject.Singleton
@@ -57,11 +56,11 @@ class StateMachineFactory @AssistedInject constructor(
                                 )
                             }
                         },
-                        {
+                        { exception ->
                             override {
                                 ContainerState.Dead(
                                     containerId,
-                                    process.exceptionOrNull()!!
+                                    exception
                                 )
                             }
                         }
@@ -85,12 +84,12 @@ class StateMachineFactory @AssistedInject constructor(
                 ) {
                     val process = startProcess(snapshot.containerId, it.command)
                     process.fold(
-                        {
+                        { process ->
                             mutate {
                                 copy(
-                                    otherProcesses = buildList {
+                                    otherProcesses = buildList(otherProcesses.size + 1) {
                                         addAll(otherProcesses)
-                                        add(process.getOrThrow())
+                                        add(process)
                                     }
                                 )
                             }
@@ -104,7 +103,7 @@ class StateMachineFactory @AssistedInject constructor(
                     override {
                         ContainerState.Stopping(
                             containerId,
-                            buildList {
+                            buildList(otherProcesses.size + 1) {
                                 add(mainProcess)
                                 addAll(otherProcesses)
                             },
@@ -144,7 +143,7 @@ class StateMachineFactory @AssistedInject constructor(
                 onEnter {
                     removeContainer(snapshot.containerId)
                     override {
-                        ContainerState.Terminated()
+                        ContainerState.Terminated(containerId)
                     }
                 }
             }
