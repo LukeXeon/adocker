@@ -217,7 +217,7 @@ class ContainerStateMachine @AssistedInject constructor(
             is SubProcessState.Running -> {
                 mutate {
                     copy(
-                        subProcesses = buildSet {
+                        subProcesses = buildSet(subProcesses.size + 1) {
                             addAll(subProcesses)
                             add(state.process)
                         }
@@ -228,7 +228,7 @@ class ContainerStateMachine @AssistedInject constructor(
             is SubProcessState.Exited -> {
                 mutate {
                     copy(
-                        subProcesses = buildSet {
+                        subProcesses = buildSet(subProcesses.size) {
                             addAll(subProcesses)
                             remove(state.process)
                         }
