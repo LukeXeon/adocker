@@ -42,7 +42,8 @@ class ContainerFactory @Inject constructor(
 
     private suspend fun generateContainerSafeName(): String {
         var name = generateContainerName()
-        while (currentCoroutineContext().isActive) {
+        val context = currentCoroutineContext()
+        while (context.isActive) {
             if (containerDao.getContainerByName(name) != null) {
                 name = generateContainerName()
             } else {
