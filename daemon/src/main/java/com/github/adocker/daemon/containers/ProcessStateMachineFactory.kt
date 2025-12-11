@@ -36,11 +36,7 @@ class ProcessStateMachineFactory @AssistedInject constructor(
                     process.fold(
                         { process ->
                             override {
-                                ProcessState.Running(
-                                    process,
-                                    stdout,
-                                    stderr
-                                )
+                                ProcessState.Running(process)
                             }
                         },
                         { exception ->
