@@ -11,8 +11,10 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
 
@@ -160,12 +162,14 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         snapshot.childProcesses.forEach {
             it.destroy()
         }
-        runInterruptible {
-            snapshot.mainProcess.waitFor()
-        }
-        snapshot.childProcesses.forEach {
+        withContext(Dispatchers.IO) {
             runInterruptible {
-                it.waitFor()
+                snapshot.mainProcess.waitFor()
+            }
+            snapshot.childProcesses.forEach {
+                runInterruptible {
+                    it.waitFor()
+                }
             }
         }
         return override {
