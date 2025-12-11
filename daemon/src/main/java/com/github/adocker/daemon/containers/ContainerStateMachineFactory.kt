@@ -3,6 +3,7 @@ package com.github.adocker.daemon.containers
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
+import com.freeletics.flowredux2.State
 import com.freeletics.flowredux2.initializeWith
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
@@ -60,69 +61,25 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             inState<ContainerState.Running> {
                 onEnterStartStateMachine(
                     stateMachineFactoryBuilder = {
-                        processStateMachineFactoryBuilder.build(
-                            ProcessState.Running(
-                                snapshot.mainProcess,
-                                snapshot.stdout,
-                                snapshot.stderr
-                            )
-                        )
+                        mainProcessStateMachine()
                     },
                     actionMapper = {},
-                    cancelOnState = { it is ProcessState.Exited || it is ProcessState.Abort }
-                ) { state ->
-                    if (state is ProcessState.Exited) {
-                        override {
-                            ContainerState.Stopping(
-                                containerId,
-                                mainProcess,
-                                childProcesses
-                            )
-                        }
-                    } else {
-                        noChange()
+                    cancelOnState = {
+                        it.checkCancellation()
                     }
+                ) { state ->
+                    mainProcessStateUpdated(state)
                 }
                 onActionStartStateMachine<ContainerOperation.Exec, ProcessState, Unit>(
-                    stateMachineFactoryBuilder = { exec ->
-                        processStateMachineFactoryBuilder.build(
-                            ProcessState.Starting(
-                                snapshot.containerId,
-                                exec.command,
-                                exec.deferred
-                            )
-                        )
+                    stateMachineFactoryBuilder = {
+                        childProcessStateMachine(it)
                     },
                     actionMapper = {},
-                    cancelOnState = { it is ProcessState.Exited || it is ProcessState.Abort }
-                ) { state ->
-                    when (state) {
-                        is ProcessState.Running -> {
-                            mutate {
-                                copy(
-                                    childProcesses = buildSet(childProcesses.size + 1) {
-                                        addAll(childProcesses)
-                                        add(state.process)
-                                    }
-                                )
-                            }
-                        }
-
-                        is ProcessState.Exited -> {
-                            mutate {
-                                copy(
-                                    childProcesses = buildSet(childProcesses.size) {
-                                        addAll(childProcesses)
-                                        remove(state.process)
-                                    }
-                                )
-                            }
-                        }
-
-                        else -> {
-                            noChange()
-                        }
+                    cancelOnState = {
+                        it.checkCancellation()
                     }
+                ) { state ->
+                    childProcessStateUpdated(state)
                 }
                 on<ContainerOperation.Stop> {
                     override {
@@ -216,13 +173,89 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun ChangeableState<ContainerState.Removing>.removeContainer(containerId: String): ChangedState<ContainerState> {
+    private suspend fun ChangeableState<ContainerState.Removing>.removeContainer(
+        containerId: String
+    ): ChangedState<ContainerState> {
         // Delete container directory
         val containerDir = File(appContext.containersDir, containerId)
         deleteRecursively(containerDir)
         // Delete from database
         containerDao.deleteContainerById(containerId)
         return noChange()
+    }
+
+    private fun State<ContainerState.Running>.mainProcessStateMachine(): ProcessStateMachineFactory {
+        return processStateMachineFactoryBuilder.build(
+            ProcessState.Running(
+                snapshot.mainProcess,
+                snapshot.stdout,
+                snapshot.stderr
+            )
+        )
+    }
+
+    private fun ProcessState.checkCancellation(): Boolean {
+        return this is ProcessState.Exited || this is ProcessState.Abort
+    }
+
+    private fun ChangeableState<ContainerState.Running>.mainProcessStateUpdated(
+        state: ProcessState
+    ): ChangedState<ContainerState> {
+        return if (state is ProcessState.Exited) {
+            override {
+                ContainerState.Stopping(
+                    containerId,
+                    mainProcess,
+                    childProcesses
+                )
+            }
+        } else {
+            noChange()
+        }
+    }
+
+    private fun State<ContainerState.Running>.childProcessStateMachine(
+        exec: ContainerOperation.Exec
+    ): ProcessStateMachineFactory {
+        return processStateMachineFactoryBuilder.build(
+            ProcessState.Starting(
+                snapshot.containerId,
+                exec.command,
+                exec.deferred
+            )
+        )
+    }
+
+    private fun ChangeableState<ContainerState.Running>.childProcessStateUpdated(
+        state: ProcessState
+    ): ChangedState<ContainerState> {
+        return when (state) {
+            is ProcessState.Running -> {
+                mutate {
+                    copy(
+                        childProcesses = buildSet(childProcesses.size + 1) {
+                            addAll(childProcesses)
+                            add(state.process)
+                        }
+                    )
+                }
+            }
+
+            is ProcessState.Exited -> {
+                mutate {
+                    copy(
+                        childProcesses = buildSet(childProcesses.size) {
+                            addAll(childProcesses)
+                            remove(state.process)
+                        }
+                    )
+                }
+            }
+
+            else -> {
+                noChange()
+            }
+        }
     }
 
     @Singleton
