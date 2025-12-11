@@ -42,7 +42,7 @@ sealed interface ContainerState {
         val throwable: Throwable,
     ) : ContainerState
 
-    data class Terminated(
+    data class Removed(
         override val containerId: String
     ) : ContainerState
 }

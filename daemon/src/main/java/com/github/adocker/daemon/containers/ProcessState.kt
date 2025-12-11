@@ -7,9 +7,7 @@ sealed interface ProcessState {
     data class Starting(
         val containerId: String,
         val command: List<String>,
-        val deferred: CompletableDeferred<Process>? = null,
-        val stdout: File? = null,
-        val stderr: File? = null,
+        val deferred: CompletableDeferred<Process>,
     ) : ProcessState
 
     data class Running(

@@ -119,7 +119,6 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Dead> {
                 on<ContainerOperation.Remove> {
-                    val containerId = snapshot.containerId
                     override {
                         ContainerState.Removing(containerId)
                     }
@@ -185,7 +184,9 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         deleteRecursively(containerDir)
         // Delete from database
         containerDao.deleteContainerById(containerId)
-        return noChange()
+        return override {
+            ContainerState.Removed(containerId)
+        }
     }
 
     private fun State<ContainerState.Running>.mainProcessStateMachine(): ProcessStateMachineFactory {
