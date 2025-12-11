@@ -26,7 +26,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ContainerManager @Inject constructor(
-    private val stateMachineFactory: ContainerStateMachine.Factory,
+    private val stateMachineFactoryBuilder: ContainerStateMachineFactory.Builder,
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appContext: AppContext,
@@ -71,7 +71,7 @@ class ContainerManager @Inject constructor(
             entity.lastRunAt != null -> {
                 Result.success(
                     Container(
-                        containerId, stateMachineFactory.create(
+                        containerId, stateMachineFactoryBuilder.build(
                             ContainerState.Exited(containerId)
                         ).launchIn(scope)
                     )
@@ -81,7 +81,7 @@ class ContainerManager @Inject constructor(
             else -> {
                 Result.success(
                     Container(
-                        containerId, stateMachineFactory.create(
+                        containerId, stateMachineFactoryBuilder.build(
                             ContainerState.Created(containerId)
                         ).launchIn(scope)
                     )
@@ -175,7 +175,7 @@ class ContainerManager @Inject constructor(
         containerDao.insertContainer(entity)
         return Result.success(
             Container(
-                containerId, stateMachineFactory.create(
+                containerId, stateMachineFactoryBuilder.build(
                     ContainerState.Created(containerId)
                 ).launchIn(scope)
             )
@@ -194,7 +194,7 @@ class ContainerManager @Inject constructor(
                 // Remove containers that no longer exist
                 val idsToRemove = oldIds - newIds
                 idsToRemove.forEach { id ->
-                    table.remove(id)?.stop()
+                    table.remove(id)
                     Timber.d("Removed container from cache: $id")
                 }
                 // Add new containers

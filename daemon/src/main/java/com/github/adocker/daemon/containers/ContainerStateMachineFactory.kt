@@ -20,14 +20,14 @@ import java.io.File
 import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ContainerStateMachine @AssistedInject constructor(
+class ContainerStateMachineFactory @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val processBuilder: ContainerProcessBuilder,
     private val scope: CoroutineScope,
-    private val subStateMachineFactory: SubProcessStateMachine.Factory,
+    private val subStateMachineFactoryBuilder: SubProcessStateMachineFactory.Builder,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     init {
@@ -245,7 +245,7 @@ class ContainerStateMachine @AssistedInject constructor(
     private fun State<ContainerState.Running>.subProcessStateMachine(
         exec: ContainerOperation.Exec
     ): FlowReduxStateMachineFactory<SubProcessState, Unit> {
-        return subStateMachineFactory.create(
+        return subStateMachineFactoryBuilder.build(
             SubProcessState.Starting(
                 snapshot.containerId,
                 exec.command,
@@ -256,10 +256,10 @@ class ContainerStateMachine @AssistedInject constructor(
 
     @Singleton
     @AssistedFactory
-    interface Factory {
-        fun create(
+    interface Builder {
+        fun build(
             @Assisted
             initialState: ContainerState,
-        ): ContainerStateMachine
+        ): ContainerStateMachineFactory
     }
 }

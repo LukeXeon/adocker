@@ -11,6 +11,7 @@ sealed class ContainerOperation {
     object Remove : ContainerOperation()
     data class Exec(
         val command: List<String>,
-        val deferred: CompletableDeferred<Process>
-    ) : ContainerOperation()
+    ) : ContainerOperation() {
+        val deferred = CompletableDeferred<Process>()
+    }
 }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.runInterruptible
 import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SubProcessStateMachine @AssistedInject constructor(
+class SubProcessStateMachineFactory @AssistedInject constructor(
     @Assisted
     initialState: SubProcessState,
     private val processBuilder: ContainerProcessBuilder
@@ -56,7 +56,7 @@ class SubProcessStateMachine @AssistedInject constructor(
 
     @Singleton
     @AssistedFactory
-    interface Factory {
-        fun create(@Assisted initialState: SubProcessState): SubProcessStateMachine
+    interface Builder {
+        fun build(@Assisted initialState: SubProcessState): SubProcessStateMachineFactory
     }
 }
