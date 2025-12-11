@@ -11,16 +11,16 @@ import kotlinx.coroutines.runInterruptible
 import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SubProcessStateMachineFactory @AssistedInject constructor(
+class ProcessStateMachineFactory @AssistedInject constructor(
     @Assisted
-    initialState: SubProcessState,
+    initialState: ProcessState,
     private val processBuilder: ContainerProcessBuilder
-) : FlowReduxStateMachineFactory<SubProcessState, Unit>() {
+) : FlowReduxStateMachineFactory<ProcessState, Unit>() {
 
     init {
         initializeWith { initialState }
         spec {
-            inState<SubProcessState.Starting> {
+            inState<ProcessState.Starting> {
                 onEnter {
                     val process = processBuilder.startProcess(
                         snapshot.containerId,
@@ -30,24 +30,24 @@ class SubProcessStateMachineFactory @AssistedInject constructor(
                     process.fold(
                         { process ->
                             override {
-                                SubProcessState.Running(process)
+                                ProcessState.Running(process)
                             }
                         },
                         { exception ->
                             override {
-                                SubProcessState.Abort(exception)
+                                ProcessState.Abort(exception)
                             }
                         }
                     )
                 }
             }
-            inState<SubProcessState.Running> {
+            inState<ProcessState.Running> {
                 onEnter {
                     runInterruptible {
                         snapshot.process.waitFor()
                     }
                     override {
-                        SubProcessState.Exited(process)
+                        ProcessState.Exited(process)
                     }
                 }
             }
@@ -57,6 +57,6 @@ class SubProcessStateMachineFactory @AssistedInject constructor(
     @Singleton
     @AssistedFactory
     interface Builder {
-        fun build(@Assisted initialState: SubProcessState): SubProcessStateMachineFactory
+        fun build(@Assisted initialState: ProcessState): ProcessStateMachineFactory
     }
 }

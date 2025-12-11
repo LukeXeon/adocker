@@ -11,10 +11,10 @@ class Container(
     val state
         get() = stateMachine.state
 
-    suspend fun exec(command: List<String>) {
+    suspend fun exec(command: List<String>): Process {
         val exec = ContainerOperation.Exec(command)
         stateMachine.dispatch(exec)
-        exec.deferred.await()
+        return exec.deferred.await()
     }
 
     fun start() {
