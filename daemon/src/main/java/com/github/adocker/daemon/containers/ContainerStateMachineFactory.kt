@@ -10,9 +10,7 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import java.io.File
 import javax.inject.Singleton
@@ -24,7 +22,6 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val processBuilder: ContainerProcessBuilder,
-    private val scope: CoroutineScope,
     private val processStateMachineFactoryBuilder: ProcessStateMachineFactory.Builder,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
@@ -64,7 +61,11 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 onEnterStartStateMachine(
                     stateMachineFactoryBuilder = {
                         processStateMachineFactoryBuilder.build(
-                            ProcessState.Running(snapshot.mainProcess)
+                            ProcessState.Running(
+                                snapshot.mainProcess,
+                                snapshot.stdout,
+                                snapshot.stderr
+                            )
                         )
                     },
                     actionMapper = {},
@@ -176,19 +177,6 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 val logDir = File(appContext.logDir, snapshot.containerId)
                 val stdout = File(logDir, AppContext.STDOUT)
                 val stderr = File(logDir, AppContext.STDERR)
-                arrayOf(
-                    stdout to mainProcess.inputStream,
-                    stderr to mainProcess.errorStream
-                ).forEach {
-                    val (file, stream) = it
-                    scope.launch {
-                        stream.use { input ->
-                            file.outputStream().use { output ->
-                                input.copyTo(output)
-                            }
-                        }
-                    }
-                }
                 override {
                     ContainerState.Running(
                         containerId,
