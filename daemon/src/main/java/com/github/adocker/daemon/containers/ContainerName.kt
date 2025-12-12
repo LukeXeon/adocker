@@ -5,7 +5,6 @@ import com.github.adocker.daemon.R
 import com.github.adocker.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.isActive
 import javax.inject.Inject
 import javax.inject.Singleton
 
