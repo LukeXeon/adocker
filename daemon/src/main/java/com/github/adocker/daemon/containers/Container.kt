@@ -19,7 +19,7 @@ import javax.inject.Singleton
 class Container @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
-    stateMachineFactory: ContainerStateMachineSpec.Factory,
+    stateMachineFactory: ContainerStateMachine.Factory,
     parentScope: CoroutineScope,
 ) {
     init {

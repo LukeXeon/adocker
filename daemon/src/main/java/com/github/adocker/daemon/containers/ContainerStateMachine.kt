@@ -20,7 +20,7 @@ import java.io.File
 import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ContainerStateMachineSpec @AssistedInject constructor(
+class ContainerStateMachine @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     private val containerDao: ContainerDao,
@@ -242,6 +242,6 @@ class ContainerStateMachineSpec @AssistedInject constructor(
         fun create(
             @Assisted
             initialState: ContainerState,
-        ): ContainerStateMachineSpec
+        ): ContainerStateMachine
     }
 }
