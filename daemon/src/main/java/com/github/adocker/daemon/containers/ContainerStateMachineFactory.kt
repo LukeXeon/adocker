@@ -80,7 +80,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 }
                 untilIdentityChanges({ it.childProcesses }) {
                     onEnter {
-                        val toRemove = withContext(Dispatchers.IO) {
+                        withContext(Dispatchers.IO) {
                             select {
                                 snapshot.childProcesses.forEach { process ->
                                     launch {
@@ -90,26 +90,17 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                     }.onJoin {}
                                 }
                             }
-                            snapshot.childProcesses.mapNotNull { process ->
-                                try {
-                                    process.exitValue()
-                                    process
-                                } catch (_: IllegalThreadStateException) {
-                                    null
-                                }
-                            }
                         }
-                        if (toRemove.isEmpty()) {
-                            noChange()
-                        } else {
-                            mutate {
-                                copy(
-                                    childProcesses = buildSet(childProcesses.size) {
-                                        addAll(childProcesses)
-                                        removeAll(toRemove)
+                        mutate {
+                            copy(
+                                childProcesses = buildSet(childProcesses.size) {
+                                    childProcesses.forEach { process ->
+                                        if (process.isAlive) {
+                                            add(process)
+                                        }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }
