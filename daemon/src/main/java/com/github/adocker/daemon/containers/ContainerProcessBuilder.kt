@@ -1,7 +1,6 @@
 package com.github.adocker.daemon.containers
 
 import com.github.adocker.daemon.app.AppContext
-import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import java.io.File
 import javax.inject.Inject
@@ -15,8 +14,6 @@ class ContainerProcessBuilder @Inject constructor(
     fun startProcess(
         containerId: String,
         command: List<String>? = null,
-        stdout: File? = null,
-        stderr: File? = null,
         config: ContainerConfig = ContainerConfig(),
     ): Result<ContainerProcess> {
         val containerDir = File(appContext.containersDir, containerId)
@@ -24,10 +21,13 @@ class ContainerProcessBuilder @Inject constructor(
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }
-        engine.startProcess(
+        val process = engine.startProcess(
             config,
             rootfsDir,
             command
         )
+        return process.map {
+            ContainerProcess(it)
+        }
     }
 }

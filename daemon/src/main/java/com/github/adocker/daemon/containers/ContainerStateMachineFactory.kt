@@ -10,18 +10,21 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import io.ktor.util.cio.writeChannel
+import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.jvm.javaio.copyTo
+import io.ktor.utils.io.jvm.javaio.toByteReadChannel
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class ContainerStateMachineFactory @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
@@ -36,9 +39,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             inState<ContainerState.Created> {
                 on<ContainerOperation.Start> {
                     override {
-                        ContainerState.Starting(
-                            containerId
-                        )
+                        ContainerState.Starting(containerId)
                     }
                 }
                 on<ContainerOperation.Remove> {
@@ -65,25 +66,18 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 }
                 untilIdentityChanges({ it.childProcesses }) {
                     onEnter {
-                        withContext(Dispatchers.IO) {
-                            select {
-                                snapshot.childProcesses.forEach { process ->
-                                    launch {
-                                        runInterruptible {
-                                            process.waitFor()
-                                        }
-                                    }.onJoin {}
-                                }
+                        select {
+                            snapshot.childProcesses.forEach { process ->
+                                process.job.onJoin {}
                             }
                         }
                         mutate {
                             copy(
                                 childProcesses = buildSet(childProcesses.size) {
-                                    childProcesses.forEach { process ->
-                                        if (process.isAlive) {
-                                            add(process)
-                                        }
-                                    }
+                                    addAll(
+                                        childProcesses.asSequence()
+                                            .filter { process -> process.job.isActive }
+                                    )
                                 }
                             )
                         }
@@ -176,10 +170,20 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 val process = processBuilder.startProcess(containerId, config = config)
                 process.fold(
                     { mainProcess ->
-                        val stdin = mainProcess.outputStream.bufferedWriter()
+                        val stdin = mainProcess.stdin.bufferedWriter()
                         val logDir = File(appContext.logDir, containerId)
                         val stdout = File(logDir, AppContext.STDOUT)
                         val stderr = File(logDir, AppContext.STDERR)
+                        arrayOf(
+                            mainProcess.stdout to stdout,
+                            mainProcess.stderr to stderr
+                        ).forEach { (input, output) ->
+                            GlobalScope.launch(Dispatchers.IO) {
+                                input.toByteReadChannel().copyTo(
+                                    output.writeChannel()
+                                )
+                            }
+                        }
                         ContainerState.Running(
                             containerId,
                             mainProcess,
@@ -201,7 +205,8 @@ class ContainerStateMachineFactory @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
         sequenceOf(snapshot.mainProcess.job).plus(
-            snapshot.childProcesses.map { it.job }).toList().onEach {
+            snapshot.childProcesses.asSequence().map { it.job }
+        ).toList().onEach {
             it.cancel()
         }.joinAll()
         return override {
