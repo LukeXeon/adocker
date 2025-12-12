@@ -60,7 +60,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     }
                 }
                 on<ContainerOperation.Exec> {
-                    execCommand(it)
+                    execProcess(it)
                 }
                 on<ContainerOperation.Stop> {
                     toStoping()
@@ -202,7 +202,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun ChangeableState<ContainerState.Running>.execCommand(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
+    private suspend fun ChangeableState<ContainerState.Running>.execProcess(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
         val containerId = snapshot.containerId
         val config = containerDao.getContainerById(snapshot.containerId)?.config
         return if (config == null) {
