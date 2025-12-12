@@ -4,6 +4,7 @@ import android.app.Application
 import com.github.adocker.daemon.R
 import com.github.adocker.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,16 +29,14 @@ class ContainerName @Inject constructor(
     }
 
     suspend fun generateName(): String {
-        var name = randomContainerName()
-        val context = currentCoroutineContext()
-        while (context.isActive) {
-            if (containerDao.getContainerByName(name) != null) {
-                name = randomContainerName()
+        do {
+            val name = randomContainerName()
+            if (containerDao.getContainerByName(name) == null) {
+                return name
             } else {
-                break
+                currentCoroutineContext().ensureActive()
             }
-        }
-        return name
+        } while (true)
     }
 
 }
