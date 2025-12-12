@@ -120,7 +120,11 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                         noChange()
                     } else {
                         mutate {
-                            val process = processBuilder.startProcess(containerId, config = config)
+                            val process = processBuilder.startProcess(
+                                containerId,
+                                it.command,
+                                config
+                            )
                             process.fold(
                                 { childProcess ->
                                     copy(
