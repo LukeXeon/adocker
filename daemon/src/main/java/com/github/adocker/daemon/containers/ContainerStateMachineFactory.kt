@@ -104,7 +104,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                         } else {
                             mutate {
                                 copy(
-                                    childProcesses = buildSet {
+                                    childProcesses = buildSet(childProcesses.size) {
                                         addAll(childProcesses)
                                         removeAll(toRemove)
                                     }
