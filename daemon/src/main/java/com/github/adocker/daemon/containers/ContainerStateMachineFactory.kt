@@ -3,7 +3,6 @@ package com.github.adocker.daemon.containers
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
-import com.freeletics.flowredux2.State
 import com.freeletics.flowredux2.initializeWith
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
@@ -13,7 +12,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
@@ -25,22 +26,11 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val processBuilder: ContainerProcessBuilder,
-    private val processStateMachineFactoryBuilder: ProcessStateMachineFactory.Builder,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     init {
         initializeWith { initialState }
         spec {
-            inState<ContainerState> {
-                condition({ it !is ContainerState.Running }) {
-                    on<ContainerOperation.Exec> {
-                        it.deferred.completeExceptionally(
-                            IllegalStateException("Cannot exec: container is not running")
-                        )
-                        noChange()
-                    }
-                }
-            }
             inState<ContainerState.Created> {
                 on<ContainerOperation.Start> {
                     override {
@@ -61,27 +51,91 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 }
             }
             inState<ContainerState.Running> {
-                onEnterStartStateMachine(
-                    stateMachineFactoryBuilder = {
-                        mainProcessStateMachine()
-                    },
-                    actionMapper = {},
-                    cancelOnState = {
-                        it.checkCancellation()
+                onEnter {
+                    withContext(Dispatchers.IO) {
+                        mapOf(
+                            snapshot.stdout to snapshot.mainProcess.inputStream,
+                            snapshot.stderr to snapshot.mainProcess.errorStream
+                        ).forEach {
+                            val (output, input) = it
+                            launch {
+                                input.use { input ->
+                                    output.outputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                            }
+                        }
+                        runInterruptible {
+                            snapshot.mainProcess.waitFor()
+                        }
                     }
-                ) { state ->
-                    mainProcessStateUpdated(state)
+                    override {
+                        ContainerState.Stopping(
+                            containerId,
+                            mainProcess,
+                            childProcesses,
+                        )
+                    }
                 }
-                onActionStartStateMachine<ContainerOperation.Exec, ProcessState, Unit>(
-                    stateMachineFactoryBuilder = {
-                        childProcessStateMachine(it)
-                    },
-                    actionMapper = {},
-                    cancelOnState = {
-                        it.checkCancellation()
+                untilIdentityChanges({ it.childProcesses }) {
+                    onEnter {
+                        val toRemove = withContext(Dispatchers.IO) {
+                            select {
+                                snapshot.childProcesses.forEach { process ->
+                                    launch {
+                                        runInterruptible {
+                                            process.waitFor()
+                                        }
+                                    }.onJoin {}
+                                }
+                            }
+                            snapshot.childProcesses.mapNotNull { process ->
+                                try {
+                                    process.exitValue()
+                                    process
+                                } catch (_: IllegalThreadStateException) {
+                                    null
+                                }
+                            }
+                        }
+                        if (toRemove.isEmpty()) {
+                            noChange()
+                        } else {
+                            mutate {
+                                copy(
+                                    childProcesses = buildSet {
+                                        addAll(childProcesses)
+                                        removeAll(toRemove)
+                                    }
+                                )
+                            }
+                        }
                     }
-                ) { state ->
-                    childProcessStateUpdated(state)
+                }
+                on<ContainerOperation.Exec> {
+                    val containerId = snapshot.containerId
+                    val config = containerDao.getContainerById(snapshot.containerId)?.config
+                    if (config == null) {
+                        noChange()
+                    } else {
+                        mutate {
+                            val process = processBuilder.startProcess(containerId, config = config)
+                            process.fold(
+                                { childProcess ->
+                                    copy(
+                                        childProcesses = buildSet(childProcesses.size + 1) {
+                                            addAll(childProcesses)
+                                            add(childProcess)
+                                        }
+                                    )
+                                },
+                                {
+                                    this
+                                }
+                            )
+                        }
+                    }
                 }
                 on<ContainerOperation.Stop> {
                     override {
@@ -128,32 +182,41 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Starting>.startContainer(): ChangedState<ContainerState> {
-        val process = processBuilder.startProcess(snapshot.containerId)
-        return process.fold(
-            { mainProcess ->
-                val stdin = mainProcess.outputStream.bufferedWriter()
-                val logDir = File(appContext.logDir, snapshot.containerId)
-                val stdout = File(logDir, AppContext.STDOUT)
-                val stderr = File(logDir, AppContext.STDERR)
-                override {
-                    ContainerState.Running(
-                        containerId,
-                        mainProcess,
-                        stdin,
-                        stdout,
-                        stderr
-                    )
-                }
-            },
-            { exception ->
-                override {
-                    ContainerState.Dead(
-                        containerId,
-                        exception
-                    )
-                }
+        val containerId = snapshot.containerId
+        val config = containerDao.getContainerById(snapshot.containerId)?.config
+        return if (config == null) {
+            override {
+                ContainerState.Dead(
+                    containerId,
+                    IllegalStateException("Container not found: $containerId")
+                )
             }
-        )
+        } else {
+            override {
+                val process = processBuilder.startProcess(containerId, config = config)
+                process.fold(
+                    { mainProcess ->
+                        val stdin = mainProcess.outputStream.bufferedWriter()
+                        val logDir = File(appContext.logDir, containerId)
+                        val stdout = File(logDir, AppContext.STDOUT)
+                        val stderr = File(logDir, AppContext.STDERR)
+                        ContainerState.Running(
+                            containerId,
+                            mainProcess,
+                            stdin,
+                            stdout,
+                            stderr
+                        )
+                    },
+                    { exception ->
+                        ContainerState.Dead(
+                            containerId,
+                            exception
+                        )
+                    }
+                )
+            }
+        }
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
@@ -186,80 +249,6 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         containerDao.deleteContainerById(containerId)
         return override {
             ContainerState.Removed(containerId)
-        }
-    }
-
-    private fun State<ContainerState.Running>.mainProcessStateMachine(): ProcessStateMachineFactory {
-        return processStateMachineFactoryBuilder.build(
-            ProcessState.Running(
-                snapshot.mainProcess,
-                snapshot.stdout,
-                snapshot.stderr
-            )
-        )
-    }
-
-    private fun ProcessState.checkCancellation(): Boolean {
-        return this is ProcessState.Exited || this is ProcessState.Abort
-    }
-
-    private fun ChangeableState<ContainerState.Running>.mainProcessStateUpdated(
-        state: ProcessState
-    ): ChangedState<ContainerState> {
-        return if (state is ProcessState.Exited) {
-            override {
-                ContainerState.Stopping(
-                    containerId,
-                    mainProcess,
-                    childProcesses
-                )
-            }
-        } else {
-            noChange()
-        }
-    }
-
-    private fun State<ContainerState.Running>.childProcessStateMachine(
-        exec: ContainerOperation.Exec
-    ): ProcessStateMachineFactory {
-        return processStateMachineFactoryBuilder.build(
-            ProcessState.Starting(
-                snapshot.containerId,
-                exec.command,
-                exec.deferred
-            )
-        )
-    }
-
-    private fun ChangeableState<ContainerState.Running>.childProcessStateUpdated(
-        state: ProcessState
-    ): ChangedState<ContainerState> {
-        return when (state) {
-            is ProcessState.Running -> {
-                mutate {
-                    copy(
-                        childProcesses = buildSet(childProcesses.size + 1) {
-                            addAll(childProcesses)
-                            add(state.process)
-                        }
-                    )
-                }
-            }
-
-            is ProcessState.Exited -> {
-                mutate {
-                    copy(
-                        childProcesses = buildSet(childProcesses.size) {
-                            addAll(childProcesses)
-                            remove(state.process)
-                        }
-                    )
-                }
-            }
-
-            else -> {
-                noChange()
-            }
         }
     }
 
