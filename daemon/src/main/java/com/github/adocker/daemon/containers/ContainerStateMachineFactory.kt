@@ -10,10 +10,6 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import io.ktor.util.cio.writeChannel
-import io.ktor.utils.io.copyTo
-import io.ktor.utils.io.jvm.javaio.copyTo
-import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -55,7 +51,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    snapshot.mainProcess.job.join()
+                    snapshot.mainProcess.task.join()
                     override {
                         ContainerState.Stopping(
                             containerId,
@@ -68,7 +64,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     onEnter {
                         select {
                             snapshot.childProcesses.forEach { process ->
-                                process.job.onJoin {}
+                                process.task.onJoin {}
                             }
                         }
                         mutate {
@@ -76,7 +72,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                 childProcesses = buildSet(childProcesses.size) {
                                     addAll(
                                         childProcesses.asSequence()
-                                            .filter { process -> process.job.isActive }
+                                            .filter { process -> process.task.isActive }
                                     )
                                 }
                             )
@@ -179,9 +175,11 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                             mainProcess.stderr to stderr
                         ).forEach { (input, output) ->
                             GlobalScope.launch(Dispatchers.IO) {
-                                input.toByteReadChannel().copyTo(
-                                    output.writeChannel()
-                                )
+                                input.use { input ->
+                                    output.outputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
                             }
                         }
                         ContainerState.Running(
@@ -204,8 +202,8 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
-        sequenceOf(snapshot.mainProcess.job).plus(
-            snapshot.childProcesses.asSequence().map { it.job }
+        sequenceOf(snapshot.mainProcess.task).plus(
+            snapshot.childProcesses.asSequence().map { it.task }
         ).toList().onEach {
             it.cancel()
         }.joinAll()
