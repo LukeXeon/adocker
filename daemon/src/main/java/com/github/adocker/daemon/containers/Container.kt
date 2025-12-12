@@ -46,7 +46,7 @@ class Container @AssistedInject constructor(
 
     private class AbortFlowException(val payload: Any?) : CancellationException()
 
-    private suspend inline fun <reified T : ContainerState, reified R> whenState(
+    private suspend inline fun <reified T : ContainerState, reified R> runInState(
         crossinline block: suspend () -> R
     ): R {
         try {
@@ -68,7 +68,7 @@ class Container @AssistedInject constructor(
     suspend fun exec(command: List<String>): Result<ContainerProcess> {
         return try {
             Result.success(
-                whenState<ContainerState.Running, ContainerProcess> {
+                runInState<ContainerState.Running, ContainerProcess> {
                     val process = CompletableDeferred<ContainerProcess>()
                     stateMachine.dispatch(
                         ContainerOperation.Exec(
