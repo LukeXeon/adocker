@@ -12,6 +12,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.selects.select
@@ -52,24 +53,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    withContext(Dispatchers.IO) {
-                        mapOf(
-                            snapshot.stdout to snapshot.mainProcess.inputStream,
-                            snapshot.stderr to snapshot.mainProcess.errorStream
-                        ).forEach {
-                            val (output, input) = it
-                            launch {
-                                input.use { input ->
-                                    output.outputStream().use { output ->
-                                        input.copyTo(output)
-                                    }
-                                }
-                            }
-                        }
-                        runInterruptible {
-                            snapshot.mainProcess.waitFor()
-                        }
-                    }
+                    snapshot.mainProcess.job.join()
                     override {
                         ContainerState.Stopping(
                             containerId,
@@ -215,20 +199,13 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
-        snapshot.mainProcess.destroy()
-        snapshot.childProcesses.forEach {
-            it.destroy()
+        snapshot.mainProcess.job.cancel()
+        snapshot.childProcesses.forEach { process ->
+            process.job.cancel()
         }
-        withContext(Dispatchers.IO) {
-            runInterruptible {
-                snapshot.mainProcess.waitFor()
-            }
-            snapshot.childProcesses.forEach {
-                runInterruptible {
-                    it.waitFor()
-                }
-            }
-        }
+        snapshot.mainProcess.job.join()
+        sequenceOf(snapshot.mainProcess.job).plus()
+
         return override {
             ContainerState.Exited(containerId)
         }

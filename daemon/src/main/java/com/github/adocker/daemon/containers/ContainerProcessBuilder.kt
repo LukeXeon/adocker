@@ -15,14 +15,16 @@ class ContainerProcessBuilder @Inject constructor(
     fun startProcess(
         containerId: String,
         command: List<String>? = null,
+        stdout: File? = null,
+        stderr: File? = null,
         config: ContainerConfig = ContainerConfig(),
-    ): Result<Process> {
+    ): Result<ContainerProcess> {
         val containerDir = File(appContext.containersDir, containerId)
         val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }
-        return engine.startProcess(
+        engine.startProcess(
             config,
             rootfsDir,
             command

@@ -3,7 +3,9 @@ package com.github.adocker.daemon.registry
 import com.github.adocker.daemon.database.dao.MirrorDao
 import com.github.adocker.daemon.database.model.MirrorEntity
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -21,15 +23,16 @@ import javax.inject.Singleton
  * - No manual mirror selection - always uses best available
  */
 
+
 @Singleton
+@OptIn(DelicateCoroutinesApi::class)
 class RegistryRepository @Inject constructor(
     private val mirrorDao: MirrorDao,
     private val healthChecker: MirrorHealthChecker,
-    scope: CoroutineScope,
 ) {
     init {
         // Initialize mirrors on startup using a coroutine
-        scope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             ensureInitialized()
         }
     }

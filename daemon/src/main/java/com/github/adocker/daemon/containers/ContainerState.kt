@@ -16,17 +16,17 @@ sealed interface ContainerState {
 
     data class Running(
         override val containerId: String,
-        val mainProcess: Process,
+        val mainProcess: ContainerProcess,
         val stdin: BufferedWriter,
         val stdout: File,
         val stderr: File,
-        val childProcesses: Set<Process> = emptySet(),
+        val childProcesses: Set<ContainerProcess> = emptySet(),
     ) : ContainerState
 
     data class Stopping(
         override val containerId: String,
-        val mainProcess: Process,
-        val childProcesses: Set<Process>,
+        val mainProcess: ContainerProcess,
+        val childProcesses: Set<ContainerProcess>,
     ) : ContainerState
 
     data class Removing(
