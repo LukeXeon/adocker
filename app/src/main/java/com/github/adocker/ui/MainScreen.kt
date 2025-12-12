@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.rememberLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.whenCreated
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -44,7 +47,6 @@ fun MainScreen() {
     val currentDestination = navBackStackEntry?.destination
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
     // Check if we should show bottom navigation
     val showBottomBar = remember(currentDestination) {
         bottomNavItems.any { screen ->

@@ -10,8 +10,7 @@ class Container(
     val state
         get() = stateMachine.state
 
-    suspend fun exec(command: List<String>): Process {
-        stateMachine.dispatch(ContainerOperation.Exec(command))
+    suspend fun exec(command: List<String>): Result<Process> {
         TODO()
     }
 

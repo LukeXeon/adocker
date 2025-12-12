@@ -10,6 +10,7 @@ import javax.inject.Singleton
 class ContainerProcessBuilder @Inject constructor(
     private val appContext: AppContext,
     private val engine: PRootEngine,
+    private val factory: ContainerProcess.Factory
 ) {
     fun startProcess(
         containerId: String,
@@ -27,7 +28,7 @@ class ContainerProcessBuilder @Inject constructor(
             command
         )
         return process.map {
-            ContainerProcess(it)
+            factory.create(it)
         }
     }
 }

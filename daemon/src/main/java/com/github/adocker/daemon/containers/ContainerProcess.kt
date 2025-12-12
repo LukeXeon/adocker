@@ -1,20 +1,22 @@
 package com.github.adocker.daemon.containers
 
-import android.system.Os
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import java.io.InputStream
 import java.io.OutputStream
+import javax.inject.Singleton
 
-@OptIn(DelicateCoroutinesApi::class)
-data class ContainerProcess(
-    private val process: Process
+class ContainerProcess @AssistedInject constructor(
+    @Assisted
+    private val process: Process,
+    scope: CoroutineScope
 ) {
-    val job = GlobalScope.launch(Dispatchers.IO) {
+    val job = scope.launch {
         try {
             runInterruptible {
                 process.waitFor()
@@ -37,4 +39,10 @@ data class ContainerProcess(
 
     val stderr: InputStream
         get() = process.errorStream
+
+    @Singleton
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted process: Process): ContainerProcess
+    }
 }
