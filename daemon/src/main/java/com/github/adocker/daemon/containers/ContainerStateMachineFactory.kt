@@ -10,6 +10,7 @@ import com.github.adocker.daemon.utils.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,17 +21,18 @@ import kotlinx.coroutines.selects.select
 import java.io.File
 import javax.inject.Singleton
 
-@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class ContainerStateMachineFactory @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val processBuilder: ContainerProcessBuilder,
+    private val scope: CoroutineScope,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     init {
-        initializeWith { initialState }
+        initializeWith(reuseLastEmittedStateOnLaunch = false) { initialState }
         spec {
             inState<ContainerState.Created> {
                 on<ContainerOperation.Start> {
@@ -93,6 +95,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                 it.command,
                                 config
                             )
+                            it.continuation.resumeWith(process)
                             process.fold(
                                 { childProcess ->
                                     copy(
@@ -178,7 +181,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                             mainProcess.stdout to stdout,
                             mainProcess.stderr to stderr
                         ).forEach { (input, output) ->
-                            GlobalScope.launch(Dispatchers.IO) {
+                            scope.launch(Dispatchers.IO) {
                                 input.use { input ->
                                     output.outputStream().use { output ->
                                         input.copyTo(output)

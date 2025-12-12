@@ -1,28 +1,97 @@
 package com.github.adocker.daemon.containers
 
-import com.freeletics.flowredux2.FlowReduxStateMachine
-import kotlinx.coroutines.flow.StateFlow
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Singleton
 
-class Container(
-    val containerId: String,
-    private val stateMachine: FlowReduxStateMachine<StateFlow<ContainerState>, ContainerOperation>,
+class Container @AssistedInject constructor(
+    @Assisted
+    initialState: ContainerState,
+    stateMachineFactoryBuilder: ContainerStateMachineFactory.Builder,
 ) {
+    init {
+        require(initialState is ContainerState.Created || initialState is ContainerState.Exited)
+    }
+
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private val stateMachine = stateMachineFactoryBuilder.build(initialState).launchIn(scope)
+
     val state
         get() = stateMachine.state
 
-    suspend fun exec(command: List<String>): Result<Process> {
-        TODO()
+    init {
+        scope.launch {
+            stateMachine.state.collect {
+                if (it is ContainerState.Removed) {
+                    scope.cancel()
+                }
+            }
+        }
     }
 
-    fun start() {
-        stateMachine.dispatchAction(ContainerOperation.Start)
+    private class JumpOutException(val process: ContainerProcess) : CancellationException()
+
+    suspend fun exec(command: List<String>): Result<ContainerProcess> {
+        try {
+            stateMachine.state.map {
+                it is ContainerState.Running
+            }.distinctUntilChanged().collectLatest {
+                if (it) {
+                    coroutineScope {
+                        throw JumpOutException(
+                            suspendCancellableCoroutine { continuation ->
+                                launch {
+                                    stateMachine.dispatch(
+                                        ContainerOperation.Exec(
+                                            command,
+                                            continuation
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
+                } else {
+                    throw IllegalStateException("Cannot exec: container is not running")
+                }
+            }
+        } catch (e: JumpOutException) {
+            return Result.success(e.process)
+        } catch (e: IllegalStateException) {
+            return Result.failure(e)
+        }
+        throw AssertionError()
     }
 
-    fun stop() {
-        stateMachine.dispatchAction(ContainerOperation.Stop)
+    suspend fun start() {
+        stateMachine.dispatch(ContainerOperation.Start)
     }
 
-    fun remove() {
-        stateMachine.dispatchAction(ContainerOperation.Remove)
+    suspend fun stop() {
+        stateMachine.dispatch(ContainerOperation.Stop)
+    }
+
+    suspend fun remove() {
+        stateMachine.dispatch(ContainerOperation.Remove)
+    }
+
+    @Singleton
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted
+            initialState: ContainerState
+        ): Container
     }
 }

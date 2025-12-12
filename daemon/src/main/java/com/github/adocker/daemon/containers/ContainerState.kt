@@ -1,24 +1,10 @@
 package com.github.adocker.daemon.containers
 
-import com.github.adocker.daemon.registry.model.ContainerConfig
 import kotlinx.coroutines.Job
 import java.io.BufferedWriter
 import java.io.File
 
 sealed interface ContainerState {
-
-    object None : ContainerState
-
-    data class Creating(
-        val imageId: String,
-        val name: String?,
-        val config: ContainerConfig,
-    ) : ContainerState
-
-    data class Loading(
-        val containerId: String
-    ) : ContainerState
-
     class Created(
         val containerId: String
     ) : ContainerState

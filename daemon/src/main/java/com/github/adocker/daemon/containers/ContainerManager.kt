@@ -26,11 +26,11 @@ import javax.inject.Singleton
 
 @Singleton
 class ContainerManager @Inject constructor(
-    private val stateMachineFactoryBuilder: ContainerStateMachineFactory.Builder,
+    private val factory: Container.Factory,
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appContext: AppContext,
-    private val scope: CoroutineScope,
+    scope: CoroutineScope,
     application: Application,
 ) {
     private val adjectives = application.resources.getStringArray(R.array.adjectives).asList()
@@ -70,21 +70,13 @@ class ContainerManager @Inject constructor(
 
             entity.lastRunAt != null -> {
                 Result.success(
-                    Container(
-                        containerId, stateMachineFactoryBuilder.build(
-                            ContainerState.Exited(containerId)
-                        ).launchIn(scope)
-                    )
+                    factory.create(ContainerState.Exited(containerId))
                 )
             }
 
             else -> {
                 Result.success(
-                    Container(
-                        containerId, stateMachineFactoryBuilder.build(
-                            ContainerState.Created(containerId)
-                        ).launchIn(scope)
-                    )
+                    factory.create(ContainerState.Created(containerId))
                 )
             }
         }
@@ -174,11 +166,7 @@ class ContainerManager @Inject constructor(
         )
         containerDao.insertContainer(entity)
         return Result.success(
-            Container(
-                containerId, stateMachineFactoryBuilder.build(
-                    ContainerState.Created(containerId)
-                ).launchIn(scope)
-            )
+            factory.create(ContainerState.Created(containerId))
         )
     }
 
