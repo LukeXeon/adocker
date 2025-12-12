@@ -6,6 +6,8 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
@@ -19,12 +21,15 @@ class Container @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     stateMachineFactoryBuilder: ContainerStateMachineFactory.Builder,
+    parentScope: CoroutineScope,
 ) {
     init {
         require(initialState is ContainerState.Created || initialState is ContainerState.Exited)
     }
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(
+        SupervisorJob(parentScope.coroutineContext[Job]) + Dispatchers.IO
+    )
     private val stateMachine = stateMachineFactoryBuilder.build(initialState).launchIn(scope)
 
     val state
