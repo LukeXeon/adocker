@@ -29,10 +29,10 @@ import javax.inject.Singleton
 class RegistryRepository @Inject constructor(
     private val mirrorDao: MirrorDao,
     private val healthChecker: MirrorHealthChecker,
+    scope: CoroutineScope
 ) {
     init {
-        // Initialize mirrors on startup using a coroutine
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             ensureInitialized()
         }
     }
