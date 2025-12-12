@@ -44,14 +44,31 @@ class Container @AssistedInject constructor(
         }
     }
 
-    private class AbortFlowException(val process: ContainerProcess) : CancellationException()
+    private class AbortFlowException(val payload: Any?) : CancellationException()
 
-    suspend fun exec(command: List<String>): Result<ContainerProcess> {
+    private suspend inline fun <reified T : ContainerState, reified R> whenState(
+        crossinline block: suspend () -> R
+    ): R {
         try {
             stateMachine.state.map {
-                it is ContainerState.Running
+                it is T
             }.distinctUntilChanged().collectLatest {
                 if (it) {
+                    throw AbortFlowException(block())
+                } else {
+                    throw IllegalStateException("container is not ${T::class}")
+                }
+            }
+        } catch (e: AbortFlowException) {
+            return e.payload as R
+        }
+        throw AssertionError()
+    }
+
+    suspend fun exec(command: List<String>): Result<ContainerProcess> {
+        return try {
+            Result.success(
+                whenState<ContainerState.Running, ContainerProcess> {
                     val process = CompletableDeferred<ContainerProcess>()
                     stateMachine.dispatch(
                         ContainerOperation.Exec(
@@ -59,17 +76,12 @@ class Container @AssistedInject constructor(
                             process
                         )
                     )
-                    throw AbortFlowException(process.await())
-                } else {
-                    throw IllegalStateException("Cannot exec: container is not running")
+                    process.await()
                 }
-            }
-        } catch (e: AbortFlowException) {
-            return Result.success(e.process)
+            )
         } catch (e: IllegalStateException) {
-            return Result.failure(e)
+            Result.failure(e)
         }
-        throw AssertionError()
     }
 
     suspend fun start() {
