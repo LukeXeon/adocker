@@ -20,12 +20,12 @@ import java.io.File
 import javax.inject.Singleton
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ContainerStateMachineFactory @AssistedInject constructor(
+class ContainerStateMachineSpec @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
-    private val processBuilder: ContainerProcessBuilder,
+    private val prootEngine: PRootEngine,
     private val scope: CoroutineScope,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
@@ -112,7 +112,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             }
         } else {
             override {
-                val process = processBuilder.startProcess(containerId, config = config)
+                val process = prootEngine.startProcess(containerId, config = config)
                 process.fold(
                     { mainProcess ->
                         val stdin = mainProcess.stdin.bufferedWriter()
@@ -180,7 +180,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         }
         return mutate {
             copy(
-                childProcesses = buildSet(childProcesses.size) {
+                childProcesses = buildList(childProcesses.size) {
                     addAll(
                         childProcesses.asSequence()
                             .filter { process -> process.job.isActive }
@@ -212,7 +212,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             noChange()
         } else {
             mutate {
-                val process = processBuilder.startProcess(
+                val process = prootEngine.startProcess(
                     containerId,
                     exec.command,
                     config
@@ -221,7 +221,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     { childProcess ->
                         exec.process.complete(childProcess)
                         copy(
-                            childProcesses = buildSet(childProcesses.size + 1) {
+                            childProcesses = buildList(childProcesses.size + 1) {
                                 addAll(childProcesses)
                                 add(childProcess)
                             }
@@ -238,10 +238,10 @@ class ContainerStateMachineFactory @AssistedInject constructor(
 
     @Singleton
     @AssistedFactory
-    interface Builder {
-        fun build(
+    interface Factory {
+        fun create(
             @Assisted
             initialState: ContainerState,
-        ): ContainerStateMachineFactory
+        ): ContainerStateMachineSpec
     }
 }

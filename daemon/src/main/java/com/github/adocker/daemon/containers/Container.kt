@@ -19,7 +19,7 @@ import javax.inject.Singleton
 class Container @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
-    stateMachineFactoryBuilder: ContainerStateMachineFactory.Builder,
+    stateMachineFactoryFactory: ContainerStateMachineSpec.Factory,
     parentScope: CoroutineScope,
 ) {
     init {
@@ -29,7 +29,7 @@ class Container @AssistedInject constructor(
     private val scope = CoroutineScope(
         SupervisorJob(parentScope.coroutineContext[Job]) + Dispatchers.IO
     )
-    private val stateMachine = stateMachineFactoryBuilder.build(initialState).launchIn(scope)
+    private val stateMachine = stateMachineFactoryFactory.create(initialState).launchIn(scope)
 
     val state
         get() = stateMachine.state

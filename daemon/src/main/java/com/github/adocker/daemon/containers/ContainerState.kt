@@ -19,7 +19,7 @@ sealed interface ContainerState {
         val stdin: BufferedWriter,
         val stdout: File,
         val stderr: File,
-        val childProcesses: Set<ContainerProcess> = emptySet(),
+        val childProcesses: List<ContainerProcess> = emptyList(),
     ) : ContainerState
 
     data class Stopping(

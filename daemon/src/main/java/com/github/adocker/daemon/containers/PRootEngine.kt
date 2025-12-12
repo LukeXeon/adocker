@@ -33,7 +33,8 @@ import javax.inject.Singleton
 class PRootEngine @Inject constructor(
     private val appContext: AppContext,
     @param:Named("redirect")
-    private val mapping: Map<String, String>
+    private val mapping: Map<String, String>,
+    private val factory: ContainerProcess.Factory
 ) {
     private val nativeLibDir = appContext.nativeLibDir
 
@@ -246,10 +247,7 @@ class PRootEngine @Inject constructor(
         return env
     }
 
-    /**
-     * Run a container and return immediately
-     */
-    fun startProcess(
+    private fun startProcess(
         container: ContainerConfig,
         rootfsDir: File,
         command: List<String>? = null
@@ -269,6 +267,30 @@ class PRootEngine @Inject constructor(
             environment = env
         )
     }
+
+    /**
+     * Run a container and return immediately
+     */
+    fun startProcess(
+        containerId: String,
+        command: List<String>? = null,
+        config: ContainerConfig = ContainerConfig(),
+    ): Result<ContainerProcess> {
+        val containerDir = File(appContext.containersDir, containerId)
+        val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
+        if (!rootfsDir.exists()) {
+            return Result.failure(IllegalStateException("Container rootfs not found"))
+        }
+        val process = startProcess(
+            config,
+            rootfsDir,
+            command
+        )
+        return process.map {
+            factory.create(it)
+        }
+    }
+
 
     companion object {
 
