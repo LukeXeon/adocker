@@ -20,6 +20,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import java.io.File
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ContainerStateMachineFactory @AssistedInject constructor(
@@ -87,6 +89,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     val containerId = snapshot.containerId
                     val config = containerDao.getContainerById(snapshot.containerId)?.config
                     if (config == null) {
+                        it.continuation.resumeWithException(IllegalStateException("Container not found: $containerId"))
                         noChange()
                     } else {
                         mutate {
@@ -95,9 +98,9 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                 it.command,
                                 config
                             )
-                            it.continuation.resumeWith(process)
                             process.fold(
                                 { childProcess ->
+                                    it.continuation.resume(childProcess)
                                     copy(
                                         childProcesses = buildSet(childProcesses.size + 1) {
                                             addAll(childProcesses)
@@ -105,7 +108,8 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                         }
                                     )
                                 },
-                                {
+                                { exception ->
+                                    it.continuation.resumeWithException(exception)
                                     this
                                 }
                             )
