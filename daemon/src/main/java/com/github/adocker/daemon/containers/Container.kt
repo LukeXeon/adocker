@@ -44,7 +44,7 @@ class Container @AssistedInject constructor(
         }
     }
 
-    private class JumpOutException(val process: ContainerProcess) : CancellationException()
+    private class AbortFlowException(val process: ContainerProcess) : CancellationException()
 
     suspend fun exec(command: List<String>): Result<ContainerProcess> {
         try {
@@ -59,12 +59,12 @@ class Container @AssistedInject constructor(
                             process
                         )
                     )
-                    throw JumpOutException(process.await())
+                    throw AbortFlowException(process.await())
                 } else {
                     throw IllegalStateException("Cannot exec: container is not running")
                 }
             }
-        } catch (e: JumpOutException) {
+        } catch (e: AbortFlowException) {
             return Result.success(e.process)
         } catch (e: IllegalStateException) {
             return Result.failure(e)
