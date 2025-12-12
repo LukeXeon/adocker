@@ -4,6 +4,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -53,20 +54,14 @@ class Container @AssistedInject constructor(
                 it is ContainerState.Running
             }.distinctUntilChanged().collectLatest {
                 if (it) {
-                    coroutineScope {
-                        throw JumpOutException(
-                            suspendCancellableCoroutine { continuation ->
-                                launch {
-                                    stateMachine.dispatch(
-                                        ContainerOperation.Exec(
-                                            command,
-                                            continuation
-                                        )
-                                    )
-                                }
-                            }
+                    val process = CompletableDeferred<ContainerProcess>()
+                    stateMachine.dispatch(
+                        ContainerOperation.Exec(
+                            command,
+                            process
                         )
-                    }
+                    )
+                    throw JumpOutException(process.await())
                 } else {
                     throw IllegalStateException("Cannot exec: container is not running")
                 }

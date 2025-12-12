@@ -11,17 +11,13 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import java.io.File
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ContainerStateMachineFactory @AssistedInject constructor(
@@ -210,7 +206,9 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         val containerId = snapshot.containerId
         val config = containerDao.getContainerById(snapshot.containerId)?.config
         return if (config == null) {
-            exec.continuation.resumeWithException(IllegalStateException("Container not found: $containerId"))
+            exec.process.completeExceptionally(
+                IllegalStateException("Container not found: $containerId")
+            )
             noChange()
         } else {
             mutate {
@@ -221,7 +219,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                 )
                 process.fold(
                     { childProcess ->
-                        exec.continuation.resume(childProcess)
+                        exec.process.complete(childProcess)
                         copy(
                             childProcesses = buildSet(childProcesses.size + 1) {
                                 addAll(childProcesses)
@@ -230,7 +228,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                         )
                     },
                     { exception ->
-                        exec.continuation.resumeWithException(exception)
+                        exec.process.completeExceptionally(exception)
                         this
                     }
                 )

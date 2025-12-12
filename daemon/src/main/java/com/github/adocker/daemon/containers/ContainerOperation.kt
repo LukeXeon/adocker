@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.containers
 
-import kotlin.coroutines.Continuation
+import kotlinx.coroutines.CompletableDeferred
 
 sealed interface ContainerOperation {
 
@@ -11,6 +11,6 @@ sealed interface ContainerOperation {
     object Remove : ContainerOperation
     data class Exec(
         val command: List<String>,
-        val continuation: Continuation<ContainerProcess>
+        val process: CompletableDeferred<ContainerProcess>
     ) : ContainerOperation
 }
