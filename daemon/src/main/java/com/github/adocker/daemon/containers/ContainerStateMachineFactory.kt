@@ -55,8 +55,10 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     override {
                         ContainerState.Stopping(
                             containerId,
-                            mainProcess,
-                            childProcesses,
+                            buildList(childProcesses.size + 1) {
+                                add(mainProcess.job)
+                                addAll(childProcesses.asSequence().map { it.job })
+                            }
                         )
                     }
                 }
@@ -111,8 +113,10 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     override {
                         ContainerState.Stopping(
                             containerId,
-                            mainProcess,
-                            childProcesses,
+                            buildList(childProcesses.size + 1) {
+                                add(mainProcess.job)
+                                addAll(childProcesses.asSequence().map { it.job })
+                            }
                         )
                     }
                 }
@@ -202,9 +206,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
-        sequenceOf(snapshot.mainProcess.job).plus(
-            snapshot.childProcesses.asSequence().map { it.job }
-        ).toList().onEach {
+        snapshot.processes.onEach {
             it.cancel()
         }.joinAll()
         return override {
