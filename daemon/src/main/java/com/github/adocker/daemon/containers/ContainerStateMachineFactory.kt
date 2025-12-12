@@ -13,6 +13,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.selects.select
@@ -199,13 +200,10 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
-        snapshot.mainProcess.job.cancel()
-        snapshot.childProcesses.forEach { process ->
-            process.job.cancel()
-        }
-        snapshot.mainProcess.job.join()
-        sequenceOf(snapshot.mainProcess.job).plus()
-
+        sequenceOf(snapshot.mainProcess.job).plus(
+            snapshot.childProcesses.map { it.job }).toList().onEach {
+            it.cancel()
+        }.joinAll()
         return override {
             ContainerState.Exited(containerId)
         }
