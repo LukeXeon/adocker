@@ -1,13 +1,13 @@
 package com.github.adocker.daemon.containers
 
-sealed class ContainerOperation {
+sealed interface ContainerOperation {
 
-    object Start : ContainerOperation()
+    object Start : ContainerOperation
 
-    object Stop : ContainerOperation()
+    object Stop : ContainerOperation
 
-    object Remove : ContainerOperation()
+    object Remove : ContainerOperation
     data class Exec(
         val command: List<String>,
-    ) : ContainerOperation()
+    ) : ContainerOperation
 }
