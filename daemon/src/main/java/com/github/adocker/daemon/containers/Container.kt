@@ -44,7 +44,12 @@ class Container @AssistedInject constructor(
         }
     }
 
-    private class AbortFlowException(val payload: Any?) : CancellationException()
+    private class AbortFlowException(val payload: Any?) : CancellationException(){
+        override fun fillInStackTrace(): Throwable {
+            stackTrace = emptyArray()
+            return this
+        }
+    }
 
     private suspend inline fun <reified T : ContainerState, reified R> runInState(
         crossinline block: suspend () -> R
