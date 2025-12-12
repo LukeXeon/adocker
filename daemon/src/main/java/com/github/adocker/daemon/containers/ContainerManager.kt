@@ -1,7 +1,5 @@
 package com.github.adocker.daemon.containers
 
-import android.app.Application
-import com.github.adocker.daemon.R
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
@@ -9,12 +7,10 @@ import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.utils.extractTarGz
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -30,35 +26,9 @@ class ContainerManager @Inject constructor(
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appContext: AppContext,
+    private val containerName: ContainerName,
     scope: CoroutineScope,
-    application: Application,
 ) {
-    private val adjectives = application.resources.getStringArray(R.array.adjectives).asList()
-    private val nouns = application.resources.getStringArray(R.array.nouns).asList()
-
-    /**
-     * Generate a random container name
-     */
-    private fun generateContainerName(): String {
-        val adj = adjectives.random()
-        val noun = nouns.random()
-        val num = (1000..9999).random()
-        return "${adj}_${noun}_$num"
-    }
-
-    private suspend fun generateContainerSafeName(): String {
-        var name = generateContainerName()
-        val context = currentCoroutineContext()
-        while (context.isActive) {
-            if (containerDao.getContainerByName(name) != null) {
-                name = generateContainerName()
-            } else {
-                break
-            }
-        }
-        return name
-    }
-
     private suspend fun loadContainer(containerId: String): Result<Container> {
         val entity = containerDao.getContainerById(containerId)
         return when {
@@ -91,7 +61,7 @@ class ContainerManager @Inject constructor(
             IllegalArgumentException("Image not found: $imageId")
         )
         val containerName = if (name == null) {
-            generateContainerSafeName()
+            containerName.generateName()
         } else {
             if (containerDao.getContainerById(name) != null) {
                 return Result.failure(
