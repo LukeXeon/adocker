@@ -51,7 +51,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    snapshot.mainProcess.task.join()
+                    snapshot.mainProcess.job.join()
                     override {
                         ContainerState.Stopping(
                             containerId,
@@ -64,7 +64,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                     onEnter {
                         select {
                             snapshot.childProcesses.forEach { process ->
-                                process.task.onJoin {}
+                                process.job.onJoin {}
                             }
                         }
                         mutate {
@@ -72,7 +72,7 @@ class ContainerStateMachineFactory @AssistedInject constructor(
                                 childProcesses = buildSet(childProcesses.size) {
                                     addAll(
                                         childProcesses.asSequence()
-                                            .filter { process -> process.task.isActive }
+                                            .filter { process -> process.job.isActive }
                                     )
                                 }
                             )
@@ -202,8 +202,8 @@ class ContainerStateMachineFactory @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
-        sequenceOf(snapshot.mainProcess.task).plus(
-            snapshot.childProcesses.asSequence().map { it.task }
+        sequenceOf(snapshot.mainProcess.job).plus(
+            snapshot.childProcesses.asSequence().map { it.job }
         ).toList().onEach {
             it.cancel()
         }.joinAll()

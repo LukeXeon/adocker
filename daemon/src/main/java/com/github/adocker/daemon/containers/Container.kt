@@ -1,7 +1,6 @@
 package com.github.adocker.daemon.containers
 
 import com.freeletics.flowredux2.FlowReduxStateMachine
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.StateFlow
 
 class Container(
@@ -13,6 +12,7 @@ class Container(
 
     suspend fun exec(command: List<String>): Process {
         stateMachine.dispatch(ContainerOperation.Exec(command))
+        TODO()
     }
 
     fun start() {

@@ -1,10 +1,11 @@
 package com.github.adocker.daemon.containers
 
+import android.system.Os
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import java.io.InputStream
 import java.io.OutputStream
@@ -13,7 +14,7 @@ import java.io.OutputStream
 data class ContainerProcess(
     private val process: Process
 ) {
-    val task = GlobalScope.async(Dispatchers.IO) {
+    val job = GlobalScope.launch(Dispatchers.IO) {
         try {
             runInterruptible {
                 process.waitFor()
@@ -23,6 +24,10 @@ data class ContainerProcess(
             throw e
         }
     }
+
+    val exitCode: Int
+        get() = process.exitValue()
+
     val stdin: OutputStream
         get() = process.outputStream
 
