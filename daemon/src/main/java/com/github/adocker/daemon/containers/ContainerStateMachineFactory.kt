@@ -56,76 +56,18 @@ class ContainerStateMachineFactory @AssistedInject constructor(
             inState<ContainerState.Running> {
                 onEnter {
                     snapshot.mainProcess.job.join()
-                    override {
-                        ContainerState.Stopping(
-                            containerId,
-                            buildList(childProcesses.size + 1) {
-                                add(mainProcess.job)
-                                addAll(childProcesses.asSequence().map { it.job })
-                            }
-                        )
-                    }
+                    toStoping()
                 }
                 untilIdentityChanges({ it.childProcesses }) {
                     onEnter {
-                        select {
-                            snapshot.childProcesses.forEach { process ->
-                                process.job.onJoin {}
-                            }
-                        }
-                        mutate {
-                            copy(
-                                childProcesses = buildSet(childProcesses.size) {
-                                    addAll(
-                                        childProcesses.asSequence()
-                                            .filter { process -> process.job.isActive }
-                                    )
-                                }
-                            )
-                        }
+                        anyExit()
                     }
                 }
                 on<ContainerOperation.Exec> {
-                    val containerId = snapshot.containerId
-                    val config = containerDao.getContainerById(snapshot.containerId)?.config
-                    if (config == null) {
-                        it.continuation.resumeWithException(IllegalStateException("Container not found: $containerId"))
-                        noChange()
-                    } else {
-                        mutate {
-                            val process = processBuilder.startProcess(
-                                containerId,
-                                it.command,
-                                config
-                            )
-                            process.fold(
-                                { childProcess ->
-                                    it.continuation.resume(childProcess)
-                                    copy(
-                                        childProcesses = buildSet(childProcesses.size + 1) {
-                                            addAll(childProcesses)
-                                            add(childProcess)
-                                        }
-                                    )
-                                },
-                                { exception ->
-                                    it.continuation.resumeWithException(exception)
-                                    this
-                                }
-                            )
-                        }
-                    }
+                    execProcess(it)
                 }
                 on<ContainerOperation.Stop> {
-                    override {
-                        ContainerState.Stopping(
-                            containerId,
-                            buildList(childProcesses.size + 1) {
-                                add(mainProcess.job)
-                                addAll(childProcesses.asSequence().map { it.job })
-                            }
-                        )
-                    }
+                    toStoping()
                 }
             }
             inState<ContainerState.Stopping> {
@@ -231,6 +173,68 @@ class ContainerStateMachineFactory @AssistedInject constructor(
         containerDao.deleteContainerById(containerId)
         return override {
             ContainerState.Removed(containerId)
+        }
+    }
+
+    private suspend fun ChangeableState<ContainerState.Running>.anyExit(): ChangedState<ContainerState> {
+        select {
+            snapshot.childProcesses.forEach { process ->
+                process.job.onJoin {}
+            }
+        }
+        return mutate {
+            copy(
+                childProcesses = buildSet(childProcesses.size) {
+                    addAll(
+                        childProcesses.asSequence()
+                            .filter { process -> process.job.isActive }
+                    )
+                }
+            )
+        }
+    }
+
+    private fun ChangeableState<ContainerState.Running>.toStoping(): ChangedState<ContainerState> {
+        return override {
+            ContainerState.Stopping(
+                containerId,
+                buildList(childProcesses.size + 1) {
+                    add(mainProcess.job)
+                    addAll(childProcesses.asSequence().map { it.job })
+                }
+            )
+        }
+    }
+
+    private suspend fun ChangeableState<ContainerState.Running>.execProcess(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
+        val containerId = snapshot.containerId
+        val config = containerDao.getContainerById(snapshot.containerId)?.config
+        return if (config == null) {
+            exec.continuation.resumeWithException(IllegalStateException("Container not found: $containerId"))
+            noChange()
+        } else {
+            mutate {
+                val process = processBuilder.startProcess(
+                    containerId,
+                    exec.command,
+                    config
+                )
+                process.fold(
+                    { childProcess ->
+                        exec.continuation.resume(childProcess)
+                        copy(
+                            childProcesses = buildSet(childProcesses.size + 1) {
+                                addAll(childProcesses)
+                                add(childProcess)
+                            }
+                        )
+                    },
+                    { exception ->
+                        exec.continuation.resumeWithException(exception)
+                        this
+                    }
+                )
+            }
         }
     }
 
