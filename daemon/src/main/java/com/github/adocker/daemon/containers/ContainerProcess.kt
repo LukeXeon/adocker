@@ -21,6 +21,7 @@ data class ContainerProcess(
             }
         } catch (e: CancellationException) {
             process.destroy()
+            process.waitFor()
             throw e
         }
     }
