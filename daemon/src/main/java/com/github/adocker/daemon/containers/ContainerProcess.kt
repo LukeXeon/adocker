@@ -27,7 +27,7 @@ class ContainerProcess @AssistedInject constructor(
 ) {
 
     companion object {
-        private val getFileDescriptor by lazy<Result<(FilterOutputStream) -> FileDescriptor>> {
+        private val getFileDescriptor by lazy<Result<(Any) -> FileDescriptor>> {
             runCatching {
                 FilterOutputStream::class.java.getDeclaredField("out").apply {
                     isAccessible = true
@@ -46,7 +46,7 @@ class ContainerProcess @AssistedInject constructor(
         try {
             suspendCancellableCoroutine { con ->
                 getFileDescriptor.mapCatching {
-                    it(process.outputStream as FilterOutputStream)
+                    it(process.outputStream)
                 }.fold(
                     { fd ->
                         val queue = Looper.getMainLooper().queue
