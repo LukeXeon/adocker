@@ -68,6 +68,7 @@ class ContainerProcess @AssistedInject constructor(
                             OnFileDescriptorEventListener.EVENT_ERROR,
                             callbacks
                         )
+                        con.invokeOnCancellation(callbacks)
                     },
                     {
                         Timber.d(it)
