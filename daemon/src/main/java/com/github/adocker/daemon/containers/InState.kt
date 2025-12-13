@@ -21,11 +21,12 @@ internal class AbortFlowException(private val owner: Any) : CancellationExceptio
     }
 }
 
-typealias InState = Pair<StateFlow<ContainerState>, KClass<*>>
+typealias InState = Pair<StateFlow<ContainerState>, Set<KClass<*>>>
+
 suspend inline fun <reified R> InState.execute(
     crossinline block: suspend () -> R
 ): R {
-    val (state, clazz) = this
+    val (state, classes) = this
     val collector = object : suspend (Boolean) -> Unit {
         var result: Any? = this
 
@@ -34,13 +35,15 @@ suspend inline fun <reified R> InState.execute(
                 result = block()
                 throw AbortFlowException(this)
             } else {
-                throw IllegalStateException("container is not $clazz")
+                throw IllegalStateException("container is not $classes")
             }
         }
     }
     try {
         state.map {
-            clazz.isInstance(it)
+            classes.any { clazz ->
+                clazz.isInstance(it)
+            }
         }.distinctUntilChanged().collectLatest(collector)
     } catch (e: AbortFlowException) {
         e.checkOwnership(collector)
@@ -52,5 +55,9 @@ suspend inline fun <reified R> InState.execute(
 }
 
 inline fun <reified S : ContainerState> StateFlow<ContainerState>.inState(): InState {
-    return this to S::class
+    return this to setOf(S::class)
+}
+
+fun StateFlow<ContainerState>.inState(vararg classes: KClass<out ContainerState>): InState {
+    return this to setOf(*classes)
 }
