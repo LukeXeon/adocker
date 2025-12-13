@@ -3,16 +3,12 @@ package com.github.adocker.daemon.containers
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
@@ -44,36 +40,10 @@ class Container @AssistedInject constructor(
         }
     }
 
-    private class AbortFlowException(val payload: Any?) : CancellationException(){
-        override fun fillInStackTrace(): Throwable {
-            stackTrace = emptyArray()
-            return this
-        }
-    }
-
-    private suspend inline fun <reified T : ContainerState, reified R> runInState(
-        crossinline block: suspend () -> R
-    ): R {
-        try {
-            stateMachine.state.map {
-                it is T
-            }.distinctUntilChanged().collectLatest {
-                if (it) {
-                    throw AbortFlowException(block())
-                } else {
-                    throw IllegalStateException("container is not ${T::class}")
-                }
-            }
-        } catch (e: AbortFlowException) {
-            return e.payload as R
-        }
-        throw AssertionError()
-    }
-
     suspend fun exec(command: List<String>): Result<ContainerProcess> {
         return try {
             Result.success(
-                runInState<ContainerState.Running, ContainerProcess> {
+                stateMachine.state.inState<ContainerState.Running>().execute {
                     val process = CompletableDeferred<ContainerProcess>()
                     stateMachine.dispatch(
                         ContainerOperation.Exec(

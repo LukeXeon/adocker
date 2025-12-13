@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.containers.PRootEngine
-import com.github.adocker.daemon.utils.getDirectorySize
+import com.github.adocker.daemon.io.getDirectorySize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers

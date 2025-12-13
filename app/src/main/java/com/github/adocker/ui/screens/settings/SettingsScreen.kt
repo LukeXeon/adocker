@@ -12,10 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.ui.theme.Spacing
-import com.github.adocker.ui.theme.IconSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.adocker.R
-import com.github.adocker.daemon.utils.formatFileSize
+import com.github.adocker.daemon.io.formatFileSize
 import com.github.adocker.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 

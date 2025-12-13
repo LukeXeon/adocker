@@ -4,7 +4,7 @@ import android.net.LocalServerSocket
 import android.net.LocalSocket
 import android.net.LocalSocketAddress
 import android.net.LocalSocketAddress.Namespace
-import com.github.adocker.daemon.utils.chmod
+import com.github.adocker.daemon.io.chmod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

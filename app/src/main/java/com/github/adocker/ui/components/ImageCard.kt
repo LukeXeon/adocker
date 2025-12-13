@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
-import com.github.adocker.daemon.utils.formatFileSize
+import com.github.adocker.daemon.io.formatFileSize
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing

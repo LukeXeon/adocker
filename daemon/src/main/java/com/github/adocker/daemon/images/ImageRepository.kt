@@ -7,9 +7,9 @@ import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.registry.DockerRegistryApi
 import com.github.adocker.daemon.registry.model.ImageConfig
-import com.github.adocker.daemon.utils.copyDirectory
-import com.github.adocker.daemon.utils.extractTar
-import com.github.adocker.daemon.utils.getDirectorySize
+import com.github.adocker.daemon.io.copyDirectory
+import com.github.adocker.daemon.io.extractTar
+import com.github.adocker.daemon.io.getDirectorySize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
