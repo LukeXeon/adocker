@@ -2,6 +2,7 @@ package com.github.adocker.daemon.containers
 
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
+import com.freeletics.flowredux2.ExecutionPolicy
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.adocker.daemon.app.AppContext
@@ -59,7 +60,7 @@ class ContainerStateMachine @AssistedInject constructor(
                         anyExit()
                     }
                 }
-                on<ContainerOperation.Exec> {
+                on<ContainerOperation.Exec>(ExecutionPolicy.Unordered) {
                     execCommand(it)
                 }
                 on<ContainerOperation.Stop> {
