@@ -17,6 +17,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.io.IOException
+import timber.log.Timber
 import java.io.File
 import javax.inject.Singleton
 
@@ -119,17 +121,28 @@ class ContainerStateMachine @AssistedInject constructor(
                     { mainProcess ->
                         val stdin = mainProcess.stdin.bufferedWriter()
                         val logDir = File(appContext.logDir, containerId)
+                        logDir.mkdirs()
                         val stdout = File(logDir, AppContext.STDOUT)
                         val stderr = File(logDir, AppContext.STDERR)
+                        scope.launch {
+                            containerDao.setContainerLastRun(
+                                containerId,
+                                System.currentTimeMillis()
+                            )
+                        }
                         arrayOf(
                             mainProcess.stdout to stdout,
                             mainProcess.stderr to stderr
                         ).forEach { (input, output) ->
                             scope.launch(Dispatchers.IO) {
-                                input.use { input ->
-                                    output.outputStream().use { output ->
-                                        input.copyTo(output)
+                                try {
+                                    input.use { read ->
+                                        output.outputStream().use { write ->
+                                            read.copyTo(write)
+                                        }
                                     }
+                                } catch (e: IOException) {
+                                    Timber.d(e)
                                 }
                             }
                         }

@@ -37,8 +37,8 @@ class ContainerManager @Inject constructor(
         scope.launch {
             mutex.withLock {
                 containers.value = containerDao.getAllContainerIds().mapNotNull {
-                    loadContainer(it).onFailure { exception ->
-                        Timber.e(exception)
+                    loadContainer(it).onFailure { e ->
+                        Timber.e(e)
                     }.getOrNull()
                 }.associateBy { it.containerId }
             }
