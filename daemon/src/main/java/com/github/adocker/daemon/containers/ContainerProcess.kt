@@ -8,9 +8,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.FileDescriptor
 import java.io.FileOutputStream
@@ -76,8 +78,10 @@ class ContainerProcess @AssistedInject constructor(
                     }
                 )
             }
-            runInterruptible {
-                process.waitFor()
+            withContext(Dispatchers.IO) {
+                runInterruptible {
+                    process.waitFor()
+                }
             }
         } catch (e: CancellationException) {
             process.destroy()
