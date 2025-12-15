@@ -3,13 +3,19 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.adocker.daemon.containers.ContainerManager
+import com.github.adocker.daemon.containers.ContainerState
+import com.github.adocker.daemon.database.model.ContainerEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.BufferedWriter
+import org.apache.commons.io.input.Tailer
+import org.apache.commons.io.input.TailerListenerAdapter
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,8 +26,8 @@ class TerminalViewModel @Inject constructor(
 
     private val containerId: String = savedStateHandle.get<String>("containerId") ?: ""
 
-    private val _container = MutableStateFlow<Container2?>(null)
-    val container: StateFlow<Container2?> = _container.asStateFlow()
+    private val _container = MutableStateFlow<ContainerEntity?>(null)
+    val container: StateFlow<ContainerEntity?> = _container.asStateFlow()
 
     private val _outputLines = MutableStateFlow<List<String>>(emptyList())
     val outputLines: StateFlow<List<String>> = _outputLines.asStateFlow()
@@ -32,17 +38,83 @@ class TerminalViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private var process: Process? = null
-    private var stdin: BufferedWriter? = null
-    private var stdout: BufferedReader? = null
+    private var stdoutTailer: Tailer? = null
+    private var stderrTailer: Tailer? = null
 
     init {
         loadContainer()
+        startMonitoringContainer()
+    }
+
+    private fun startMonitoringContainer() {
+        viewModelScope.launch {
+            containerManager.allContainers.collect { containers ->
+                val container = containers[containerId]
+                val state = container?.state?.value
+
+                if (state is ContainerState.Running) {
+                    // Start tailing stdout and stderr if not already started
+                    if (stdoutTailer == null) {
+                        startTailing(state.stdout, isError = false)
+                    }
+                    if (stderrTailer == null) {
+                        startTailing(state.stderr, isError = true)
+                    }
+                    _isRunning.value = true
+                } else {
+                    // Stop tailing if container is not running
+                    stopTailing()
+                    _isRunning.value = false
+                }
+            }
+        }
+    }
+
+    private fun startTailing(file: File, isError: Boolean) {
+        val listener = object : TailerListenerAdapter() {
+            override fun handle(line: String) {
+                viewModelScope.launch {
+                    addOutput(if (isError) "[ERROR] $line" else line)
+                }
+            }
+
+            override fun handle(e: Exception) {
+                viewModelScope.launch {
+                    _error.value = "Tailer error: ${e.message}"
+                }
+            }
+        }
+
+        val tailer = Tailer.builder()
+            .setFile(file)
+            .setTailerListener(listener)
+            .setDelayDuration(java.time.Duration.ofMillis(100))
+            .setStartThread(true)
+            .setTailFromEnd(false) // start from beginning
+            .setReOpen(false) // don't reopen on EOF
+            .get()
+
+        if (isError) {
+            stderrTailer = tailer
+        } else {
+            stdoutTailer = tailer
+        }
+    }
+
+    private fun stopTailing() {
+        stdoutTailer?.close()
+        stdoutTailer = null
+        stderrTailer?.close()
+        stderrTailer = null
     }
 
     private fun loadContainer() {
         viewModelScope.launch {
-            _container.value = containerManager.getContainerById(containerId)
+            val containers = containerManager.allContainers.value
+            val container = containers[containerId]
+            container?.getInfo()?.onSuccess { entity ->
+                _container.value = entity
+            }
         }
     }
 
@@ -53,37 +125,32 @@ class TerminalViewModel @Inject constructor(
             addOutput("$ $command")
 
             try {
-                // Get the running container
-                val runningContainer = containerManager.getRunningContainer(containerId)
+                // Get the container
+                val containers = containerManager.allContainers.value
+                val container = containers[containerId]
 
-                if (runningContainer == null) {
+                if (container == null) {
+                    addOutput("Error: Container not found.")
+                    return@launch
+                }
+
+                // Check if container is running
+                val state = container.state.value
+                if (state !is ContainerState.Running) {
                     addOutput("Error: Container is not running. Please start the container first.")
                     return@launch
                 }
 
-                // Execute command in the running container
-                val result = containerManager.execCommand(containerId, listOf("/bin/sh", "-c", command))
+                // Execute command in the container (output will be captured by Tailer)
+                val result = container.exec(listOf("/bin/sh", "-c", command))
 
-                result.onSuccess { process ->
+                result.onSuccess { containerProcess ->
+                    // Wait for command to complete
                     withContext(Dispatchers.IO) {
-                        val output = process.inputStream.bufferedReader().use { it.readText() }
-                        val errorOutput = process.errorStream.bufferedReader().use { it.readText() }
-                        process.waitFor()
+                        containerProcess.job.join()
 
-                        withContext(Dispatchers.Main) {
-                            if (output.isNotBlank()) {
-                                output.lines().forEach { line ->
-                                    addOutput(line)
-                                }
-                            }
-                            if (errorOutput.isNotBlank()) {
-                                errorOutput.lines().forEach { line ->
-                                    addOutput(line)
-                                }
-                            }
-                            if (process.exitValue() != 0) {
-                                addOutput("Exit code: ${process.exitValue()}")
-                            }
+                        if (containerProcess.exitCode != 0) {
+                            addOutput("Exit code: ${containerProcess.exitCode}")
                         }
                     }
                 }.onFailure { e ->
@@ -97,17 +164,26 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun sendInput(input: String) {
+        if (input.isBlank()) return
+
         viewModelScope.launch {
             try {
-                stdin?.let {
+                // Get the container
+                val containers = containerManager.allContainers.value
+                val container = containers[containerId]
+                val state = container?.state?.value
+
+                if (state is ContainerState.Running) {
                     withContext(Dispatchers.IO) {
-                        it.write(input)
+                        state.stdin.write(input)
                         if (!input.endsWith("\n")) {
-                            it.newLine()
+                            state.stdin.newLine()
                         }
-                        it.flush()
+                        state.stdin.flush()
                     }
                     addOutput("> $input")
+                } else {
+                    addOutput("Error: Container is not running.")
                 }
             } catch (e: Exception) {
                 addOutput("Error sending input: ${e.message}")
@@ -123,17 +199,16 @@ class TerminalViewModel @Inject constructor(
         _outputLines.value = _outputLines.value + line
     }
 
-    fun stopShell() {
+    fun stopContainer() {
         viewModelScope.launch {
             try {
-                process?.destroy()
-                process = null
-                stdin = null
-                stdout = null
-                _isRunning.value = false
-                addOutput("Shell terminated")
+                val containers = containerManager.allContainers.value
+                val container = containers[containerId]
+
+                container?.stop()
+                addOutput("Container stopped")
             } catch (e: Exception) {
-                _error.value = "Error stopping shell: ${e.message}"
+                _error.value = "Error stopping container: ${e.message}"
             }
         }
     }
@@ -144,6 +219,6 @@ class TerminalViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        process?.destroy()
+        stopTailing()
     }
 }

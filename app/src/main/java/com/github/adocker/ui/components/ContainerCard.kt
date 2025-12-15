@@ -14,9 +14,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
+import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
+import kotlinx.coroutines.launch
 
 /**
  * Material Design 3 容器卡片组件
@@ -26,7 +29,7 @@ import com.github.adocker.ui.theme.Spacing
 
 @Composable
 fun ContainerCard(
-    container: Container2,
+    container: Container,
     status: ContainerStatus,
     onStart: () -> Unit,
     onStop: () -> Unit,
@@ -36,6 +39,16 @@ fun ContainerCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(container) {
+        scope.launch {
+            container.getInfo().onSuccess { entity ->
+                containerInfo = entity
+            }
+        }
+    }
 
     Card(
         modifier = modifier
@@ -104,7 +117,7 @@ fun ContainerCard(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = container.name,
+                            text = containerInfo?.name ?: container.containerId.take(12),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
@@ -113,7 +126,7 @@ fun ContainerCard(
                         )
                         Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
                         Text(
-                            text = container.id.take(12),
+                            text = container.containerId.take(12),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = FontFamily.Monospace
@@ -144,7 +157,7 @@ fun ContainerCard(
                     modifier = Modifier.size(IconSize.Small)
                 )
                 Text(
-                    text = container.imageName,
+                    text = containerInfo?.imageName ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),

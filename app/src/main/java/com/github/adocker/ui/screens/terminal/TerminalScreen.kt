@@ -84,7 +84,7 @@ fun TerminalScreen(
                         )
                     }
                     if (isRunning) {
-                        IconButton(onClick = { viewModel.stopShell() }) {
+                        IconButton(onClick = { viewModel.stopContainer() }) {
                             Icon(
                                 Icons.Default.Stop,
                                 contentDescription = stringResource(R.string.action_stop)

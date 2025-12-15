@@ -13,12 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.adocker.daemon.containers.Container
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.components.ContainerCard
 import com.github.adocker.ui.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,9 +31,10 @@ fun ContainersScreen(
     modifier: Modifier = Modifier
 ) {
     val containers by viewModel.containers.collectAsState()
+    val scope = rememberCoroutineScope()
 
     var filterStatus by remember { mutableStateOf<ContainerStatus?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<Container2?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
 
     // Calculate counts for each status
     val statusCounts = remember(containers) {
@@ -200,15 +203,15 @@ fun ContainersScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
             ) {
-                items(filteredContainers, key = { it.id }) { container ->
+                items(filteredContainers, key = { it.containerId }) { container ->
                     ContainerCard(
                         container = container,
                         status = viewModel.getContainerStatus(container),
-                        onStart = { viewModel.startContainer(container.id) },
-                        onStop = { viewModel.stopContainer(container.id) },
+                        onStart = { viewModel.startContainer(container.containerId) },
+                        onStop = { viewModel.stopContainer(container.containerId) },
                         onDelete = { showDeleteDialog = container },
-                        onTerminal = { onNavigateToTerminal(container.id) },
-                        onClick = { onNavigateToDetail(container.id) }
+                        onTerminal = { onNavigateToTerminal(container.containerId) },
+                        onClick = { onNavigateToDetail(container.containerId) }
                     )
                 }
             }
@@ -217,17 +220,25 @@ fun ContainersScreen(
 
     // Delete confirmation dialog
     showDeleteDialog?.let { container ->
+        var containerName by remember { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(container) {
+            container.getInfo().onSuccess { entity ->
+                containerName = entity.name
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
             title = { Text(stringResource(R.string.containers_delete_confirm_title)) },
             text = {
-                Text(stringResource(R.string.containers_delete_confirm_message, container.name))
+                Text(stringResource(R.string.containers_delete_confirm_message, containerName ?: container.containerId))
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteContainer(container.id)
+                        viewModel.deleteContainer(container.containerId)
                         showDeleteDialog = null
                     },
                     colors = ButtonDefaults.textButtonColors(

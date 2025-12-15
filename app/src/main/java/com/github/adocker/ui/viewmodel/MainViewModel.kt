@@ -2,6 +2,9 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.ContainerManager
+import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
@@ -38,7 +41,8 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers: StateFlow<List<Container2>> = containerManager.getAllContainers()
+    val containers: StateFlow<List<Container>> = containerManager.allContainers
+        .map { it.values.toList() }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
@@ -134,7 +138,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             containerManager.createContainer(imageId, name, config)
                 .onSuccess { container ->
-                    _message.value = "Container created: ${container.name}"
+                    container.getInfo().onSuccess { entity ->
+                        _message.value = "Container created: ${entity.name}"
+                    }
                 }
                 .onFailure { e ->
                     _error.value = "Create failed: ${e.message}"
@@ -145,39 +151,51 @@ class MainViewModel @Inject constructor(
     // Start a container
     fun startContainer(containerId: String) {
         viewModelScope.launch {
-            containerManager.startContainer(containerId)
-                .onSuccess {
+            val container = containers.value.find { it.containerId == containerId }
+            if (container != null) {
+                try {
+                    container.start()
                     _message.value = "Container started"
-                }
-                .onFailure { e ->
+                } catch (e: Exception) {
                     _error.value = "Start failed: ${e.message}"
                 }
+            } else {
+                _error.value = "Container not found"
+            }
         }
     }
 
     // Stop a container
     fun stopContainer(containerId: String) {
         viewModelScope.launch {
-            containerManager.stopContainer(containerId)
-                .onSuccess {
+            val container = containers.value.find { it.containerId == containerId }
+            if (container != null) {
+                try {
+                    container.stop()
                     _message.value = "Container stopped"
-                }
-                .onFailure { e ->
+                } catch (e: Exception) {
                     _error.value = "Stop failed: ${e.message}"
                 }
+            } else {
+                _error.value = "Container not found"
+            }
         }
     }
 
     // Delete a container
     fun deleteContainer(containerId: String) {
         viewModelScope.launch {
-            containerManager.deleteContainer(containerId)
-                .onSuccess {
+            val container = containers.value.find { it.containerId == containerId }
+            if (container != null) {
+                try {
+                    container.remove()
                     _message.value = "Container deleted"
-                }
-                .onFailure { e ->
+                } catch (e: Exception) {
                     _error.value = "Delete failed: ${e.message}"
                 }
+            } else {
+                _error.value = "Container not found"
+            }
         }
     }
 
@@ -190,13 +208,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             containerManager.createContainer(imageId, name, config)
                 .onSuccess { container ->
-                    containerManager.startContainer(container.id)
-                        .onSuccess {
-                            _message.value = "Container running: ${container.name}"
+                    try {
+                        container.start()
+                        container.getInfo().onSuccess { entity ->
+                            _message.value = "Container running: ${entity.name}"
                         }
-                        .onFailure { e ->
-                            _error.value = "Run failed: ${e.message}"
-                        }
+                    } catch (e: Exception) {
+                        _error.value = "Run failed: ${e.message}"
+                    }
                 }
                 .onFailure { e ->
                     _error.value = "Create failed: ${e.message}"
@@ -215,19 +234,23 @@ class MainViewModel @Inject constructor(
     }
 
     // Helper function to convert Container state to UI ContainerStatus
-    fun getContainerStatus(container: Container2): ContainerStatus {
-        return when (container.state) {
-            com.github.adocker.daemon.containers.ContainerState2.Created -> ContainerStatus.CREATED
-            com.github.adocker.daemon.containers.ContainerState2.Running -> ContainerStatus.RUNNING
-            com.github.adocker.daemon.containers.ContainerState2.Exited -> ContainerStatus.EXITED
-            else -> ContainerStatus.EXITED // For Paused, Restarting, Removing, Dead
+    fun getContainerStatus(container: Container): ContainerStatus {
+        return when (container.state.value) {
+            is ContainerState.Created -> ContainerStatus.CREATED
+            is ContainerState.Starting -> ContainerStatus.CREATED
+            is ContainerState.Running -> ContainerStatus.RUNNING
+            is ContainerState.Stopping -> ContainerStatus.EXITED
+            is ContainerState.Exited -> ContainerStatus.EXITED
+            is ContainerState.Dead -> ContainerStatus.EXITED
+            is ContainerState.Removing -> ContainerStatus.EXITED
+            is ContainerState.Removed -> ContainerStatus.EXITED
         }
     }
 
     // Get running containers count
     fun getRunningCount(): Int {
         return containers.value.count {
-            it.state == com.github.adocker.daemon.containers.ContainerState2.Running
+            it.state.value is ContainerState.Running
         }
     }
 
@@ -241,7 +264,7 @@ class MainViewModel @Inject constructor(
 
     val stats: StateFlow<Stats> = containers.map { containers ->
         val runningCount = containers.count {
-            it.state == com.github.adocker.daemon.containers.ContainerState2.Running
+            it.state.value is ContainerState.Running
         }
         Stats(
             totalImages = images.value.size,

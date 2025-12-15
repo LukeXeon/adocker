@@ -114,9 +114,14 @@ com.github.adocker.daemon/
 │   └── model/                    # Entities (ImageEntity, ContainerEntity, LayerEntity, MirrorEntity)
 ├── containers/
 │   ├── PRootEngine.kt            # PRoot command builder and execution
-│   ├── ContainerExecutor.kt      # Manages container lifecycle (start/stop)
-│   ├── RunningContainer.kt       # Represents an active container instance
-│   └── ContainerRepository.kt    # Container CRUD operations
+│   ├── ContainerManager.kt       # Container creation and management
+│   ├── Container.kt              # Container instance with lifecycle methods
+│   ├── ContainerState.kt         # Container state machine states
+│   ├── ContainerStateMachine.kt  # State machine for container lifecycle
+│   ├── ContainerProcess.kt       # Wrapper for container processes
+│   ├── ContainerOperation.kt     # Operations that can be performed on containers
+│   ├── ContainerName.kt          # Container name generator
+│   └── InState.kt                # State machine helper for state checks
 ├── http/
 │   ├── UnixHttp4kServer.kt       # Unix domain socket HTTP server (supports FILESYSTEM & ABSTRACT)
 │   ├── HttpProcessor.kt          # HTTP/1.1 request/response processor
@@ -147,17 +152,20 @@ com.github.adocker.daemon/
    - `ImageEntity` saved to Room database with layer references
 
 2. **Container Creation Flow:**
-   - `MainViewModel.createContainer()` → `ContainerRepository.createContainer()`
+   - `MainViewModel.createContainer()` → `ContainerManager.createContainer()`
    - Creates directory: `containersDir/{containerId}/ROOT/`
    - **Layers extracted directly from compressed files** to container rootfs
    - `extractTarGz()` handles symlinks, permissions, and whiteout files during extraction
    - `ContainerEntity` saved to Room database (NO status field)
+   - `Container` instance created with initial state (Created or Exited)
 
 3. **Container Execution Flow:**
-   - `MainViewModel.startContainer()` → `ContainerExecutor.startContainer()`
-   - `ContainerExecutor` creates `RunningContainer` via factory
-   - `RunningContainer` uses `PRootEngine.startProcess()` to launch main process
-   - Runtime status tracked in-memory via `RunningContainer.isActive`
+   - `MainViewModel.startContainer()` → `Container.start()`
+   - `Container` dispatches `Start` operation to `ContainerStateMachine`
+   - State machine transitions from `Created/Exited` → `Starting` → `Running`
+   - `PRootEngine` launches the container process
+   - Runtime status tracked via `Container.state` StateFlow
+   - Processes managed through `ContainerProcess` wrapper
 
 ### Critical Architecture Details
 
@@ -166,23 +174,58 @@ com.github.adocker.daemon/
 **IMPORTANT:** Container status is NOT stored in the database.
 
 - **Database (`ContainerEntity`)**: Only stores static configuration (name, imageId, config, created timestamp)
-- **Runtime State (`RunningContainer`)**: Tracks active containers in-memory
-- **UI Layer (`ContainerStatus` enum)**: Maps runtime state to UI (CREATED, RUNNING, EXITED)
+- **Runtime State (`Container`)**: Each `Container` instance has a state machine tracking current state
+- **UI Layer (`ContainerStatus` enum)**: Maps `ContainerState` to simplified UI states (CREATED, RUNNING, EXITED)
+
+**Container State Machine:**
+
+The `ContainerStateMachine` manages container lifecycle with these states:
+- `Created` - Container created but never started
+- `Starting` - Container is being started
+- `Running` - Container is actively running with main process
+- `Stopping` - Container is being stopped
+- `Exited` - Container has exited normally
+- `Dead` - Container process died unexpectedly
+- `Removing` - Container is being removed
+- `Removed` - Container has been deleted
 
 **How to check container status:**
 ```kotlin
 // In ViewModel
-val containerStatus = if (runningContainers.value.any { it.containerId == id && it.isActive }) {
-    ContainerStatus.RUNNING
-} else {
-    ContainerStatus.CREATED
+fun getContainerStatus(container: Container): ContainerStatus {
+    return when (container.state.value) {
+        is ContainerState.Created -> ContainerStatus.CREATED
+        is ContainerState.Starting -> ContainerStatus.CREATED
+        is ContainerState.Running -> ContainerStatus.RUNNING
+        is ContainerState.Stopping -> ContainerStatus.EXITED
+        is ContainerState.Exited -> ContainerStatus.EXITED
+        is ContainerState.Dead -> ContainerStatus.EXITED
+        is ContainerState.Removing -> ContainerStatus.EXITED
+        is ContainerState.Removed -> ContainerStatus.EXITED
+    }
 }
 ```
 
+**Container API:**
+```kotlin
+// Access container info from database
+container.getInfo() // Returns Result<ContainerEntity>
+
+// Control container lifecycle
+container.start()   // Start the container
+container.stop()    // Stop the container
+container.remove()  // Remove the container
+
+// Execute commands in running container
+container.exec(listOf("/bin/sh", "-c", "ls -la"))  // Returns Result<ContainerProcess>
+```
+
 **Why this design:**
-- Containers don't have persistent "RUNNING" state - they're either active in memory or not
+- Containers maintain their own state through a state machine
+- State transitions are explicit and type-safe
 - Prevents stale status in database (e.g., app killed while container "running")
-- Single source of truth: `RunningContainer.isActive` checks actual process state
+- Single source of truth: `Container.state` tracks actual process state
+- State is observable via StateFlow for reactive UI updates
 
 #### PRoot Execution & SELinux
 
@@ -362,16 +405,36 @@ class ImageRepository @Inject constructor(
 )
 ```
 
-**IMPORTANT:** `ContainerExecutor` and `PRootEngine` are NEVER nullable:
+**IMPORTANT:** `ContainerManager` is NEVER nullable:
 ```kotlin
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val containerExecutor: ContainerExecutor,  // NOT nullable!
+    private val containerManager: ContainerManager,  // NOT nullable!
     // ...
 )
 ```
 
 ViewModels are annotated with `@HiltViewModel` and injected into Composables via `hiltViewModel()`.
+
+**Container Access:**
+```kotlin
+// Access all containers
+val containers: StateFlow<Map<String, Container>> = containerManager.allContainers
+
+// In ViewModel, transform to list for UI
+val containers: StateFlow<List<Container>> = containerManager.allContainers
+    .map { it.values.toList() }
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+// Find specific container
+val container = containers.value.find { it.containerId == id }
+
+// Use container API
+container?.start()
+container?.stop()
+container?.remove()
+container?.exec(command)
+```
 
 #### Database Schema
 
@@ -701,23 +764,35 @@ Apply consistently across:
 
 ### Working with Container Status
 ```kotlin
-// In ViewModel
-val runningContainers: StateFlow<List<RunningContainer>> =
-    containerExecutor.getAllRunningContainers()
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+// In ViewModel - access containers
+val containers: StateFlow<List<Container>> = containerManager.allContainers
+    .map { it.values.toList() }
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-fun getContainerStatus(containerId: String): ContainerStatus {
-    val running = runningContainers.value.find { it.containerId == containerId }
-    return if (running?.isActive == true) {
-        ContainerStatus.RUNNING
-    } else {
-        ContainerStatus.CREATED
+// Convert Container state to UI status
+fun getContainerStatus(container: Container): ContainerStatus {
+    return when (container.state.value) {
+        is ContainerState.Created -> ContainerStatus.CREATED
+        is ContainerState.Starting -> ContainerStatus.CREATED
+        is ContainerState.Running -> ContainerStatus.RUNNING
+        is ContainerState.Stopping -> ContainerStatus.EXITED
+        is ContainerState.Exited -> ContainerStatus.EXITED
+        is ContainerState.Dead -> ContainerStatus.EXITED
+        is ContainerState.Removing -> ContainerStatus.EXITED
+        is ContainerState.Removed -> ContainerStatus.EXITED
     }
 }
 
-// In UI
-val status = viewModel.getContainerStatus(container.id)
+// In UI - pass Container instance
+val status = viewModel.getContainerStatus(container)
 ContainerCard(container = container, status = status, ...)
+
+// In ContainerCard - get container info
+LaunchedEffect(container) {
+    container.getInfo().onSuccess { entity ->
+        // Use entity.name, entity.imageName, etc.
+    }
+}
 ```
 
 ### Working with PRoot

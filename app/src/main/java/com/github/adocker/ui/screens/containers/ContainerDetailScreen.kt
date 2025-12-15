@@ -15,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,20 +31,38 @@ fun ContainerDetailScreen(
     onNavigateToTerminal: (String) -> Unit
 ) {
     val containers by viewModel.containers.collectAsState()
-    val container = containers.find { it.id == containerId }
+    val container = containers.find { it.containerId == containerId }
+    val scope = rememberCoroutineScope()
+
+    var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
+
+    // Load container info
+    LaunchedEffect(container) {
+        container?.let {
+            scope.launch {
+                it.getInfo().onSuccess { entity ->
+                    containerInfo = entity
+                }
+            }
+        }
+    }
 
     // Get container status from ViewModel
     val containerStatus = container?.let { viewModel.getContainerStatus(it) } ?: ContainerStatus.CREATED
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    if (container == null) {
-        // Container not found, navigate back
-        LaunchedEffect(Unit) {
-            onNavigateBack()
+    if (container == null || containerInfo == null) {
+        // Container not found or info not loaded yet
+        if (container == null) {
+            LaunchedEffect(Unit) {
+                onNavigateBack()
+            }
         }
         return
     }
+
+    val info = containerInfo!! // Safe because we checked above
 
     Scaffold(
         topBar = {
@@ -59,7 +79,7 @@ fun ContainerDetailScreen(
                 actions = {
                     // Terminal button (only for running containers)
                     if (containerStatus == ContainerStatus.RUNNING) {
-                        IconButton(onClick = { onNavigateToTerminal(container.id) }) {
+                        IconButton(onClick = { onNavigateToTerminal(container.containerId) }) {
                             Icon(
                                 Icons.Default.Terminal,
                                 contentDescription = stringResource(R.string.action_terminal)
@@ -68,14 +88,14 @@ fun ContainerDetailScreen(
                     }
                     // Start/Stop button
                     if (containerStatus == ContainerStatus.RUNNING) {
-                        IconButton(onClick = { viewModel.stopContainer(container.id) }) {
+                        IconButton(onClick = { viewModel.stopContainer(container.containerId) }) {
                             Icon(
                                 Icons.Default.Stop,
                                 contentDescription = stringResource(R.string.action_stop)
                             )
                         }
                     } else {
-                        IconButton(onClick = { viewModel.startContainer(container.id) }) {
+                        IconButton(onClick = { viewModel.startContainer(container.containerId) }) {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 contentDescription = stringResource(R.string.action_start)
@@ -108,50 +128,50 @@ fun ContainerDetailScreen(
 
             // Basic Information Card
             DetailCard(title = stringResource(R.string.common_basic_info)) {
-                DetailRow(label = stringResource(R.string.common_name), value = container.name)
-                DetailRow(label = stringResource(R.string.common_id), value = container.id)
-                DetailRow(label = stringResource(R.string.container_image), value = container.imageName)
+                DetailRow(label = stringResource(R.string.common_name), value = info.name)
+                DetailRow(label = stringResource(R.string.common_id), value = info.id)
+                DetailRow(label = stringResource(R.string.container_image), value = info.imageName)
                 DetailRow(label = stringResource(R.string.container_status), value = getStatusText(containerStatus))
                 DetailRow(
                     label = stringResource(R.string.container_created),
-                    value = formatDate(container.createdAt)
+                    value = formatDate(info.createdAt)
                 )
             }
 
             // Configuration Card
             DetailCard(title = stringResource(R.string.common_config)) {
-                if (container.config.cmd.isNotEmpty()) {
+                if (info.config.cmd.isNotEmpty()) {
                     Text(
                         text = stringResource(R.string.container_command),
                         style = MaterialTheme.typography.titleSmall
                     )
                     Text(
-                        text = container.config.cmd.joinToString(" "),
+                        text = info.config.cmd.joinToString(" "),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                if (container.config.workingDir.isNotEmpty()) {
+                if (info.config.workingDir.isNotEmpty()) {
                     DetailRow(
                         label = stringResource(R.string.container_working_dir),
-                        value = container.config.workingDir
+                        value = info.config.workingDir
                     )
                 }
 
-                if (container.config.hostname.isNotEmpty()) {
+                if (info.config.hostname.isNotEmpty()) {
                     DetailRow(
                         label = stringResource(R.string.container_hostname),
-                        value = container.config.hostname
+                        value = info.config.hostname
                     )
                 }
             }
 
             // Environment Variables Card
-            if (container.config.env.isNotEmpty()) {
+            if (info.config.env.isNotEmpty()) {
                 DetailCard(title = stringResource(R.string.container_env_vars)) {
-                    container.config.env.forEach { (key, value) ->
+                    info.config.env.forEach { (key, value) ->
                         Text(
                             text = "$key=$value",
                             style = MaterialTheme.typography.bodySmall,
@@ -162,9 +182,9 @@ fun ContainerDetailScreen(
             }
 
             // Volume Mounts Card
-            if (container.config.binds.isNotEmpty()) {
+            if (info.config.binds.isNotEmpty()) {
                 DetailCard(title = stringResource(R.string.container_volumes)) {
-                    container.config.binds.forEach { bind ->
+                    info.config.binds.forEach { bind ->
                         Text(
                             text = "${bind.hostPath} -> ${bind.containerPath}",
                             style = MaterialTheme.typography.bodySmall,
@@ -183,12 +203,12 @@ fun ContainerDetailScreen(
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
             title = { Text(stringResource(R.string.containers_delete_confirm_title)) },
             text = {
-                Text(stringResource(R.string.containers_delete_confirm_message, container.name))
+                Text(stringResource(R.string.containers_delete_confirm_message, info.name))
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteContainer(container.id)
+                        viewModel.deleteContainer(container.containerId)
                         showDeleteDialog = false
                         onNavigateBack()
                     },
