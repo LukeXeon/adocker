@@ -45,7 +45,6 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // Check if we should show bottom navigation
     val showBottomBar = remember(currentDestination) {
@@ -322,7 +321,8 @@ fun MainScreen() {
                 route = Screen.ContainerDetail.route,
                 arguments = listOf(navArgument("containerId") { type = NavType.StringType })
             ) { backStackEntry ->
-                val containerId = backStackEntry.arguments?.getString("containerId") ?: return@composable
+                val containerId =
+                    backStackEntry.arguments?.getString("containerId") ?: return@composable
                 ContainerDetailScreen(
                     containerId = containerId,
                     viewModel = mainViewModel,

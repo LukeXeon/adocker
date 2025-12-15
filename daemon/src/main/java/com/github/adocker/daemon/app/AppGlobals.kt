@@ -4,6 +4,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 
 /**
@@ -16,6 +17,8 @@ import kotlinx.serialization.json.Json
 @InstallIn(SingletonComponent::class)
 interface AppGlobals {
     fun json(): Json
+
+    fun scope(): CoroutineScope
 
     companion object : AppGlobals by EntryPointAccessors.fromApplication(
         AppContext.application,
