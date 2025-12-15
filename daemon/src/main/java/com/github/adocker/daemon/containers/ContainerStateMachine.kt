@@ -28,6 +28,7 @@ class ContainerStateMachine @AssistedInject constructor(
     private val appContext: AppContext,
     private val prootEngine: PRootEngine,
     private val scope: CoroutineScope,
+    private val containerManager: ContainerManager,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     init {
@@ -167,7 +168,7 @@ class ContainerStateMachine @AssistedInject constructor(
         val containerDir = File(appContext.containersDir, containerId)
         deleteRecursively(containerDir)
         // Delete from database
-        containerDao.deleteContainerById(containerId)
+        containerManager.removeContainer(containerId)
         return override {
             ContainerState.Removed(containerId)
         }

@@ -5,16 +5,18 @@ import java.io.BufferedWriter
 import java.io.File
 
 sealed interface ContainerState {
+    val containerId: String
+
     class Created(
-        val containerId: String
+        override val containerId: String
     ) : ContainerState
 
     data class Starting(
-        val containerId: String
+        override val containerId: String
     ) : ContainerState
 
     data class Running(
-        val containerId: String,
+        override val containerId: String,
         val mainProcess: ContainerProcess,
         val stdin: BufferedWriter,
         val stdout: File,
@@ -23,24 +25,24 @@ sealed interface ContainerState {
     ) : ContainerState
 
     data class Stopping(
-        val containerId: String,
+        override val containerId: String,
         val processes: List<Job>,
     ) : ContainerState
 
     data class Removing(
-        val containerId: String
+        override val containerId: String
     ) : ContainerState
 
     data class Exited(
-        val containerId: String,
+        override val containerId: String,
     ) : ContainerState
 
     data class Dead(
-        val containerId: String,
+        override val containerId: String,
         val throwable: Throwable,
     ) : ContainerState
 
     data class Removed(
-        val containerId: String
+        override val containerId: String
     ) : ContainerState
 }

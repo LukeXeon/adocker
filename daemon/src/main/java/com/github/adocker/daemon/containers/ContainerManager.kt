@@ -4,13 +4,12 @@ import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.io.extractTarGz
+import com.github.adocker.daemon.registry.model.ContainerConfig
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -29,6 +28,23 @@ class ContainerManager @Inject constructor(
     private val containerName: ContainerName,
     scope: CoroutineScope,
 ) {
+    private val mutex = Mutex()
+    private val containers = MutableStateFlow<Map<String, Container>>(emptyMap())
+
+    val allContainers = containers.asStateFlow()
+
+    init {
+        scope.launch {
+            mutex.withLock {
+                containers.value = containerDao.getAllContainerIds().mapNotNull {
+                    loadContainer(it).onFailure { exception ->
+                        Timber.e(exception)
+                    }.getOrNull()
+                }.associateBy { it.containerId }
+            }
+        }
+    }
+
     private suspend fun loadContainer(containerId: String): Result<Container> {
         val entity = containerDao.getContainerById(containerId)
         return when {
@@ -52,6 +68,13 @@ class ContainerManager @Inject constructor(
         }
     }
 
+    internal suspend fun removeContainer(containerId: String) {
+        mutex.withLock {
+            containerDao.deleteContainerById(containerId)
+            containers.value -= containerId
+        }
+    }
+
     suspend fun createContainer(
         imageId: String,
         name: String?,
@@ -71,7 +94,6 @@ class ContainerManager @Inject constructor(
                 name
             }
         }
-
         val containerId = UUID.randomUUID().toString()
         // Create container directory structure
         val containerDir = File(appContext.containersDir, containerId)
@@ -134,46 +156,12 @@ class ContainerManager @Inject constructor(
             imageName = "${image.repository}:${image.tag}",
             config = mergedConfig
         )
-        containerDao.insertContainer(entity)
-        return Result.success(
-            factory.create(ContainerState.Created(containerId))
-        )
-    }
-
-    val allContainers = flow {
-        val table = HashMap<String, Container>()
-        val mutex = Mutex()
-        containerDao.getAllContainers().collectLatest { containerIds ->
-            // Use mutex to ensure atomic cache updates
-            val newList = mutex.withLock {
-                // Get current cached IDs
-                val oldIds = table.keys
-                val newIds = containerIds.toSet()
-                // Remove containers that no longer exist
-                val idsToRemove = oldIds - newIds
-                idsToRemove.forEach { id ->
-                    table.remove(id)
-                    Timber.d("Removed container from cache: $id")
-                }
-                // Add new containers
-                val idsToAdd = newIds - oldIds
-                idsToAdd.forEach { id ->
-                    val result = loadContainer(id)
-                    result.fold(
-                        { container ->
-                            table[id] = container
-                            Timber.d("Added container to cache: $id")
-                        },
-                        { error ->
-                            Timber.e(error, "Failed to load container: $id")
-                        }
-                    )
-                }
-                table.asSequence().sortedBy { it.key }.map { it.value }.toList()
-            }
-            emit(newList)
+        mutex.withLock {
+            containerDao.insertContainer(entity)
+            val container = factory.create(ContainerState.Created(containerId))
+            containers.value += containerId to container
+            return Result.success(container)
         }
-    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
-
+    }
 }
 

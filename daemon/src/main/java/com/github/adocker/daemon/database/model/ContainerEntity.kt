@@ -18,11 +18,5 @@ data class ContainerEntity(
     val imageName: String,
     val createdAt: Long = System.currentTimeMillis(),
     val config: ContainerConfig = ContainerConfig(),
-    /**
-     * Timestamp of when this container was last started.
-     * Null if the container has never been started.
-     * Used to distinguish CREATED (never run) from EXITED (ran and stopped).
-     */
     val lastRunAt: Long? = null,
-
 )
