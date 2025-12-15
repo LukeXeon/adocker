@@ -78,9 +78,11 @@ class ContainerProcess @AssistedInject constructor(
                     }
                 )
             }
-            withContext(Dispatchers.IO) {
-                runInterruptible {
-                    process.waitFor()
+            if (process.isAlive) {
+                withContext(Dispatchers.IO) {
+                    runInterruptible {
+                        process.waitFor()
+                    }
                 }
             }
         } catch (e: CancellationException) {
