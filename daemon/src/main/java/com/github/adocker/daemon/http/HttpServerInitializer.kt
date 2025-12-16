@@ -1,15 +1,15 @@
 package com.github.adocker.daemon.http
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.startup.Initializer
 import com.github.adocker.daemon.app.AppGlobals
+import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.EmptyCoroutineContext
 
 class HttpServerInitializer : Initializer<Unit>, Runnable {
 
     override fun create(context: Context) {
-        Handler(Looper.getMainLooper()).post(this)
+        Dispatchers.Main.dispatch(EmptyCoroutineContext, this)
     }
 
     override fun run() {
