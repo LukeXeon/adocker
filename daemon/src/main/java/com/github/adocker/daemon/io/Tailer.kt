@@ -23,7 +23,8 @@ fun File.tailAsFlow(
     pollingDelay: Long = 1000, // 对应 Tailer.setDelayMillis()
     fromEnd: Boolean = false,    // 对应 Tailer.setEnd()
     reOpen: Boolean = true,     // 对应 Tailer.setReOpen()
-    charset: Charset = Charsets.UTF_8 // 对应 Tailer.setCharset()
+    charset: Charset = Charsets.UTF_8, // 对应 Tailer.setCharset()
+    bufferSize: Int = DEFAULT_BUFFER_SIZE
 ) = flow {
     if (!exists() && !reOpen) {
         throw FileNotFoundException("file not found: $absolutePath")
@@ -33,7 +34,9 @@ fun File.tailAsFlow(
     var lastReadPos = if (fromEnd && exists()) length() else 0L
 
     try {
-        while (currentCoroutineContext().isActive) {
+        val context = currentCoroutineContext()
+        val buffer = ByteArray(bufferSize) // 对应 Tailer.setBufferSize()
+        while (context.isActive) {
             // 1. 处理文件不存在/重建（自动重连）
             if (!exists()) {
                 randomAccessFile?.close()
@@ -52,10 +55,10 @@ fun File.tailAsFlow(
             val currentFileLength = length()
             if (currentFileLength < lastReadPos) {
                 randomAccessFile.seek(0)
+                // lastReadPos 会在读取后自动更新为 filePointer（第72行）
             }
 
             // 4. 读取新增内容（按行发射）
-            val buffer = ByteArray(4096) // 对应 Tailer.setBufferSize()
             var bytesRead: Int
             val stringBuilder = StringBuilder()
             while (randomAccessFile.read(buffer).also { bytesRead = it } != -1) {
