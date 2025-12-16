@@ -22,10 +22,10 @@ interface MirrorDao {
     @Query("SELECT * FROM registry_mirrors WHERE isHealthy = 1 ORDER BY latencyMs ASC, priority DESC LIMIT 1")
     suspend fun getBestMirror(): MirrorEntity?
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMirror(mirror: MirrorEntity)
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMirrors(mirrors: List<MirrorEntity>)
 
     @Delete

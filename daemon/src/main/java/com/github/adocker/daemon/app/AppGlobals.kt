@@ -6,6 +6,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import org.http4k.server.Http4kServer
 
 /**
  * EntryPoint for accessing Hilt dependencies in Room TypeConverter
@@ -19,6 +20,7 @@ interface AppGlobals {
     fun json(): Json
 
     fun scope(): CoroutineScope
+    fun servers(): Set<@JvmSuppressWildcards Http4kServer>
 
     companion object : AppGlobals by EntryPointAccessors.fromApplication(
         AppContext.application,

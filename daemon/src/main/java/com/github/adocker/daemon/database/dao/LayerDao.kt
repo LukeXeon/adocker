@@ -11,7 +11,7 @@ interface LayerDao {
     @Query("SELECT * FROM layers WHERE digest = :digest")
     suspend fun getLayerByDigest(digest: String): LayerEntity?
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLayer(layer: LayerEntity)
 
     @Query("UPDATE layers SET downloaded = :downloaded WHERE digest = :digest")

@@ -29,21 +29,22 @@ class MainViewModel @Inject constructor(
     private val imageRepository: ImageRepository,
     private val containerManager: ContainerManager,
     val json: Json,
-    servers: Set<@JvmSuppressWildcards Http4kServer>,
 ) : ViewModel() {
 
-    init {
-        servers.forEach { it.start() }
-    }
 
     // Images
-    val images: StateFlow<List<ImageEntity>> = imageRepository.getAllImages()
+    val images = imageRepository.getAllImages()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers: StateFlow<List<Container>> = containerManager.allContainers
-        .map { it.values.toList() }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val containers = containerManager.allContainers
+        .map {
+            it.asSequence()
+                .sortedBy { container -> container.key }
+                .map { container ->
+                    container.value
+                }.toList()
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Search results
     private val _searchResults = MutableStateFlow<List<SearchResult>>(emptyList())

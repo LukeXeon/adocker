@@ -19,7 +19,9 @@
             <meta-data
                 android:name="com.github.adocker.daemon.logging.TimberInitializer"
                 android:value="androidx.startup" />
-            <!-- Config and RegistrySettings are now handled by Hilt DI -->
+            <meta-data
+                android:name="com.github.adocker.daemon.http.HttpServerInitializer"
+                android:value="androidx.startup" />
         </provider>
 
         <!-- Shizuku Provider -->

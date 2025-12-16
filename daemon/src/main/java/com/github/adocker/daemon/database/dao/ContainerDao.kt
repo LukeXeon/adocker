@@ -19,7 +19,7 @@ interface ContainerDao {
     @Query("SELECT * FROM containers WHERE name = :name")
     suspend fun getContainerByName(name: String): ContainerEntity?
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertContainer(container: ContainerEntity)
 
     @Update
