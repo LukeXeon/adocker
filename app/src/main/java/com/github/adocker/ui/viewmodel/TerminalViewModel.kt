@@ -6,16 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ContainerEntity
+import com.github.adocker.daemon.io.tailAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.input.Tailer
-import org.apache.commons.io.input.TailerListenerAdapter
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,8 +38,8 @@ class TerminalViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private var stdoutTailer: Tailer? = null
-    private var stderrTailer: Tailer? = null
+    private var stdoutJob: Job? = null
+    private var stderrJob: Job? = null
 
     init {
         loadContainer()
@@ -54,11 +54,11 @@ class TerminalViewModel @Inject constructor(
 
                 if (state is ContainerState.Running) {
                     // Start tailing stdout and stderr if not already started
-                    if (stdoutTailer == null) {
-                        startTailing(state.stdout, isError = false)
+                    if (stdoutJob == null) {
+                        stdoutJob = startTailingFlow(state.stdout, isError = false)
                     }
-                    if (stderrTailer == null) {
-                        startTailing(state.stderr, isError = true)
+                    if (stderrJob == null) {
+                        stderrJob = startTailingFlow(state.stderr, isError = true)
                     }
                     _isRunning.value = true
                 } else {
@@ -70,42 +70,27 @@ class TerminalViewModel @Inject constructor(
         }
     }
 
-    private fun startTailing(file: File, isError: Boolean) {
-        val listener = object : TailerListenerAdapter() {
-            override fun handle(line: String) {
-                viewModelScope.launch {
-                    addOutput(if (isError) "[ERROR] $line" else line)
-                }
-            }
-
-            override fun handle(e: Exception) {
-                viewModelScope.launch {
+    private fun startTailingFlow(file: java.io.File, isError: Boolean): Job {
+        return viewModelScope.launch(Dispatchers.IO) {
+            file.tailAsFlow(
+                delayMillis = 100,
+                startFromEnd = false,
+                reOpen = false
+            )
+                .catch { e ->
                     _error.value = "Tailer error: ${e.message}"
                 }
-            }
-        }
-
-        val tailer = Tailer.builder()
-            .setFile(file)
-            .setTailerListener(listener)
-            .setDelayDuration(java.time.Duration.ofMillis(100))
-            .setStartThread(true)
-            .setTailFromEnd(false) // start from beginning
-            .setReOpen(false) // don't reopen on EOF
-            .get()
-
-        if (isError) {
-            stderrTailer = tailer
-        } else {
-            stdoutTailer = tailer
+                .collect { line ->
+                    addOutput(if (isError) "[ERROR] $line" else line)
+                }
         }
     }
 
     private fun stopTailing() {
-        stdoutTailer?.close()
-        stdoutTailer = null
-        stderrTailer?.close()
-        stderrTailer = null
+        stdoutJob?.cancel()
+        stdoutJob = null
+        stderrJob?.cancel()
+        stderrJob = null
     }
 
     private fun loadContainer() {

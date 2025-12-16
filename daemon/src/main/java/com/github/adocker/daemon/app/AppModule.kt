@@ -1,7 +1,5 @@
 package com.github.adocker.daemon.app
 
-import android.annotation.SuppressLint
-import android.app.Application
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,7 +31,7 @@ object AppModule {
     @Provides
     @Singleton
     fun scope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { context, e ->
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e ->
             if (e !is CancellationException) {
                 Timber.e(e)
             }
