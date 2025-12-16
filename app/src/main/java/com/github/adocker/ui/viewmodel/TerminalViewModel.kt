@@ -20,8 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TerminalViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val containerManager: ContainerManager
+    savedStateHandle: SavedStateHandle, private val containerManager: ContainerManager
 ) : ViewModel() {
 
     private val containerId: String = savedStateHandle.get<String>("containerId") ?: ""
@@ -73,14 +72,10 @@ class TerminalViewModel @Inject constructor(
     private fun startTailingFlow(file: java.io.File, isError: Boolean): Job {
         return viewModelScope.launch(Dispatchers.IO) {
             file.tailAsFlow(
-                delayMillis = 100,
-                startFromEnd = false,
-                reOpen = false
-            )
-                .catch { e ->
-                    _error.value = "Tailer error: ${e.message}"
-                }
-                .collect { line ->
+                pollingDelay = 100, fromEnd = false, reOpen = false
+            ).catch { e ->
+                _error.value = "Tailer error: ${e.message}"
+            }.collect { line ->
                     addOutput(if (isError) "[ERROR] $line" else line)
                 }
         }

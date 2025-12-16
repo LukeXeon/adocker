@@ -1,102 +1,81 @@
 package com.github.adocker.daemon.io
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.runInterruptible
-import org.apache.commons.io.input.Tailer
-import org.apache.commons.io.input.TailerListenerAdapter
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.isActive
 import java.io.File
-import java.time.Duration
+import java.io.FileNotFoundException
+import java.io.RandomAccessFile
+import java.nio.charset.Charset
 
 /**
- * Tails a file and emits each new line as a Flow element.
- *
- * This function creates a [Tailer] that monitors the file for changes and emits
- * new lines as they are written. The tailer runs in a background thread and is
- * automatically cleaned up when the flow is cancelled.
- *
- * **Backpressure Handling:**
- * - Lines are sent using suspending [send()] which blocks the Tailer thread when
- *   the channel buffer is full
- * - This prevents data loss by applying backpressure to the file reading
- * - The default channel buffer size is 64 elements
- *
- * **Performance Considerations:**
- * - If the consumer is slow, the Tailer thread will be blocked, which naturally
- *   rate-limits the file reading
- * - For high-throughput scenarios with a slow consumer, consider using downstream
- *   operators like [kotlinx.coroutines.flow.buffer] or [kotlinx.coroutines.flow.conflate]
- *
- * @param delayMillis Delay between checks of the file for new content in milliseconds.
- *                    Default is 100ms. Smaller values provide more real-time updates
- *                    but consume more CPU.
- * @param startFromEnd If true, only new lines added after tailing starts are emitted.
- *                     If false, existing content is emitted first. Default is false.
- * @param reOpen If true, the tailer will attempt to reopen the file if it is deleted
- *               or rotated. Default is false.
- * @param bufferSize Size of the internal buffer used by Tailer to read the file.
- *                   Default is 8192 bytes. Larger buffers can improve performance
- *                   for files with high write rates.
- *
- * @return A cold Flow that emits each line from the file as a String.
- *         The flow will continue emitting lines until cancelled or an error occurs.
- *         Applies backpressure when consumer is slow.
- *
- * @throws IllegalArgumentException if the file does not exist when tailing starts
- *
- * Example usage:
- * ```kotlin
- * val logFile = File("/path/to/log.txt")
- * logFile.tailAsFlow(delayMillis = 100, startFromEnd = true)
- *     .collect { line ->
- *         println("New line: $line")
- *     }
- * ```
+ * Kotlin 协程 + Flow 实现 Tailer 核心功能（tail -f 效果）
+ * 对齐 Apache Commons IO Tailer 的核心特性：
+ * - 轮询文件新增内容
+ * - 从文件末尾开始监控（可配置）
+ * - 自动适配文件轮转（截断/重建）
+ * - 非阻塞（协程挂起，无额外线程池）
  */
 fun File.tailAsFlow(
-    delayMillis: Long = 1000,
-    startFromEnd: Boolean = false,
-    reOpen: Boolean = false,
-    bufferSize: Int = DEFAULT_BUFFER_SIZE
-) = callbackFlow {
-    val tailer = Tailer.builder()
-        .setFile(this@tailAsFlow)
-        .setTailerListener(object : TailerListenerAdapter() {
-            override fun handle(line: String) {
-                // Use runBlocking to call the suspending send() function
-                // This blocks the tailer thread when channel is full, providing backpressure
-                runBlocking { send(line) }
+    pollingDelay: Long = 1000, // 对应 Tailer.setDelayMillis()
+    fromEnd: Boolean = false,    // 对应 Tailer.setEnd()
+    reOpen: Boolean = true,     // 对应 Tailer.setReOpen()
+    charset: Charset = Charsets.UTF_8 // 对应 Tailer.setCharset()
+) = flow {
+    if (!exists() && !reOpen) {
+        throw FileNotFoundException("file not found: $absolutePath")
+    }
+
+    var randomAccessFile: RandomAccessFile? = null
+    var lastReadPos = if (fromEnd && exists()) length() else 0L
+
+    try {
+        while (currentCoroutineContext().isActive) {
+            // 1. 处理文件不存在/重建（自动重连）
+            if (!exists()) {
+                randomAccessFile?.close()
+                randomAccessFile = null
+                delay(pollingDelay)
+                continue
             }
 
-            override fun handle(ex: Exception) {
-                // Close the flow with an exception
-                close(ex)
+            // 2. 初始化/重建文件连接
+            if (randomAccessFile == null) {
+                randomAccessFile = RandomAccessFile(this@tailAsFlow, "r")
+                randomAccessFile.seek(lastReadPos)
             }
 
-            override fun fileNotFound() {
-                // Close the flow if file is not found and reOpen is false
-                if (!reOpen) {
-                    close(IllegalArgumentException("File not found: ${this@tailAsFlow.absolutePath}"))
+            // 3. 检测文件轮转（长度变小 → 截断/重建）
+            val currentFileLength = length()
+            if (currentFileLength < lastReadPos) {
+                randomAccessFile.seek(0)
+            }
+
+            // 4. 读取新增内容（按行发射）
+            val buffer = ByteArray(4096) // 对应 Tailer.setBufferSize()
+            var bytesRead: Int
+            val stringBuilder = StringBuilder()
+            while (randomAccessFile.read(buffer).also { bytesRead = it } != -1) {
+                stringBuilder.append(String(buffer, 0, bytesRead, charset))
+                // 按换行分割，处理跨轮询的换行
+                val lines = stringBuilder.split("\n")
+                for (i in 0 until lines.size - 1) {
+                    emit(lines[i])  // 保留原始内容，包括空行
                 }
+                // 保留最后一个不完整行（可能跨轮询）
+                stringBuilder.clear().append(lines.last())
             }
-        })
-        .setDelayDuration(Duration.ofMillis(delayMillis))
-        .setStartThread(false) // Don't auto-start, we'll start it manually in a coroutine
-        .setTailFromEnd(startFromEnd)
-        .setReOpen(reOpen)
-        .setBufferSize(bufferSize) // Use the bufferSize parameter
-        .get()
-    // Launch the tailer in a dedicated coroutine with its own dispatcher
-    launch(Dispatchers.IO) {
-        runInterruptible {
-            tailer.run()
+            // 更新读取位置
+            lastReadPos = randomAccessFile.filePointer
+
+            // 5. 轮询休眠（协程挂起，非阻塞）
+            delay(pollingDelay)
         }
+    } finally {
+        // 释放资源（对应 Tailer.stop()）
+        randomAccessFile?.close()
     }
-    // When the flow is cancelled, stop the tailer
-    awaitClose {
-        tailer.close()
-    }
-}
+}.flowOn(Dispatchers.IO) // 确保文件操作在 IO 线程执行
