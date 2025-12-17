@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import android.os.Handler
 import android.os.Looper
 import android.os.MessageQueue.OnFileDescriptorEventListener
 import dagger.assisted.Assisted
@@ -42,6 +43,18 @@ class ContainerProcess @AssistedInject constructor(
                 }
             }
         }
+        private val queue by lazy {
+            Class.forName("android.app.QueuedWork")
+                .getDeclaredMethod(
+                    "getHandler"
+                ).apply {
+                    isAccessible = true
+                }.runCatching { invoke(null) as Handler }
+                .onFailure { e ->
+                    Timber.d(e)
+                }.map { it.looper }
+                .getOrElse { Looper.getMainLooper() }.queue
+        }
     }
 
     val job = scope.launch {
@@ -51,7 +64,6 @@ class ContainerProcess @AssistedInject constructor(
                     it(process.outputStream)
                 }.fold(
                     { fd ->
-                        val queue = Looper.getMainLooper().queue
                         val callbacks = object : OnFileDescriptorEventListener, CompletionHandler {
                             override fun onFileDescriptorEvents(
                                 fd: FileDescriptor,
