@@ -20,7 +20,7 @@
                 android:name="com.github.adocker.daemon.logging.TimberInitializer"
                 android:value="androidx.startup" />
             <meta-data
-                android:name="com.github.adocker.daemon.http.HttpServerInitializer"
+                android:name="com.github.adocker.daemon.api.ApiServerInitializer"
                 android:value="androidx.startup" />
         </provider>
 

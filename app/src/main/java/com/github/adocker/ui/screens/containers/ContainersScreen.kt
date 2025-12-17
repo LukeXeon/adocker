@@ -13,149 +13,91 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.github.adocker.daemon.containers.Container
-import com.github.adocker.daemon.containers.ContainerState
-import com.github.adocker.ui.theme.Spacing
-import com.github.adocker.ui.theme.IconSize
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
+import com.github.adocker.daemon.containers.Container
 import com.github.adocker.ui.components.ContainerCard
-import com.github.adocker.ui.viewmodel.MainViewModel
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainersScreen(
-    viewModel: MainViewModel,
     onNavigateToTerminal: (String) -> Unit,
     onNavigateToDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val viewModel = hiltViewModel<ContainersViewModel>()
+
     val containers by viewModel.containers.collectAsState()
 
-    // Filter type: null = all, "Running" = running, "Other" = non-running
-    var filterType by remember { mutableStateOf<String?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
+    val sortedContainers = remember(containers) {
+        containers.asSequence().sortedBy { container -> container.key }
+            .map { container ->
+                container.value
+            }.toList()
+    }
 
-    // Observe all container states to trigger recomposition when any state changes
-    // This ensures UI updates in real-time when container states change
-    val containerStates = containers.map { container ->
+    val containerStates = sortedContainers.map { container ->
         container.state.collectAsState().value
     }
 
-    // Calculate counts for each status based on current states
-    val statusCounts = remember(containers, containerStates) {
-        val running = containers.count { it.state.value is ContainerState.Running }
-        val created = containers.count {
-            val state = it.state.value
-            state is ContainerState.Created || state is ContainerState.Starting
-        }
-        val exited = containers.count {
-            val state = it.state.value
-            state is ContainerState.Exited || state is ContainerState.Stopping ||
-            state is ContainerState.Dead || state is ContainerState.Removing ||
-            state is ContainerState.Removed
-        }
-        mapOf(
-            null to containers.size,
-            "Created" to created,
-            "Running" to running,
-            "Exited" to exited
-        )
+    val statesCount = remember(sortedContainers, containerStates) {
+        FilterType.entries.asSequence().map {
+            it to sortedContainers.asSequence().map { container -> container.state.value }
+                .filter(it.predicate).count()
+        }.toMap()
     }
 
-    // Filter containers based on filter type
-    val filteredContainers = remember(containers, filterType, containerStates) {
-        if (filterType == null) {
-            containers
-        } else {
-            containers.filter { container ->
-                val state = container.state.value
-                when (filterType) {
-                    "Running" -> state is ContainerState.Running
-                    "Created" -> state is ContainerState.Created || state is ContainerState.Starting
-                    "Exited" -> state is ContainerState.Exited || state is ContainerState.Stopping ||
-                               state is ContainerState.Dead || state is ContainerState.Removing ||
-                               state is ContainerState.Removed
-                    else -> true
-                }
-            }
-        }
+    var filterType by remember { mutableStateOf(FilterType.All) }
+
+    val filteredContainers = remember(sortedContainers, filterType) {
+        sortedContainers.asSequence()
+            .filter { container -> filterType.predicate(container.state.value) }.toList()
     }
+
+    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
+
 
     Column(modifier = modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(stringResource(R.string.containers_title)) }
         )
-
         // Filter chips
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
-            // All filter
-            item {
-                FilterChip(
-                    selected = filterType == null,
-                    onClick = { filterType = null },
-                    label = {
-                        Text("${stringResource(R.string.containers_tab_all)} (${statusCounts[null] ?: 0})")
-                    },
-                    leadingIcon = if (filterType == null) {
-                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                    } else null
-                )
-            }
-
-            // Created filter
-            item {
-                FilterChip(
-                    selected = filterType == "Created",
-                    onClick = {
-                        filterType = if (filterType == "Created") null else "Created"
-                    },
-                    label = {
-                        Text("${stringResource(R.string.containers_tab_created)} (${statusCounts["Created"] ?: 0})")
-                    },
-                    leadingIcon = if (filterType == "Created") {
-                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                    } else null
-                )
-            }
-
-            // Running filter
-            item {
-                FilterChip(
-                    selected = filterType == "Running",
-                    onClick = {
-                        filterType = if (filterType == "Running") null else "Running"
-                    },
-                    label = {
-                        Text("${stringResource(R.string.containers_tab_running)} (${statusCounts["Running"] ?: 0})")
-                    },
-                    leadingIcon = if (filterType == "Running") {
-                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                    } else null
-                )
-            }
-
-            // Exited filter
-            item {
-                FilterChip(
-                    selected = filterType == "Exited",
-                    onClick = {
-                        filterType = if (filterType == "Exited") null else "Exited"
-                    },
-                    label = {
-                        Text("${stringResource(R.string.containers_tab_exited)} (${statusCounts["Exited"] ?: 0})")
-                    },
-                    leadingIcon = if (filterType == "Exited") {
-                        { Icon(Icons.Default.Check, null, Modifier.size(IconSize.Small)) }
-                    } else null
-                )
+            FilterType.entries.forEach { type ->
+                item(key = type) {
+                    FilterChip(
+                        selected = filterType == type,
+                        onClick = {
+                            filterType = if (filterType == type && type != FilterType.All) {
+                                FilterType.All
+                            } else {
+                                type
+                            }
+                        },
+                        label = {
+                            Text(
+                                "${stringResource(type.labelResId)} (${
+                                    statesCount.getOrDefault(type, 0)
+                                })"
+                            )
+                        },
+                        leadingIcon = if (filterType == type) {
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(IconSize.Small)
+                                )
+                            }
+                        } else null
+                    )
+                }
             }
         }
 
@@ -254,7 +196,12 @@ fun ContainersScreen(
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
             title = { Text(stringResource(R.string.containers_delete_confirm_title)) },
             text = {
-                Text(stringResource(R.string.containers_delete_confirm_message, containerName ?: container.containerId))
+                Text(
+                    stringResource(
+                        R.string.containers_delete_confirm_message,
+                        containerName ?: container.containerId
+                    )
+                )
             },
             confirmButton = {
                 TextButton(

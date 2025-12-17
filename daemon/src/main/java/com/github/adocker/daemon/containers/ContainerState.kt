@@ -5,6 +5,7 @@ import java.io.BufferedWriter
 import java.io.File
 
 sealed interface ContainerState {
+
     val containerId: String
 
     class Created(

@@ -164,7 +164,6 @@ fun MainScreen() {
             // Containers
             composable(Screen.Containers.route) {
                 ContainersScreen(
-                    viewModel = mainViewModel,
                     onNavigateToTerminal = { containerId ->
                         navController.navigate(Screen.Terminal.createRoute(containerId))
                     },

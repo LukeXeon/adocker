@@ -30,7 +30,6 @@ class MainViewModel @Inject constructor(
     val json: Json,
 ) : ViewModel() {
 
-
     // Images
     val images = imageRepository.getAllImages()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -38,8 +37,7 @@ class MainViewModel @Inject constructor(
     // Containers
     val containers = containerManager.allContainers
         .map {
-            it.asSequence()
-                .sortedBy { container -> container.key }
+            it.asSequence().sortedBy { container -> container.key }
                 .map { container ->
                     container.value
                 }.toList()
