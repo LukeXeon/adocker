@@ -9,19 +9,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
-import com.github.adocker.ui.model.ContainerStatus
 
 @Composable
 fun StatusIndicator(
-    status: ContainerStatus,
+    state: ContainerState,
     modifier: Modifier = Modifier
 ) {
-    val color = when (status) {
-        ContainerStatus.RUNNING -> Color(0xFF4CAF50)
-        ContainerStatus.CREATED -> Color(0xFF2196F3)
-        ContainerStatus.EXITED -> Color(0xFF9E9E9E)
+    val color = when (state) {
+        is ContainerState.Running -> Color(0xFF4CAF50)  // Green for running
+        is ContainerState.Created,
+        is ContainerState.Starting -> Color(0xFF2196F3)  // Blue for created/starting
+        is ContainerState.Exited,
+        is ContainerState.Stopping,
+        is ContainerState.Dead,
+        is ContainerState.Removing,
+        is ContainerState.Removed -> Color(0xFF9E9E9E)  // Gray for stopped states
     }
 
     Box(

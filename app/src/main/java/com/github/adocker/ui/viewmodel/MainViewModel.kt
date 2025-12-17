@@ -10,7 +10,6 @@ import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.registry.model.SearchResult
-import com.github.adocker.ui.model.ContainerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -232,20 +231,6 @@ class MainViewModel @Inject constructor(
     // Clear message
     fun clearMessage() {
         _message.value = null
-    }
-
-    // Helper function to convert Container state to UI ContainerStatus
-    fun getContainerStatus(container: Container): ContainerStatus {
-        return when (container.state.value) {
-            is ContainerState.Created -> ContainerStatus.CREATED
-            is ContainerState.Starting -> ContainerStatus.CREATED
-            is ContainerState.Running -> ContainerStatus.RUNNING
-            is ContainerState.Stopping -> ContainerStatus.EXITED
-            is ContainerState.Exited -> ContainerStatus.EXITED
-            is ContainerState.Dead -> ContainerStatus.EXITED
-            is ContainerState.Removing -> ContainerStatus.EXITED
-            is ContainerState.Removed -> ContainerStatus.EXITED
-        }
     }
 
     // Get running containers count

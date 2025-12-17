@@ -15,8 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.Container
+import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 import kotlinx.coroutines.launch
@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun ContainerCard(
     container: Container,
-    status: ContainerStatus,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onDelete: () -> Unit,
@@ -41,6 +40,9 @@ fun ContainerCard(
     var expanded by remember { mutableStateOf(false) }
     var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
     val scope = rememberCoroutineScope()
+
+    // Observe container state changes in real-time
+    val containerState by container.state.collectAsState()
 
     LaunchedEffect(container) {
         scope.launch {
@@ -80,10 +82,11 @@ fun ContainerCard(
                     Box {
                         Surface(
                             shape = MaterialTheme.shapes.small,
-                            color = when (status) {
-                                ContainerStatus.RUNNING -> MaterialTheme.colorScheme.tertiaryContainer
-                                ContainerStatus.CREATED -> MaterialTheme.colorScheme.primaryContainer
-                                ContainerStatus.EXITED -> MaterialTheme.colorScheme.errorContainer
+                            color = when (containerState) {
+                                is ContainerState.Running -> MaterialTheme.colorScheme.tertiaryContainer
+                                is ContainerState.Created,
+                                is ContainerState.Starting -> MaterialTheme.colorScheme.primaryContainer
+                                else -> MaterialTheme.colorScheme.errorContainer
                             },
                             modifier = Modifier.size(IconSize.Large)
                         ) {
@@ -94,10 +97,11 @@ fun ContainerCard(
                                 Icon(
                                     imageVector = Icons.Default.ViewInAr,
                                     contentDescription = null,
-                                    tint = when (status) {
-                                        ContainerStatus.RUNNING -> MaterialTheme.colorScheme.onTertiaryContainer
-                                        ContainerStatus.CREATED -> MaterialTheme.colorScheme.onPrimaryContainer
-                                        ContainerStatus.EXITED -> MaterialTheme.colorScheme.onErrorContainer
+                                    tint = when (containerState) {
+                                        is ContainerState.Running -> MaterialTheme.colorScheme.onTertiaryContainer
+                                        is ContainerState.Created,
+                                        is ContainerState.Starting -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        else -> MaterialTheme.colorScheme.onErrorContainer
                                     },
                                     modifier = Modifier.size(IconSize.Medium)
                                 )
@@ -105,7 +109,7 @@ fun ContainerCard(
                         }
                         // 右下角状态指示点
                         StatusIndicator(
-                            status = status,
+                            state = containerState,
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = Spacing.ExtraSmall, y = Spacing.ExtraSmall)
@@ -168,23 +172,25 @@ fun ContainerCard(
 
             Spacer(modifier = Modifier.height(Spacing.Small))
 
-            // 状态标签
+            // 状态标签 - 显示ContainerState子类的简单类名
             Surface(
                 shape = MaterialTheme.shapes.extraSmall,
-                color = when (status) {
-                    ContainerStatus.RUNNING -> MaterialTheme.colorScheme.tertiaryContainer
-                    ContainerStatus.CREATED -> MaterialTheme.colorScheme.secondaryContainer
-                    ContainerStatus.EXITED -> MaterialTheme.colorScheme.errorContainer
+                color = when (containerState) {
+                    is ContainerState.Running -> MaterialTheme.colorScheme.tertiaryContainer
+                    is ContainerState.Created,
+                    is ContainerState.Starting -> MaterialTheme.colorScheme.secondaryContainer
+                    else -> MaterialTheme.colorScheme.errorContainer
                 }
             ) {
                 Text(
-                    text = status.name,
+                    text = containerState::class.simpleName ?: "Unknown",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium,
-                    color = when (status) {
-                        ContainerStatus.RUNNING -> MaterialTheme.colorScheme.onTertiaryContainer
-                        ContainerStatus.CREATED -> MaterialTheme.colorScheme.onSecondaryContainer
-                        ContainerStatus.EXITED -> MaterialTheme.colorScheme.onErrorContainer
+                    color = when (containerState) {
+                        is ContainerState.Running -> MaterialTheme.colorScheme.onTertiaryContainer
+                        is ContainerState.Created,
+                        is ContainerState.Starting -> MaterialTheme.colorScheme.onSecondaryContainer
+                        else -> MaterialTheme.colorScheme.onErrorContainer
                     },
                     modifier = Modifier.padding(
                         horizontal = Spacing.Small,
@@ -202,7 +208,7 @@ fun ContainerCard(
                 Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 // 操作按钮
-                if (status == ContainerStatus.RUNNING) {
+                if (containerState is ContainerState.Running) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.Small)

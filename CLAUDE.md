@@ -175,7 +175,7 @@ com.github.adocker.daemon/
 
 - **Database (`ContainerEntity`)**: Only stores static configuration (name, imageId, config, created timestamp)
 - **Runtime State (`Container`)**: Each `Container` instance has a state machine tracking current state
-- **UI Layer (`ContainerStatus` enum)**: Maps `ContainerState` to simplified UI states (CREATED, RUNNING, EXITED)
+- **UI Layer**: Directly uses `ContainerState` class names for display (no intermediate enum)
 
 **Container State Machine:**
 
@@ -189,21 +189,27 @@ The `ContainerStateMachine` manages container lifecycle with these states:
 - `Removing` - Container is being removed
 - `Removed` - Container has been deleted
 
-**How to check container status:**
+**Real-time State Observation:**
 ```kotlin
-// In ViewModel
-fun getContainerStatus(container: Container): ContainerStatus {
-    return when (container.state.value) {
-        is ContainerState.Created -> ContainerStatus.CREATED
-        is ContainerState.Starting -> ContainerStatus.CREATED
-        is ContainerState.Running -> ContainerStatus.RUNNING
-        is ContainerState.Stopping -> ContainerStatus.EXITED
-        is ContainerState.Exited -> ContainerStatus.EXITED
-        is ContainerState.Dead -> ContainerStatus.EXITED
-        is ContainerState.Removing -> ContainerStatus.EXITED
-        is ContainerState.Removed -> ContainerStatus.EXITED
+// In Composable - observe container state in real-time
+val containerState by container.state.collectAsState()
+
+// Use state directly for UI logic
+when (containerState) {
+    is ContainerState.Running -> {
+        // Show stop button, terminal button
+    }
+    is ContainerState.Created,
+    is ContainerState.Starting -> {
+        // Show start button
+    }
+    else -> {
+        // Show start button, delete button
     }
 }
+
+// Display state name
+Text(text = containerState::class.simpleName ?: "Unknown")
 ```
 
 **Container API:**
@@ -226,6 +232,8 @@ container.exec(listOf("/bin/sh", "-c", "ls -la"))  // Returns Result<ContainerPr
 - Prevents stale status in database (e.g., app killed while container "running")
 - Single source of truth: `Container.state` tracks actual process state
 - State is observable via StateFlow for reactive UI updates
+- UI displays actual state names directly (no lossy enum mapping)
+- Real-time updates: UI automatically recomposes when container state changes
 
 #### PRoot Execution & SELinux
 
@@ -416,18 +424,28 @@ class MainViewModel @Inject constructor(
 
 ViewModels are annotated with `@HiltViewModel` and injected into Composables via `hiltViewModel()`.
 
-**Container Access:**
+**Container Access and Real-time State Updates:**
 ```kotlin
-// Access all containers
-val containers: StateFlow<Map<String, Container>> = containerManager.allContainers
-
-// In ViewModel, transform to list for UI
+// In ViewModel - transform to list for UI
 val containers: StateFlow<List<Container>> = containerManager.allContainers
     .map { it.values.toList() }
     .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-// Find specific container
-val container = containers.value.find { it.containerId == id }
+// In Composable - observe container list
+val containers by viewModel.containers.collectAsState()
+
+// In Composable - observe individual container state for real-time updates
+@Composable
+fun ContainerCard(container: Container, ...) {
+    // Observe state changes in real-time
+    val containerState by container.state.collectAsState()
+
+    // UI updates automatically when state changes
+    when (containerState) {
+        is ContainerState.Running -> ShowStopButton()
+        else -> ShowStartButton()
+    }
+}
 
 // Use container API
 container?.start()
@@ -762,36 +780,54 @@ Apply consistently across:
 3. Add route to `Navigation.kt`
 4. Use `hiltViewModel()` in composable to inject ViewModel
 
-### Working with Container Status
+### Working with Container State
 ```kotlin
 // In ViewModel - access containers
 val containers: StateFlow<List<Container>> = containerManager.allContainers
     .map { it.values.toList() }
     .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-// Convert Container state to UI status
-fun getContainerStatus(container: Container): ContainerStatus {
-    return when (container.state.value) {
-        is ContainerState.Created -> ContainerStatus.CREATED
-        is ContainerState.Starting -> ContainerStatus.CREATED
-        is ContainerState.Running -> ContainerStatus.RUNNING
-        is ContainerState.Stopping -> ContainerStatus.EXITED
-        is ContainerState.Exited -> ContainerStatus.EXITED
-        is ContainerState.Dead -> ContainerStatus.EXITED
-        is ContainerState.Removing -> ContainerStatus.EXITED
-        is ContainerState.Removed -> ContainerStatus.EXITED
+// In UI - pass Container instance (no status parameter needed)
+ContainerCard(container = container, ...)
+
+// In ContainerCard - observe state in real-time
+@Composable
+fun ContainerCard(container: Container, ...) {
+    // Observe container state for real-time updates
+    val containerState by container.state.collectAsState()
+
+    // Get container info from database
+    var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
+    LaunchedEffect(container) {
+        container.getInfo().onSuccess { entity ->
+            containerInfo = entity
+        }
     }
+
+    // Use state directly for UI logic
+    when (containerState) {
+        is ContainerState.Running -> ShowRunningUI()
+        is ContainerState.Created,
+        is ContainerState.Starting -> ShowCreatedUI()
+        else -> ShowStoppedUI()
+    }
+
+    // Display state name
+    Text(text = containerState::class.simpleName ?: "Unknown")
 }
 
-// In UI - pass Container instance
-val status = viewModel.getContainerStatus(container)
-ContainerCard(container = container, status = status, ...)
+// In ContainersScreen - observe all states for real-time filtering
+val containers by viewModel.containers.collectAsState()
 
-// In ContainerCard - get container info
-LaunchedEffect(container) {
-    container.getInfo().onSuccess { entity ->
-        // Use entity.name, entity.imageName, etc.
-    }
+// Observe all container states to trigger recomposition
+val containerStates = containers.map { container ->
+    container.state.collectAsState().value
+}
+
+// Calculate counts based on current states
+val statusCounts = remember(containers, containerStates) {
+    val running = containers.count { it.state.value is ContainerState.Running }
+    // ... calculate other counts
 }
 ```
 

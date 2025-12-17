@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
+import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.ui.model.ContainerStatus
 import com.github.adocker.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -47,8 +47,8 @@ fun ContainerDetailScreen(
         }
     }
 
-    // Get container status from ViewModel
-    val containerStatus = container?.let { viewModel.getContainerStatus(it) } ?: ContainerStatus.CREATED
+    // Observe container state in real-time
+    val containerState = container?.state?.collectAsState()?.value
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -78,7 +78,7 @@ fun ContainerDetailScreen(
                 },
                 actions = {
                     // Terminal button (only for running containers)
-                    if (containerStatus == ContainerStatus.RUNNING) {
+                    if (containerState is ContainerState.Running) {
                         IconButton(onClick = { onNavigateToTerminal(container.containerId) }) {
                             Icon(
                                 Icons.Default.Terminal,
@@ -87,7 +87,7 @@ fun ContainerDetailScreen(
                         }
                     }
                     // Start/Stop button
-                    if (containerStatus == ContainerStatus.RUNNING) {
+                    if (containerState is ContainerState.Running) {
                         IconButton(onClick = { viewModel.stopContainer(container.containerId) }) {
                             Icon(
                                 Icons.Default.Stop,
@@ -103,7 +103,7 @@ fun ContainerDetailScreen(
                         }
                     }
                     // Delete button (only for stopped containers)
-                    if (containerStatus != ContainerStatus.RUNNING) {
+                    if (containerState !is ContainerState.Running) {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
@@ -124,14 +124,14 @@ fun ContainerDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Status badge
-            StatusChip(status = containerStatus)
+            containerState?.let { StatusChip(state = it) }
 
             // Basic Information Card
             DetailCard(title = stringResource(R.string.common_basic_info)) {
                 DetailRow(label = stringResource(R.string.common_name), value = info.name)
                 DetailRow(label = stringResource(R.string.common_id), value = info.id)
                 DetailRow(label = stringResource(R.string.container_image), value = info.imageName)
-                DetailRow(label = stringResource(R.string.container_status), value = getStatusText(containerStatus))
+                DetailRow(label = stringResource(R.string.container_status), value = containerState?.let { getStatusText(it) } ?: "Unknown")
                 DetailRow(
                     label = stringResource(R.string.container_created),
                     value = formatDate(info.createdAt)
@@ -229,11 +229,16 @@ fun ContainerDetailScreen(
 }
 
 @Composable
-private fun StatusChip(status: ContainerStatus) {
-    val (text, color) = when (status) {
-        ContainerStatus.CREATED -> stringResource(R.string.status_created) to MaterialTheme.colorScheme.secondary
-        ContainerStatus.RUNNING -> stringResource(R.string.status_running) to MaterialTheme.colorScheme.primary
-        ContainerStatus.EXITED -> stringResource(R.string.status_stopped) to MaterialTheme.colorScheme.error
+private fun StatusChip(state: ContainerState) {
+    val (text, color) = when (state) {
+        is ContainerState.Created -> "Created" to MaterialTheme.colorScheme.secondary
+        is ContainerState.Starting -> "Starting" to MaterialTheme.colorScheme.secondary
+        is ContainerState.Running -> "Running" to MaterialTheme.colorScheme.primary
+        is ContainerState.Stopping -> "Stopping" to MaterialTheme.colorScheme.error
+        is ContainerState.Exited -> "Exited" to MaterialTheme.colorScheme.error
+        is ContainerState.Dead -> "Dead" to MaterialTheme.colorScheme.error
+        is ContainerState.Removing -> "Removing" to MaterialTheme.colorScheme.error
+        is ContainerState.Removed -> "Removed" to MaterialTheme.colorScheme.error
     }
 
     AssistChip(
@@ -289,11 +294,16 @@ private fun DetailRow(label: String, value: String) {
 }
 
 @Composable
-private fun getStatusText(status: ContainerStatus): String {
-    return when (status) {
-        ContainerStatus.CREATED -> stringResource(R.string.status_created)
-        ContainerStatus.RUNNING -> stringResource(R.string.status_running)
-        ContainerStatus.EXITED -> stringResource(R.string.status_stopped)
+private fun getStatusText(state: ContainerState): String {
+    return when (state) {
+        is ContainerState.Created -> "Created"
+        is ContainerState.Starting -> "Starting"
+        is ContainerState.Running -> "Running"
+        is ContainerState.Stopping -> "Stopping"
+        is ContainerState.Exited -> "Exited"
+        is ContainerState.Dead -> "Dead"
+        is ContainerState.Removing -> "Removing"
+        is ContainerState.Removed -> "Removed"
     }
 }
 

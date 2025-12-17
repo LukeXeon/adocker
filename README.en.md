@@ -158,17 +158,34 @@ On Android 12+ devices, the system may kill background processes. Use Shizuku to
 ### Container Status Management
 
 - **Database (ContainerEntity)**: Only stores static configuration, no runtime status
-- **Runtime (RunningContainer)**: Tracks active containers in memory with automatic main process monitoring
-- **UI Layer (ContainerStatus)**: Maps runtime state to UI (CREATED, RUNNING, EXITED)
+- **Runtime (Container + ContainerStateMachine)**: Each container maintains its own state machine, tracking 8 states (Created, Starting, Running, Stopping, Exited, Dead, Removing, Removed)
+- **UI Layer**: Directly uses `ContainerState` class names for display, observing state changes in real-time via `StateFlow`
 
-This design prevents stale status in database (e.g., "RUNNING" status when app is killed).
+Benefits of this design:
+- Prevents stale status in database (e.g., "RUNNING" status when app is killed)
+- Real-time UI updates: UI automatically recomposes when container state changes
+- Type-safe state transitions: State machine ensures valid state transitions
+- Precise state representation: 8 states fully express container lifecycle with no information loss
 
-#### RunningContainer Auto-Cleanup Mechanism
+#### Real-time State Observation
 
-`RunningContainer` automatically monitors the `mainProcess` lifecycle:
-- When `mainProcess` exits, all `otherProcesses` are automatically destroyed
-- After `mainProcess` exits, new processes cannot be launched via `execCommand`
-- Uses background daemon thread for monitoring, no manual polling required
+Observing container state in UI components:
+```kotlin
+@Composable
+fun ContainerCard(container: Container) {
+    // Observe state changes, UI recomposes automatically
+    val containerState by container.state.collectAsState()
+
+    // Use state directly for UI logic
+    when (containerState) {
+        is ContainerState.Running -> ShowStopButton()
+        else -> ShowStartButton()
+    }
+
+    // Display state name
+    Text(text = containerState::class.simpleName ?: "Unknown")
+}
+```
 
 ### SELinux Compatibility
 

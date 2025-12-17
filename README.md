@@ -158,17 +158,34 @@ cd adocker
 ### 容器状态管理
 
 - **数据库（ContainerEntity）**：只存储静态配置，不存储运行状态
-- **运行时（RunningContainer）**：内存中追踪活跃容器，自动监控主进程生命周期
-- **UI层（ContainerStatus）**：映射运行状态到UI显示（CREATED, RUNNING, EXITED）
+- **运行时（Container + ContainerStateMachine）**：每个容器维护自己的状态机，追踪8种状态（Created, Starting, Running, Stopping, Exited, Dead, Removing, Removed）
+- **UI层**：直接使用 `ContainerState` 子类名称显示，通过 `StateFlow` 实时观察状态变化
 
-这种设计避免了数据库中状态过期的问题（如应用被杀死时容器"RUNNING"状态会失效）。
+这种设计的优势：
+- 避免了数据库中状态过期的问题（如应用被杀死时容器"RUNNING"状态会失效）
+- UI 自动实时更新：当容器状态改变时，UI 会自动重组
+- 类型安全的状态转换：通过状态机确保状态转换的合法性
+- 精确的状态表达：8种状态完整表达容器生命周期，无信息丢失
 
-#### RunningContainer 自动清理机制
+#### 实时状态观察
 
-`RunningContainer` 会自动监控 `mainProcess` 的生命周期：
-- 当 `mainProcess` 退出时，自动销毁所有 `otherProcesses`
-- `mainProcess` 退出后，禁止通过 `execCommand` 启动新进程
-- 使用后台守护线程监控，无需手动轮询
+在 UI 组件中观察容器状态：
+```kotlin
+@Composable
+fun ContainerCard(container: Container) {
+    // 观察状态变化，状态改变时自动重组
+    val containerState by container.state.collectAsState()
+
+    // 直接使用状态进行UI逻辑判断
+    when (containerState) {
+        is ContainerState.Running -> ShowStopButton()
+        else -> ShowStartButton()
+    }
+
+    // 显示状态名称
+    Text(text = containerState::class.simpleName ?: "Unknown")
+}
+```
 
 ### SELinux 兼容
 
