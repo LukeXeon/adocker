@@ -2,14 +2,13 @@ package com.github.adocker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.adocker.daemon.containers.Container
 import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.containers.ContainerState
-import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.registry.model.SearchResult
+import com.github.adocker.ui.screens.home.HomeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import org.http4k.server.Http4kServer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -146,57 +144,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Start a container
-    fun startContainer(containerId: String) {
-        viewModelScope.launch {
-            val container = containers.value.find { it.containerId == containerId }
-            if (container != null) {
-                try {
-                    container.start()
-                    _message.value = "Container started"
-                } catch (e: Exception) {
-                    _error.value = "Start failed: ${e.message}"
-                }
-            } else {
-                _error.value = "Container not found"
-            }
-        }
-    }
-
-    // Stop a container
-    fun stopContainer(containerId: String) {
-        viewModelScope.launch {
-            val container = containers.value.find { it.containerId == containerId }
-            if (container != null) {
-                try {
-                    container.stop()
-                    _message.value = "Container stopped"
-                } catch (e: Exception) {
-                    _error.value = "Stop failed: ${e.message}"
-                }
-            } else {
-                _error.value = "Container not found"
-            }
-        }
-    }
-
-    // Delete a container
-    fun deleteContainer(containerId: String) {
-        viewModelScope.launch {
-            val container = containers.value.find { it.containerId == containerId }
-            if (container != null) {
-                try {
-                    container.remove()
-                    _message.value = "Container deleted"
-                } catch (e: Exception) {
-                    _error.value = "Delete failed: ${e.message}"
-                }
-            } else {
-                _error.value = "Container not found"
-            }
-        }
-    }
-
     // Run container (create and start)
     fun runContainer(
         imageId: String,
@@ -231,26 +178,12 @@ class MainViewModel @Inject constructor(
         _message.value = null
     }
 
-    // Get running containers count
-    fun getRunningCount(): Int {
-        return containers.value.count {
-            it.state.value is ContainerState.Running
-        }
-    }
 
-    // Get stats
-    data class Stats(
-        val totalImages: Int,
-        val totalContainers: Int,
-        val runningContainers: Int,
-        val stoppedContainers: Int
-    )
-
-    val stats: StateFlow<Stats> = containers.map { containers ->
+    val stats: StateFlow<HomeStats> = containers.map { containers ->
         val runningCount = containers.count {
             it.state.value is ContainerState.Running
         }
-        Stats(
+        HomeStats(
             totalImages = images.value.size,
             totalContainers = containers.size,
             runningContainers = runningCount,
@@ -259,6 +192,6 @@ class MainViewModel @Inject constructor(
     }.stateIn(
         viewModelScope,
         SharingStarted.Lazily,
-        Stats(0, 0, 0, 0)
+        HomeStats(0, 0, 0, 0)
     )
 }

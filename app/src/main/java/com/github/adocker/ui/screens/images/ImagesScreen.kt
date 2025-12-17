@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
@@ -24,12 +25,12 @@ import com.github.adocker.ui.viewmodel.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagesScreen(
-    viewModel: MainViewModel,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToQRScanner: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
     val pullProgress by viewModel.pullProgress.collectAsState()
     val isPulling by viewModel.isPulling.collectAsState()
@@ -175,7 +176,6 @@ fun ImagesScreen(
     // Pull Image Dialog
     if (showPullDialog) {
         PullImageDialog(
-            viewModel = viewModel,
             onDismiss = { showPullDialog = false },
             onNavigateToSearch = { showPullDialog = false }
         )

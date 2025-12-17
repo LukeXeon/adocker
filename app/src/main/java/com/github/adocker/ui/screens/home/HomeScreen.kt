@@ -247,7 +247,6 @@ fun HomeScreen(
     // Pull Image Dialog
     if (showPullDialog) {
         PullImageDialog(
-            viewModel = viewModel,
             onDismiss = { showPullDialog = false },
             onNavigateToSearch = {
                 showPullDialog = false

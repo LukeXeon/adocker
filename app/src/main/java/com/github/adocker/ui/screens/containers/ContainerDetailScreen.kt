@@ -14,10 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,16 +26,14 @@ import java.util.*
 @Composable
 fun ContainerDetailScreen(
     containerId: String,
-    viewModel: MainViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToTerminal: (String) -> Unit
 ) {
+    val viewModel = hiltViewModel<ContainersViewModel>()
     val containers by viewModel.containers.collectAsState()
-    val container = containers.find { it.containerId == containerId }
+    val container = containers[containerId]
     val scope = rememberCoroutineScope()
-
     var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
-
     // Load container info
     LaunchedEffect(container) {
         container?.let {
@@ -46,7 +44,6 @@ fun ContainerDetailScreen(
             }
         }
     }
-
     // Observe container state in real-time
     val containerState = container?.state?.collectAsState()?.value
 
@@ -131,7 +128,9 @@ fun ContainerDetailScreen(
                 DetailRow(label = stringResource(R.string.common_name), value = info.name)
                 DetailRow(label = stringResource(R.string.common_id), value = info.id)
                 DetailRow(label = stringResource(R.string.container_image), value = info.imageName)
-                DetailRow(label = stringResource(R.string.container_status), value = containerState?.let { getStatusText(it) } ?: "Unknown")
+                DetailRow(
+                    label = stringResource(R.string.container_status),
+                    value = containerState?.let { getStatusText(it) } ?: "Unknown")
                 DetailRow(
                     label = stringResource(R.string.container_created),
                     value = formatDate(info.createdAt)

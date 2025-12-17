@@ -176,7 +176,6 @@ fun MainScreen() {
             // Images
             composable(Screen.Images.route) {
                 ImagesScreen(
-                    viewModel = mainViewModel,
                     onNavigateToCreate = { imageId ->
                         navController.navigate(Screen.CreateContainer.createRoute(imageId))
                     },
@@ -324,7 +323,6 @@ fun MainScreen() {
                     backStackEntry.arguments?.getString("containerId") ?: return@composable
                 ContainerDetailScreen(
                     containerId = containerId,
-                    viewModel = mainViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     },

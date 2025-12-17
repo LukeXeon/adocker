@@ -14,43 +14,45 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
+import com.github.adocker.ui.screens.images.ImagesViewModel
 import com.github.adocker.ui.viewmodel.MainViewModel
 
 @Composable
 fun PullImageDialog(
-    viewModel: MainViewModel,
     onDismiss: () -> Unit,
     onNavigateToSearch: () -> Unit = {}
 ) {
+    val viewModel = hiltViewModel<ImagesViewModel>()
     val isPulling by viewModel.isPulling.collectAsState()
     val pullProgress by viewModel.pullProgress.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val message by viewModel.message.collectAsState()
+//    val error by viewModel.error.collectAsState()
+//    val message by viewModel.message.collectAsState()
 
     var imageName by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Show messages
-    LaunchedEffect(error) {
-        error?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
-        }
-    }
+//    LaunchedEffect(error) {
+//        error?.let {
+//            snackbarHostState.showSnackbar(it)
+//            viewModel.clearError()
+//        }
+//    }
 
-    LaunchedEffect(message) {
-        message?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessage()
-            if (it.contains("successfully")) {
-                onDismiss()
-            }
-        }
-    }
+//    LaunchedEffect(message) {
+//        message?.let {
+//            snackbarHostState.showSnackbar(it)
+//            viewModel.clearMessage()
+//            if (it.contains("successfully")) {
+//                onDismiss()
+//            }
+//        }
+//    }
 
     AlertDialog(
         onDismissRequest = { if (!isPulling) onDismiss() },
@@ -85,7 +87,7 @@ fun PullImageDialog(
                         onDone = {
                             focusManager.clearFocus()
                             if (imageName.isNotBlank() && !isPulling) {
-                                viewModel.pullImage(imageName)
+//                                viewModel.pullImage(imageName)
                             }
                         }
                     ),
@@ -107,7 +109,7 @@ fun PullImageDialog(
                 onClick = {
                     focusManager.clearFocus()
                     if (imageName.isNotBlank()) {
-                        viewModel.pullImage(imageName)
+//                        viewModel.pullImage(imageName)
                     }
                 },
                 enabled = imageName.isNotBlank() && !isPulling
