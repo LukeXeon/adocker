@@ -1,10 +1,10 @@
-package com.github.adocker.ui.viewmodel
+package com.github.adocker.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.adocker.daemon.database.model.MirrorEntity
 import com.github.adocker.daemon.registry.MirrorHealthChecker
 import com.github.adocker.daemon.registry.RegistryRepository
-import com.github.adocker.daemon.database.model.MirrorEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,14 +23,14 @@ class MirrorSettingsViewModel @Inject constructor(
     val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrorsFlow()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = RegistryRepository.BUILT_IN_MIRRORS
+            started = SharingStarted.Companion.WhileSubscribed(5000),
+            initialValue = RegistryRepository.Companion.BUILT_IN_MIRRORS
         )
 
     val isCheckingHealth: StateFlow<Boolean> = healthChecker.isChecking
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Companion.WhileSubscribed(5000),
             initialValue = false
         )
 
@@ -38,7 +38,7 @@ class MirrorSettingsViewModel @Inject constructor(
     val checkingMirrors: StateFlow<Set<String>> = healthChecker.checkingMirrors
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Companion.WhileSubscribed(5000),
             initialValue = emptySet()
         )
 

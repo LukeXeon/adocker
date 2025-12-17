@@ -57,7 +57,7 @@ import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
-import com.github.adocker.ui.viewmodel.PhantomProcessViewModel
+import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
 import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)

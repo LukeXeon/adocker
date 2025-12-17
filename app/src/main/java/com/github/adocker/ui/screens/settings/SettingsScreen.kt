@@ -15,7 +15,7 @@ import com.github.adocker.ui.theme.Spacing
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.io.formatFileSize
-import com.github.adocker.ui.viewmodel.SettingsViewModel
+import com.github.adocker.ui.screens.settings.SettingsViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

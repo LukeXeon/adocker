@@ -1,4 +1,4 @@
-package com.github.adocker.ui.viewmodel
+package com.github.adocker.ui.screens.settings
 
 data class PhantomProcessUiState(
     val shizukuAvailable: Boolean = false,

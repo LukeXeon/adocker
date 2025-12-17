@@ -58,7 +58,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.database.model.MirrorEntity
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
-import com.github.adocker.ui.viewmodel.MirrorSettingsViewModel
+import com.github.adocker.ui.screens.settings.MirrorSettingsViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

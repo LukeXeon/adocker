@@ -1,4 +1,4 @@
-package com.github.adocker.ui.viewmodel
+package com.github.adocker.ui.screens.settings
 
 import android.content.Context
 import android.content.pm.PackageInfo
@@ -30,7 +30,7 @@ class SettingsViewModel @Inject constructor(
     private val _prootVersion = MutableStateFlow<String?>(null)
     val prootVersion: StateFlow<String?> = _prootVersion.asStateFlow()
 
-    val architecture = AppContext.ARCHITECTURE
+    val architecture = AppContext.Companion.ARCHITECTURE
     val baseDir: String = appContext.baseDir.absolutePath
 
     init {

@@ -1,4 +1,4 @@
-package com.github.adocker.ui.viewmodel
+package com.github.adocker.ui.screens.terminal
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -69,7 +70,7 @@ class TerminalViewModel @Inject constructor(
         }
     }
 
-    private fun startTailingFlow(file: java.io.File, isError: Boolean): Job {
+    private fun startTailingFlow(file: File, isError: Boolean): Job {
         return viewModelScope.launch(Dispatchers.IO) {
             file.tailAsFlow(
                 pollingDelay = 100, fromEnd = false, reOpen = false

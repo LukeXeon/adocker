@@ -20,7 +20,7 @@ import com.github.adocker.ui.components.StatCard
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.viewmodel.MainViewModel
-import com.github.adocker.ui.viewmodel.SettingsViewModel
+import com.github.adocker.ui.screens.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,10 +1,12 @@
-package com.github.adocker.ui.viewmodel
+package com.github.adocker.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.os.PhantomProcessKillerCompat
 import com.github.adocker.daemon.os.RemoteProcessBuilder
+import com.github.adocker.ui.screens.settings.PhantomProcessUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,7 +59,7 @@ class PhantomProcessViewModel @Inject constructor(
                     isChecking = false
                 )
             } catch (e: Exception) {
-                Timber.e(e, "Failed to check phantom process status")
+                Timber.Forest.e(e, "Failed to check phantom process status")
                 _uiState.value = _uiState.value.copy(
                     isChecking = false,
                     error = "Failed to check status: ${e.message}"
@@ -70,7 +72,7 @@ class PhantomProcessViewModel @Inject constructor(
         viewModelScope.launch {
             remoteProcessBuilder.requestPermission()
             // Delay to allow permission dialog result
-            kotlinx.coroutines.delay(500)
+            delay(500)
             checkStatus()
         }
     }

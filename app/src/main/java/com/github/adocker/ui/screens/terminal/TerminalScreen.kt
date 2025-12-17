@@ -25,7 +25,7 @@ import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import androidx.compose.ui.unit.sp
 import com.github.adocker.R
-import com.github.adocker.ui.viewmodel.TerminalViewModel
+import com.github.adocker.ui.screens.terminal.TerminalViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

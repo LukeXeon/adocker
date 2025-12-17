@@ -36,8 +36,8 @@ import com.github.adocker.ui.screens.settings.PhantomProcessScreen
 import com.github.adocker.ui.screens.settings.SettingsScreen
 import com.github.adocker.ui.screens.terminal.TerminalScreen
 import com.github.adocker.ui.viewmodel.MainViewModel
-import com.github.adocker.ui.viewmodel.PhantomProcessViewModel
-import com.github.adocker.ui.viewmodel.TerminalViewModel
+import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
+import com.github.adocker.ui.screens.terminal.TerminalViewModel
 import kotlinx.coroutines.launch
 
 @Composable
