@@ -24,14 +24,12 @@ sealed interface ProcessWaiter {
     }
 
     class NonBlocking(
-        private val getFileDescriptor: (Any) -> FileDescriptor,
+        private val getFileDescriptor: (Any) -> Result<FileDescriptor>,
         private val queue: MessageQueue
     ) : ProcessWaiter {
         override suspend fun waitFor(process: Process): Int {
             suspendCancellableCoroutine { con ->
-                getFileDescriptor.runCatching {
-                    invoke(process.outputStream)
-                }.fold(
+                getFileDescriptor(process.outputStream).fold(
                     { fd ->
                         val callbacks = object : MessageQueue.OnFileDescriptorEventListener,
                             CompletionHandler {

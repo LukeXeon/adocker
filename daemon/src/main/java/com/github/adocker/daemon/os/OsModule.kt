@@ -23,9 +23,13 @@ object OsModule {
             }
         }.map { field ->
             return@map { stream: Any ->
-                field.get(stream).let {
+                field.runCatching {
+                    get(stream)
+                }.map {
                     it as FileOutputStream
-                }.fd
+                }.map {
+                    it.fd
+                }
             }
         }.fold(
             {
