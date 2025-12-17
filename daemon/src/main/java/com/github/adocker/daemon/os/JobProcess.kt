@@ -5,6 +5,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.io.OutputStream
@@ -16,7 +17,7 @@ class JobProcess @AssistedInject constructor(
     scope: CoroutineScope,
     waiter: ProcessWaiter,
 ) {
-    val job = scope.launch {
+    val job = scope.async {
         try {
             waiter.waitFor(process)
         } catch (e: CancellationException) {
