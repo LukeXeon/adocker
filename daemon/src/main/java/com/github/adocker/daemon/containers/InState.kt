@@ -7,33 +7,27 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
 
-@PublishedApi
-internal class AbortFlowException(private val owner: Any) : CancellationException(
-    "Flow was aborted, no more elements needed"
-) {
-    override fun fillInStackTrace(): Throwable {
-        stackTrace = emptyArray()
-        return this
-    }
-
-    fun checkOwnership(owner: Any) {
-        if (this.owner !== owner) throw this
-    }
-}
-
 typealias InState = Pair<StateFlow<ContainerState>, Set<KClass<*>>>
 
-suspend inline fun <reified R> InState.execute(
-    crossinline block: suspend () -> R
-): R {
+@PublishedApi
+internal suspend inline fun InState.executeInternal(
+    crossinline block: suspend () -> Any?
+): Any? {
     val (state, classes) = this
-    val collector = object : suspend (Boolean) -> Unit {
+    val collector = object : CancellationException(
+        "Flow was aborted, no more elements needed"
+    ), suspend (Boolean) -> Unit {
         var result: Any? = this
+
+        override fun fillInStackTrace(): Throwable {
+            stackTrace = emptyArray()
+            return this
+        }
 
         override suspend fun invoke(value: Boolean) {
             if (value) {
                 result = block()
-                throw AbortFlowException(this)
+                throw this
             } else {
                 throw IllegalStateException("container is not $classes")
             }
@@ -45,13 +39,21 @@ suspend inline fun <reified R> InState.execute(
                 clazz.isInstance(it)
             }
         }.distinctUntilChanged().collectLatest(collector)
-    } catch (e: AbortFlowException) {
-        e.checkOwnership(collector)
+    } catch (e: CancellationException) {
+        if (e != collector) {
+            throw e
+        }
     }
     if (collector.result == collector) {
         throw NoSuchElementException("Expected at least one element")
     }
-    return collector.result as R
+    return collector.result
+}
+
+suspend inline fun <reified R> InState.execute(
+    crossinline block: suspend () -> R
+): R {
+    return executeInternal { block() } as R
 }
 
 inline fun <reified S : ContainerState> StateFlow<ContainerState>.inState(): InState {
