@@ -69,35 +69,33 @@ fun ContainersScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
-            FilterType.entries.forEach { type ->
-                item(key = type) {
-                    FilterChip(
-                        selected = filterType == type,
-                        onClick = {
-                            filterType = if (filterType == type && type != FilterType.All) {
-                                FilterType.All
-                            } else {
-                                type
-                            }
-                        },
-                        label = {
-                            Text(
-                                "${stringResource(type.labelResId)} (${
-                                    statesCount.getOrDefault(type, 0)
-                                })"
+            items(FilterType.entries, { it }) { type ->
+                FilterChip(
+                    selected = filterType == type,
+                    onClick = {
+                        filterType = if (filterType == type && type != FilterType.All) {
+                            FilterType.All
+                        } else {
+                            type
+                        }
+                    },
+                    label = {
+                        Text(
+                            "${stringResource(type.labelResId)} (${
+                                statesCount.getOrDefault(type, 0)
+                            })"
+                        )
+                    },
+                    leadingIcon = if (filterType == type) {
+                        {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.Small)
                             )
-                        },
-                        leadingIcon = if (filterType == type) {
-                            {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(IconSize.Small)
-                                )
-                            }
-                        } else null
-                    )
-                }
+                        }
+                    } else null
+                )
             }
         }
 
