@@ -2,6 +2,7 @@ package com.github.adocker.daemon.containers
 
 import android.os.SystemClock
 import com.github.adocker.daemon.app.AppContext
+import com.github.adocker.daemon.os.JobProcess
 import com.github.adocker.daemon.registry.model.ContainerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -34,7 +35,7 @@ class PRootEngine @Inject constructor(
     private val appContext: AppContext,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
-    private val factory: ContainerProcess.Factory
+    private val factory: JobProcess.Factory
 ) {
     private val nativeLibDir = appContext.nativeLibDir
 
@@ -275,7 +276,7 @@ class PRootEngine @Inject constructor(
         containerId: String,
         command: List<String>? = null,
         config: ContainerConfig = ContainerConfig(),
-    ): Result<ContainerProcess> {
+    ): Result<JobProcess> {
         val containerDir = File(appContext.containersDir, containerId)
         val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
         if (!rootfsDir.exists()) {

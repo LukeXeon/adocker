@@ -2,6 +2,7 @@ package com.github.adocker.daemon.containers
 
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.model.ContainerEntity
+import com.github.adocker.daemon.os.JobProcess
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -46,11 +47,11 @@ class Container @AssistedInject constructor(
         }
     }
 
-    suspend fun exec(command: List<String>): Result<ContainerProcess> {
+    suspend fun exec(command: List<String>): Result<JobProcess> {
         return try {
             Result.success(
                 stateMachine.state.inState<ContainerState.Running>().execute {
-                    val process = CompletableDeferred<ContainerProcess>()
+                    val process = CompletableDeferred<JobProcess>()
                     stateMachine.dispatch(
                         ContainerOperation.Exec(
                             command,

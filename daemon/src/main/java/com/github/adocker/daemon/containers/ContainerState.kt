@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import com.github.adocker.daemon.os.JobProcess
 import kotlinx.coroutines.Job
 import java.io.BufferedWriter
 import java.io.File
@@ -18,11 +19,11 @@ sealed interface ContainerState {
 
     data class Running(
         override val containerId: String,
-        val mainProcess: ContainerProcess,
+        val mainProcess: JobProcess,
         val stdin: BufferedWriter,
         val stdout: File,
         val stderr: File,
-        val childProcesses: List<ContainerProcess> = emptyList(),
+        val childProcesses: List<JobProcess> = emptyList(),
     ) : ContainerState
 
     data class Stopping(

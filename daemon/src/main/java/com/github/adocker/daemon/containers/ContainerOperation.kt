@@ -1,5 +1,6 @@
 package com.github.adocker.daemon.containers
 
+import com.github.adocker.daemon.os.JobProcess
 import kotlinx.coroutines.CompletableDeferred
 
 sealed interface ContainerOperation {
@@ -11,6 +12,6 @@ sealed interface ContainerOperation {
     object Remove : ContainerOperation
     data class Exec(
         val command: List<String>,
-        val process: CompletableDeferred<ContainerProcess>
+        val process: CompletableDeferred<JobProcess>
     ) : ContainerOperation
 }
