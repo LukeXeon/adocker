@@ -55,7 +55,7 @@ sealed interface ProcessWaiter {
                         con.invokeOnCancellation(callbacks)
                     },
                     {
-                        Timber.Forest.d(it)
+                        Timber.d(it)
                         con.resume(Unit)
                     }
                 )
