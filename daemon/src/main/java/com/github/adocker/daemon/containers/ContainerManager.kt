@@ -29,14 +29,14 @@ class ContainerManager @Inject constructor(
     scope: CoroutineScope,
 ) {
     private val mutex = Mutex()
-    private val containers = MutableStateFlow<Map<String, Container>>(emptyMap())
+    private val _containers = MutableStateFlow<Map<String, Container>>(emptyMap())
 
-    val allContainers = containers.asStateFlow()
+    val containers = _containers.asStateFlow()
 
     init {
         scope.launch {
             mutex.withLock {
-                containers.value = containerDao.getAllContainerIds().mapNotNull {
+                _containers.value = containerDao.getAllContainerIds().mapNotNull {
                     loadContainer(it).onFailure { e ->
                         Timber.e(e)
                     }.getOrNull()
@@ -71,7 +71,7 @@ class ContainerManager @Inject constructor(
     internal suspend fun removeContainer(containerId: String) {
         mutex.withLock {
             containerDao.deleteContainerById(containerId)
-            containers.value -= containerId
+            _containers.value -= containerId
         }
     }
 
@@ -159,7 +159,7 @@ class ContainerManager @Inject constructor(
         mutex.withLock {
             containerDao.insertContainer(entity)
             val container = factory.create(ContainerState.Created(containerId))
-            containers.value += containerId to container
+            _containers.value += containerId to container
             return Result.success(container)
         }
     }

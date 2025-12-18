@@ -39,16 +39,12 @@ fun ContainerCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
-    val scope = rememberCoroutineScope()
-
     // Observe container state changes in real-time
     val containerState by container.state.collectAsState()
 
     LaunchedEffect(container) {
-        scope.launch {
-            container.getInfo().onSuccess { entity ->
-                containerInfo = entity
-            }
+        container.getInfo().onSuccess { entity ->
+            containerInfo = entity
         }
     }
 
@@ -83,6 +79,7 @@ fun ContainerCard(
                                 is ContainerState.Running -> MaterialTheme.colorScheme.tertiaryContainer
                                 is ContainerState.Created,
                                 is ContainerState.Starting -> MaterialTheme.colorScheme.primaryContainer
+
                                 else -> MaterialTheme.colorScheme.errorContainer
                             },
                             modifier = Modifier.size(IconSize.Large)
@@ -98,6 +95,7 @@ fun ContainerCard(
                                         is ContainerState.Running -> MaterialTheme.colorScheme.onTertiaryContainer
                                         is ContainerState.Created,
                                         is ContainerState.Starting -> MaterialTheme.colorScheme.onPrimaryContainer
+
                                         else -> MaterialTheme.colorScheme.onErrorContainer
                                     },
                                     modifier = Modifier.size(IconSize.Medium)
@@ -176,6 +174,7 @@ fun ContainerCard(
                     is ContainerState.Running -> MaterialTheme.colorScheme.tertiaryContainer
                     is ContainerState.Created,
                     is ContainerState.Starting -> MaterialTheme.colorScheme.secondaryContainer
+
                     else -> MaterialTheme.colorScheme.errorContainer
                 }
             ) {

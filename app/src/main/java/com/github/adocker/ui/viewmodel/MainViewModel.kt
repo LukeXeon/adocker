@@ -32,7 +32,7 @@ class MainViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Containers
-    val containers = containerManager.allContainers
+    val containers = containerManager.containers
         .map {
             it.asSequence().sortedBy { container -> container.key }
                 .map { container ->

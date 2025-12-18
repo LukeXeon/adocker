@@ -13,7 +13,7 @@ class ContainersViewModel @Inject constructor(
     private val containerManager: ContainerManager,
 ) : ViewModel() {
 
-    val containers = containerManager.allContainers
+    val containers = containerManager.containers
 
     // Delete a container
     fun deleteContainer(containerId: String) {
@@ -62,7 +62,9 @@ class ContainersViewModel @Inject constructor(
         config: ContainerConfig = ContainerConfig()
     ) {
         viewModelScope.launch {
-            containerManager.createContainer(imageId, name, config)
+            containerManager.createContainer(imageId, name, config).map {
+                it.start()
+            }
 //                .onSuccess { container ->
 //                    try {
 //                        container.start()

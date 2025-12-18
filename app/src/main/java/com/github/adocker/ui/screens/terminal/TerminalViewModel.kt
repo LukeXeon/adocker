@@ -48,7 +48,7 @@ class TerminalViewModel @Inject constructor(
 
     private fun startMonitoringContainer() {
         viewModelScope.launch {
-            containerManager.allContainers.collect { containers ->
+            containerManager.containers.collect { containers ->
                 val container = containers[containerId]
                 val state = container?.state?.value
 
@@ -91,7 +91,7 @@ class TerminalViewModel @Inject constructor(
 
     private fun loadContainer() {
         viewModelScope.launch {
-            val containers = containerManager.allContainers.value
+            val containers = containerManager.containers.value
             val container = containers[containerId]
             container?.getInfo()?.onSuccess { entity ->
                 _container.value = entity
@@ -107,7 +107,7 @@ class TerminalViewModel @Inject constructor(
 
             try {
                 // Get the container
-                val containers = containerManager.allContainers.value
+                val containers = containerManager.containers.value
                 val container = containers[containerId]
 
                 if (container == null) {
@@ -150,7 +150,7 @@ class TerminalViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Get the container
-                val containers = containerManager.allContainers.value
+                val containers = containerManager.containers.value
                 val container = containers[containerId]
                 val state = container?.state?.value
 
@@ -183,7 +183,7 @@ class TerminalViewModel @Inject constructor(
     fun stopContainer() {
         viewModelScope.launch {
             try {
-                val containers = containerManager.allContainers.value
+                val containers = containerManager.containers.value
                 val container = containers[containerId]
 
                 container?.stop()
