@@ -150,16 +150,6 @@ fun MainScreen() {
             // Home
             composable(Screen.Home.route) {
                 HomeScreen(
-                    viewModel = mainViewModel,
-                    onNavigateToImages = {
-                        navController.navigate(Screen.Images.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
                     onNavigateToMirrorSettings = {
                         navController.navigate(Screen.MirrorSettings.route)
                     }

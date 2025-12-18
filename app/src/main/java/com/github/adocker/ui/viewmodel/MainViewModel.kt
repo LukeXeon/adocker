@@ -3,11 +3,9 @@ package com.github.adocker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.containers.ContainerManager
-import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
 import com.github.adocker.daemon.registry.model.SearchResult
-import com.github.adocker.ui.screens.home.HomeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -125,7 +123,6 @@ class MainViewModel @Inject constructor(
     }
 
 
-
     // Clear error
     fun clearError() {
         _error.value = null
@@ -136,20 +133,4 @@ class MainViewModel @Inject constructor(
         _message.value = null
     }
 
-
-    val stats: StateFlow<HomeStats> = containers.map { containers ->
-        val runningCount = containers.count {
-            it.state.value is ContainerState.Running
-        }
-        HomeStats(
-            totalImages = images.value.size,
-            totalContainers = containers.size,
-            runningContainers = runningCount,
-            stoppedContainers = containers.size - runningCount
-        )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.Lazily,
-        HomeStats(0, 0, 0, 0)
-    )
 }

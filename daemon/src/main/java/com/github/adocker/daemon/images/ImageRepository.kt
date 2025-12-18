@@ -5,11 +5,11 @@ import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.dao.LayerDao
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.database.model.LayerEntity
-import com.github.adocker.daemon.registry.DockerRegistryApi
-import com.github.adocker.daemon.registry.model.ImageConfig
 import com.github.adocker.daemon.io.copyDirectory
 import com.github.adocker.daemon.io.extractTar
 import com.github.adocker.daemon.io.getDirectorySize
+import com.github.adocker.daemon.registry.DockerRegistryApi
+import com.github.adocker.daemon.registry.model.ImageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -177,8 +177,8 @@ class ImageRepository @Inject constructor(
             repository = imageRef.repository,
             tag = imageRef.tag,
             digest = manifest.config.digest,
-            architecture = configResponse.architecture ?: AppContext.Companion.ARCHITECTURE,
-            os = configResponse.os ?: AppContext.Companion.DEFAULT_OS,
+            architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
+            os = configResponse.os ?: AppContext.DEFAULT_OS,
             size = totalSize,
             layerIds = layerIds,
             config = imageConfig
@@ -206,7 +206,8 @@ class ImageRepository @Inject constructor(
                 // Delete layer if no longer referenced
                 val layer = layerDao.getLayerByDigest(digest)
                 if (layer != null && layer.refCount <= 1) {
-                    val layerFile = File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
+                    val layerFile =
+                        File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                     layerFile.delete()
                     layerDao.deleteUnreferencedLayer(digest)
                 }
@@ -220,7 +221,7 @@ class ImageRepository @Inject constructor(
      * Get tags for an image
      */
     suspend fun getTags(imageName: String): Result<List<String>> {
-        val imageRef = ImageReference.Companion.parse(imageName)
+        val imageRef = ImageReference.parse(imageName)
         return registryApi.getTags(imageRef)
     }
 
@@ -244,8 +245,8 @@ class ImageRepository @Inject constructor(
                     repository = repository,
                     tag = tag,
                     digest = "sha256:$imageId",
-                    architecture = AppContext.Companion.ARCHITECTURE,
-                    os = AppContext.Companion.DEFAULT_OS,
+                    architecture = AppContext.ARCHITECTURE,
+                    os = AppContext.DEFAULT_OS,
                     size = size,
                     layerIds = listOf("sha256:$imageId")
                 )
