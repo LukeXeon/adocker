@@ -12,7 +12,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class PhantomProcessKillerCompat @Inject constructor(
-    private val remoteProcessBuilder: RemoteProcessBuilder
+    private val remoteProcessBuilder: RemoteProcessBuilder,
+    private val processAwaiter: ProcessAwaiter,
 ) {
     /**
      * Disable phantom process killer
@@ -117,7 +118,7 @@ class PhantomProcessKillerCompat @Inject constructor(
             reader.readText()
         }
 
-        val exitCode = process.waitFor()
+        val exitCode = processAwaiter.await(process)
 
         if (exitCode != 0) {
             Timber.e("Command failed with exit code %d: %s", exitCode, error)
