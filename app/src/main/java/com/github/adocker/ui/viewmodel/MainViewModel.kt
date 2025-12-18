@@ -6,7 +6,6 @@ import com.github.adocker.daemon.containers.ContainerManager
 import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullProgress
-import com.github.adocker.daemon.registry.model.ContainerConfig
 import com.github.adocker.daemon.registry.model.SearchResult
 import com.github.adocker.ui.screens.home.HomeStats
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -125,48 +124,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Create a container
-    fun createContainer(
-        imageId: String,
-        name: String?,
-        config: ContainerConfig = ContainerConfig()
-    ) {
-        viewModelScope.launch {
-            containerManager.createContainer(imageId, name, config)
-                .onSuccess { container ->
-                    container.getInfo().onSuccess { entity ->
-                        _message.value = "Container created: ${entity.name}"
-                    }
-                }
-                .onFailure { e ->
-                    _error.value = "Create failed: ${e.message}"
-                }
-        }
-    }
 
-    // Run container (create and start)
-    fun runContainer(
-        imageId: String,
-        name: String?,
-        config: ContainerConfig = ContainerConfig()
-    ) {
-        viewModelScope.launch {
-            containerManager.createContainer(imageId, name, config)
-                .onSuccess { container ->
-                    try {
-                        container.start()
-                        container.getInfo().onSuccess { entity ->
-                            _message.value = "Container running: ${entity.name}"
-                        }
-                    } catch (e: Exception) {
-                        _error.value = "Run failed: ${e.message}"
-                    }
-                }
-                .onFailure { e ->
-                    _error.value = "Create failed: ${e.message}"
-                }
-        }
-    }
 
     // Clear error
     fun clearError() {

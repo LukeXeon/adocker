@@ -57,9 +57,6 @@ fun ContainerCard(
             .fillMaxWidth()
             .animateContentSize()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = Spacing.ExtraSmall
-        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )

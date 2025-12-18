@@ -3,13 +3,14 @@ package com.github.adocker.ui.screens.containers
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.containers.ContainerManager
+import com.github.adocker.daemon.registry.model.ContainerConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ContainersViewModel @Inject constructor(
-    containerManager: ContainerManager,
+    private val containerManager: ContainerManager,
 ) : ViewModel() {
 
     val containers = containerManager.allContainers
@@ -32,6 +33,49 @@ class ContainersViewModel @Inject constructor(
     fun startContainer(containerId: String) {
         viewModelScope.launch {
             containers.value[containerId]?.start()
+        }
+    }
+
+    // Create a container
+    fun createContainer(
+        imageId: String,
+        name: String?,
+        config: ContainerConfig = ContainerConfig()
+    ) {
+        viewModelScope.launch {
+            containerManager.createContainer(imageId, name, config)
+//                .onSuccess { container ->
+//                    container.getInfo().onSuccess { entity ->
+//                        _message.value = "Container created: ${entity.name}"
+//                    }
+//                }
+//                .onFailure { e ->
+//                    _error.value = "Create failed: ${e.message}"
+//                }
+        }
+    }
+
+    // Run container (create and start)
+    fun runContainer(
+        imageId: String,
+        name: String?,
+        config: ContainerConfig = ContainerConfig()
+    ) {
+        viewModelScope.launch {
+            containerManager.createContainer(imageId, name, config)
+//                .onSuccess { container ->
+//                    try {
+//                        container.start()
+//                        container.getInfo().onSuccess { entity ->
+//                            _message.value = "Container running: ${entity.name}"
+//                        }
+//                    } catch (e: Exception) {
+//                        _error.value = "Run failed: ${e.message}"
+//                    }
+//                }
+//                .onFailure { e ->
+//                    _error.value = "Create failed: ${e.message}"
+//                }
         }
     }
 }

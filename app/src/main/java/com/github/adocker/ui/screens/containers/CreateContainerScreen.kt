@@ -12,26 +12,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
-import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.registry.model.ContainerConfig
-import com.github.adocker.ui.viewmodel.MainViewModel
+import com.github.adocker.ui.screens.images.ImagesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateContainerScreen(
     imageId: String,
-    viewModel: MainViewModel,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val images by viewModel.images.collectAsState()
-    val image = remember(images, imageId) { (images as? List<ImageEntity>)?.find { it.id == imageId } }
-    val error by viewModel.error.collectAsState()
-    val message by viewModel.message.collectAsState()
+    val imagesViewModel = hiltViewModel<ImagesViewModel>()
+    val containersViewModel = hiltViewModel<ContainersViewModel>()
+    val images by imagesViewModel.images.collectAsState()
+    val image = remember(images, imageId) { images.find { it.id == imageId } }
+//    val error by viewModel.error.collectAsState()
+//    val message by viewModel.message.collectAsState()
 
     var containerName by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
@@ -40,24 +40,23 @@ fun CreateContainerScreen(
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(error) {
-        error?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
-        }
-    }
-
-    LaunchedEffect(message) {
-        message?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessage()
-            if (it.contains("created") || it.contains("running")) {
-                onNavigateBack()
-            }
-        }
-    }
+//
+//    LaunchedEffect(error) {
+//        error?.let {
+//            snackbarHostState.showSnackbar(it)
+//            viewModel.clearError()
+//        }
+//    }
+//
+//    LaunchedEffect(message) {
+//        message?.let {
+//            snackbarHostState.showSnackbar(it)
+//            viewModel.clearMessage()
+//            if (it.contains("created") || it.contains("running")) {
+//                onNavigateBack()
+//            }
+//        }
+//    }
 
     Scaffold(
         topBar = {
@@ -65,12 +64,15 @@ fun CreateContainerScreen(
                 title = { Text(stringResource(R.string.create_container_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+//        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { padding ->
         if (image == null) {
@@ -129,7 +131,12 @@ fun CreateContainerScreen(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.create_container_name_label)) },
                     placeholder = { Text(stringResource(R.string.create_container_name_placeholder)) },
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Label,
+                            contentDescription = null
+                        )
+                    },
                     singleLine = true
                 )
 
@@ -208,20 +215,23 @@ fun CreateContainerScreen(
                 Button(
                     onClick = {
                         val config = ContainerConfig(
-                            cmd = if (command.isNotBlank()) command.split(" ") else listOf("/bin/sh"),
+                            cmd = if (command.isNotBlank()) {
+                                command.split(" ")
+                            } else {
+                                listOf("/bin/sh")
+                            },
                             workingDir = workingDir.ifBlank { "/" },
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
                         )
-
                         if (autoStart) {
-                            viewModel.runContainer(
+                            containersViewModel.runContainer(
                                 imageId = imageId,
                                 name = containerName.ifBlank { null },
                                 config = config
                             )
                         } else {
-                            viewModel.createContainer(
+                            containersViewModel.createContainer(
                                 imageId = imageId,
                                 name = containerName.ifBlank { null },
                                 config = config
@@ -236,7 +246,15 @@ fun CreateContainerScreen(
                         modifier = Modifier.size(IconSize.Small)
                     )
                     Spacer(modifier = Modifier.width(Spacing.Small))
-                    Text(stringResource(if (autoStart) R.string.action_run else R.string.create_container_button))
+                    Text(
+                        stringResource(
+                            if (autoStart) {
+                                R.string.action_run
+                            } else {
+                                R.string.create_container_button
+                            }
+                        )
+                    )
                 }
             }
         }
