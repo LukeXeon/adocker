@@ -1,7 +1,9 @@
 package com.github.adocker.daemon.os
 
+import android.os.DeadObjectException
 import android.os.ParcelFileDescriptor
 import android.os.RemoteException
+import timber.log.Timber
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -31,8 +33,11 @@ class RemoteProcess(
     }
 
     override fun exitValue(): Int {
-        try {
-            return session.exitValue()
+        return try {
+            session.exitValue()
+        } catch (e: DeadObjectException) {
+            Timber.e(e)
+            -1
         } catch (e: RemoteException) {
             throw RuntimeException(e)
         }
@@ -42,7 +47,7 @@ class RemoteProcess(
         try {
             return session.destroy()
         } catch (e: RemoteException) {
-            throw RuntimeException(e)
+            Timber.e(e)
         }
     }
 
@@ -57,8 +62,9 @@ class RemoteProcess(
     override fun isAlive(): Boolean {
         try {
             return session.isAlive
-        } catch (e: RemoteException) {
-            throw RuntimeException(e)
+        } catch (e: Exception) {
+            Timber.e(e)
+            return false
         }
     }
 }
