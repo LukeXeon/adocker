@@ -25,7 +25,7 @@ object OsModule {
             return@map { stream: Any ->
                 field.runCatching {
                     get(stream)
-                }.map {
+                }.mapCatching {
                     it as FileOutputStream
                 }.map {
                     it.fd
