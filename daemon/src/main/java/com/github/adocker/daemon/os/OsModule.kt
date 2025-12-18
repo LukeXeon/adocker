@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import timber.log.Timber
+import java.io.FileDescriptor
 import java.io.FileOutputStream
 import java.io.FilterOutputStream
 import javax.inject.Singleton
@@ -16,23 +17,13 @@ import javax.inject.Singleton
 object OsModule {
     @Provides
     @Singleton
-    fun waiter(): ProcessWaiter {
+    fun awaiter(): ProcessAwaiter {
         runCatching {
             FilterOutputStream::class.java.getDeclaredField("out").apply {
                 isAccessible = true
             }
-        }.map { field ->
-            return@map { stream: Any ->
-                field.runCatching {
-                    get(stream)
-                }.mapCatching {
-                    it as FileOutputStream
-                }.map {
-                    it.fd
-                }
-            }
         }.fold(
-            {
+            { field ->
                 val queue = Class.forName("android.app.QueuedWork")
                     .getDeclaredMethod(
                         "getHandler"
@@ -43,10 +34,20 @@ object OsModule {
                         Timber.d(e)
                     }.map { h -> h.looper }
                     .getOrElse { Looper.getMainLooper() }.queue
-                return ProcessWaiter.NonBlocking(it, queue)
+                return object : ProcessAwaiter.NonBlocking(queue) {
+                    override fun getFileDescriptor(stream: Any): Result<FileDescriptor> {
+                        return field.runCatching {
+                            get(stream)
+                        }.mapCatching {
+                            it as FileOutputStream
+                        }.mapCatching {
+                            it.fd
+                        }
+                    }
+                }
             },
             {
-                return ProcessWaiter.Blocking
+                return ProcessAwaiter.Blocking
             }
         )
     }

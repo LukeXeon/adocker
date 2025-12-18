@@ -10,11 +10,11 @@ import timber.log.Timber
 import java.io.FileDescriptor
 import kotlin.coroutines.resume
 
-sealed interface ProcessWaiter {
-    suspend fun waitFor(process: Process): Int
+sealed interface ProcessAwaiter {
+    suspend fun await(process: Process): Int
 
-    object Blocking : ProcessWaiter {
-        override suspend fun waitFor(process: Process): Int {
+    object Blocking : ProcessAwaiter {
+        override suspend fun await(process: Process): Int {
             return withContext(Dispatchers.IO) {
                 runInterruptible {
                     process.waitFor()
@@ -23,11 +23,10 @@ sealed interface ProcessWaiter {
         }
     }
 
-    class NonBlocking(
-        private val getFileDescriptor: (Any) -> Result<FileDescriptor>,
+    abstract class NonBlocking(
         private val queue: MessageQueue
-    ) : ProcessWaiter {
-        override suspend fun waitFor(process: Process): Int {
+    ) : ProcessAwaiter {
+        override suspend fun await(process: Process): Int {
             suspendCancellableCoroutine { con ->
                 getFileDescriptor(process.outputStream).fold(
                     { fd ->
@@ -59,10 +58,12 @@ sealed interface ProcessWaiter {
                 )
             }
             return if (process.isAlive) {
-                Blocking.waitFor(process)
+                Blocking.await(process)
             } else {
                 process.exitValue()
             }
         }
+
+        abstract fun getFileDescriptor(stream: Any): Result<FileDescriptor>
     }
 }

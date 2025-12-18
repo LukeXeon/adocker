@@ -42,38 +42,36 @@ class TimberLogger(private val tag: String) : LegacyAbstractLogger() {
             messagePattern ?: ""
         }
 
-        val finalMessage = message
-
         // Use Timber's logging methods with throwable support
         when (level) {
             Level.TRACE -> if (throwable != null) {
                 Timber.tag(tag).v(throwable)
             } else {
-                Timber.tag(tag).v(finalMessage)
+                Timber.tag(tag).v(message)
             }
 
             Level.DEBUG -> if (throwable != null) {
                 Timber.tag(tag).d(throwable)
             } else {
-                Timber.tag(tag).d(finalMessage)
+                Timber.tag(tag).d(message)
             }
 
             Level.INFO -> if (throwable != null) {
                 Timber.tag(tag).i(throwable)
             } else {
-                Timber.tag(tag).i(finalMessage)
+                Timber.tag(tag).i(message)
             }
 
             Level.WARN -> if (throwable != null) {
                 Timber.tag(tag).w(throwable)
             } else {
-                Timber.tag(tag).w(finalMessage)
+                Timber.tag(tag).w(message)
             }
 
             Level.ERROR -> if (throwable != null) {
                 Timber.tag(tag).e(throwable)
             } else {
-                Timber.tag(tag).e(finalMessage)
+                Timber.tag(tag).e(message)
             }
         }
     }

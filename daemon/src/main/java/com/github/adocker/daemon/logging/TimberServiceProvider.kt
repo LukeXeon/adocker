@@ -9,6 +9,7 @@ import org.slf4j.helpers.NOPMDCAdapter
 import org.slf4j.spi.MDCAdapter
 import org.slf4j.spi.SLF4JServiceProvider
 import java.util.concurrent.ConcurrentHashMap
+import java.util.function.Function
 
 /**
  * SLF4J 2.0 ServiceProvider implementation for Android
@@ -22,22 +23,16 @@ import java.util.concurrent.ConcurrentHashMap
 class TimberServiceProvider : BasicMarkerFactory(),
     SLF4JServiceProvider,
     ILoggerFactory,
-    MDCAdapter by NOPMDCAdapter() {
-
-    companion object {
-        /**
-         * Declare the version of the SLF4J API this implementation is compiled against.
-         * The value of this field is modified with each major release.
-         */
-        const val REQUESTED_API_VERSION = "2.0.99"
-    }
-
+    MDCAdapter by NOPMDCAdapter(),
+    Function<String, Logger> {
     private val loggers = ConcurrentHashMap<String, Logger>()
 
     override fun getLogger(name: String): Logger {
-        return loggers.computeIfAbsent(name) { loggerName ->
-            TimberLogger(loggerName)
-        }
+        return loggers.computeIfAbsent(name, this)
+    }
+
+    override fun apply(loggerName: String): Logger {
+        return TimberLogger(loggerName)
     }
 
     override fun getLoggerFactory(): ILoggerFactory = this
@@ -46,8 +41,14 @@ class TimberServiceProvider : BasicMarkerFactory(),
 
     override fun getMDCAdapter(): MDCAdapter = this
 
-    override fun getRequestedApiVersion(): String = REQUESTED_API_VERSION
+    /**
+     * Declare the version of the SLF4J API this implementation is compiled against.
+     * The value of this field is modified with each major release.
+     */
+    override fun getRequestedApiVersion(): String = "2.0.99"
 
     override fun initialize() {
     }
+
+
 }

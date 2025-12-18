@@ -14,11 +14,11 @@ class JobProcess @AssistedInject constructor(
     @Assisted
     private val process: Process,
     scope: CoroutineScope,
-    waiter: ProcessWaiter,
+    awaiter: ProcessAwaiter,
 ) {
     val job = scope.async {
         try {
-            waiter.waitFor(process)
+            awaiter.await(process)
         } catch (e: CancellationException) {
             process.destroy()
             process.waitFor()

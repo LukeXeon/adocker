@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
@@ -51,7 +52,9 @@ class Container @AssistedInject constructor(
         return try {
             Result.success(
                 stateMachine.state.inState<ContainerState.Running>().execute {
-                    val process = CompletableDeferred<JobProcess>()
+                    val process = CompletableDeferred<JobProcess>(
+                        currentCoroutineContext()[Job]
+                    )
                     stateMachine.dispatch(
                         ContainerOperation.Exec(
                             command,

@@ -9,9 +9,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -35,7 +33,7 @@ class PRootEngine @Inject constructor(
     private val appContext: AppContext,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
-    private val factory: JobProcess.Factory
+    private val factory: JobProcess.Factory,
 ) {
     private val nativeLibDir = appContext.nativeLibDir
 
@@ -44,16 +42,25 @@ class PRootEngine @Inject constructor(
      * */
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
-    val isAvailable: Boolean
-
-    val version: String?
-
-    init {
+    val version = run {
         val startTime = SystemClock.elapsedRealtimeNanos()
         Timber.d("PRootEngine initialization started")
+        val prootVersion = loadVersion()
+        val elapsedNanos = SystemClock.elapsedRealtimeNanos() - startTime
+        val elapsedMs = elapsedNanos / 1_000_000.0
+        Timber.d(
+            "PRootEngine initialization completed in %.2fms (isAvailable=$isAvailable, version=$prootVersion)".format(
+                elapsedMs
+            )
+        )
+        return@run prootVersion
+    }
+    val isAvailable: Boolean
+        get() {
+            return !version.isNullOrEmpty()
+        }
 
-        var prootAvailable = false
-        var prootVersion: String? = null
+    private fun loadVersion(): String? {
         when {
             !prootBinary.canExecute() -> {
                 Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
@@ -77,13 +84,14 @@ class PRootEngine @Inject constructor(
                         environment = env,
                         redirectErrorStream = false
                     )
+
                     val (code, outputs) = runBlocking {
                         val jobs = sequenceOf(
                             process.inputStream,
                             process.errorStream
                         ).map { stream ->
                             async(Dispatchers.IO) {
-                                BufferedReader(InputStreamReader(stream)).useLines { lines ->
+                                stream.bufferedReader().useLines { lines ->
                                     val builder = StringBuilder()
                                     lines.forEach { builder.appendLine(it) }
                                     return@useLines builder
@@ -93,29 +101,20 @@ class PRootEngine @Inject constructor(
                         process.waitFor() to jobs.awaitAll()
                     }
                     val (stdout, stderr) = outputs
-                    prootAvailable = code == 0 || stdout.contains("proot", ignoreCase = true)
-                    if (!prootAvailable) {
+                    val available = code == 0 || stdout.contains("proot", ignoreCase = true)
+                    if (!available) {
                         Timber.w("PRoot check failed. Exit code: ${code}, stdout: ${stdout}, stderr: $stderr")
                     } else {
                         Timber.d("PRoot available. Version output:\n $stdout")
                     }
-                    prootVersion = parseVersion(stdout)
+                    return parseVersion(stdout)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to get PRoot version")
                     Timber.e(e, "PRoot availability check failed with exception")
                 }
             }
         }
-        isAvailable = prootAvailable
-        version = prootVersion
-
-        val elapsedNanos = SystemClock.elapsedRealtimeNanos() - startTime
-        val elapsedMs = elapsedNanos / 1_000_000.0
-        Timber.d(
-            "PRootEngine initialization completed in %.2fms (isAvailable=$isAvailable, version=$prootVersion)".format(
-                elapsedMs
-            )
-        )
+        return null
     }
 
     /**
