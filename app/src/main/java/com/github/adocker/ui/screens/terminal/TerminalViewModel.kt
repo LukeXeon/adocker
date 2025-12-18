@@ -93,7 +93,7 @@ class TerminalViewModel @Inject constructor(
         viewModelScope.launch {
             val containers = containerManager.containers.value
             val container = containers[containerId]
-            container?.getInfo()?.onSuccess { entity ->
+            container?.getMetadata()?.onSuccess { entity ->
                 _container.value = entity
             }
         }

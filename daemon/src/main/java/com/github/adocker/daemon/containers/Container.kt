@@ -69,7 +69,7 @@ class Container @AssistedInject constructor(
         }
     }
 
-    suspend fun getInfo(): Result<ContainerEntity> {
+    suspend fun getMetadata(): Result<ContainerEntity> {
         val entity = containerDao.getContainerById(containerId)
         return if (entity != null) {
             Result.success(entity)

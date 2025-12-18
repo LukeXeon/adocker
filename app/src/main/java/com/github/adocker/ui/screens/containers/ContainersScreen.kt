@@ -1,13 +1,38 @@
 package com.github.adocker.ui.screens.containers
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterListOff
+import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -16,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.Container
-import com.github.adocker.ui.components.ContainerCard
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 
@@ -99,81 +123,85 @@ fun ContainersScreen(
             }
         }
 
-        if (containers.isEmpty()) {
-            // Empty state
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+        when {
+            containers.isEmpty() -> {
+                // Empty state
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ViewInAr,
-                        contentDescription = null,
-                        modifier = Modifier.size(IconSize.Huge),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.Medium))
-                    Text(
-                        text = stringResource(R.string.containers_empty),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.Small))
-                    Text(
-                        text = stringResource(R.string.containers_empty_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ViewInAr,
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.Huge),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.Medium))
+                        Text(
+                            text = stringResource(R.string.containers_empty),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.Small))
+                        Text(
+                            text = stringResource(R.string.containers_empty_subtitle),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
-        } else if (filteredContainers.isEmpty()) {
-            // No results for filter
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+            filteredContainers.isEmpty() -> {
+                // No results for filter
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.FilterListOff,
-                        contentDescription = null,
-                        modifier = Modifier.size(IconSize.ExtraLarge),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.Medium))
-                    Text(
-                        text = stringResource(R.string.containers_filter_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterListOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(IconSize.ExtraLarge),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.Medium))
+                        Text(
+                            text = stringResource(R.string.containers_filter_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentPadding = PaddingValues(
-                    start = Spacing.ScreenPadding,
-                    top = Spacing.Medium,
-                    end = Spacing.ScreenPadding,
-                    bottom = Spacing.Medium
-                ),
-                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-            ) {
-                items(filteredContainers, key = { it.containerId }) { container ->
-                    ContainerCard(
-                        container = container,
-                        onStart = { viewModel.startContainer(container.containerId) },
-                        onStop = { viewModel.stopContainer(container.containerId) },
-                        onDelete = { showDeleteDialog = container },
-                        onTerminal = { onNavigateToTerminal(container.containerId) },
-                        onClick = { onNavigateToDetail(container.containerId) }
-                    )
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(
+                        start = Spacing.ScreenPadding,
+                        top = Spacing.Medium,
+                        end = Spacing.ScreenPadding,
+                        bottom = Spacing.Medium
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+                ) {
+                    items(filteredContainers, key = { it.containerId }) { container ->
+                        ContainerCard(
+                            container = container,
+                            onStart = { viewModel.startContainer(container.containerId) },
+                            onStop = { viewModel.stopContainer(container.containerId) },
+                            onDelete = { showDeleteDialog = container },
+                            onTerminal = { onNavigateToTerminal(container.containerId) },
+                            onClick = { onNavigateToDetail(container.containerId) }
+                        )
+                    }
                 }
             }
         }
@@ -184,7 +212,7 @@ fun ContainersScreen(
         var containerName by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(container) {
-            container.getInfo().onSuccess { entity ->
+            container.getMetadata().onSuccess { entity ->
                 containerName = entity.name
             }
         }

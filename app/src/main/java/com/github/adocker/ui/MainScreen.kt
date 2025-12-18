@@ -4,40 +4,50 @@ import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.rememberLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.whenCreated
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.components.PhantomProcessWarningDialog
 import com.github.adocker.ui.navigation.Screen
 import com.github.adocker.ui.navigation.bottomNavItems
 import com.github.adocker.ui.screens.containers.ContainerDetailScreen
 import com.github.adocker.ui.screens.containers.ContainersScreen
+import com.github.adocker.ui.screens.containers.ContainersViewModel
 import com.github.adocker.ui.screens.containers.CreateContainerScreen
 import com.github.adocker.ui.screens.discover.DiscoverScreen
 import com.github.adocker.ui.screens.home.HomeScreen
 import com.github.adocker.ui.screens.images.ImageDetailScreen
 import com.github.adocker.ui.screens.images.ImagesScreen
+import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
 import com.github.adocker.ui.screens.settings.MirrorSettingsScreen
 import com.github.adocker.ui.screens.settings.PhantomProcessScreen
+import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
 import com.github.adocker.ui.screens.settings.SettingsScreen
 import com.github.adocker.ui.screens.terminal.TerminalScreen
-import com.github.adocker.ui.viewmodel.MainViewModel
-import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
 import com.github.adocker.ui.screens.terminal.TerminalViewModel
+import com.github.adocker.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -275,7 +285,6 @@ fun MainScreen() {
                 val imageId = backStackEntry.arguments?.getString("imageId") ?: return@composable
                 CreateContainerScreen(
                     imageId = imageId,
-                    viewModel = mainViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     }
@@ -321,8 +330,11 @@ fun MainScreen() {
             ) { backStackEntry ->
                 val containerId =
                     backStackEntry.arguments?.getString("containerId") ?: return@composable
+                val containersViewModel = hiltViewModel<ContainersViewModel>()
+                val container =
+                    containersViewModel.containers.value[containerId] ?: return@composable
                 ContainerDetailScreen(
-                    containerId = containerId,
+                    container = container,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
