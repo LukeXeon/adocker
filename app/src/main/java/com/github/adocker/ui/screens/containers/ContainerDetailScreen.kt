@@ -70,10 +70,6 @@ fun ContainerDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val info = containerInfo
-    if (info == null) {
-        onNavigateBack()
-        return
-    }
 
     Scaffold(
         topBar = {
@@ -134,76 +130,81 @@ fun ContainerDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Status badge
-            StatusChip(state = containerState)
+            if (info != null) {
+                // Status badge
+                StatusChip(state = containerState)
 
-            // Basic Information Card
-            DetailCard(title = stringResource(R.string.common_basic_info)) {
-                DetailRow(label = stringResource(R.string.common_name), value = info.name)
-                DetailRow(label = stringResource(R.string.common_id), value = info.id)
-                DetailRow(label = stringResource(R.string.container_image), value = info.imageName)
-                DetailRow(
-                    label = stringResource(R.string.container_status),
-                    value = containerState::class.simpleName ?: ""
-                )
-                DetailRow(
-                    label = stringResource(R.string.container_created),
-                    value = formatDate(info.createdAt)
-                )
-            }
-
-            // Configuration Card
-            DetailCard(title = stringResource(R.string.common_config)) {
-                if (info.config.cmd.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.container_command),
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                    Text(
-                        text = info.config.cmd.joinToString(" "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                if (info.config.workingDir.isNotEmpty()) {
+                // Basic Information Card
+                DetailCard(title = stringResource(R.string.common_basic_info)) {
+                    DetailRow(label = stringResource(R.string.common_name), value = info.name)
+                    DetailRow(label = stringResource(R.string.common_id), value = info.id)
                     DetailRow(
-                        label = stringResource(R.string.container_working_dir),
-                        value = info.config.workingDir
+                        label = stringResource(R.string.container_image),
+                        value = info.imageName
                     )
-                }
-
-                if (info.config.hostname.isNotEmpty()) {
                     DetailRow(
-                        label = stringResource(R.string.container_hostname),
-                        value = info.config.hostname
+                        label = stringResource(R.string.container_status),
+                        value = containerState::class.simpleName ?: ""
+                    )
+                    DetailRow(
+                        label = stringResource(R.string.container_created),
+                        value = formatDate(info.createdAt)
                     )
                 }
-            }
 
-            // Environment Variables Card
-            if (info.config.env.isNotEmpty()) {
-                DetailCard(title = stringResource(R.string.container_env_vars)) {
-                    info.config.env.forEach { (key, value) ->
+                // Configuration Card
+                DetailCard(title = stringResource(R.string.common_config)) {
+                    if (info.config.cmd.isNotEmpty()) {
                         Text(
-                            text = "$key=$value",
+                            text = stringResource(R.string.container_command),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            text = info.config.cmd.joinToString(" "),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    if (info.config.workingDir.isNotEmpty()) {
+                        DetailRow(
+                            label = stringResource(R.string.container_working_dir),
+                            value = info.config.workingDir
+                        )
+                    }
+
+                    if (info.config.hostname.isNotEmpty()) {
+                        DetailRow(
+                            label = stringResource(R.string.container_hostname),
+                            value = info.config.hostname
                         )
                     }
                 }
-            }
 
-            // Volume Mounts Card
-            if (info.config.binds.isNotEmpty()) {
-                DetailCard(title = stringResource(R.string.container_volumes)) {
-                    info.config.binds.forEach { bind ->
-                        Text(
-                            text = "${bind.hostPath} -> ${bind.containerPath}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                // Environment Variables Card
+                if (info.config.env.isNotEmpty()) {
+                    DetailCard(title = stringResource(R.string.container_env_vars)) {
+                        info.config.env.forEach { (key, value) ->
+                            Text(
+                                text = "$key=$value",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                // Volume Mounts Card
+                if (info.config.binds.isNotEmpty()) {
+                    DetailCard(title = stringResource(R.string.container_volumes)) {
+                        info.config.binds.forEach { bind ->
+                            Text(
+                                text = "${bind.hostPath} -> ${bind.containerPath}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -211,7 +212,7 @@ fun ContainerDetailScreen(
     }
 
     // Delete confirmation dialog
-    if (showDeleteDialog) {
+    if (showDeleteDialog && info != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Default.Delete, contentDescription = null) },
