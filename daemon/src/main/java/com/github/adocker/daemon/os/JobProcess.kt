@@ -15,7 +15,13 @@ class JobProcess @AssistedInject constructor(
     private val process: Process,
     scope: CoroutineScope,
     awaiter: ProcessAwaiter,
+    locator: ProcessLocator
 ) {
+
+    val pid by lazy {
+        locator.getPid(process)
+    }
+
     val job = scope.async {
         try {
             awaiter.await(process)

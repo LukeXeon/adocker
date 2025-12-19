@@ -83,4 +83,8 @@ class RemoteProcessSession(
     override fun isAlive(): Boolean {
         return process.isAlive
     }
+
+    override fun toString(): String {
+        return process.toString()
+    }
 }

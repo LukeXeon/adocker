@@ -67,4 +67,12 @@ class RemoteProcess(
             return false
         }
     }
+
+    override fun toString(): String {
+        try {
+            return session.toString()
+        } catch (e: RemoteException) {
+            throw RuntimeException(e)
+        }
+    }
 }

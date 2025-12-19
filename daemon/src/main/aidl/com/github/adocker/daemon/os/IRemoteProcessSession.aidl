@@ -17,4 +17,6 @@ interface IRemoteProcessSession {
     void destroy() = 6;
 
     boolean isAlive() = 7;
+
+    String toString() = 8;
 }

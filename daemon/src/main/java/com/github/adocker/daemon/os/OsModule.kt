@@ -51,4 +51,29 @@ object OsModule {
             }
         )
     }
+
+    @Provides
+    @Singleton
+    fun locator(): ProcessLocator {
+        Runtime.getRuntime().runCatching {
+            exec("sh").apply {
+                destroy()
+            }.javaClass.getDeclaredField("pid").apply {
+                isAccessible = true
+            }
+        }.fold(
+            { field ->
+                return object : ProcessLocator.Reflection() {
+                    override fun getField(process: Process): Int {
+                        return field.runCatching {
+                            getInt(process)
+                        }.getOrDefault(0)
+                    }
+                }
+            },
+            {
+                return ProcessLocator.Parser
+            }
+        )
+    }
 }
