@@ -9,72 +9,54 @@ import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.io.getDirectorySize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val prootEngine: PRootEngine,
     private val appContext: AppContext,
-    @ApplicationContext val context: Context,
+    @param:ApplicationContext val context: Context,
 ) : ViewModel() {
-
     private val _storageUsage = MutableStateFlow<Long?>(null)
     val storageUsage: StateFlow<Long?> = _storageUsage.asStateFlow()
-
-    private val _prootVersion = MutableStateFlow<String?>(null)
-    val prootVersion: StateFlow<String?> = _prootVersion.asStateFlow()
-
-    val architecture = AppContext.Companion.ARCHITECTURE
-    val baseDir: String = appContext.baseDir.absolutePath
+    val prootVersion: String?
+        get() {
+            return prootEngine.version
+        }
 
     init {
-        loadSettings()
+        viewModelScope.launch {
+            loadStorageUsage()
+        }
     }
 
-    private fun loadSettings() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                _storageUsage.value = getDirectorySize(appContext.baseDir)
-                _prootVersion.value = prootEngine.version
-            }
-        }
+    suspend fun loadStorageUsage() {
+        _storageUsage.value = getDirectorySize(appContext.baseDir)
     }
 
     val packageInfo: PackageInfo
         get() = appContext.packageInfo
 
-    fun clearAllData(onComplete: () -> Unit) {
+    fun clearAllData(onComplete: suspend () -> Unit) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                // Clear containers
-                appContext.containersDir.deleteRecursively()
-                appContext.containersDir.mkdirs()
+            // Clear containers
+            appContext.containersDir.deleteRecursively()
+            appContext.containersDir.mkdirs()
 
-                // Clear layers
-                appContext.layersDir.deleteRecursively()
-                appContext.layersDir.mkdirs()
+            // Clear layers
+            appContext.layersDir.deleteRecursively()
+            appContext.layersDir.mkdirs()
 
-                // Clear temp
-                appContext.tmpDir.deleteRecursively()
-                appContext.tmpDir.mkdirs()
+            // Clear temp
+            appContext.tmpDir.deleteRecursively()
+            appContext.tmpDir.mkdirs()
 
-                _storageUsage.value = getDirectorySize(appContext.baseDir)
-            }
+            _storageUsage.value = getDirectorySize(appContext.baseDir)
             onComplete()
-        }
-    }
-
-    fun refreshStorageUsage() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                _storageUsage.value = getDirectorySize(appContext.baseDir)
-            }
         }
     }
 }

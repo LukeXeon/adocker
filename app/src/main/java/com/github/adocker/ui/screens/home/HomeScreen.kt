@@ -63,7 +63,7 @@ fun HomeScreen(
     val settingsViewModel = hiltViewModel<SettingsViewModel>()
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val stats by homeViewModel.stats.collectAsState()
-    val prootVersion by settingsViewModel.prootVersion.collectAsState()
+    val prootVersion = settingsViewModel.prootVersion
 
     var showPullDialog by remember { mutableStateOf(false) }
 

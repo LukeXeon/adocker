@@ -1,14 +1,12 @@
 package com.github.adocker.daemon.os
 
 import android.os.ParcelFileDescriptor
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
-@OptIn(DelicateCoroutinesApi::class)
 class RemoteProcessSession(
+    scope: CoroutineScope,
     cmd: Array<String>,
     env: Array<String>,
     dir: String?
@@ -24,7 +22,7 @@ class RemoteProcessSession(
     )
     private val output by lazy {
         val (read, write) = ParcelFileDescriptor.createReliablePipe()
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             process.outputStream.use { output ->
                 ParcelFileDescriptor.AutoCloseInputStream(read).use { input ->
                     input.copyTo(output)
@@ -35,7 +33,7 @@ class RemoteProcessSession(
     }
     private val input by lazy {
         val (read, write) = ParcelFileDescriptor.createReliablePipe()
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
                 process.inputStream.use { input ->
                     input.copyTo(output)
@@ -46,7 +44,7 @@ class RemoteProcessSession(
     }
     private val error by lazy {
         val (read, write) = ParcelFileDescriptor.createReliablePipe()
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             ParcelFileDescriptor.AutoCloseOutputStream(write).use { output ->
                 process.errorStream.use { input ->
                     input.copyTo(output)
