@@ -4,8 +4,6 @@ import com.github.adocker.daemon.database.dao.MirrorDao
 import com.github.adocker.daemon.database.model.MirrorEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -84,18 +82,11 @@ class RegistryRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get all mirrors (built-in + custom) for display in UI
-     */
-    suspend fun getAllMirrors(): List<MirrorEntity> {
-        ensureInitialized()
-        return mirrorDao.getAllMirrors().first()
-    }
 
     /**
      * Get all mirrors flow for observing changes in UI
      */
-    fun getAllMirrorsFlow(): Flow<List<MirrorEntity>> {
+    fun getAllMirrors(): Flow<List<MirrorEntity>> {
         return mirrorDao.getAllMirrors()
     }
 

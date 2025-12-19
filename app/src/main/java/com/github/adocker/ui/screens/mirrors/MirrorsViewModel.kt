@@ -1,4 +1,4 @@
-package com.github.adocker.ui.screens.settings
+package com.github.adocker.ui.screens.mirrors
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,23 +14,21 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @HiltViewModel
-class MirrorSettingsViewModel @Inject constructor(
+class MirrorsViewModel @Inject constructor(
     private val registrySettings: RegistryRepository,
-    private val healthChecker: MirrorHealthChecker,
-    val json: Json,
+    healthChecker: MirrorHealthChecker,
 ) : ViewModel() {
 
-    val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrorsFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(5000),
-            initialValue = RegistryRepository.Companion.BUILT_IN_MIRRORS
-        )
+    val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrors().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = RegistryRepository.BUILT_IN_MIRRORS
+    )
 
     val isCheckingHealth: StateFlow<Boolean> = healthChecker.isChecking
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = false
         )
 
@@ -38,7 +36,7 @@ class MirrorSettingsViewModel @Inject constructor(
     val checkingMirrors: StateFlow<Set<String>> = healthChecker.checkingMirrors
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(5000),
+            started = SharingStarted.Lazily,
             initialValue = emptySet()
         )
 
