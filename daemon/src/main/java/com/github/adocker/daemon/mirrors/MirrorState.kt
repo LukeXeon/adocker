@@ -1,0 +1,28 @@
+package com.github.adocker.daemon.mirrors
+
+sealed interface MirrorState {
+    val id: String
+
+    data class Unhealthy(
+        override val id: String,
+    ) : MirrorState
+
+    data class Checking(
+        override val id: String,
+        val failures: Int
+    ) : MirrorState
+
+    data class Healthy(
+        override val id: String,
+        val latencyMs: Long,
+        val failures: Int
+    ) : MirrorState
+
+    data class Deleting(
+        override val id: String,
+    ) : MirrorState
+
+    data class Deleted(
+        override val id: String,
+    ) : MirrorState
+}

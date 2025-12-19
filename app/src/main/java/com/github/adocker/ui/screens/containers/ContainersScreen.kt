@@ -192,14 +192,14 @@ fun ContainersScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
-                    items(filteredContainers, key = { it.containerId }) { container ->
+                    items(filteredContainers, key = { it.id }) { container ->
                         ContainerCard(
                             container = container,
-                            onStart = { viewModel.startContainer(container.containerId) },
-                            onStop = { viewModel.stopContainer(container.containerId) },
+                            onStart = { viewModel.startContainer(container.id) },
+                            onStop = { viewModel.stopContainer(container.id) },
                             onDelete = { showDeleteDialog = container },
-                            onTerminal = { onNavigateToTerminal(container.containerId) },
-                            onClick = { onNavigateToDetail(container.containerId) }
+                            onTerminal = { onNavigateToTerminal(container.id) },
+                            onClick = { onNavigateToDetail(container.id) }
                         )
                     }
                 }
@@ -225,14 +225,14 @@ fun ContainersScreen(
                 Text(
                     stringResource(
                         R.string.containers_delete_confirm_message,
-                        containerName ?: container.containerId
+                        containerName ?: container.id
                     )
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteContainer(container.containerId)
+                        viewModel.deleteContainer(container.id)
                         showDeleteDialog = null
                     },
                     colors = ButtonDefaults.textButtonColors(

@@ -151,7 +151,7 @@ fun ContainerCard(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = containerInfo?.name ?: container.containerId.take(12),
+                            text = containerInfo?.name ?: container.id.take(12),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
@@ -160,7 +160,7 @@ fun ContainerCard(
                         )
                         Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
                         Text(
-                            text = container.containerId.take(12),
+                            text = container.id.take(12),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = FontFamily.Monospace

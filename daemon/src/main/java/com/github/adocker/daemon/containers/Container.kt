@@ -32,8 +32,8 @@ class Container @AssistedInject constructor(
     )
     private val stateMachine = stateMachineFactory.create(initialState).launchIn(scope)
 
-    val containerId
-        get() = state.value.containerId
+    val id
+        get() = state.value.id
 
     val state
         get() = stateMachine.state
@@ -70,11 +70,11 @@ class Container @AssistedInject constructor(
     }
 
     suspend fun getMetadata(): Result<ContainerEntity> {
-        val entity = containerDao.getContainerById(containerId)
+        val entity = containerDao.getContainerById(id)
         return if (entity != null) {
             Result.success(entity)
         } else {
-            Result.failure(NoSuchElementException("Container not found: $containerId"))
+            Result.failure(NoSuchElementException("Container not found: $id"))
         }
     }
 

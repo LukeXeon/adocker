@@ -86,7 +86,7 @@ fun ContainerDetailScreen(
                 actions = {
                     // Terminal button (only for running containers)
                     if (containerState is ContainerState.Running) {
-                        IconButton(onClick = { onNavigateToTerminal(container.containerId) }) {
+                        IconButton(onClick = { onNavigateToTerminal(container.id) }) {
                             Icon(
                                 Icons.Default.Terminal,
                                 contentDescription = stringResource(R.string.action_terminal)
@@ -95,14 +95,14 @@ fun ContainerDetailScreen(
                     }
                     // Start/Stop button
                     if (containerState is ContainerState.Running) {
-                        IconButton(onClick = { viewModel.stopContainer(container.containerId) }) {
+                        IconButton(onClick = { viewModel.stopContainer(container.id) }) {
                             Icon(
                                 Icons.Default.Stop,
                                 contentDescription = stringResource(R.string.action_stop)
                             )
                         }
                     } else {
-                        IconButton(onClick = { viewModel.startContainer(container.containerId) }) {
+                        IconButton(onClick = { viewModel.startContainer(container.id) }) {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 contentDescription = stringResource(R.string.action_start)
@@ -223,7 +223,7 @@ fun ContainerDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteContainer(container.containerId)
+                        viewModel.deleteContainer(container.id)
                         showDeleteDialog = false
                         onNavigateBack()
                     },

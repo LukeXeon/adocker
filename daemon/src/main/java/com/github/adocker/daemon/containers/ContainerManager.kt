@@ -40,7 +40,7 @@ class ContainerManager @Inject constructor(
                     loadContainer(it).onFailure { e ->
                         Timber.e(e)
                     }.getOrNull()
-                }.associateBy { it.containerId }
+                }.associateBy { it.id }
             }
         }
     }

@@ -39,12 +39,12 @@ class ContainerStateMachine @AssistedInject constructor(
             inState<ContainerState.Created> {
                 on<ContainerOperation.Start> {
                     override {
-                        ContainerState.Starting(containerId)
+                        ContainerState.Starting(id)
                     }
                 }
                 on<ContainerOperation.Remove> {
                     override {
-                        ContainerState.Removing(containerId)
+                        ContainerState.Removing(id)
                     }
                 }
             }
@@ -79,25 +79,25 @@ class ContainerStateMachine @AssistedInject constructor(
                 on<ContainerOperation.Start> {
                     override {
                         ContainerState.Starting(
-                            containerId
+                            id
                         )
                     }
                 }
                 on<ContainerOperation.Remove> {
                     override {
-                        ContainerState.Removing(containerId)
+                        ContainerState.Removing(id)
                     }
                 }
             }
             inState<ContainerState.Removing> {
                 onEnter {
-                    removeContainer(snapshot.containerId)
+                    removeContainer(snapshot.id)
                 }
             }
             inState<ContainerState.Dead> {
                 on<ContainerOperation.Remove> {
                     override {
-                        ContainerState.Removing(containerId)
+                        ContainerState.Removing(id)
                     }
                 }
             }
@@ -105,8 +105,8 @@ class ContainerStateMachine @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Starting>.startContainer(): ChangedState<ContainerState> {
-        val containerId = snapshot.containerId
-        val config = containerDao.getContainerById(snapshot.containerId)?.config
+        val containerId = snapshot.id
+        val config = containerDao.getContainerById(snapshot.id)?.config
         return if (config == null) {
             override {
                 ContainerState.Dead(
@@ -170,7 +170,7 @@ class ContainerStateMachine @AssistedInject constructor(
             it.cancel()
         }.joinAll()
         return override {
-            ContainerState.Exited(containerId)
+            ContainerState.Exited(id)
         }
     }
 
@@ -208,7 +208,7 @@ class ContainerStateMachine @AssistedInject constructor(
     private fun ChangeableState<ContainerState.Running>.toStoping(): ChangedState<ContainerState> {
         return override {
             ContainerState.Stopping(
-                containerId,
+                id,
                 buildList(childProcesses.size + 1) {
                     add(mainProcess.job)
                     addAll(childProcesses.asSequence().map { it.job })
@@ -218,8 +218,8 @@ class ContainerStateMachine @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Running>.execCommand(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
-        val containerId = snapshot.containerId
-        val config = containerDao.getContainerById(snapshot.containerId)?.config
+        val containerId = snapshot.id
+        val config = containerDao.getContainerById(snapshot.id)?.config
         return if (config == null) {
             exec.process.completeExceptionally(
                 IllegalStateException("Container not found: $containerId")

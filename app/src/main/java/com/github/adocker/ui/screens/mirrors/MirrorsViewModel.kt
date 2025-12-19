@@ -3,20 +3,17 @@ package com.github.adocker.ui.screens.mirrors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.database.model.MirrorEntity
-import com.github.adocker.daemon.registry.MirrorHealthChecker
-import com.github.adocker.daemon.registry.RegistryRepository
+import com.github.adocker.daemon.mirrors.MirrorManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 @HiltViewModel
 class MirrorsViewModel @Inject constructor(
-    private val registrySettings: RegistryRepository,
-    healthChecker: MirrorHealthChecker,
+    private val mirrorManager: MirrorManager
 ) : ViewModel() {
 
     val allMirrors: StateFlow<List<MirrorEntity>> = registrySettings.getAllMirrors().stateIn(

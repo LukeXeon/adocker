@@ -36,7 +36,6 @@ import javax.inject.Singleton
  */
 @Singleton
 class DockerRegistryApi @Inject constructor(
-    private val registrySettings: RegistryRepository,
     private val json: Json,
     private val client: HttpClient,
 ) {
@@ -56,7 +55,7 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun authenticate(
         repository: String,
-        registry: String = AppContext.Companion.DEFAULT_REGISTRY
+        registry: String = AppContext.DEFAULT_REGISTRY
     ): Result<String> = runCatching {
         Timber.d("Authenticating for repository: $repository, registry: $registry")
 
@@ -79,7 +78,7 @@ class DockerRegistryApi @Inject constructor(
             Timber.d("Ping response status: ${pingResponse.status}")
 
             // If 200 OK, no auth needed (shouldn't happen but handle it)
-            if (pingResponse.status == HttpStatusCode.Companion.OK) {
+            if (pingResponse.status == HttpStatusCode.OK) {
                 Timber.i("Registry allows anonymous access")
                 authToken = ""
                 tokenExpiry = System.currentTimeMillis() + 3600000
@@ -132,7 +131,7 @@ class DockerRegistryApi @Inject constructor(
      */
     suspend fun getManifest(
         imageRef: ImageReference,
-        architecture: String = AppContext.Companion.ARCHITECTURE
+        architecture: String = AppContext.ARCHITECTURE
     ): Result<ImageManifestV2> = runCatching {
         val registry = getRegistryUrl(imageRef.registry)
 
@@ -170,7 +169,7 @@ class DockerRegistryApi @Inject constructor(
                 val manifestList: ManifestListResponse = json.decodeFromString(bodyText)
                 val platformManifest = manifestList.manifests?.find { manifest ->
                     manifest.platform?.architecture == architecture &&
-                            manifest.platform.os == AppContext.Companion.DEFAULT_OS
+                            manifest.platform.os == AppContext.DEFAULT_OS
                 } ?: manifestList.manifests?.firstOrNull()
                 ?: throw Exception("No suitable manifest found for $architecture")
 
@@ -261,7 +260,7 @@ class DockerRegistryApi @Inject constructor(
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
                 timeout {
-                    requestTimeoutMillis = AppContext.Companion.DOWNLOAD_TIMEOUT
+                    requestTimeoutMillis = AppContext.DOWNLOAD_TIMEOUT
                 }
             }.execute { response ->
                 Timber.d("Layer download response status: ${response.status}")
@@ -271,7 +270,7 @@ class DockerRegistryApi @Inject constructor(
                 destFile.parentFile?.mkdirs()
                 FileOutputStream(destFile).use { fos ->
                     val channel: ByteReadChannel = response.body()
-                    val buffer = ByteArray(AppContext.Companion.DOWNLOAD_BUFFER_SIZE)
+                    val buffer = ByteArray(AppContext.DOWNLOAD_BUFFER_SIZE)
                     while (!channel.isClosedForRead) {
                         val bytesRead = channel.readAvailable(buffer)
                         if (bytesRead > 0) {
@@ -329,33 +328,4 @@ class DockerRegistryApi @Inject constructor(
         return registrySettings.getRegistryUrl(registry)
     }
 
-    /**
-     * Execute operation with automatic retry across healthy mirrors
-     */
-    private suspend fun <T> executeWithRetry(
-        operation: suspend (registryUrl: String) -> T
-    ): T {
-        val healthyMirrors = registrySettings.getHealthyMirrors()
-        val fallbackUrl = RegistryRepository.DOCKER_HUB_URL
-
-        // Try each healthy mirror
-        for (mirror in healthyMirrors) {
-            try {
-                Timber.d("Trying mirror: ${mirror.name} (${mirror.url})")
-                return operation(mirror.url)
-            } catch (e: Exception) {
-                Timber.w(e, "Mirror ${mirror.name} failed, trying next...")
-                continue
-            }
-        }
-
-        // All mirrors failed, try Docker Hub as fallback
-        try {
-            Timber.w("All mirrors failed, trying Docker Hub fallback")
-            return operation(fallbackUrl)
-        } catch (e: Exception) {
-            Timber.e(e, "Docker Hub fallback also failed")
-            throw e
-        }
-    }
 }
