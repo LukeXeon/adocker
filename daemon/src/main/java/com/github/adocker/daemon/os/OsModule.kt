@@ -61,6 +61,8 @@ object OsModule {
             }.javaClass.getDeclaredField("pid").apply {
                 isAccessible = true
             }
+        }.onFailure { e ->
+            Timber.d(e)
         }.fold(
             { field ->
                 return object : ProcessLocator.Reflection() {

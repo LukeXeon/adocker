@@ -18,5 +18,5 @@ interface IRemoteProcessSession {
 
     boolean isAlive() = 7;
 
-    String toString() = 8;
+    String toStringInternal() = 8;
 }
