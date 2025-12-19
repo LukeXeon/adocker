@@ -28,14 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.adocker.R
-import com.github.adocker.daemon.database.model.MirrorEntity
+import com.github.adocker.daemon.mirrors.Mirror
 import com.github.adocker.ui.theme.Spacing
 
 @Composable
 fun MirrorCard(
-    mirror: MirrorEntity,
-    isChecking: Boolean,
-    onDelete: (() -> Unit)?
+    mirror: Mirror,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

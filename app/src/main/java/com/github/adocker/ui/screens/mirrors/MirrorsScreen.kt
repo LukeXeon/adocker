@@ -48,6 +48,7 @@ import com.github.adocker.daemon.app.AppGlobals
 import com.github.adocker.daemon.database.model.MirrorEntity
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.theme.Spacing
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,8 +63,7 @@ fun MirrorsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val mirrors by viewModel.allMirrors.collectAsState()
-    val checkingMirrors by viewModel.checkingMirrors.collectAsState()
+    val mirrors by viewModel.mirrors.map { it.values.toList() }.collectAsState(emptyList())
 
     // Handle scanned mirror data
     LaunchedEffect(scannedMirrorData) {
@@ -89,7 +89,7 @@ fun MirrorsScreen(
     }
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var mirrorToDelete by remember { mutableStateOf<MirrorEntity?>(null) }
+    var mirrorToDelete by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -146,13 +146,10 @@ fun MirrorsScreen(
                 )
             }
 
-            items(mirrors, key = { it.url }) { mirror ->
+            items(mirrors, key = { it.id }) { mirror ->
                 MirrorCard(
                     mirror = mirror,
-                    isChecking = checkingMirrors.contains(mirror.url),
-                    onDelete = if (!mirror.isBuiltIn) {
-                        { mirrorToDelete = mirror }
-                    } else null
+                    onDelete = { mirrorToDelete = mirror.id }
                 )
             }
 
