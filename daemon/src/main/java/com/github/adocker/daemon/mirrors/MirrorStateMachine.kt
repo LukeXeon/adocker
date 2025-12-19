@@ -19,13 +19,14 @@ import kotlin.system.measureTimeMillis
 @OptIn(ExperimentalCoroutinesApi::class)
 class MirrorStateMachine @AssistedInject constructor(
     @Assisted
-    initialState: MirrorState,
+    id: String,
     private val mirrorDao: MirrorDao,
     private val client: HttpClient,
     private val mirrorManager: MirrorManager,
 ) : FlowReduxStateMachineFactory<MirrorState, MirrorOperation>() {
+
     init {
-        initializeWith { initialState }
+        initializeWith { MirrorState.Checking(id, 0) }
         spec {
             inState<MirrorState.Unhealthy> {
                 on<MirrorOperation.Check> {
@@ -58,10 +59,7 @@ class MirrorStateMachine @AssistedInject constructor(
             }
             inState<MirrorState.Deleting> {
                 onEnter {
-                    mirrorManager.removeMirror(snapshot.id)
-                    override {
-                        MirrorState.Deleted(id)
-                    }
+                    removeMirror()
                 }
             }
         }
@@ -95,7 +93,7 @@ class MirrorStateMachine @AssistedInject constructor(
                         Timber.w("Mirror ${mirror.name} marked as unhealthy after $failures failures")
                         MirrorState.Unhealthy(id)
                     } else {
-                        MirrorState.Healthy(id, -1, failures + 1)
+                        MirrorState.Healthy(id, Long.MIN_VALUE, failures + 1)
                     }
                 }
             }
@@ -103,6 +101,13 @@ class MirrorStateMachine @AssistedInject constructor(
             return override {
                 MirrorState.Deleted(id)
             }
+        }
+    }
+
+    private suspend fun ChangeableState<MirrorState.Deleting>.removeMirror(): ChangedState<MirrorState> {
+        mirrorManager.removeMirror(snapshot.id)
+        return override {
+            MirrorState.Deleted(id)
         }
     }
 
@@ -115,7 +120,7 @@ class MirrorStateMachine @AssistedInject constructor(
     interface Factory {
         fun create(
             @Assisted
-            initialState: MirrorState
+            id: String,
         ): MirrorStateMachine
     }
 }

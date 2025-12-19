@@ -1,8 +1,11 @@
 package com.github.adocker.daemon.registry
 
 import com.github.adocker.daemon.app.AppContext
+import com.github.adocker.daemon.database.dao.MirrorDao
 import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.images.ImageReference
+import com.github.adocker.daemon.mirrors.MirrorManager
+import com.github.adocker.daemon.mirrors.MirrorState
 import com.github.adocker.daemon.registry.model.AuthTokenResponse
 import com.github.adocker.daemon.registry.model.ImageConfigResponse
 import com.github.adocker.daemon.registry.model.ImageManifestV2
@@ -38,6 +41,8 @@ import javax.inject.Singleton
 class DockerRegistryApi @Inject constructor(
     private val json: Json,
     private val client: HttpClient,
+    private val mirrorDao: MirrorDao,
+    private val mirrorManager: MirrorManager
 ) {
 
     private var authToken: String? = null
@@ -61,7 +66,7 @@ class DockerRegistryApi @Inject constructor(
 
         try {
             // Check if this specific registry URL has a Bearer Token configured
-            val bearerToken = registrySettings.getBearerToken(registry)
+            val bearerToken = mirrorDao.getBearerTokenByUrl(registry)
             if (!bearerToken.isNullOrEmpty()) {
                 Timber.i("Using configured Bearer Token for registry: $registry")
                 authToken = bearerToken
@@ -324,8 +329,42 @@ class DockerRegistryApi @Inject constructor(
         response.tags
     }
 
-    private suspend fun getRegistryUrl(registry: String): String {
-        return registrySettings.getRegistryUrl(registry)
+
+    private suspend fun getBestMirror(): String {
+        return mirrorManager.mirrors.value.values.mapNotNull {
+            it.getMetadata().mapCatching { data ->
+                data to it.state.value as MirrorState.Healthy
+            }.getOrNull()
+        }.asSequence().sortedWith { a, b ->
+            val c = b.second.compareTo(b.second)
+            if (c == 0) {
+                b.first.priority.compareTo(a.first.priority)
+            } else {
+                c
+            }
+        }.map {
+            it.first.url
+        }.firstOrNull() ?: AppContext.DEFAULT_REGISTRY
+    }
+
+    /**
+     * Get registry URL for pulling images
+     * For Docker Hub, automatically selects best mirror
+     * For other registries, returns the original URL
+     */
+    private suspend fun getRegistryUrl(originalRegistry: String): String {
+        return when {
+            // Docker Hub - use best available mirror
+            originalRegistry == "docker.io"
+                    || originalRegistry == "registry-1.docker.io"
+                    || originalRegistry.contains(
+                "docker.io"
+            ) -> getBestMirror()
+
+            // Other registries - use as-is
+            originalRegistry.startsWith("http") -> originalRegistry
+            else -> "https://$originalRegistry"
+        }
     }
 
 }

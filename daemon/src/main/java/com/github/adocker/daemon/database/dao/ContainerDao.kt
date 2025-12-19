@@ -24,7 +24,6 @@ interface ContainerDao {
     @Update
     suspend fun updateContainer(container: ContainerEntity)
 
-
     @Query("DELETE FROM containers WHERE id = :id")
     suspend fun deleteContainerById(id: String)
 

@@ -11,17 +11,14 @@ interface MirrorDao {
     @Query("SELECT id FROM registry_mirrors")
     suspend fun getAllMirrorIds(): List<String>
 
-//    @Query("SELECT * FROM registry_mirrors WHERE url = :url")
-//    suspend fun getMirrorByUrl(url: String): MirrorEntity?
-
     @Query("SELECT * FROM registry_mirrors WHERE id = :id")
     suspend fun getMirrorById(id: String): MirrorEntity?
 
-//    @Query("SELECT * FROM registry_mirrors WHERE isHealthy = 1 ORDER BY latencyMs ASC, priority DESC")
-//    suspend fun getHealthyMirrors(): List<MirrorEntity>
+    @Query("SELECT * FROM registry_mirrors WHERE id = :id")
+    suspend fun getMirrorByUrl(id: String): MirrorEntity?
 
-//    @Query("SELECT * FROM registry_mirrors WHERE isHealthy = 1 ORDER BY latencyMs ASC, priority DESC LIMIT 1")
-//    suspend fun getBestMirror(): MirrorEntity?
+    @Query("SELECT bearerToken FROM registry_mirrors WHERE url = :url")
+    suspend fun getBearerTokenByUrl(url: String): String?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMirror(mirror: MirrorEntity)

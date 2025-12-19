@@ -9,9 +9,8 @@ import com.github.adocker.daemon.registry.model.ContainerConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -28,20 +27,17 @@ class ContainerManager @Inject constructor(
     private val containerName: ContainerName,
     scope: CoroutineScope,
 ) {
-    private val mutex = Mutex()
     private val _containers = MutableStateFlow<Map<String, Container>>(emptyMap())
 
     val containers = _containers.asStateFlow()
 
     init {
         scope.launch {
-            mutex.withLock {
-                _containers.value = containerDao.getAllContainerIds().mapNotNull {
-                    loadContainer(it).onFailure { e ->
-                        Timber.e(e)
-                    }.getOrNull()
-                }.associateBy { it.id }
-            }
+            _containers.value = containerDao.getAllContainerIds().mapNotNull {
+                loadContainer(it).onFailure { e ->
+                    Timber.e(e)
+                }.getOrNull()
+            }.associateBy { it.id }
         }
     }
 
@@ -69,9 +65,9 @@ class ContainerManager @Inject constructor(
     }
 
     internal suspend fun removeContainer(containerId: String) {
-        mutex.withLock {
-            containerDao.deleteContainerById(containerId)
-            _containers.value -= containerId
+        containerDao.deleteContainerById(containerId)
+        _containers.update {
+            it - containerId
         }
     }
 
@@ -156,12 +152,12 @@ class ContainerManager @Inject constructor(
             imageName = "${image.repository}:${image.tag}",
             config = mergedConfig
         )
-        mutex.withLock {
-            containerDao.insertContainer(entity)
-            val container = factory.create(ContainerState.Created(containerId))
-            _containers.value += containerId to container
-            return Result.success(container)
+        containerDao.insertContainer(entity)
+        val container = factory.create(ContainerState.Created(containerId))
+        _containers.update {
+            it + (containerId to container)
         }
+        return Result.success(container)
     }
 }
 

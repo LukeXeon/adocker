@@ -15,7 +15,7 @@ import javax.inject.Singleton
 
 class Mirror @AssistedInject constructor(
     @Assisted
-    initialState: MirrorState,
+    id: String,
     stateMachineFactory: MirrorStateMachine.Factory,
     parent: CoroutineScope,
     private val mirrorDao: MirrorDao,
@@ -24,7 +24,7 @@ class Mirror @AssistedInject constructor(
         SupervisorJob(parent.coroutineContext[Job]) + Dispatchers.IO
     )
 
-    private val stateMachine = stateMachineFactory.create(initialState).launchIn(scope)
+    private val stateMachine = stateMachineFactory.create(id).launchIn(scope)
 
     init {
         scope.launch {
@@ -65,7 +65,7 @@ class Mirror @AssistedInject constructor(
     interface Factory {
         fun create(
             @Assisted
-            initialState: MirrorState
+            id: String,
         ): Mirror
     }
 }

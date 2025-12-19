@@ -16,7 +16,20 @@ sealed interface MirrorState {
         override val id: String,
         val latencyMs: Long,
         val failures: Int
-    ) : MirrorState
+    ) : MirrorState, Comparable<Healthy> {
+        override fun compareTo(other: Healthy): Int {
+            if (this == other) {
+                return 0
+            } else {
+                val c = latencyMs.compareTo(other.latencyMs)
+                return if (c == 0) {
+                    failures.compareTo(other.failures)
+                } else {
+                    c
+                }
+            }
+        }
+    }
 
     data class Deleting(
         override val id: String,

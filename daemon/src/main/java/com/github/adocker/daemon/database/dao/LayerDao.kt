@@ -14,9 +14,6 @@ interface LayerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLayer(layer: LayerEntity)
 
-    @Query("UPDATE layers SET downloaded = :downloaded WHERE digest = :digest")
-    suspend fun updateLayerDownloaded(digest: String, downloaded: Boolean)
-
     @Query("UPDATE layers SET refCount = refCount + 1 WHERE digest = :digest")
     suspend fun incrementRefCount(digest: String)
 
