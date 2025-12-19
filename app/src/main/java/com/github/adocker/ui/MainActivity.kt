@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.github.adocker.ui.screens.main.MainScreen
 import com.github.adocker.ui.theme.ADockerTheme
 import dagger.hilt.android.AndroidEntryPoint
 

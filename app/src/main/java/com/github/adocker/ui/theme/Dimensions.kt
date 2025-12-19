@@ -48,24 +48,3 @@ object IconSize {
     val ExtraLarge = 48.dp
     val Huge = 64.dp
 }
-
-object ComponentSize {
-    // Button heights
-    val ButtonSmall = 32.dp
-    val ButtonMedium = 40.dp
-    val ButtonLarge = 48.dp
-
-    // TextField heights
-    val TextFieldSmall = 40.dp
-    val TextFieldMedium = 56.dp
-
-    // Card minimum heights
-    val CardMinHeight = 72.dp
-    val StatCardMinHeight = 100.dp
-
-    // Divider thickness
-    val DividerThickness = 1.dp
-
-    // StatusIndicator size
-    val StatusIndicatorSize = 12.dp
-}

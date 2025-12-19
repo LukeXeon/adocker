@@ -19,7 +19,6 @@ import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
 import com.github.adocker.ui.screens.images.ImagesViewModel
-import com.github.adocker.ui.viewmodel.MainViewModel
 
 @Composable
 fun PullImageDialog(

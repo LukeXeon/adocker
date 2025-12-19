@@ -53,12 +53,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import com.github.adocker.ui.theme.Spacing
-import com.github.adocker.ui.theme.IconSize
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
-import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
-import androidx.core.net.toUri
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,7 +173,10 @@ fun PhantomProcessScreen(
                             status = when {
                                 uiState.isChecking -> stringResource(R.string.status_loading)
                                 uiState.phantomKillerDisabled -> stringResource(R.string.phantom_disabled)
-                                else -> stringResource(R.string.phantom_active, uiState.currentLimit ?: "32")
+                                else -> stringResource(
+                                    R.string.phantom_active,
+                                    uiState.currentLimit ?: "32"
+                                )
                             },
                             isGood = uiState.phantomKillerDisabled,
                             icon = Icons.Default.Block
@@ -324,7 +326,9 @@ fun PhantomProcessScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 OutlinedButton(
-                                    onClick = { viewModel.enablePhantomKiller() },
+                                    onClick = {
+
+                                    },
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = !uiState.isProcessing
                                 ) {

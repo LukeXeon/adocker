@@ -1,15 +1,35 @@
-package com.github.adocker.ui.navigation
+package com.github.adocker.ui.screens.main
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.ViewInAr
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.adocker.R
 
 sealed class Screen(
     val route: String,
-    @StringRes val titleResId: Int,
+    @param:StringRes val titleResId: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {

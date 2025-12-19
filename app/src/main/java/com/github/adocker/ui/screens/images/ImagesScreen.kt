@@ -20,7 +20,6 @@ import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui.components.ImageCard
 import com.github.adocker.ui.components.PullImageDialog
 import com.github.adocker.ui.components.PullProgressDialog
-import com.github.adocker.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

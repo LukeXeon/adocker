@@ -1,6 +1,5 @@
-package com.github.adocker.ui
+package com.github.adocker.ui.screens.main
 
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -14,10 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -28,9 +24,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.github.adocker.ui.components.PhantomProcessWarningDialog
-import com.github.adocker.ui.navigation.Screen
-import com.github.adocker.ui.navigation.bottomNavItems
 import com.github.adocker.ui.screens.containers.ContainerDetailScreen
 import com.github.adocker.ui.screens.containers.ContainersScreen
 import com.github.adocker.ui.screens.containers.ContainersViewModel
@@ -43,69 +36,22 @@ import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
 import com.github.adocker.ui.screens.settings.MirrorSettingsScreen
 import com.github.adocker.ui.screens.settings.PhantomProcessScreen
-import com.github.adocker.ui.screens.settings.PhantomProcessViewModel
 import com.github.adocker.ui.screens.settings.SettingsScreen
 import com.github.adocker.ui.screens.terminal.TerminalScreen
 import com.github.adocker.ui.screens.terminal.TerminalViewModel
-import com.github.adocker.ui.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val scope = rememberCoroutineScope()
     // Check if we should show bottom navigation
     val showBottomBar = remember(currentDestination) {
         bottomNavItems.any { screen ->
             currentDestination?.hierarchy?.any { it.route == screen.route } == true
         }
     }
-
     val mainViewModel = hiltViewModel<MainViewModel>()
-    val phantomViewModel = hiltViewModel<PhantomProcessViewModel>()
-
-    // Phantom process warning state
-    var showPhantomWarning by remember { mutableStateOf(false) }
-    var hasCheckedPhantomProcess by remember { mutableStateOf(false) }
-
-    // Observe phantom process UI state
-    val phantomUiState by phantomViewModel.uiState.collectAsState()
-
-    // Check phantom process restrictions on first launch
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !hasCheckedPhantomProcess) {
-            scope.launch {
-                phantomViewModel.checkStatus()
-                hasCheckedPhantomProcess = true
-            }
-        }
-    }
-
-    // Show warning if phantom killer is not disabled and shizuku permission granted
-    LaunchedEffect(phantomUiState) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            phantomUiState.shizukuPermissionGranted &&
-            !phantomUiState.phantomKillerDisabled &&
-            !phantomUiState.isChecking &&
-            hasCheckedPhantomProcess
-        ) {
-            showPhantomWarning = true
-        }
-    }
-
-    // Show warning dialog
-    if (showPhantomWarning) {
-        PhantomProcessWarningDialog(
-            onDismiss = { showPhantomWarning = false },
-            onNavigateToSettings = {
-                showPhantomWarning = false
-                navController.navigate(Screen.PhantomProcess.route)
-            }
-        )
-    }
-
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
@@ -158,7 +104,7 @@ fun MainScreen() {
 
             // Discover
             composable(Screen.Discover.route) {
-                DiscoverScreen(viewModel = mainViewModel)
+                DiscoverScreen()
             }
 
             // Containers
@@ -303,7 +249,6 @@ fun MainScreen() {
                 val imageId = backStackEntry.arguments?.getString("imageId") ?: return@composable
                 ImageDetailScreen(
                     imageId = imageId,
-                    viewModel = mainViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
