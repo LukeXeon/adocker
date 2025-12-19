@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.github.adocker.daemon.registry.model.ImageConfig
+import com.github.adocker.daemon.client.model.ImageConfig
 import java.util.UUID
 
 /**

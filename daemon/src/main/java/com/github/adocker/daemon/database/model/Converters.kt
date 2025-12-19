@@ -2,8 +2,8 @@ package com.github.adocker.daemon.database.model
 
 import androidx.room.TypeConverter
 import com.github.adocker.daemon.app.AppGlobals
-import com.github.adocker.daemon.registry.model.ContainerConfig
-import com.github.adocker.daemon.registry.model.ImageConfig
+import com.github.adocker.daemon.client.model.ContainerConfig
+import com.github.adocker.daemon.client.model.ImageConfig
 
 class Converters {
     /**

@@ -8,8 +8,8 @@ import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.io.copyDirectory
 import com.github.adocker.daemon.io.extractTar
 import com.github.adocker.daemon.io.getDirectorySize
-import com.github.adocker.daemon.registry.DockerRegistryApi
-import com.github.adocker.daemon.registry.model.ImageConfig
+import com.github.adocker.daemon.client.DockerRegistryClient
+import com.github.adocker.daemon.client.model.ImageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -31,7 +31,7 @@ import javax.inject.Singleton
 class ImageRepository @Inject constructor(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
-    private val registryApi: DockerRegistryApi,
+    private val registryApi: DockerRegistryClient,
     private val appContext: AppContext
 ) {
     /**

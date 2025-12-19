@@ -3,7 +3,7 @@ package com.github.adocker.ui.screens.containers
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.containers.ContainerManager
-import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.client.model.ContainerConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

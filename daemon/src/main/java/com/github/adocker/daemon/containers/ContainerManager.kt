@@ -5,7 +5,7 @@ import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.io.extractTarGz
-import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.client.model.ContainerConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

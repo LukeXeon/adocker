@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.R
-import com.github.adocker.daemon.registry.model.SearchResult
+import com.github.adocker.daemon.client.model.SearchResult
 
 @Composable
 fun SearchResultCard(

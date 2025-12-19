@@ -4,7 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.images.ImageRepository
 import com.github.adocker.daemon.images.PullStatus
-import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.client.model.ContainerConfig
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.delay

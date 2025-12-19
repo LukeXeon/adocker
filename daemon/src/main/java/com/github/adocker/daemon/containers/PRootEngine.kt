@@ -3,7 +3,7 @@ package com.github.adocker.daemon.containers
 import android.os.SystemClock
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.os.JobProcess
-import com.github.adocker.daemon.registry.model.ContainerConfig
+import com.github.adocker.daemon.client.model.ContainerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
