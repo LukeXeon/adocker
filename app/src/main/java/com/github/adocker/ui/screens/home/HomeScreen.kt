@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.ui.components.PullImageDialog
-import com.github.adocker.ui.components.StatCard
 import com.github.adocker.ui.screens.settings.SettingsViewModel
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing

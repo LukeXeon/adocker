@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ADockerTheme {
                 Surface(
-                    modifier = Modifier.Companion.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainScreen()

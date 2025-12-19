@@ -3,11 +3,14 @@ package com.github.adocker.ui.screens.main
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +56,9 @@ fun MainScreen() {
     }
     val mainViewModel = hiltViewModel<MainViewModel>()
     Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        ),
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
