@@ -1,7 +1,7 @@
-package com.github.adocker.daemon.mirrors
+package com.github.adocker.daemon.registries
 
-import com.github.adocker.daemon.database.dao.MirrorDao
-import com.github.adocker.daemon.database.model.MirrorEntity
+import com.github.adocker.daemon.database.dao.RegistryDao
+import com.github.adocker.daemon.database.model.RegistryEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -13,12 +13,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
-class Mirror @AssistedInject constructor(
+class Registry @AssistedInject constructor(
     @Assisted
     id: String,
-    stateMachineFactory: MirrorStateMachine.Factory,
+    stateMachineFactory: RegistryStateMachine.Factory,
     parent: CoroutineScope,
-    private val mirrorDao: MirrorDao,
+    private val registryDao: RegistryDao,
 ) {
     private val scope = CoroutineScope(
         SupervisorJob(parent.coroutineContext[Job]) + Dispatchers.IO
@@ -29,7 +29,7 @@ class Mirror @AssistedInject constructor(
     init {
         scope.launch {
             stateMachine.state.collect {
-                if (it is MirrorState.Deleted) {
+                if (it is RegistryState.Deleted) {
                     scope.cancel()
                 }
             }
@@ -42,23 +42,22 @@ class Mirror @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    suspend fun getMetadata(): Result<MirrorEntity> {
-        val entity = mirrorDao.getMirrorById(id)
+    suspend fun getMetadata(): Result<RegistryEntity> {
+        val entity = registryDao.getRegistryById(id)
         return if (entity != null) {
             Result.success(entity)
         } else {
-            Result.failure(NoSuchElementException("Mirror not found: $id"))
+            Result.failure(NoSuchElementException("Registry server not found: $id"))
         }
     }
 
     suspend fun check() {
-        stateMachine.dispatch(MirrorOperation.Check)
+        stateMachine.dispatch(RegistryOperation.Check)
     }
 
     suspend fun delete() {
-        stateMachine.dispatch(MirrorOperation.Delete)
+        stateMachine.dispatch(RegistryOperation.Delete)
     }
-
 
     @Singleton
     @AssistedFactory
@@ -66,6 +65,6 @@ class Mirror @AssistedInject constructor(
         fun create(
             @Assisted
             id: String,
-        ): Mirror
+        ): Registry
     }
 }

@@ -14,11 +14,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.app.AppGlobals
-import com.github.adocker.daemon.database.model.MirrorEntity
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.theme.Spacing
 import kotlinx.coroutines.flow.map
@@ -148,7 +143,7 @@ fun MirrorsScreen(
 
             items(mirrors, key = { it.id }) { mirror ->
                 MirrorCard(
-                    mirror = mirror,
+                    registry = mirror,
                     onDelete = { mirrorToDelete = mirror.id }
                 )
             }
@@ -197,33 +192,33 @@ fun MirrorsScreen(
     }
 
     // Delete confirmation dialog
-    mirrorToDelete?.let { mirror ->
-        AlertDialog(
-            onDismissRequest = { mirrorToDelete = null },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text(stringResource(R.string.mirror_settings_delete_title)) },
-            text = { Text(stringResource(R.string.mirror_settings_delete_message, mirror.name)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteCustomMirror(mirror)
-                        mirrorToDelete = null
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Mirror deleted")
-                        }
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.action_delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { mirrorToDelete = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
-    }
+//    mirrorToDelete?.let { mirror ->
+//        AlertDialog(
+//            onDismissRequest = { mirrorToDelete = null },
+//            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+//            title = { Text(stringResource(R.string.mirror_settings_delete_title)) },
+//            text = { Text(stringResource(R.string.mirror_settings_delete_message, mirror.name)) },
+//            confirmButton = {
+//                TextButton(
+//                    onClick = {
+//                        viewModel.deleteCustomMirror(mirror)
+//                        mirrorToDelete = null
+//                        scope.launch {
+//                            snackbarHostState.showSnackbar("Mirror deleted")
+//                        }
+//                    },
+//                    colors = ButtonDefaults.textButtonColors(
+//                        contentColor = MaterialTheme.colorScheme.error
+//                    )
+//                ) {
+//                    Text(stringResource(R.string.action_delete))
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { mirrorToDelete = null }) {
+//                    Text(stringResource(R.string.action_cancel))
+//                }
+//            }
+//        )
+//    }
 }

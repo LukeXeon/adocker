@@ -5,14 +5,15 @@ import com.github.adocker.daemon.client.model.AuthTokenResponse
 import com.github.adocker.daemon.client.model.ImageConfigResponse
 import com.github.adocker.daemon.client.model.ImageManifestV2
 import com.github.adocker.daemon.client.model.ManifestListResponse
+import com.github.adocker.daemon.client.model.RegistrySnapshot
 import com.github.adocker.daemon.client.model.SearchResponse
 import com.github.adocker.daemon.client.model.SearchResult
 import com.github.adocker.daemon.client.model.TagsListResponse
-import com.github.adocker.daemon.database.dao.MirrorDao
+import com.github.adocker.daemon.database.dao.RegistryDao
 import com.github.adocker.daemon.database.model.LayerEntity
 import com.github.adocker.daemon.images.ImageReference
-import com.github.adocker.daemon.mirrors.MirrorManager
-import com.github.adocker.daemon.mirrors.MirrorState
+import com.github.adocker.daemon.registries.RegistryManager
+import com.github.adocker.daemon.registries.RegistryState
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -41,8 +42,8 @@ import javax.inject.Singleton
 class DockerRegistryClient @Inject constructor(
     private val json: Json,
     private val client: HttpClient,
-    private val mirrorDao: MirrorDao,
-    private val mirrorManager: MirrorManager
+    private val registryDao: RegistryDao,
+    private val registryManager: RegistryManager
 ) {
 
     private var authToken: String? = null
@@ -66,7 +67,7 @@ class DockerRegistryClient @Inject constructor(
 
         try {
             // Check if this specific registry URL has a Bearer Token configured
-            val bearerToken = mirrorDao.getBearerTokenByUrl(registry)
+            val bearerToken = registryDao.getBearerTokenByUrl(registry)
             if (!bearerToken.isNullOrEmpty()) {
                 Timber.i("Using configured Bearer Token for registry: $registry")
                 authToken = bearerToken
@@ -329,22 +330,19 @@ class DockerRegistryClient @Inject constructor(
         response.tags
     }
 
-
-    private suspend fun getBestMirror(): String {
-        return mirrorManager.mirrors.value.values.mapNotNull {
-            it.getMetadata().mapCatching { data ->
-                data to it.state.value as MirrorState.Healthy
-            }.getOrNull()
-        }.asSequence().sortedWith { a, b ->
-            val c = b.second.compareTo(b.second)
-            if (c == 0) {
-                b.first.priority.compareTo(a.first.priority)
+    private suspend fun getBestRegistry(): String {
+        return registryManager.registries.value.values.mapNotNull {
+            val state = it.state.value
+            val metadata = it.getMetadata().getOrNull()
+            if (metadata != null && state is RegistryState.Healthy) {
+                RegistrySnapshot(
+                    metadata,
+                    state
+                )
             } else {
-                c
+                null
             }
-        }.map {
-            it.first.url
-        }.firstOrNull() ?: AppContext.DEFAULT_REGISTRY
+        }.minOrNull()?.metadata?.url ?: AppContext.DEFAULT_REGISTRY
     }
 
     /**
@@ -359,7 +357,7 @@ class DockerRegistryClient @Inject constructor(
                     || originalRegistry == "registry-1.docker.io"
                     || originalRegistry.contains(
                 "docker.io"
-            ) -> getBestMirror()
+            ) -> getBestRegistry()
 
             // Other registries - use as-is
             originalRegistry.startsWith("http") -> originalRegistry

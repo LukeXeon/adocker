@@ -41,4 +41,14 @@ class Converters {
     fun toImageConfig(value: String?): ImageConfig? {
         return value?.let { json.decodeFromString(it) }
     }
+
+    @TypeConverter
+    fun fromRegistryType(value: RegistryType): Int {
+        return value.ordinal
+    }
+
+    @TypeConverter
+    fun toRegistryType(value: Int): RegistryType {
+        return RegistryType.entries[value]
+    }
 }

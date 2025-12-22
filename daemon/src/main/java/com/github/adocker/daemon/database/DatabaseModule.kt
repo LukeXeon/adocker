@@ -5,7 +5,7 @@ import androidx.room.Room
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.dao.LayerDao
-import com.github.adocker.daemon.database.dao.MirrorDao
+import com.github.adocker.daemon.database.dao.RegistryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,8 +41,8 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun mirrorDao(database: AppDatabase): MirrorDao {
-        return database.mirrorDao()
+    fun mirrorDao(database: AppDatabase): RegistryDao {
+        return database.registryDao()
     }
 
     @Provides

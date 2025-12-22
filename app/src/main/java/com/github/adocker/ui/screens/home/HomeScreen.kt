@@ -1,8 +1,8 @@
 package com.github.adocker.ui.screens.home
 
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,7 +30,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -253,7 +252,7 @@ fun HomeScreen(
                         )
                         InfoRow(
                             label = stringResource(R.string.home_architecture),
-                            value = android.os.Build.SUPPORTED_ABIS.firstOrNull()
+                            value = Build.SUPPORTED_ABIS.firstOrNull()
                                 ?: stringResource(R.string.home_unknown),
                             icon = Icons.Default.Memory
                         )
@@ -264,7 +263,7 @@ fun HomeScreen(
                             label = stringResource(R.string.home_android_version),
                             value = stringResource(
                                 R.string.home_api_level,
-                                android.os.Build.VERSION.SDK_INT
+                                Build.VERSION.SDK_INT
                             ),
                             icon = Icons.Default.Android
                         )
@@ -282,102 +281,6 @@ fun HomeScreen(
                 showPullDialog = false
                 // Navigate to Discover tab would be handled at MainScreen level
             }
-        )
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = Spacing.ExtraSmall
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(Spacing.Medium),
-            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
-        ) {
-            // 图标 - 圆形背景
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
-                modifier = Modifier.size(IconSize.ExtraLarge)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(IconSize.Large)
-                    )
-                }
-            }
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Spacing.ExtraSmall)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(IconSize.Medium)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

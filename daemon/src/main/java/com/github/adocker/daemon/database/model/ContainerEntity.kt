@@ -4,10 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.github.adocker.daemon.client.model.ContainerConfig
-import kotlinx.serialization.Serializable
 import java.util.UUID
 
-@Serializable
 @Entity(tableName = "containers")
 @TypeConverters(Converters::class)
 data class ContainerEntity(

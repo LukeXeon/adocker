@@ -1,10 +1,10 @@
-package com.github.adocker.daemon.mirrors
+package com.github.adocker.daemon.registries
 
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
-import com.github.adocker.daemon.database.dao.MirrorDao
+import com.github.adocker.daemon.database.dao.RegistryDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -17,97 +17,97 @@ import javax.inject.Singleton
 import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MirrorStateMachine @AssistedInject constructor(
+class RegistryStateMachine @AssistedInject constructor(
     @Assisted
     id: String,
-    private val mirrorDao: MirrorDao,
+    private val registryDao: RegistryDao,
     private val client: HttpClient,
-    private val mirrorManager: MirrorManager,
-) : FlowReduxStateMachineFactory<MirrorState, MirrorOperation>() {
+    private val registryManager: RegistryManager,
+) : FlowReduxStateMachineFactory<RegistryState, RegistryOperation>() {
 
     init {
-        initializeWith { MirrorState.Checking(id, 0) }
+        initializeWith { RegistryState.Checking(id, 0) }
         spec {
-            inState<MirrorState.Unhealthy> {
-                on<MirrorOperation.Check> {
+            inState<RegistryState.Unhealthy> {
+                on<RegistryOperation.Check> {
                     override {
-                        MirrorState.Checking(id, UNHEALTHY_THRESHOLD)
+                        RegistryState.Checking(id, UNHEALTHY_THRESHOLD)
                     }
                 }
-                on<MirrorOperation.Delete> {
+                on<RegistryOperation.Delete> {
                     override {
-                        MirrorState.Deleting(id)
+                        RegistryState.Deleting(id)
                     }
                 }
             }
-            inState<MirrorState.Checking> {
+            inState<RegistryState.Checking> {
                 onEnter {
-                    checkMirror()
+                    checkServer()
                 }
             }
-            inState<MirrorState.Healthy> {
-                on<MirrorOperation.Check> {
+            inState<RegistryState.Healthy> {
+                on<RegistryOperation.Check> {
                     override {
-                        MirrorState.Checking(id, failures)
+                        RegistryState.Checking(id, failures)
                     }
                 }
-                on<MirrorOperation.Delete> {
+                on<RegistryOperation.Delete> {
                     override {
-                        MirrorState.Deleting(id)
+                        RegistryState.Deleting(id)
                     }
                 }
             }
-            inState<MirrorState.Deleting> {
+            inState<RegistryState.Deleting> {
                 onEnter {
-                    removeMirror()
+                    removeServer()
                 }
             }
         }
     }
 
-    private suspend fun ChangeableState<MirrorState.Checking>.checkMirror(): ChangedState<MirrorState> {
-        val mirror = mirrorDao.getMirrorById(snapshot.id)
-        if (mirror != null) {
+    private suspend fun ChangeableState<RegistryState.Checking>.checkServer(): ChangedState<RegistryState> {
+        val server = registryDao.getRegistryById(snapshot.id)
+        if (server != null) {
             try {
-                Timber.d("Checking health of mirror: ${mirror.name} (${mirror.url})")
+                Timber.d("Checking health of server: ${server.name} (${server.url})")
                 val latency = measureTimeMillis {
-                    val response = client.get("${mirror.url}/v2/")
+                    val response = client.get("${server.url}/v2/")
                     // Accept both OK and Unauthorized (401) as healthy
                     // 401 means the registry is responding but requires auth
                     if (response.status != HttpStatusCode.OK && response.status != HttpStatusCode.Unauthorized) {
                         throw Exception("Unexpected status code: ${response.status}")
                     }
                 }
-                Timber.i("Mirror ${mirror.name} is healthy (latency: ${latency}ms)")
+                Timber.i("Server ${server.name} is healthy (latency: ${latency}ms)")
                 return override {
-                    MirrorState.Healthy(
+                    RegistryState.Healthy(
                         id = id,
                         latencyMs = latency,
                         failures = 0
                     )
                 }
             } catch (e: Exception) {
-                Timber.w(e, "Mirror ${mirror.name} health check failed: ${e.message}")
+                Timber.w(e, "Server ${server.name} health check failed: ${e.message}")
                 return override {
                     if (failures >= UNHEALTHY_THRESHOLD) {
-                        Timber.w("Mirror ${mirror.name} marked as unhealthy after $failures failures")
-                        MirrorState.Unhealthy(id)
+                        Timber.w("Server ${server.name} marked as unhealthy after $failures failures")
+                        RegistryState.Unhealthy(id)
                     } else {
-                        MirrorState.Healthy(id, Long.MIN_VALUE, failures + 1)
+                        RegistryState.Healthy(id, Long.MAX_VALUE, failures + 1)
                     }
                 }
             }
         } else {
             return override {
-                MirrorState.Deleted(id)
+                RegistryState.Deleted(id)
             }
         }
     }
 
-    private suspend fun ChangeableState<MirrorState.Deleting>.removeMirror(): ChangedState<MirrorState> {
-        mirrorManager.removeMirror(snapshot.id)
+    private suspend fun ChangeableState<RegistryState.Deleting>.removeServer(): ChangedState<RegistryState> {
+        registryManager.removeServer(snapshot.id)
         return override {
-            MirrorState.Deleted(id)
+            RegistryState.Deleted(id)
         }
     }
 
@@ -121,6 +121,6 @@ class MirrorStateMachine @AssistedInject constructor(
         fun create(
             @Assisted
             id: String,
-        ): MirrorStateMachine
+        ): RegistryStateMachine
     }
 }
