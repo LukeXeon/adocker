@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 
-@Entity(tableName = "registry_servers")
+@Entity(tableName = "registries")
 @TypeConverters(Converters::class)
 data class RegistryEntity(
     @PrimaryKey
