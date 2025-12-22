@@ -1,4 +1,4 @@
-package com.github.adocker.ui.screens.mirrors
+package com.github.adocker.ui.screens.registries
 
 import androidx.compose.runtime.Composable
 import com.github.adocker.daemon.registries.Registry

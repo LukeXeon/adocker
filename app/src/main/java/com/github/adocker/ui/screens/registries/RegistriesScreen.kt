@@ -1,4 +1,4 @@
-package com.github.adocker.ui.screens.mirrors
+package com.github.adocker.ui.screens.registries
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,12 +48,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MirrorsScreen(
+fun RegistriesScreen(
     onNavigateBack: () -> Unit,
     onNavigateToQRScanner: () -> Unit,
     scannedMirrorData: String? = null,
 ) {
-    val viewModel = hiltViewModel<MirrorsViewModel>()
+    val viewModel = hiltViewModel<RegistriesViewModel>()
     val json = AppGlobals.json()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }

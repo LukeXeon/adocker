@@ -1,4 +1,4 @@
-package com.github.adocker.ui.screens.mirrors
+package com.github.adocker.ui.screens.registries
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MirrorsViewModel @Inject constructor(
+class RegistriesViewModel @Inject constructor(
     private val registryManager: RegistryManager
 ) : ViewModel() {
 
@@ -22,7 +22,7 @@ class MirrorsViewModel @Inject constructor(
 
     fun deleteCustomMirror(id: String) {
         viewModelScope.launch {
-            registryManager.registries.value[id]?.delete()
+            registryManager.registries.value[id]?.remove()
         }
     }
 

@@ -37,7 +37,7 @@ import com.github.adocker.ui.screens.images.ImageDetailScreen
 import com.github.adocker.ui.screens.images.ImagesScreen
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.screens.qrcode.QRCodeScannerScreen
-import com.github.adocker.ui.screens.mirrors.MirrorsScreen
+import com.github.adocker.ui.screens.registries.RegistriesScreen
 import com.github.adocker.ui.screens.settings.PhantomProcessScreen
 import com.github.adocker.ui.screens.settings.SettingsScreen
 import com.github.adocker.ui.screens.terminal.TerminalScreen
@@ -166,7 +166,7 @@ fun MainScreen() {
                     }
                 }
 
-                MirrorsScreen(
+                RegistriesScreen(
                     onNavigateBack = {
                         navController.popBackStack()
                     },

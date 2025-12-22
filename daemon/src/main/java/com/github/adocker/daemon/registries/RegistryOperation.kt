@@ -1,6 +1,6 @@
 package com.github.adocker.daemon.registries
 
 sealed interface RegistryOperation {
-    object Delete : RegistryOperation
+    object Remove : RegistryOperation
     object Check : RegistryOperation
 }

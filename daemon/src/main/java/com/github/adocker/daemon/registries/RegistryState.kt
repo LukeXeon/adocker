@@ -2,7 +2,6 @@ package com.github.adocker.daemon.registries
 
 sealed interface RegistryState {
     val id: String
-
     data class Unhealthy(
         override val id: String,
     ) : RegistryState
@@ -18,11 +17,11 @@ sealed interface RegistryState {
         val failures: Int
     ) : RegistryState
 
-    data class Deleting(
+    data class Removing(
         override val id: String,
     ) : RegistryState
 
-    data class Deleted(
+    data class Removed(
         override val id: String,
     ) : RegistryState
 }

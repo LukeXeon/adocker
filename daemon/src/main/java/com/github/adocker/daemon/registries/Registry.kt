@@ -29,7 +29,7 @@ class Registry @AssistedInject constructor(
     init {
         scope.launch {
             stateMachine.state.collect {
-                if (it is RegistryState.Deleted) {
+                if (it is RegistryState.Removed) {
                     scope.cancel()
                 }
             }
@@ -55,8 +55,8 @@ class Registry @AssistedInject constructor(
         stateMachine.dispatch(RegistryOperation.Check)
     }
 
-    suspend fun delete() {
-        stateMachine.dispatch(RegistryOperation.Delete)
+    suspend fun remove() {
+        stateMachine.dispatch(RegistryOperation.Remove)
     }
 
     @Singleton
