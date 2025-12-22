@@ -9,8 +9,8 @@ import com.github.adocker.daemon.database.model.ContainerEntity
 
 @Dao
 interface ContainerDao {
-    @Query("SELECT id FROM containers")
-    suspend fun getAllContainerIds(): List<String>
+    @Query("SELECT * FROM containers")
+    suspend fun getAllContainers(): List<ContainerEntity>
 
     @Query("SELECT * FROM containers WHERE id = :id")
     suspend fun getContainerById(id: String): ContainerEntity?

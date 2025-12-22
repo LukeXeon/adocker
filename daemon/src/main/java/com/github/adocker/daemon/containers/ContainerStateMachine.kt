@@ -109,10 +109,7 @@ class ContainerStateMachine @AssistedInject constructor(
         val config = containerDao.getContainerById(snapshot.id)?.config
         return if (config == null) {
             override {
-                ContainerState.Dead(
-                    containerId,
-                    IllegalStateException("Container not found: $containerId")
-                )
+                ContainerState.Removed(containerId)
             }
         } else {
             override {
@@ -224,7 +221,9 @@ class ContainerStateMachine @AssistedInject constructor(
             exec.process.completeExceptionally(
                 IllegalStateException("Container not found: $containerId")
             )
-            noChange()
+            override {
+                ContainerState.Removed(containerId)
+            }
         } else {
             mutate {
                 val process = prootEngine.startProcess(

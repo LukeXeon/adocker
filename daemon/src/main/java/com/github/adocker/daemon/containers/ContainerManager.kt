@@ -1,11 +1,11 @@
 package com.github.adocker.daemon.containers
 
 import com.github.adocker.daemon.app.AppContext
+import com.github.adocker.daemon.client.model.ContainerConfig
 import com.github.adocker.daemon.database.dao.ContainerDao
 import com.github.adocker.daemon.database.dao.ImageDao
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.io.extractTarGz
-import com.github.adocker.daemon.client.model.ContainerConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,34 +33,15 @@ class ContainerManager @Inject constructor(
 
     init {
         scope.launch {
-            _containers.value = containerDao.getAllContainerIds().mapNotNull {
-                loadContainer(it).onFailure { e ->
-                    Timber.e(e)
-                }.getOrNull()
+            _containers.value = containerDao.getAllContainers().map { entity ->
+                factory.create(
+                    if (entity.lastRunAt != null) {
+                        ContainerState.Exited(entity.id)
+                    } else {
+                        ContainerState.Created(entity.id)
+                    }
+                )
             }.associateBy { it.id }
-        }
-    }
-
-    private suspend fun loadContainer(containerId: String): Result<Container> {
-        val entity = containerDao.getContainerById(containerId)
-        return when {
-            entity == null -> {
-                Result.failure(
-                    IllegalArgumentException("Container not found: $containerId")
-                )
-            }
-
-            entity.lastRunAt != null -> {
-                Result.success(
-                    factory.create(ContainerState.Exited(containerId))
-                )
-            }
-
-            else -> {
-                Result.success(
-                    factory.create(ContainerState.Created(containerId))
-                )
-            }
         }
     }
 
@@ -82,7 +63,7 @@ class ContainerManager @Inject constructor(
         val containerName = if (name == null) {
             containerName.generateName()
         } else {
-            if (containerDao.getContainerById(name) != null) {
+            if (containerDao.getContainerByName(name) != null) {
                 return Result.failure(
                     IllegalArgumentException("Container with name '${name}' already exists")
                 )
