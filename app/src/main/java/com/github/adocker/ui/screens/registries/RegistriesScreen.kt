@@ -39,8 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.github.adocker.R
 import com.github.adocker.daemon.app.AppGlobals
+import com.github.adocker.ui.screens.main.Screen
 import com.github.adocker.ui.screens.qrcode.MirrorQRCode
 import com.github.adocker.ui.theme.Spacing
 import kotlinx.coroutines.flow.map
@@ -49,8 +51,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistriesScreen(
-    onNavigateBack: () -> Unit,
-    onNavigateToQRScanner: () -> Unit,
+    navController: NavHostController,
     scannedMirrorData: String? = null,
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
@@ -91,7 +92,9 @@ fun RegistriesScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.mirror_settings_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
@@ -99,13 +102,19 @@ fun RegistriesScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.checkMirrorsNow() }) {
+                    IconButton(
+                        onClick = { viewModel.checkMirrorsNow() }
+                    ) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Check Health"
                         )
                     }
-                    IconButton(onClick = onNavigateToQRScanner) {
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.QRCodeScanner.route)
+                        }
+                    ) {
                         Icon(
                             Icons.Default.QrCodeScanner,
                             contentDescription = stringResource(R.string.mirror_settings_scan_qr)

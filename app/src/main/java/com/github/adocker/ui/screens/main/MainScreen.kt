@@ -167,12 +167,7 @@ fun MainScreen() {
                 }
 
                 RegistriesScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onNavigateToQRScanner = {
-                        navController.navigate(Screen.QRCodeScanner.route)
-                    },
+                    navController,
                     scannedMirrorData = scannedMirror.value,
                 )
             }

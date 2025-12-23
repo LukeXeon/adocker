@@ -72,7 +72,7 @@ class RegistryStateMachine @AssistedInject constructor(
                 // Accept both OK and Unauthorized (401) as healthy
                 // 401 means the registry is responding but requires auth
                 if (response.status != HttpStatusCode.OK && response.status != HttpStatusCode.Unauthorized) {
-                    throw Exception("Unexpected status code: ${response.status}")
+                    throw IllegalStateException("Unexpected status code: ${response.status}")
                 }
                 val latency = SystemClock.uptimeMillis() - start
                 Timber.i("Server ${server.name} is healthy (latency: ${latency}ms)")

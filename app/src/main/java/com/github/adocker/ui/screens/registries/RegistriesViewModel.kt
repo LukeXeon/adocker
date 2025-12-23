@@ -20,7 +20,7 @@ class RegistriesViewModel @Inject constructor(
         }
     }
 
-    fun deleteCustomMirror(id: String) {
+    fun removeCustomMirror(id: String) {
         viewModelScope.launch {
             registryManager.registries.value[id]?.remove()
         }
