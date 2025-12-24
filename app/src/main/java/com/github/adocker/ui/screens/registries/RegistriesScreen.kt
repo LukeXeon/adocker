@@ -42,7 +42,6 @@ import androidx.navigation.compose.rememberNavController
 import com.github.adocker.R
 import com.github.adocker.daemon.registries.Registry
 import com.github.adocker.ui.theme.Spacing
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,9 +53,7 @@ fun RegistriesScreen(
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
-    val registries by viewModel.registries.map {
-        it.values.toList()
-    }.collectAsState(emptyList())
+    val registries by viewModel.sortedList.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     Scaffold(
         topBar = {

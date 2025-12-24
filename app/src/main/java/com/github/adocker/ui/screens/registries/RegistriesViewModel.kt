@@ -11,10 +11,7 @@ import javax.inject.Inject
 class RegistriesViewModel @Inject constructor(
     private val registryManager: RegistryManager
 ) : ViewModel() {
-
-    val registries = registryManager.registries
-
-
+    val sortedList = registryManager.sortedList
 
     suspend fun deleteCustomMirror(id: String) {
         registryManager.registries.value[id]?.remove()

@@ -16,6 +16,9 @@ interface ImageDao {
     @Query("SELECT * FROM images WHERE id = :id")
     suspend fun getImageById(id: String): ImageEntity?
 
+    @Query("SELECT * FROM images WHERE id = :id")
+    fun getImageFlowById(id: String): Flow<ImageEntity?>
+
     @Query("SELECT * FROM images WHERE repository = :repository AND tag = :tag")
     suspend fun getImageByRepoTag(repository: String, tag: String): ImageEntity?
 
