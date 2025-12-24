@@ -44,8 +44,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateToMirrorSettings: () -> Unit,
-    onNavigateToPhantomProcess: () -> Unit,
+    onNavigateToMirrorSettings: () -> Unit = {},
+    onNavigateToPhantomProcess: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<SettingsViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }

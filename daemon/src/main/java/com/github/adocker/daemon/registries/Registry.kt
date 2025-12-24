@@ -10,6 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
@@ -41,6 +43,13 @@ class Registry @AssistedInject constructor(
 
     val state
         get() = stateMachine.state
+
+    val metadata
+        get() = registryDao.getRegistryFlowById(id).stateIn(
+            scope,
+            SharingStarted.Eagerly,
+            null
+        )
 
     suspend fun getMetadata(): Result<RegistryEntity> {
         val entity = registryDao.getRegistryById(id)

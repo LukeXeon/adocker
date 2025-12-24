@@ -12,7 +12,7 @@ class RegistriesViewModel @Inject constructor(
     private val registryManager: RegistryManager
 ) : ViewModel() {
 
-    val mirrors = registryManager.registries
+    val registries = registryManager.registries
 
     fun addCustomMirror(name: String, url: String, token: String? = null, priority: Int = 50) {
         viewModelScope.launch {

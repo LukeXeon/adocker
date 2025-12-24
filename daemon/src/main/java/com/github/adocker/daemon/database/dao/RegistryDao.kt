@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.github.adocker.daemon.database.model.RegistryEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RegistryDao {
@@ -13,6 +14,9 @@ interface RegistryDao {
 
     @Query("SELECT * FROM registries WHERE id = :id")
     suspend fun getRegistryById(id: String): RegistryEntity?
+
+    @Query("SELECT * FROM registries WHERE id = :id")
+    fun getRegistryFlowById(id: String): Flow<RegistryEntity?>
 
     @Query("SELECT * FROM registries WHERE id = :id")
     suspend fun getRegistryByUrl(id: String): RegistryEntity?

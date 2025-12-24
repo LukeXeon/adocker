@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.registries
+package com.github.adocker.ui.screens.registries
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,7 +27,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,53 +39,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.github.adocker.R
-import com.github.adocker.daemon.app.AppGlobals
 import com.github.adocker.ui2.screens.main.Screen
-import com.github.adocker.ui2.screens.qrcode.MirrorQRCode
+import com.github.adocker.ui2.screens.registries.AddMirrorDialog
+import com.github.adocker.ui2.screens.registries.RegistriesViewModel
 import com.github.adocker.ui2.theme.Spacing
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistriesScreen(
-    navController: NavHostController,
-    scannedMirrorData: String? = null,
+    navController: NavHostController = rememberNavController()
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
-    val json = AppGlobals.json()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val mirrors by viewModel.mirrors.map { it.values.toList() }.collectAsState(emptyList())
-
-    // Handle scanned mirror data
-    LaunchedEffect(scannedMirrorData) {
-        if (scannedMirrorData != null) {
-            try {
-                val mirrorQRCode = json.runCatching {
-                    decodeFromString<MirrorQRCode>(scannedMirrorData)
-                }.getOrNull()
-                if (mirrorQRCode != null) {
-                    viewModel.addCustomMirror(
-                        mirrorQRCode.name,
-                        mirrorQRCode.url,
-                        mirrorQRCode.bearerToken
-                    )
-                    snackbarHostState.showSnackbar("Mirror imported: ${mirrorQRCode.name}")
-                } else {
-                    snackbarHostState.showSnackbar("Invalid QR code format")
-                }
-            } catch (e: Exception) {
-                snackbarHostState.showSnackbar("Failed to import mirror: ${e.message}")
-            }
-        }
+    val registries by viewModel.registries.collectAsState()
+    val sortedRegistries = remember(registries) {
+        registries.values.toList()
     }
-
     var showAddDialog by remember { mutableStateOf(false) }
-    var mirrorToDelete by remember { mutableStateOf<String?>(null) }
-
+    val (mirrorToDelete, setServerToDelete) = remember { mutableStateOf<String?>(null) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -150,10 +124,10 @@ fun RegistriesScreen(
                 )
             }
 
-            items(mirrors, key = { it.id }) { mirror ->
-                MirrorCard(
-                    registry = mirror,
-                    onDelete = { mirrorToDelete = mirror.id }
+            items(sortedRegistries, key = { it.id }) { server ->
+                RegistryCard(
+                    registry = server,
+                    onDelete = { setServerToDelete(server.id) }
                 )
             }
 
