@@ -44,7 +44,7 @@ import com.github.adocker.daemon.registries.Registry
 import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui2.screens.main.Screen
 import com.github.adocker.ui2.screens.registries.AddMirrorDialog
-import com.github.adocker.ui2.screens.registries.RegistriesViewModel
+import com.github.adocker.ui.screens.registries.RegistriesViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
