@@ -164,6 +164,12 @@
     <string name="mirror_settings_import_success">Mirror imported successfully</string>
     <string name="mirror_settings_import_error">Invalid QR code format</string>
     <string name="mirror_settings_has_token">With Token</string>
+    <string name="mirror_settings_name_required">Name is required</string>
+    <string name="mirror_settings_url_invalid">Invalid URL</string>
+    <string name="mirror_settings_add_description">Add a custom Docker registry mirror for faster image downloads in your region.</string>
+    <string name="mirror_settings_priority_label">Priority</string>
+    <string name="mirror_settings_priority_hint">0-100, higher values are prioritized</string>
+    <string name="mirror_settings_token_hint">Optional Bearer token for authenticated registries</string>
 
     <!-- Phantom process management -->
     <string name="phantom_title">Background Process Management</string>

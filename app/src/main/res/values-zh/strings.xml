@@ -164,6 +164,12 @@
     <string name="mirror_settings_import_success">镜像源导入成功</string>
     <string name="mirror_settings_import_error">无效的二维码格式</string>
     <string name="mirror_settings_has_token">已配置 Token</string>
+    <string name="mirror_settings_name_required">名称不能为空</string>
+    <string name="mirror_settings_url_invalid">无效的 URL</string>
+    <string name="mirror_settings_add_description">添加自定义 Docker 镜像源，以在您所在地区获得更快的镜像下载速度。</string>
+    <string name="mirror_settings_priority_label">优先级</string>
+    <string name="mirror_settings_priority_hint">0-100，数值越高优先级越高</string>
+    <string name="mirror_settings_token_hint">需要身份验证的镜像源可选填 Bearer token</string>
 
     <!-- 后台进程管理 -->
     <string name="phantom_title">后台进程管理</string>

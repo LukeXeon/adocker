@@ -50,13 +50,13 @@ import kotlinx.coroutines.launch
 fun RegistriesScreen(
     navController: NavHostController = rememberNavController(),
     onNavigateToQRCodeScanner: () -> Unit = {},
+    onNavigateToAddMirror: () -> Unit = {}
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
     val registries by viewModel.registries.map {
         it.values.toList()
     }.collectAsState(emptyList())
-    val (showAddDialog, setShowAddDialog) = remember { mutableStateOf(false) }
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     Scaffold(
         topBar = {
@@ -89,12 +89,6 @@ fun RegistriesScreen(
                         Icon(
                             Icons.Default.QrCodeScanner,
                             contentDescription = stringResource(R.string.mirror_settings_scan_qr)
-                        )
-                    }
-                    IconButton(onClick = { setShowAddDialog(true) }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.mirror_settings_add)
                         )
                     }
                 }
@@ -131,7 +125,7 @@ fun RegistriesScreen(
             item {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
-                    onClick = { setShowAddDialog(true) },
+                    onClick = onNavigateToAddMirror,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -155,20 +149,6 @@ fun RegistriesScreen(
                 }
             }
         }
-    }
-
-    // Add mirror dialog
-    if (showAddDialog) {
-        AddMirrorDialog(
-            onDismiss = { setShowAddDialog(false) },
-            onAdd = { name, url, token ->
-                viewModel.viewModelScope.launch {
-                    viewModel.addCustomMirror(name, url, token)
-                    setShowAddDialog(false)
-                    snackbarHostState.showSnackbar("Mirror added: $name")
-                }
-            }
-        )
     }
     RegistryDeleteDialog(
         serverToDelete,
