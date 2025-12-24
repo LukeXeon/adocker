@@ -33,10 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.adocker.R
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.io.formatFileSize
 import com.github.adocker.ui2.theme.Spacing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +55,9 @@ fun SettingsScreen(
         viewModel.loadStorageUsage()
     }
     val prootVersion = viewModel.prootVersion
-    val (showClearDialog, setShowClearDialog) = remember { mutableStateOf(false) }
+    val (clearDataDialogState, setClearDataDialogState) = remember {
+        mutableStateOf(SettingsClearDataState.Hidden)
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -128,7 +133,9 @@ fun SettingsScreen(
                     iconTint = MaterialTheme.colorScheme.error,
                     title = stringResource(R.string.settings_clear_data),
                     subtitle = stringResource(R.string.settings_clear_data_subtitle),
-                    onClick = { setShowClearDialog(true) },
+                    onClick = {
+                        setClearDataDialogState(SettingsClearDataState.Showing)
+                    },
                     isWarning = true
                 )
             }
@@ -153,15 +160,21 @@ fun SettingsScreen(
         }
     }
     SettingsClearDataDialog(
-        showClearDialog,
+        clearDataDialogState,
         onClearData = {
-            viewModel.clearAllData {
+            viewModel.viewModelScope.launch {
+                setClearDataDialogState(SettingsClearDataState.Running)
+                val delayJob = launch {
+                    delay(500)
+                }
+                viewModel.clearAllData()
+                delayJob.join()
+                setClearDataDialogState(SettingsClearDataState.Hidden)
                 snackbarHostState.showSnackbar(clearSuccessMessage)
             }
-            setShowClearDialog(false)
         },
         onDismissRequest = {
-            setShowClearDialog(false)
+            setClearDataDialogState(SettingsClearDataState.Hidden)
         }
     )
 }
