@@ -6,13 +6,10 @@ import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.io.getDirectorySize
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,21 +36,4 @@ class SettingsViewModel @Inject constructor(
 
     val packageInfo
         get() = appContext.packageInfo
-
-    suspend fun clearAllData() {
-        withContext(Dispatchers.IO + NonCancellable) {
-            // Clear containers
-            appContext.containersDir.deleteRecursively()
-            appContext.containersDir.mkdirs()
-
-            // Clear layers
-            appContext.layersDir.deleteRecursively()
-            appContext.layersDir.mkdirs()
-
-            // Clear temp
-            appContext.tmpDir.deleteRecursively()
-            appContext.tmpDir.mkdirs()
-            _storageUsage.value = getDirectorySize(appContext.baseDir)
-        }
-    }
 }

@@ -38,7 +38,6 @@ import com.github.adocker.R
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.io.formatFileSize
 import com.github.adocker.ui.theme.Spacing
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,9 +54,7 @@ fun SettingsScreen(
         viewModel.loadStorageUsage()
     }
     val prootVersion = viewModel.prootVersion
-    val (clearDataDialogState, setClearDataDialogState) = remember {
-        mutableStateOf(SettingsClearDataState.Hidden)
-    }
+    val (isShowClearDataDialog, setShowDataDialogState) = remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -134,7 +131,7 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_clear_data),
                     subtitle = stringResource(R.string.settings_clear_data_subtitle),
                     onClick = {
-                        setClearDataDialogState(SettingsClearDataState.Showing)
+                        setShowDataDialogState(true)
                     },
                     isWarning = true
                 )
@@ -160,21 +157,12 @@ fun SettingsScreen(
         }
     }
     SettingsClearDataDialog(
-        clearDataDialogState,
-        onClearData = {
+        isShowClearDataDialog,
+        onDismissRequest = {
+            setShowDataDialogState(false)
             viewModel.viewModelScope.launch {
-                setClearDataDialogState(SettingsClearDataState.Running)
-                val delayJob = launch {
-                    delay(500)
-                }
-                viewModel.clearAllData()
-                delayJob.join()
-                setClearDataDialogState(SettingsClearDataState.Hidden)
                 snackbarHostState.showSnackbar(clearSuccessMessage)
             }
-        },
-        onDismissRequest = {
-            setClearDataDialogState(SettingsClearDataState.Hidden)
         }
     )
 }

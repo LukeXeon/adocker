@@ -14,10 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.github.adocker.ui2.screens.main.Screen
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
 
-@Destination<RootGraph>(start = true)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
