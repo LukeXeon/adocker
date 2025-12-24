@@ -31,20 +31,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.github.adocker.R
+import com.github.adocker.daemon.registries.Registry
+import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.ui2.screens.main.Screen
 import com.github.adocker.ui2.screens.registries.AddMirrorDialog
 import com.github.adocker.ui2.screens.registries.RegistriesViewModel
-import com.github.adocker.ui2.theme.Spacing
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,22 +54,22 @@ fun RegistriesScreen(
     navController: NavHostController = rememberNavController()
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val registries by viewModel.registries.collectAsState()
-    val sortedRegistries = remember(registries) {
-        registries.values.toList()
-    }
-    var showAddDialog by remember { mutableStateOf(false) }
-    val (mirrorToDelete, setServerToDelete) = remember { mutableStateOf<String?>(null) }
+    val registries by viewModel.registries.map {
+        it.values.toList()
+    }.collectAsState(emptyList())
+    val (showAddDialog, setShowAddDialog) = remember { mutableStateOf(false) }
+    val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.mirror_settings_title)) },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStack()
+                        }
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
@@ -94,7 +95,7 @@ fun RegistriesScreen(
                             contentDescription = stringResource(R.string.mirror_settings_scan_qr)
                         )
                     }
-                    IconButton(onClick = { showAddDialog = true }) {
+                    IconButton(onClick = { setShowAddDialog(true) }) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = stringResource(R.string.mirror_settings_add)
@@ -124,17 +125,17 @@ fun RegistriesScreen(
                 )
             }
 
-            items(sortedRegistries, key = { it.id }) { server ->
+            items(registries, key = { it.id }) { server ->
                 RegistryCard(
                     registry = server,
-                    onDelete = { setServerToDelete(server.id) }
+                    onDelete = { setServerToDelete(server) }
                 )
             }
 
             item {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
-                    onClick = { showAddDialog = true },
+                    onClick = { setShowAddDialog(true) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -163,45 +164,26 @@ fun RegistriesScreen(
     // Add mirror dialog
     if (showAddDialog) {
         AddMirrorDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = { setShowAddDialog(false) },
             onAdd = { name, url, token ->
-                viewModel.addCustomMirror(name, url, token)
-                showAddDialog = false
-                scope.launch {
+                viewModel.viewModelScope.launch {
+                    viewModel.addCustomMirror(name, url, token)
+                    setShowAddDialog(false)
                     snackbarHostState.showSnackbar("Mirror added: $name")
                 }
             }
         )
     }
-
-    // Delete confirmation dialog
-//    mirrorToDelete?.let { mirror ->
-//        AlertDialog(
-//            onDismissRequest = { mirrorToDelete = null },
-//            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-//            title = { Text(stringResource(R.string.mirror_settings_delete_title)) },
-//            text = { Text(stringResource(R.string.mirror_settings_delete_message, mirror.name)) },
-//            confirmButton = {
-//                TextButton(
-//                    onClick = {
-//                        viewModel.deleteCustomMirror(mirror)
-//                        mirrorToDelete = null
-//                        scope.launch {
-//                            snackbarHostState.showSnackbar("Mirror deleted")
-//                        }
-//                    },
-//                    colors = ButtonDefaults.textButtonColors(
-//                        contentColor = MaterialTheme.colorScheme.error
-//                    )
-//                ) {
-//                    Text(stringResource(R.string.action_delete))
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { mirrorToDelete = null }) {
-//                    Text(stringResource(R.string.action_cancel))
-//                }
-//            }
-//        )
-//    }
+    RegistryDeleteDialog(
+        serverToDelete,
+        onDelete = { registry ->
+            viewModel.viewModelScope.launch {
+                viewModel.deleteCustomMirror(registry.id)
+                snackbarHostState.showSnackbar("Mirror deleted")
+            }
+        },
+        onDismissRequest = {
+            setServerToDelete(null)
+        }
+    )
 }

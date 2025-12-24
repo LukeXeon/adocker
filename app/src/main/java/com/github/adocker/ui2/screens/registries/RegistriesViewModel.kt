@@ -14,16 +14,17 @@ class RegistriesViewModel @Inject constructor(
 
     val registries = registryManager.registries
 
-    fun addCustomMirror(name: String, url: String, token: String? = null, priority: Int = 50) {
-        viewModelScope.launch {
-            registryManager.addCustomMirror(name, url, token, priority)
-        }
+    suspend fun addCustomMirror(
+        name: String,
+        url: String,
+        token: String? = null,
+        priority: Int = 50
+    ) {
+        registryManager.addCustomMirror(name, url, token, priority)
     }
 
-    fun removeCustomMirror(id: String) {
-        viewModelScope.launch {
-            registryManager.registries.value[id]?.remove()
-        }
+    suspend fun deleteCustomMirror(id: String) {
+        registryManager.registries.value[id]?.remove()
     }
 
     fun checkAll() {

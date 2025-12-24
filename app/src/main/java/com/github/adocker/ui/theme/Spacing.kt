@@ -1,0 +1,24 @@
+package com.github.adocker.ui.theme
+
+import androidx.compose.ui.unit.dp
+
+/**
+ * Material Design 3 统一间距和尺寸规范
+ * 遵循Google官方推荐的8dp网格系统
+ */
+object Spacing {
+    // 基础间距 - 8dp增量
+    val ExtraSmall = 4.dp
+    val Small = 8.dp
+    val Medium = 16.dp
+    val Large = 24.dp
+    val ExtraLarge = 32.dp
+    val Huge = 48.dp
+
+    // 特殊用途间距
+    val CardPadding = 16.dp
+    val ScreenPadding = 16.dp
+    val ListItemSpacing = 12.dp
+    val SectionSpacing = 24.dp
+    val ContentSpacing = 16.dp
+}

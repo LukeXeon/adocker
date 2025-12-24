@@ -13,8 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.ui2.components.ImageCard
 import com.github.adocker.ui2.components.PullImageDialog

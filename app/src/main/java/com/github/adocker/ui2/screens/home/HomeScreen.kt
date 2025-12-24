@@ -49,8 +49,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.ui2.components.PullImageDialog
 import com.github.adocker.ui.screens.settings.SettingsViewModel
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

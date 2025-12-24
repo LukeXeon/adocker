@@ -37,7 +37,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.adocker.R
 import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.io.formatFileSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.Spacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

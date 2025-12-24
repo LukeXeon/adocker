@@ -33,7 +33,7 @@ import com.github.adocker.R
 import com.github.adocker.daemon.database.model.RegistryType
 import com.github.adocker.daemon.registries.Registry
 import com.github.adocker.daemon.registries.RegistryState
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.Spacing
 import kotlinx.coroutines.flow.map
 
 @Composable

@@ -48,8 +48,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
 import com.github.adocker.daemon.client.model.ContainerConfig
 import com.github.adocker.ui2.screens.images.ImagesViewModel
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

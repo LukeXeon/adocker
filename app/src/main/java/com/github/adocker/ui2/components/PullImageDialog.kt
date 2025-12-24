@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.Spacing
 import com.github.adocker.R
 import com.github.adocker.ui2.screens.images.ImagesViewModel
 

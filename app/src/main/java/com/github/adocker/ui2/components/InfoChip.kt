@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 /**
  * Material Design 3 信息标签组件

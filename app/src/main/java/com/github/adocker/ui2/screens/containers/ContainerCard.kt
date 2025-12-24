@@ -53,8 +53,8 @@ import com.github.adocker.daemon.containers.Container
 import com.github.adocker.daemon.containers.ContainerState
 import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.ui2.components.StatusIndicator
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 /**
  * Material Design 3 容器卡片组件

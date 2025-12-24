@@ -19,7 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.github.adocker.R
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.Spacing
 
 @Composable
 fun AddMirrorDialog(

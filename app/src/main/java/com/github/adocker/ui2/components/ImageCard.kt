@@ -16,8 +16,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
 import com.github.adocker.daemon.io.formatFileSize
 import com.github.adocker.daemon.database.model.ImageEntity
-import com.github.adocker.ui2.theme.IconSize
-import com.github.adocker.ui2.theme.Spacing
+import com.github.adocker.ui.theme.IconSize
+import com.github.adocker.ui.theme.Spacing
 
 /**
  * Material Design 3 镜像卡片组件
