@@ -73,15 +73,21 @@ class RegistryManager @Inject constructor(
         } else {
             // Combine all metadata flows
             combine(
-                registries.asSequence().sortedBy { it.key }.map { it.value.metadata }.asIterable()
+                registries.asSequence()
+                    .sortedBy { it.key }
+                    .map { it.value.metadata }
+                    .asIterable()
             ) { metadataArray ->
                 // Pair each metadata with its registry and sort by metadata
-                metadataArray.filterNotNull()
+                metadataArray.asSequence()
+                    .filterNotNull()
                     .mapNotNull { metadata ->
                         registries[metadata.id]?.let { registry ->
                             registry to metadata
                         }
-                    }.sortedBy { it.second }.map { it.first }
+                    }.sortedBy { it.second }
+                    .map { it.first }
+                    .toList()
             }
         }
     }.stateIn(scope, SharingStarted.Lazily, emptyList())
