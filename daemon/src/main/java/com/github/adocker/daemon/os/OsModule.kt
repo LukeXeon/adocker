@@ -56,7 +56,7 @@ object OsModule {
     @Singleton
     fun locator(): ProcessLocator {
         Runtime.getRuntime().runCatching {
-            exec("sh").apply {
+            exec("echo").apply {
                 destroy()
             }.javaClass.getDeclaredField("pid").apply {
                 isAccessible = true
