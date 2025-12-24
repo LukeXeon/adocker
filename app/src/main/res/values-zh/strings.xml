@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 应用名称 -->
-    <string name="app_name">ADocker</string>
+    <string name="app_name">Andock</string>
 
     <!-- 导航标题 -->
     <string name="nav_home">主页</string>
@@ -17,7 +17,7 @@
     <string name="nav_phantom_process">后台进程</string>
 
     <!-- 主页 -->
-    <string name="home_welcome">欢迎使用 ADocker</string>
+    <string name="home_welcome">欢迎使用 Andock</string>
     <string name="home_subtitle">无需 root 即可在 Android 上运行 Docker 容器</string>
     <string name="home_overview">概览</string>
     <string name="home_images_count">镜像</string>
@@ -183,7 +183,7 @@
     <string name="phantom_shizuku_not_running_message">请先启动 Shizuku 服务</string>
     <string name="phantom_shizuku_open">打开 Shizuku</string>
     <string name="phantom_permission_denied">权限被拒绝</string>
-    <string name="phantom_permission_message">请在 Shizuku 中授予 ADocker 权限</string>
+    <string name="phantom_permission_message">请在 Shizuku 中授予 Andock 权限</string>
     <string name="phantom_success">后台进程限制已更新为 %1$d</string>
     <string name="phantom_error">更新失败：%1$s</string>
     <string name="phantom_warning_title">检测到进程限制</string>

@@ -17,10 +17,10 @@
             tools:node="merge">
             <!-- Timber Initializer -->
             <meta-data
-                android:name="com.github.adocker.daemon.logging.TimberInitializer"
+                android:name="com.github.andock.daemon.logging.TimberInitializer"
                 android:value="androidx.startup" />
             <meta-data
-                android:name="com.github.adocker.daemon.server.ApiServerInitializer"
+                android:name="com.github.andock.daemon.server.ApiServerInitializer"
                 android:value="androidx.startup" />
         </provider>
 

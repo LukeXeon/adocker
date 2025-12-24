@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.Adocker" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Andock" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color - Docker blue -->
         <item name="colorPrimary">#0DB7ED</item>
         <item name="colorPrimaryContainer">#0DB7ED</item>
@@ -11,10 +11,10 @@
     </style>
 
     <!-- Splash screen theme -->
-    <style name="Theme.Adocker.Splash" parent="Theme.SplashScreen">
+    <style name="Theme.Andock.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#DCEDC8</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_animated</item>
         <item name="windowSplashScreenAnimationDuration">800</item>
-        <item name="postSplashScreenTheme">@style/Theme.Adocker</item>
+        <item name="postSplashScreenTheme">@style/Theme.Andock</item>
     </style>
 </resources>

@@ -8,13 +8,13 @@ plugins {
 }
 
 android {
-    namespace = "com.github.adocker.daemon"
+    namespace = "com.github.andock.daemon"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 26
 
-        testInstrumentationRunner = "com.github.adocker.daemon.HiltTestRunner"
+        testInstrumentationRunner = "com.github.andock.daemon.HiltTestRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 

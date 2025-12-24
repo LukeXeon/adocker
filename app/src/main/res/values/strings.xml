@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App name -->
-    <string name="app_name">ADocker</string>
+    <string name="app_name">Andock</string>
 
     <!-- Navigation titles -->
     <string name="nav_home">Home</string>
@@ -17,7 +17,7 @@
     <string name="nav_phantom_process">Background Process</string>
 
     <!-- Home screen -->
-    <string name="home_welcome">Welcome to ADocker</string>
+    <string name="home_welcome">Welcome to Andock</string>
     <string name="home_subtitle">Run Docker containers on Android without root</string>
     <string name="home_overview">Overview</string>
     <string name="home_images_count">Images</string>
@@ -183,7 +183,7 @@
     <string name="phantom_shizuku_not_running_message">Please start Shizuku service first</string>
     <string name="phantom_shizuku_open">Open Shizuku</string>
     <string name="phantom_permission_denied">Permission Denied</string>
-    <string name="phantom_permission_message">Please grant ADocker permission in Shizuku</string>
+    <string name="phantom_permission_message">Please grant Andock permission in Shizuku</string>
     <string name="phantom_success">Phantom process limit updated to %1$d</string>
     <string name="phantom_error">Update failed: %1$s</string>
     <string name="phantom_warning_title">Process Restrictions Detected</string>

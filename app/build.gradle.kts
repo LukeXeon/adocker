@@ -9,17 +9,17 @@ plugins {
 }
 
 android {
-    namespace = "com.github.adocker"
+    namespace = "com.github.andock"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.github.adocker"
+        applicationId = "com.github.andock"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "com.github.adocker.HiltTestRunner"
+        testInstrumentationRunner = "com.github.andock.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }

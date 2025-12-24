@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "adocker"
+rootProject.name = "andock"
 include(":app")
 include(":daemon")
