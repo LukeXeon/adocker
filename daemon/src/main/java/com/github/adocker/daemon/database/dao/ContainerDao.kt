@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.github.adocker.daemon.database.model.ContainerEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ContainerDao {
@@ -14,6 +15,9 @@ interface ContainerDao {
 
     @Query("SELECT * FROM containers WHERE id = :id")
     suspend fun getContainerById(id: String): ContainerEntity?
+
+    @Query("SELECT * FROM containers WHERE id = :id")
+    fun getContainerFlowById(id: String): Flow<ContainerEntity?>
 
     @Query("SELECT * FROM containers WHERE name = :name")
     suspend fun getContainerByName(name: String): ContainerEntity?

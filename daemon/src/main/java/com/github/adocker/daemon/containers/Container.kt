@@ -13,6 +13,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
@@ -68,6 +70,14 @@ class Container @AssistedInject constructor(
             Result.failure(e)
         }
     }
+
+    val metadata
+        get() = containerDao.getContainerFlowById(id).stateIn(
+            scope,
+            SharingStarted.Eagerly,
+            null
+        )
+
 
     suspend fun getMetadata(): Result<ContainerEntity> {
         val entity = containerDao.getContainerById(id)

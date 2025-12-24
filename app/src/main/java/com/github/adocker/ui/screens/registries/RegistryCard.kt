@@ -42,7 +42,7 @@ fun RegistryCard(
     onDelete: () -> Unit
 ) {
     val metadata = registry.metadata.collectAsState().value ?: return
-    val isChecking by registry.state.map { it is RegistryState.Checking }.collectAsState(false)
+    val isChecking by registry.state.map { it is RegistryState.Checking }.collectAsState(true)
     val isHealthy by registry.state.map { it is RegistryState.Healthy }.collectAsState(false)
     val latencyMs by registry.state.map {
         when (it) {
