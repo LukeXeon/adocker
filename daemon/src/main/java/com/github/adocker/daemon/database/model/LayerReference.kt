@@ -12,7 +12,7 @@ import androidx.room.Index
         Index(value = ["layerDigest"])
     ],
     foreignKeys = [
-        // 给image_id加外键：关联image表的id
+        // 给imageId加外键：关联image表的id
         ForeignKey(
             entity = ImageEntity::class,
             parentColumns = ["id"],       // 父表（image）的主键
@@ -20,7 +20,7 @@ import androidx.room.Index
             onDelete = ForeignKey.CASCADE, // 核心：删除Image时，自动删除该Image的所有引用关系
             onUpdate = ForeignKey.CASCADE, // Image的id更新时，同步更新此处的image_id
         ),
-        // 给layer_id加外键：关联layer表的id
+        // 给layerDigest加外键：关联layer表的id
         ForeignKey(
             entity = LayerEntity::class,
             parentColumns = ["digest"],
