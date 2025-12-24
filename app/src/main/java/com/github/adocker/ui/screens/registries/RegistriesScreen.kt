@@ -42,16 +42,14 @@ import androidx.navigation.compose.rememberNavController
 import com.github.adocker.R
 import com.github.adocker.daemon.registries.Registry
 import com.github.adocker.ui.theme.Spacing
-import com.github.adocker.ui2.screens.main.Screen
-import com.github.adocker.ui2.screens.registries.AddMirrorDialog
-import com.github.adocker.ui.screens.registries.RegistriesViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistriesScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    onNavigateToQRCodeScanner: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -86,9 +84,7 @@ fun RegistriesScreen(
                         )
                     }
                     IconButton(
-                        onClick = {
-                            navController.navigate(Screen.QRCodeScanner.route)
-                        }
+                        onClick = onNavigateToQRCodeScanner
                     ) {
                         Icon(
                             Icons.Default.QrCodeScanner,

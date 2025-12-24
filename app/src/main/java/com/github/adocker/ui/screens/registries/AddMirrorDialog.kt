@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.registries
+package com.github.adocker.ui.screens.registries
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
