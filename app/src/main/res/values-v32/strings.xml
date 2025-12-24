@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="adb_shell_command">adb shell device_config put activity_manager max_phantom_processes 2147483647</string>
+</resources>

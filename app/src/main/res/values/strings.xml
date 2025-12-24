@@ -285,4 +285,5 @@
     <string name="message_error">Operation failed</string>
     <string name="message_loading">Loading...</string>
     <string name="message_no_data">No data</string>
+    <string name="adb_shell_command">adb shell settings put global settings_enable_monitor_phantom_procs false</string>
 </resources>

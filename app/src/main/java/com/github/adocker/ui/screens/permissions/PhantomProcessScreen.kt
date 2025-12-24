@@ -1,9 +1,8 @@
-package com.github.adocker.ui2.screens.settings
+package com.github.adocker.ui.screens.permissions
 
 import android.content.Intent
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -46,7 +45,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -56,18 +54,19 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.adocker.R
+import com.github.adocker.ui.components.HelpStep
+import com.github.adocker.ui.components.StatusRow
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhantomProcessScreen(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<PhantomProcessViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Show error or success messages
@@ -249,7 +248,7 @@ fun PhantomProcessScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Button(
-                                    onClick = { viewModel.requestShizukuPermission() },
+                                    onClick = { viewModel.requestPermission() },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Icon(Icons.Default.Lock, contentDescription = null)
@@ -419,11 +418,7 @@ fun PhantomProcessScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        val adbCommand = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
-                            "adb shell settings put global settings_enable_monitor_phantom_procs false"
-                        } else {
-                            "adb shell device_config put activity_manager max_phantom_processes 2147483647"
-                        }
+                        val adbCommand = stringResource(R.string.adb_shell_command)
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             shape = MaterialTheme.shapes.small
@@ -437,113 +432,6 @@ fun PhantomProcessScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusRow(
-    label: String,
-    status: String,
-    isGood: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = if (isGood) Icons.Default.CheckCircle else Icons.Default.Warning,
-                contentDescription = null,
-                tint = if (isGood) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
-                },
-                modifier = Modifier.size(IconSize.Small)
-            )
-            Text(
-                text = status,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (isGood) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun HelpStep(
-    number: String,
-    title: String,
-    description: String,
-    code: Boolean = false
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-    ) {
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer,
-            shape = MaterialTheme.shapes.small,
-            modifier = Modifier.size(IconSize.Medium)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = number,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (code) {
-                Spacer(Modifier.height(4.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = description,
-                        modifier = Modifier.padding(Spacing.Small),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace
-                    )
-                }
-            } else {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

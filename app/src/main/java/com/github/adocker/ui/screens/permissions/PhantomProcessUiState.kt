@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.settings
+package com.github.adocker.ui.screens.permissions
 
 data class PhantomProcessUiState(
     val shizukuAvailable: Boolean = false,

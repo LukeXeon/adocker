@@ -87,18 +87,14 @@ fun SettingsScreen(
 
             // System section
             SettingsSection(title = stringResource(R.string.settings_system)) {
-                // Phantom Process (Android 12+ only)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    SettingsClickableItem(
-                        icon = Icons.Default.Block,
-                        iconTint = MaterialTheme.colorScheme.error,
-                        title = stringResource(R.string.settings_phantom_process),
-                        subtitle = stringResource(R.string.settings_phantom_process_subtitle),
-                        onClick = onNavigateToPhantomProcess,
-                        isWarning = true
-                    )
-                }
-
+                SettingsClickableItem(
+                    icon = Icons.Default.Block,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    title = stringResource(R.string.settings_phantom_process),
+                    subtitle = stringResource(R.string.settings_phantom_process_subtitle),
+                    onClick = onNavigateToPhantomProcess,
+                    isWarning = true
+                )
                 SettingsItem(
                     icon = Icons.Default.PhoneAndroid,
                     title = stringResource(R.string.settings_platform),

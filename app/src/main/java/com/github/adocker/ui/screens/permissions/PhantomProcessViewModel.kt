@@ -1,11 +1,10 @@
-package com.github.adocker.ui2.screens.settings
+package com.github.adocker.ui.screens.permissions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.adocker.daemon.os.PhantomProcessKillerCompat
 import com.github.adocker.daemon.os.RemoteProcessBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,11 +66,9 @@ class PhantomProcessViewModel @Inject constructor(
         }
     }
 
-    fun requestShizukuPermission() {
+    fun requestPermission() {
         viewModelScope.launch {
             remoteProcessBuilder.requestPermission()
-            // Delay to allow permission dialog result
-            delay(500)
             checkStatus()
         }
     }
