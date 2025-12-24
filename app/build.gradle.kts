@@ -65,6 +65,9 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
+    kotlinOptions {
+        freeCompilerArgs = listOf("-XXLanguage:+WhenGuards")
+    }
 }
 
 dependencies {
