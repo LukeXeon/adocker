@@ -70,7 +70,7 @@ class RegistryManager @Inject constructor(
                 delay(with(Duration) {
                     5.minutes
                 })
-                checkAllMirrors()
+                checkAll()
             }
         }
     }
@@ -101,7 +101,7 @@ class RegistryManager @Inject constructor(
     /**
      * Check health of all mirrors concurrently
      */
-    suspend fun checkAllMirrors() {
+    suspend fun checkAll() {
         _registries.value.values.forEach {
             it.check()
         }
