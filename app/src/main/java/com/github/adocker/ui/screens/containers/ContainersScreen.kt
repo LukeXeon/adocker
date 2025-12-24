@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -74,127 +76,135 @@ fun ContainersScreen(
 
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
 
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text(stringResource(R.string.containers_title)) }
-        )
-        // Filter chips
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.containers_title)) }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            items(ContainerFilterType.entries, { it }) { type ->
-                FilterChip(
-                    selected = filterType == type,
-                    onClick = {
-                        filterType = if (filterType == type && type != ContainerFilterType.All) {
-                            ContainerFilterType.All
-                        } else {
-                            type
-                        }
-                    },
-                    label = {
-                        Text(
-                            "${stringResource(type.labelResId)} (${
-                                statesCount.getOrDefault(type, 0)
-                            })"
-                        )
-                    },
-                    leadingIcon = if (filterType == type) {
-                        {
+            // Filter chips
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+            ) {
+                items(ContainerFilterType.entries, { it }) { type ->
+                    FilterChip(
+                        selected = filterType == type,
+                        onClick = {
+                            filterType = if (filterType == type && type != ContainerFilterType.All) {
+                                ContainerFilterType.All
+                            } else {
+                                type
+                            }
+                        },
+                        label = {
+                            Text(
+                                "${stringResource(type.labelResId)} (${
+                                    statesCount.getOrDefault(type, 0)
+                                })"
+                            )
+                        },
+                        leadingIcon = if (filterType == type) {
+                            {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(IconSize.Small)
+                                )
+                            }
+                        } else null
+                    )
+                }
+            }
+
+            when {
+                containers.isEmpty() -> {
+                    // Empty state
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Icon(
-                                Icons.Default.Check,
+                                imageVector = Icons.Default.ViewInAr,
                                 contentDescription = null,
-                                modifier = Modifier.size(IconSize.Small)
+                                modifier = Modifier.size(IconSize.Huge),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
+                            Text(
+                                text = stringResource(R.string.containers_empty),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.Small))
+                            Text(
+                                text = stringResource(R.string.containers_empty_subtitle),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
                             )
                         }
-                    } else null
-                )
-            }
-        }
-
-        when {
-            containers.isEmpty() -> {
-                // Empty state
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ViewInAr,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.Huge),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Medium))
-                        Text(
-                            text = stringResource(R.string.containers_empty),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Small))
-                        Text(
-                            text = stringResource(R.string.containers_empty_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
                     }
                 }
-            }
 
-            filteredContainers.isEmpty() -> {
-                // No results for filter
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                filteredContainers.isEmpty() -> {
+                    // No results for filter
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterListOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.ExtraLarge),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.Medium))
-                        Text(
-                            text = stringResource(R.string.containers_filter_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterListOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.ExtraLarge),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
+                            Text(
+                                text = stringResource(R.string.containers_filter_empty),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
-            }
 
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = PaddingValues(
-                        start = Spacing.ScreenPadding,
-                        top = Spacing.Medium,
-                        end = Spacing.ScreenPadding,
-                        bottom = Spacing.Medium
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                ) {
-                    items(filteredContainers, key = { it.id }) { container ->
-                        ContainerCard(
-                            container = container,
-                            onStart = { viewModel.startContainer(container.id) },
-                            onStop = { viewModel.stopContainer(container.id) },
-                            onDelete = { setDeleteDialog(container) },
-                            onTerminal = { onNavigateToTerminal(container.id) },
-                            onClick = { onNavigateToDetail(container.id) }
-                        )
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentPadding = PaddingValues(
+                            start = Spacing.ScreenPadding,
+                            top = Spacing.Medium,
+                            end = Spacing.ScreenPadding,
+                            bottom = Spacing.Medium
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+                    ) {
+                        items(filteredContainers, key = { it.id }) { container ->
+                            ContainerCard(
+                                container = container,
+                                onStart = { viewModel.startContainer(container.id) },
+                                onStop = { viewModel.stopContainer(container.id) },
+                                onDelete = { setDeleteDialog(container) },
+                                onTerminal = { onNavigateToTerminal(container.id) },
+                                onClick = { onNavigateToDetail(container.id) }
+                            )
+                        }
                     }
                 }
             }
