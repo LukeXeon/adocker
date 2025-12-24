@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.settings
+package com.github.adocker.ui.screens.settings
 
 import android.content.Context
 import android.content.pm.PackageInfo
@@ -19,7 +19,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val prootEngine: PRootEngine,
     private val appContext: AppContext,
-    @param:ApplicationContext val context: Context,
+    @param:ApplicationContext
+    val context: Context,
 ) : ViewModel() {
     private val _storageUsage = MutableStateFlow<Long?>(null)
     val storageUsage: StateFlow<Long?> = _storageUsage.asStateFlow()
