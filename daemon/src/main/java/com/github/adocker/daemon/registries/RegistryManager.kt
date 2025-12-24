@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -98,11 +97,6 @@ class RegistryManager @Inject constructor(
                     5.minutes
                 })
                 checkAll()
-            }
-        }
-        scope.launch {
-            sortedList.collectLatest {
-                println(it.map { it.id })
             }
         }
     }
