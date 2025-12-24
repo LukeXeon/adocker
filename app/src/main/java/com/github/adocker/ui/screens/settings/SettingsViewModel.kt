@@ -1,6 +1,5 @@
 package com.github.adocker.ui.screens.settings
 
-import android.content.Context
 import android.content.pm.PackageInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +7,6 @@ import com.github.adocker.daemon.app.AppContext
 import com.github.adocker.daemon.containers.PRootEngine
 import com.github.adocker.daemon.io.getDirectorySize
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,8 +17,6 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val prootEngine: PRootEngine,
     private val appContext: AppContext,
-    @param:ApplicationContext
-    val context: Context,
 ) : ViewModel() {
     private val _storageUsage = MutableStateFlow<Long?>(null)
     val storageUsage: StateFlow<Long?> = _storageUsage.asStateFlow()
