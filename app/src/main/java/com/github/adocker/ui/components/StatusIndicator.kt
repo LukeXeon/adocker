@@ -1,4 +1,4 @@
-package com.github.adocker.ui.screens.containers
+package com.github.adocker.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -90,13 +90,14 @@ class TerminalViewModel @Inject constructor(
     }
 
     private fun loadContainer() {
-        viewModelScope.launch {
-            val containers = containerManager.containers.value
-            val container = containers[containerId]
-            container?.getMetadata()?.onSuccess { entity ->
-                _container.value = entity
-            }
-        }
+        TODO()
+//        viewModelScope.launch {
+//            val containers = containerManager.containers.value
+//            val container = containers[containerId]
+//            container?.getMetadata()?.onSuccess { entity ->
+//                _container.value = entity
+//            }
+//        }
     }
 
     fun executeCommand(command: String) {

@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.Container
 import com.github.adocker.daemon.containers.ContainerState
+import com.github.adocker.ui.components.StatusIndicator
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 
@@ -67,13 +68,12 @@ fun ContainerCard(
     onDelete: () -> Unit,
     onTerminal: () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val metadata = container.metadata.collectAsState().value ?: return
     var expanded by remember { mutableStateOf(false) }
     val containerState by container.state.collectAsState()
     Card(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .animateContentSize()
             .clickable(onClick = onClick),
