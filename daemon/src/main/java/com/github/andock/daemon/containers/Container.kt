@@ -3,6 +3,8 @@ package com.github.andock.daemon.containers
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.model.ContainerEntity
 import com.github.andock.daemon.os.JobProcess
+import com.github.andock.daemon.utils.execute
+import com.github.andock.daemon.utils.inState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -53,7 +55,9 @@ class Container @AssistedInject constructor(
     suspend fun exec(command: List<String>): Result<JobProcess> {
         return try {
             Result.success(
-                stateMachine.state.inState<ContainerState.Running>().execute {
+                stateMachine.state.inState(
+                    ContainerState.Running::class
+                ).execute {
                     val process = CompletableDeferred<JobProcess>(
                         currentCoroutineContext()[Job]
                     )

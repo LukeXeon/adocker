@@ -1,4 +1,4 @@
-package com.github.andock.daemon.containers
+package com.github.andock.daemon.utils
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlin.reflect.KClass
 
-typealias InState = Pair<StateFlow<ContainerState>, Set<KClass<*>>>
+typealias InState<T> = Pair<StateFlow<T>, Set<KClass<out T>>>
 
 @PublishedApi
-internal suspend inline fun InState.executeInternal(
+internal suspend inline fun InState<*>.executeUnchecked(
     crossinline block: suspend () -> Any?
 ): Any? {
     val (state, classes) = this
@@ -34,9 +34,9 @@ internal suspend inline fun InState.executeInternal(
         }
     }
     try {
-        state.map {
+        state.map { state ->
             classes.any { clazz ->
-                clazz.isInstance(it)
+                clazz.isInstance(state)
             }
         }.distinctUntilChanged().collectLatest(collector)
     } catch (e: CancellationException) {
@@ -50,16 +50,12 @@ internal suspend inline fun InState.executeInternal(
     return collector.result
 }
 
-suspend inline fun <reified R> InState.execute(
+suspend inline fun <reified R> InState<*>.execute(
     crossinline block: suspend () -> R
 ): R {
-    return executeInternal { block() } as R
+    return executeUnchecked { block() } as R
 }
 
-inline fun <reified S : ContainerState> StateFlow<ContainerState>.inState(): InState {
-    return this to setOf(S::class)
-}
-
-fun StateFlow<ContainerState>.inState(vararg classes: KClass<out ContainerState>): InState {
+fun <T> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
     return this to setOf(*classes)
 }
