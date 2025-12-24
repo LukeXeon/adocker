@@ -18,9 +18,6 @@ interface RegistryDao {
     @Query("SELECT * FROM registries WHERE id = :id")
     fun getRegistryFlowById(id: String): Flow<RegistryEntity?>
 
-    @Query("SELECT * FROM registries WHERE id = :id")
-    suspend fun getRegistryByUrl(id: String): RegistryEntity?
-
     @Query("SELECT bearerToken FROM registries WHERE url = :url")
     suspend fun getBearerTokenByUrl(url: String): String?
 

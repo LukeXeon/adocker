@@ -103,7 +103,7 @@ class ImageRepository @Inject constructor(
             if (existingLayer?.downloaded == true && layerFile.exists()) {
                 // Layer already exists, increment reference
                 Timber.i("Layer ${layerDigest.take(16)} already exists, skipping download")
-                layerDao.incrementRefCount(layerDigest)
+//                layerDao.incrementRefCount(layerDigest)
                 layerIds.add(layerDigest)
                 emit(
                     PullProgress(
@@ -123,7 +123,7 @@ class ImageRepository @Inject constructor(
                 layerDescriptor.size,
                 layerDescriptor.mediaType,
                 downloaded = false,
-                refCount = 0
+//                refCount = 0
             )
 
             val downloadResult =
@@ -141,7 +141,7 @@ class ImageRepository @Inject constructor(
                     size = layerDescriptor.size,
                     mediaType = layerDescriptor.mediaType,
                     downloaded = true,
-                    refCount = 1
+//                    refCount = 1
                 )
             )
 
@@ -201,11 +201,13 @@ class ImageRepository @Inject constructor(
 
             // Decrement layer references
             image.layerIds.forEach { digest ->
-                layerDao.decrementRefCount(digest)
+//                layerDao.decrementRefCount(digest)
 
                 // Delete layer if no longer referenced
                 val layer = layerDao.getLayerByDigest(digest)
-                if (layer != null && layer.refCount <= 1) {
+                if (layer != null
+//                    && layer.refCount <= 1
+                    ) {
                     val layerFile =
                         File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                     layerFile.delete()
@@ -258,7 +260,7 @@ class ImageRepository @Inject constructor(
                         size = size,
                         mediaType = "application/vnd.docker.image.rootfs.diff.tar",
                         downloaded = true,
-                        refCount = 1
+//                        refCount = 1
                     )
                 )
 

@@ -11,6 +11,7 @@ import com.github.adocker.daemon.database.model.ContainerEntity
 import com.github.adocker.daemon.database.model.Converters
 import com.github.adocker.daemon.database.model.ImageEntity
 import com.github.adocker.daemon.database.model.LayerEntity
+import com.github.adocker.daemon.database.model.LayerReference
 import com.github.adocker.daemon.database.model.RegistryEntity
 
 @Database(
@@ -18,6 +19,7 @@ import com.github.adocker.daemon.database.model.RegistryEntity
         ImageEntity::class,
         ContainerEntity::class,
         LayerEntity::class,
+        LayerReference::class,
         RegistryEntity::class
     ],
     version = 1,

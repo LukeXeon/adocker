@@ -14,15 +14,14 @@ interface LayerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLayer(layer: LayerEntity)
 
-    @Query("UPDATE layers SET refCount = refCount + 1 WHERE digest = :digest")
-    suspend fun incrementRefCount(digest: String)
-
-    @Query("UPDATE layers SET refCount = refCount - 1 WHERE digest = :digest")
-    suspend fun decrementRefCount(digest: String)
-
-    @Query("DELETE FROM layers WHERE digest = :digest AND refCount <= 0")
-    suspend fun deleteUnreferencedLayer(digest: String)
-
-    @Query("SELECT * FROM layers WHERE refCount <= 0")
-    suspend fun getUnreferencedLayers(): List<LayerEntity>
+    @Query(
+        """
+        DELETE FROM layers
+        WHERE digest = :digest
+        AND NOT EXISTS (
+            SELECT 1 FROM layer_references WHERE layerDigest = :digest
+        )
+    """
+    )
+    suspend fun deleteUnreferencedLayer(digest: String): Int
 }

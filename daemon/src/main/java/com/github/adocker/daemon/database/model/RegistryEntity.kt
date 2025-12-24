@@ -1,10 +1,16 @@
 package com.github.adocker.daemon.database.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 
-@Entity(tableName = "registries")
+@Entity(
+    tableName = "registries",
+    indices = [
+        Index("id"),
+    ]
+)
 @TypeConverters(Converters::class)
 data class RegistryEntity(
     @PrimaryKey

@@ -2,6 +2,7 @@ package com.github.adocker.daemon.database.model
 
 import androidx.room.Entity
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.github.adocker.daemon.client.model.ImageConfig
@@ -11,7 +12,13 @@ import java.util.UUID
  * Room database entities
  */
 
-@Entity(tableName = "images")
+@Entity(
+    tableName = "images",
+    indices = [
+        Index("id"),
+        Index("digest")
+    ]
+)
 @TypeConverters(Converters::class)
 data class ImageEntity(
     @PrimaryKey
