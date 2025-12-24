@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 fun AddMirrorScreen(
     onNavigateBack: () -> Unit = {},
 ) {
-    val viewModel = hiltViewModel<RegistriesViewModel>()
+    val viewModel = hiltViewModel<AddMirrorViewModel>()
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("https://") }
     var token by remember { mutableStateOf("") }

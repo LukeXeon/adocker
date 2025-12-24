@@ -1,11 +1,12 @@
-package com.github.adocker.ui2.screens.containers
+package com.github.adocker.ui.screens.containers
 
 import androidx.annotation.StringRes
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.ContainerState
 
-enum class FilterType(
-    @param:StringRes val labelResId: Int,
+enum class ContainerFilterType(
+    @param:StringRes
+    val labelResId: Int,
     val predicate: (ContainerState) -> Boolean
 ) {
     All(R.string.containers_tab_all, { true }),

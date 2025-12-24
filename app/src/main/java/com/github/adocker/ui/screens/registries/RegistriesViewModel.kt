@@ -14,14 +14,7 @@ class RegistriesViewModel @Inject constructor(
 
     val registries = registryManager.registries
 
-    suspend fun addCustomMirror(
-        name: String,
-        url: String,
-        token: String? = null,
-        priority: Int = 50
-    ) {
-        registryManager.addCustomMirror(name, url, token, priority)
-    }
+
 
     suspend fun deleteCustomMirror(id: String) {
         registryManager.registries.value[id]?.remove()

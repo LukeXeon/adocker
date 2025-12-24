@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.containers
+package com.github.adocker.ui.screens.containers
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,20 +14,15 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.ViewInAr
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,47 +38,44 @@ import com.github.adocker.R
 import com.github.adocker.daemon.containers.Container
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainersScreen(
-    onNavigateToTerminal: (String) -> Unit,
-    onNavigateToDetail: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onNavigateToTerminal: (String) -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ContainersViewModel>()
-
-    val containers by viewModel.containers.collectAsState()
-
-    val sortedContainers = remember(containers) {
-        containers.asSequence().sortedBy { container -> container.key }
+    val containers by viewModel.containers.map {
+        it.asSequence().sortedBy { container -> container.key }
             .map { container ->
                 container.value
             }.toList()
-    }
+    }.collectAsState(emptyList())
 
-    val containerStates = sortedContainers.map { container ->
+    val containerStates = containers.map { container ->
         container.state.collectAsState().value
     }
 
-    val statesCount = remember(sortedContainers, containerStates) {
-        FilterType.entries.asSequence().map {
-            it to sortedContainers.asSequence().map { container -> container.state.value }
+    val statesCount = remember(containers, containerStates) {
+        ContainerFilterType.entries.asSequence().map {
+            it to containers.asSequence().map { container -> container.state.value }
                 .filter(it.predicate).count()
         }.toMap()
     }
 
-    var filterType by remember { mutableStateOf(FilterType.All) }
+    var filterType by remember { mutableStateOf(ContainerFilterType.All) }
 
-    val filteredContainers = remember(sortedContainers, filterType) {
-        sortedContainers.asSequence()
+    val filteredContainers = remember(containers, filterType) {
+        containers.asSequence()
             .filter { container -> filterType.predicate(container.state.value) }.toList()
     }
 
-    var showDeleteDialog by remember { mutableStateOf<Container?>(null) }
+    val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
 
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(stringResource(R.string.containers_title)) }
         )
@@ -93,12 +85,12 @@ fun ContainersScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
-            items(FilterType.entries, { it }) { type ->
+            items(ContainerFilterType.entries, { it }) { type ->
                 FilterChip(
                     selected = filterType == type,
                     onClick = {
-                        filterType = if (filterType == type && type != FilterType.All) {
-                            FilterType.All
+                        filterType = if (filterType == type && type != ContainerFilterType.All) {
+                            ContainerFilterType.All
                         } else {
                             type
                         }
@@ -155,6 +147,7 @@ fun ContainersScreen(
                     }
                 }
             }
+
             filteredContainers.isEmpty() -> {
                 // No results for filter
                 Box(
@@ -179,6 +172,7 @@ fun ContainersScreen(
                     }
                 }
             }
+
             else -> {
                 LazyColumn(
                     modifier = Modifier
@@ -197,7 +191,7 @@ fun ContainersScreen(
                             container = container,
                             onStart = { viewModel.startContainer(container.id) },
                             onStop = { viewModel.stopContainer(container.id) },
-                            onDelete = { showDeleteDialog = container },
+                            onDelete = { setDeleteDialog(container) },
                             onTerminal = { onNavigateToTerminal(container.id) },
                             onClick = { onNavigateToDetail(container.id) }
                         )
@@ -206,47 +200,14 @@ fun ContainersScreen(
             }
         }
     }
-
-    // Delete confirmation dialog
-    showDeleteDialog?.let { container ->
-        var containerName by remember { mutableStateOf<String?>(null) }
-
-        LaunchedEffect(container) {
-            container.getMetadata().onSuccess { entity ->
-                containerName = entity.name
-            }
+    ContainerDeleteDialog(
+        showDeleteDialog,
+        onDelete = {
+            viewModel.deleteContainer(it.id)
+            setDeleteDialog(null)
+        },
+        onDismissRequest = {
+            setDeleteDialog(null)
         }
-
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = null },
-            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text(stringResource(R.string.containers_delete_confirm_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.containers_delete_confirm_message,
-                        containerName ?: container.id
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteContainer(container.id)
-                        showDeleteDialog = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.action_delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
-    }
+    )
 }

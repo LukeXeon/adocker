@@ -1,4 +1,4 @@
-package com.github.adocker.ui2.screens.containers
+package com.github.adocker.ui.screens.containers
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -36,7 +36,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,8 +50,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.github.adocker.R
 import com.github.adocker.daemon.containers.Container
 import com.github.adocker.daemon.containers.ContainerState
-import com.github.adocker.daemon.database.model.ContainerEntity
-import com.github.adocker.ui2.components.StatusIndicator
 import com.github.adocker.ui.theme.IconSize
 import com.github.adocker.ui.theme.Spacing
 
@@ -72,17 +69,9 @@ fun ContainerCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metadata = container.metadata.collectAsState().value ?: return
     var expanded by remember { mutableStateOf(false) }
-    var containerInfo by remember { mutableStateOf<ContainerEntity?>(null) }
-    // Observe container state changes in real-time
     val containerState by container.state.collectAsState()
-
-    LaunchedEffect(container) {
-        container.getMetadata().onSuccess { entity ->
-            containerInfo = entity
-        }
-    }
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -151,7 +140,7 @@ fun ContainerCard(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = containerInfo?.name ?: container.id.take(12),
+                            text = metadata.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
@@ -191,7 +180,7 @@ fun ContainerCard(
                     modifier = Modifier.size(IconSize.Small)
                 )
                 Text(
-                    text = containerInfo?.imageName ?: "",
+                    text = metadata.imageName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
@@ -221,6 +210,7 @@ fun ContainerCard(
                         is ContainerState.Running -> MaterialTheme.colorScheme.onTertiaryContainer
                         is ContainerState.Created,
                         is ContainerState.Starting -> MaterialTheme.colorScheme.onSecondaryContainer
+
                         else -> MaterialTheme.colorScheme.onErrorContainer
                     },
                     modifier = Modifier.padding(
