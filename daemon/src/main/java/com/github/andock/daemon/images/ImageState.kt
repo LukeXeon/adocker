@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.StateFlow
 sealed interface ImageState {
     val digest: String
 
+    data class Waiting(
+        override val digest: String
+    ) : ImageState
+
     data class Downloading(
         override val digest: String,
         val progress: StateFlow<List<DownloadProgress>>

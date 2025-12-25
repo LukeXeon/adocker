@@ -25,10 +25,9 @@ data class ImageEntity(
     val tag: String,
     val architecture: String,
     val os: String,
-    val created: Long = System.currentTimeMillis(),
-    val size: Long = 0,
-    val layerIds: List<String> = emptyList(),
-    val config: ImageConfig? = null
+    val created: Long,
+    val layerDigests: List<String>,
+    val config: ImageConfig?
 ) {
     @get:Ignore
     val fullName: String

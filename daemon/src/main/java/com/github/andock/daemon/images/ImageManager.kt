@@ -38,6 +38,10 @@ class ImageManager @Inject constructor(
         val imageRef = ImageReference.parse(imageName)
         client.getManifest(imageRef).fold(
             { manifest ->
+                val image = _images.value[manifest.config.digest]
+                if (image != null) {
+                    return Result.success(image)
+                }
                 client.getImageConfig(
                     imageRef,
                     manifest.config.digest
@@ -53,17 +57,17 @@ class ImageManager @Inject constructor(
                         )
                         // Save image to database
                         val imageEntity = ImageEntity(
+                            digest = manifest.config.digest,
                             repository = imageRef.repository,
                             tag = imageRef.tag,
-                            digest = manifest.config.digest,
                             architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
                             os = configResponse.os ?: AppContext.DEFAULT_OS,
-                            size = manifest.layers.sumOf { it.size },
-                            layerIds = manifest.layers.map { it.digest },
+                            layerDigests = manifest.layers.map { it.digest },
+                            created = System.currentTimeMillis(),
                             config = imageConfig
                         )
                         imageDao.insertImage(imageEntity)
-                        return Result.success(factory.create(ImageState.Downloaded(manifest.config.digest)))
+                        return Result.success(factory.create(ImageState.Waiting(manifest.config.digest)))
                     },
                     {
                         return Result.failure(it)

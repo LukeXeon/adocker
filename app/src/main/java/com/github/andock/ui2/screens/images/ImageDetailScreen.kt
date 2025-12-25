@@ -126,11 +126,11 @@ fun ImageDetailScreen(
             // Layers Card
             DetailCard(title = stringResource(R.string.images_layers)) {
                 Text(
-                    text = stringResource(R.string.images_layer_count, image.layerIds.size),
+                    text = stringResource(R.string.images_layer_count, image.layerDigests.size),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                image.layerIds.forEachIndexed { index, layerId ->
+                image.layerDigests.forEachIndexed { index, layerId ->
                     Text(
                         text = "${index + 1}. ${layerId.take(12)}...",
                         style = MaterialTheme.typography.bodySmall,

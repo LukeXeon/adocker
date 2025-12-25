@@ -86,7 +86,7 @@ class ContainerManager @Inject constructor(
         val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
         rootfsDir.mkdirs()
         // Extract layers directly to rootfs
-        for (digest in image.layerIds) {
+        for (digest in image.layerDigests) {
             val layerFile = File(
                 appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz"
             )

@@ -177,7 +177,7 @@ class ImageRepository @Inject constructor(
             architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
             os = configResponse.os ?: AppContext.DEFAULT_OS,
             size = totalSize,
-            layerIds = layerIds,
+            layerDigests = layerIds,
             config = imageConfig
         )
 
@@ -197,7 +197,7 @@ class ImageRepository @Inject constructor(
                 ?: throw IllegalArgumentException("Image not found: $imageId")
 
             // Decrement layer references
-            image.layerIds.forEach { digest ->
+            image.layerDigests.forEach { digest ->
 //                layerDao.decrementRefCount(digest)
 
                 // Delete layer if no longer referenced
@@ -239,7 +239,7 @@ class ImageRepository @Inject constructor(
                     architecture = AppContext.ARCHITECTURE,
                     os = AppContext.DEFAULT_OS,
                     size = size,
-                    layerIds = listOf("sha256:$imageId")
+                    layerDigests = listOf("sha256:$imageId")
                 )
 
                 // Save layer
@@ -272,7 +272,7 @@ class ImageRepository @Inject constructor(
                 tempDir.mkdirs()
 
                 // Copy all layers
-                image.layerIds.forEach { digest ->
+                image.layerDigests.forEach { digest ->
                     val layerDir = File(appContext.layersDir, digest.removePrefix("sha256:"))
                     if (layerDir.exists()) {
                         copyDirectory(layerDir, File(tempDir, "layer"))
