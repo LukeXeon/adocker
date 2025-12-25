@@ -29,6 +29,8 @@ class ImageClient @Inject constructor(
 ) {
     private val mutex = Mutex()
     private val authTokens = HashMap<String, AuthToken>()
+    private val realmRegex = Regex("realm=\"([^\"]+)\"")
+    private val serviceRegex = Regex("service=\"([^\"]+)\"")
 
     /**
      * Get authentication token for Docker Hub or mirror
@@ -83,9 +85,9 @@ class ImageClient @Inject constructor(
             Timber.d("WWW-Authenticate: $wwwAuth")
 
             // Parse: Bearer realm="https://xxx",service="xxx",scope="..."
-            val realm = Regex("realm=\"([^\"]+)\"").find(wwwAuth)?.groupValues?.get(1)
+            val realm = realmRegex.find(wwwAuth)?.groupValues?.get(1)
                 ?: throw IllegalStateException("Cannot parse realm from WWW-Authenticate")
-            val service = Regex("service=\"([^\"]+)\"").find(wwwAuth)?.groupValues?.get(1) ?: ""
+            val service = serviceRegex.find(wwwAuth)?.groupValues?.get(1) ?: ""
 
             // Step 3: Build auth URL and request token
             val authUrl = buildString {
