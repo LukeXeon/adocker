@@ -44,14 +44,14 @@ data class ImageReference(
                 val afterColon = name.substring(lastColon + 1)
                 if (!afterColon.contains("/")) {
                     tag = afterColon
-                    name = name.substring(0, lastColon)
+                    name = name.take(lastColon)
                 }
             }
 
             // Check for registry
             if (name.contains("/")) {
                 val firstSlash = name.indexOf("/")
-                val possibleRegistry = name.substring(0, firstSlash)
+                val possibleRegistry = name.take(firstSlash)
                 if (possibleRegistry.contains(".") || possibleRegistry.contains(":")) {
                     registry = possibleRegistry
                     name = name.substring(firstSlash + 1)

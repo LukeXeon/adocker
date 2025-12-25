@@ -48,7 +48,6 @@ class Image @AssistedInject constructor(
         }
     }
 
-
     @Singleton
     @AssistedFactory
     interface Factory {

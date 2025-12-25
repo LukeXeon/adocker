@@ -8,9 +8,6 @@ import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
-import com.github.andock.daemon.io.copyDirectory
-import com.github.andock.daemon.io.extractTar
-import com.github.andock.daemon.io.getDirectorySize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -19,7 +16,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
-import java.io.FileInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,7 +59,6 @@ class ImageRepository @Inject constructor(
 
             val existingLayer: LayerEntity?
             val layerFile: File
-            val extractedDir: File
 
             try {
                 Timber.d("About to check database for existing layer")
@@ -73,10 +68,7 @@ class ImageRepository @Inject constructor(
 
                 layerFile =
                     File(appContext.layersDir, "${layerDigest.removePrefix("sha256:")}.tar.gz")
-                extractedDir = File(appContext.layersDir, layerDigest.removePrefix("sha256:"))
                 Timber.d("File paths created")
-
-                Timber.d("Existing layer: $existingLayer, extracted dir exists: ${extractedDir.exists()}")
             } catch (e: Exception) {
                 Timber.e(e, "Error checking layer existence")
                 throw e
