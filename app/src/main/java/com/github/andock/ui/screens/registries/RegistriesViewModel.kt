@@ -13,6 +13,8 @@ class RegistriesViewModel @Inject constructor(
 ) : ViewModel() {
     val sortedList = registryManager.sortedList
 
+    val bestServer = registryManager.bestServer
+
     suspend fun deleteCustomMirror(id: String) {
         registryManager.registries.value[id]?.remove()
     }

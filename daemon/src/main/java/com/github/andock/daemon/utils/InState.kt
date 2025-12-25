@@ -56,6 +56,6 @@ suspend inline fun <reified R> InState<*>.execute(
     return executeUnchecked { block() } as R
 }
 
-fun <T> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
+fun <T : Any> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
     return this to setOf(*classes)
 }

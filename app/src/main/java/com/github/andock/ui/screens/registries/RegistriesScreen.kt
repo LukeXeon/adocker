@@ -54,6 +54,7 @@ fun RegistriesScreen(
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
     val registries by viewModel.sortedList.collectAsState()
+    val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     Scaffold(
         topBar = {
@@ -115,6 +116,7 @@ fun RegistriesScreen(
             items(registries, key = { it.id }) { server ->
                 RegistryCard(
                     registry = server,
+                    isBest = server == bestServer,
                     onDelete = { setServerToDelete(server) }
                 )
             }

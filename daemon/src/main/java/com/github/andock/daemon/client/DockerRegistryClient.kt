@@ -5,7 +5,6 @@ import com.github.andock.daemon.client.model.AuthTokenResponse
 import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
 import com.github.andock.daemon.client.model.ManifestListResponse
-import com.github.andock.daemon.client.model.RegistrySnapshot
 import com.github.andock.daemon.client.model.SearchResponse
 import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.client.model.TagsListResponse
@@ -13,7 +12,6 @@ import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.registries.RegistryManager
-import com.github.andock.daemon.registries.RegistryState
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -330,19 +328,8 @@ class DockerRegistryClient @Inject constructor(
         response.tags
     }
 
-    private suspend fun getBestRegistry(): String {
-        return registryManager.registries.value.values.mapNotNull {
-            val state = it.state.value
-            val metadata = it.getMetadata().getOrNull()
-            if (metadata != null && state is RegistryState.Healthy) {
-                RegistrySnapshot(
-                    metadata,
-                    state
-                )
-            } else {
-                null
-            }
-        }.minOrNull()?.metadata?.url ?: AppContext.DEFAULT_REGISTRY
+    private fun getBestRegistry(): String {
+        return registryManager.bestServer.value?.metadata?.value?.url ?: AppContext.DEFAULT_REGISTRY
     }
 
     /**
@@ -350,7 +337,7 @@ class DockerRegistryClient @Inject constructor(
      * For Docker Hub, automatically selects best mirror
      * For other registries, returns the original URL
      */
-    private suspend fun getRegistryUrl(originalRegistry: String): String {
+    private fun getRegistryUrl(originalRegistry: String): String {
         return when {
             // Docker Hub - use best available mirror
             originalRegistry == "docker.io"

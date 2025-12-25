@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.map
 @Composable
 fun RegistryCard(
     registry: Registry,
+    isBest: Boolean,
     onDelete: () -> Unit
 ) {
     val metadata = registry.metadata.collectAsState().value ?: return
@@ -101,16 +102,39 @@ fun RegistryCard(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (metadata.type == RegistryType.CustomMirror) {
+                    if (isBest) {
                         AssistChip(
                             onClick = { },
-                            label = { Text("Custom", style = MaterialTheme.typography.labelSmall) },
+                            label = {
+                                Text(
+                                    "Best",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1
+                                )
+                            },
                             modifier = Modifier.height(Spacing.Large),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
                             )
                         )
                     }
+                    if (metadata.type == RegistryType.CustomMirror) {
+                        AssistChip(
+                            onClick = { },
+                            label = {
+                                Text(
+                                    "Custom",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1
+                                )
+                            },
+                            modifier = Modifier.height(Spacing.Large),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            )
+                        )
+                    }
+
                 }
 
                 Text(

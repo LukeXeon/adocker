@@ -34,7 +34,7 @@ class RegistryManager @Inject constructor(
         private val BUILTIN_SERVERS = listOf(
             RegistryEntity(
                 id = "c0d1e2f3-4567-49ab-cdef-0123456789ab",
-                name = "Docker Hub",
+                name = "Docker Hub (Official)",
                 url = AppContext.DEFAULT_REGISTRY,
                 priority = 100,
                 type = RegistryType.Official,
@@ -75,22 +75,70 @@ class RegistryManager @Inject constructor(
             combine(
                 registries.asSequence()
                     .sortedBy { it.key }
-                    .map { it.value.metadata }
+                    .map {
+                        it.value
+                    }.map { it.metadata }
                     .asIterable()
             ) { metadataArray ->
                 // Pair each metadata with its registry and sort by metadata
                 metadataArray.asSequence()
                     .filterNotNull()
                     .mapNotNull { metadata ->
-                        registries[metadata.id]?.let { registry ->
-                            registry to metadata
+                        val registry = registries[metadata.id]
+                        if (registry != null) {
+                            return@mapNotNull registry to metadata
+                        } else {
+                            return@mapNotNull null
                         }
                     }.sortedBy { it.second }
                     .map { it.first }
                     .toList()
             }
         }
-    }.stateIn(scope, SharingStarted.Lazily, emptyList())
+    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    val bestServer = _registries.flatMapLatest { registries ->
+        if (registries.isEmpty()) {
+            flowOf(null)
+        } else {
+            combine(
+                registries.asSequence()
+                    .sortedBy { it.key }
+                    .map { it.value }
+                    .map {
+                        combine(it.state, it.metadata) { m, d ->
+                            m to d
+                        }
+                    }.asIterable()
+            ) { array ->
+                array.asSequence().mapNotNull { (state, metadata) ->
+                    if (metadata != null && state is RegistryState.Healthy) {
+                        val registry = registries[metadata.id]
+                        if (registry != null) {
+                            return@mapNotNull Triple(
+                                registry,
+                                state,
+                                metadata,
+                            )
+                        }
+                    }
+                    return@mapNotNull null
+                }.sortedWith { a, b ->
+                    var c = a.second.compareTo(b.second)
+                    if (c != 0) {
+                        return@sortedWith c
+                    }
+                    c = a.third.compareTo(b.third)
+                    if (c != 0) {
+                        return@sortedWith c
+                    }
+                    return@sortedWith 0
+                }.map {
+                    it.first
+                }.firstOrNull()
+            }
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, null)
 
     init {
         scope.launch {
