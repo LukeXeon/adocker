@@ -22,9 +22,19 @@ class ImageStateMachine @AssistedInject constructor(
 
                     noChange()
                 }
+
             }
             inState<ImageState.Downloaded> {
+                onEnter {
 
+                    noChange()
+                }
+            }
+            inState<ImageState.Removing> {
+                onEnter {
+
+                    noChange()
+                }
             }
         }
     }
@@ -34,5 +44,4 @@ class ImageStateMachine @AssistedInject constructor(
     interface Factory {
         fun create(@Assisted initialState: ImageState): ImageStateMachine
     }
-
 }

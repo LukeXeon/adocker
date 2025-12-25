@@ -34,20 +34,6 @@ class ImageRepository @Inject constructor(
     private val registryApi: RegistryClient,
     private val appContext: AppContext
 ) {
-    /**
-     * Get all local images
-     */
-    fun getAllImages(): Flow<List<ImageEntity>> {
-        return imageDao.getAllImages()
-    }
-
-    /**
-     * Get image by ID
-     */
-    suspend fun getImageById(id: String): ImageEntity? {
-        return imageDao.getImageById(id)
-    }
-
 
     /**
      * Pull an image from registry
@@ -214,76 +200,5 @@ class ImageRepository @Inject constructor(
         }
     }
 
-    /**
-     * Import image from tar file
-     */
-    suspend fun importImage(tarFile: File, repository: String, tag: String): Result<ImageEntity> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val extractDir = File(appContext.layersDir, imageId)
-
-                FileInputStream(tarFile).use { fis ->
-                    extractTar(fis, extractDir).getOrThrow()
-                }
-
-                val size = getDirectorySize(extractDir)
-
-                val imageEntity = ImageEntity(
-                    repository = repository,
-                    tag = tag,
-                    id = "sha256:$imageId",
-                    architecture = AppContext.ARCHITECTURE,
-                    os = AppContext.DEFAULT_OS,
-                    layerIds = listOf("sha256:$imageId")
-                )
-
-                // Save layer
-                layerDao.insertLayer(
-                    LayerEntity(
-                        id = "sha256:$imageId",
-                        size = size,
-                        mediaType = "application/vnd.docker.image.rootfs.diff.tar",
-                        downloaded = true,
-//                        refCount = 1
-                    )
-                )
-
-                imageDao.insertImage(imageEntity)
-                imageEntity
-            }
-        }
-
-    /**
-     * Export image to tar file
-     */
-    suspend fun exportImage(imageId: String, destFile: File): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val image = imageDao.getImageById(imageId)
-                    ?: throw IllegalArgumentException("Image not found: $imageId")
-
-                // Create tar from layers
-                val tempDir = File(appContext.tmpDir, "export_$imageId")
-                tempDir.mkdirs()
-
-                // Copy all layers
-                image.layerIds.forEach { digest ->
-                    val layerDir = File(appContext.layersDir, digest.removePrefix("sha256:"))
-                    if (layerDir.exists()) {
-                        copyDirectory(layerDir, File(tempDir, "layer"))
-                    }
-                }
-
-                // Create tar (simplified - real implementation would use TarArchiveOutputStream)
-                // For now, just copy the rootfs
-                val rootfsDir = File(tempDir, "layer")
-                if (rootfsDir.exists()) {
-                    rootfsDir.copyRecursively(destFile.parentFile!!, overwrite = true)
-                }
-
-                tempDir.deleteRecursively()
-                Unit
-            }
-        }
 
 }

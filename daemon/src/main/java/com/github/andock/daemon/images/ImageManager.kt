@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,7 +26,6 @@ class ImageManager @Inject constructor(
     private val _images = MutableStateFlow<Map<String, Image>>(emptyMap())
 
     val images = _images.asStateFlow()
-
     val sortedList = _images.map {
         it.asSequence().sortedBy { image -> image.key }.map { image -> image.value }.toList()
     }.stateIn(
@@ -48,13 +48,15 @@ class ImageManager @Inject constructor(
                 ).fold(
                     { configResponse ->
                         // Create image config
-                        val imageConfig = ImageConfig(
-                            cmd = configResponse.config?.cmd,
-                            entrypoint = configResponse.config?.entrypoint,
-                            env = configResponse.config?.env,
-                            workingDir = configResponse.config?.workingDir,
-                            user = configResponse.config?.user
-                        )
+                        val imageConfig = configResponse.config?.let { config ->
+                            ImageConfig(
+                                cmd = config.cmd,
+                                entrypoint = config.entrypoint,
+                                env = config.env,
+                                workingDir = config.workingDir,
+                                user = config.user
+                            )
+                        }
                         // Save image to database
                         val imageEntity = ImageEntity(
                             id = manifest.config.digest,
@@ -62,12 +64,17 @@ class ImageManager @Inject constructor(
                             tag = imageRef.tag,
                             architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
                             os = configResponse.os ?: AppContext.DEFAULT_OS,
+                            size = manifest.layers.sumOf { it.size },
                             layerIds = manifest.layers.map { it.digest },
                             created = System.currentTimeMillis(),
                             config = imageConfig
                         )
                         imageDao.insertImage(imageEntity)
-                        return Result.success(factory.create(ImageState.Waiting(manifest.config.digest)))
+                        val image = factory.create(ImageState.Waiting(manifest.config.digest))
+                        _images.update {
+                            it + (image.id to image)
+                        }
+                        return Result.success(image)
                     },
                     {
                         return Result.failure(it)
