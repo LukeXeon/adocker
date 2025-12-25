@@ -66,7 +66,7 @@ class ContainerManager @Inject constructor(
         name: String?,
         config: ContainerConfig = ContainerConfig(),
     ): Result<Container> {
-        val image = imageDao.getImageById(imageId) ?: return Result.failure(
+        val image = imageDao.getImageByDigest(imageId) ?: return Result.failure(
             IllegalArgumentException("Image not found: $imageId")
         )
         val containerName = if (name == null) {

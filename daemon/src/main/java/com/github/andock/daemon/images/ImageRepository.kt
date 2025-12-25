@@ -1,6 +1,9 @@
 package com.github.andock.daemon.images
 
 import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.client.RegistryClient
+import com.github.andock.daemon.client.model.ImageConfig
+import com.github.andock.daemon.client.model.ImageReference
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.model.ImageEntity
@@ -8,8 +11,6 @@ import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.io.copyDirectory
 import com.github.andock.daemon.io.extractTar
 import com.github.andock.daemon.io.getDirectorySize
-import com.github.andock.daemon.client.DockerRegistryClient
-import com.github.andock.daemon.client.model.ImageConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -31,7 +32,7 @@ import javax.inject.Singleton
 class ImageRepository @Inject constructor(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
-    private val registryApi: DockerRegistryClient,
+    private val registryApi: RegistryClient,
     private val appContext: AppContext
 ) {
     /**
@@ -45,13 +46,9 @@ class ImageRepository @Inject constructor(
      * Get image by ID
      */
     suspend fun getImageById(id: String): ImageEntity? {
-        return imageDao.getImageById(id)
+        return imageDao.getImageByDigest(id)
     }
 
-    /**
-     * Search Docker Hub
-     */
-    suspend fun searchImages(query: String) = registryApi.search(query)
 
     /**
      * Pull an image from registry
@@ -196,7 +193,7 @@ class ImageRepository @Inject constructor(
      */
     suspend fun deleteImage(imageId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val image = imageDao.getImageById(imageId)
+            val image = imageDao.getImageByDigest(imageId)
                 ?: throw IllegalArgumentException("Image not found: $imageId")
 
             // Decrement layer references
@@ -207,7 +204,7 @@ class ImageRepository @Inject constructor(
                 val layer = layerDao.getLayerByDigest(digest)
                 if (layer != null
 //                    && layer.refCount <= 1
-                    ) {
+                ) {
                     val layerFile =
                         File(appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz")
                     layerFile.delete()
@@ -215,16 +212,8 @@ class ImageRepository @Inject constructor(
                 }
             }
 
-            imageDao.deleteImageById(imageId)
+            imageDao.deleteImageByDigest(imageId)
         }
-    }
-
-    /**
-     * Get tags for an image
-     */
-    suspend fun getTags(imageName: String): Result<List<String>> {
-        val imageRef = ImageReference.parse(imageName)
-        return registryApi.getTags(imageRef)
     }
 
     /**
@@ -275,7 +264,7 @@ class ImageRepository @Inject constructor(
     suspend fun exportImage(imageId: String, destFile: File): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val image = imageDao.getImageById(imageId)
+                val image = imageDao.getImageByDigest(imageId)
                     ?: throw IllegalArgumentException("Image not found: $imageId")
 
                 // Create tar from layers

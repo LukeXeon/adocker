@@ -2,10 +2,10 @@ package com.github.andock.ui2.screens.discover
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.images.ImageRepository
 import com.github.andock.daemon.images.PullProgress
-import com.github.andock.daemon.client.model.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,18 +65,18 @@ class DiscoverViewModel @Inject constructor(
             _searchResults.value = emptyList()
             return
         }
-
-        viewModelScope.launch {
-            _isLoading.value = true
-            imageRepository.searchImages(query)
-                .onSuccess { results ->
-                    _searchResults.value = results
-                }
-                .onFailure { e ->
-                    _error.value = "Search failed: ${e.message}"
-                }
-            _isLoading.value = false
-        }
+        TODO()
+//        viewModelScope.launch {
+//            _isLoading.value = true
+//            imageRepository.searchImages(query)
+//                .onSuccess { results ->
+//                    _searchResults.value = results
+//                }
+//                .onFailure { e ->
+//                    _error.value = "Search failed: ${e.message}"
+//                }
+//            _isLoading.value = false
+//        }
     }
 
     // Pull an image

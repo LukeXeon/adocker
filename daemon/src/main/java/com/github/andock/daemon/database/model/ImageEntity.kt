@@ -6,7 +6,6 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.github.andock.daemon.client.model.ImageConfig
-import java.util.UUID
 
 /**
  * Room database entities
@@ -15,17 +14,15 @@ import java.util.UUID
 @Entity(
     tableName = "images",
     indices = [
-        Index("id"),
-        Index("digest")
+        Index("digest"),
     ]
 )
 @TypeConverters(Converters::class)
 data class ImageEntity(
     @PrimaryKey
-    val id: String = UUID.randomUUID().toString(),
+    val digest: String,
     val repository: String,
     val tag: String,
-    val digest: String,
     val architecture: String,
     val os: String,
     val created: Long = System.currentTimeMillis(),

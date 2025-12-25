@@ -4,13 +4,13 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.AuthTokenResponse
 import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
+import com.github.andock.daemon.client.model.ImageReference
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.client.model.SearchResponse
 import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.client.model.TagsListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.LayerEntity
-import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,12 +19,12 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
-import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
 import kotlinx.serialization.json.Json
 import timber.log.Timber
@@ -37,7 +37,7 @@ import javax.inject.Singleton
  * Docker Registry API client
  */
 @Singleton
-class DockerRegistryClient @Inject constructor(
+class RegistryClient @Inject constructor(
     private val json: Json,
     private val client: HttpClient,
     private val registryDao: RegistryDao,
@@ -273,7 +273,7 @@ class DockerRegistryClient @Inject constructor(
 
                 destFile.parentFile?.mkdirs()
                 FileOutputStream(destFile).use { fos ->
-                    val channel: ByteReadChannel = response.body()
+                    val channel = response.bodyAsChannel()
                     val buffer = ByteArray(AppContext.DOWNLOAD_BUFFER_SIZE)
                     while (!channel.isClosedForRead) {
                         val bytesRead = channel.readAvailable(buffer)
