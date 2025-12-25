@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.images
+package com.github.andock.ui.screens.images
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

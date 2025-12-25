@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.R
-import com.github.andock.ui2.screens.images.ImagesViewModel
+import com.github.andock.ui.screens.images.ImagesViewModel
 
 @Composable
 fun PullImageDialog(

@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.images
+package com.github.andock.ui.screens.images
 
 import androidx.lifecycle.ViewModel
 import com.github.andock.daemon.images.ImageManager
