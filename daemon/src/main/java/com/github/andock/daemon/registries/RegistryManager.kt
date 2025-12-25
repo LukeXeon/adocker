@@ -34,30 +34,34 @@ class RegistryManager @Inject constructor(
         private val BUILTIN_SERVERS = listOf(
             RegistryEntity(
                 id = "c0d1e2f3-4567-49ab-cdef-0123456789ab",
-                name = "Docker Hub (Official)",
+                name = "Docker Hub",
                 url = AppContext.DEFAULT_REGISTRY,
                 priority = 100,
+                tags = listOf("Official"),
                 type = RegistryType.Official,
             ),
             RegistryEntity(
                 id = "3f8e7d6c-5b4a-4876-80fe-dcba98765432",
-                name = "DaoCloud (China)",
+                name = "DaoCloud",
                 url = "https://docker.m.daocloud.io",
                 priority = 100,
+                tags = listOf("China"),
                 type = RegistryType.BuiltinMirror,
             ),
             RegistryEntity(
                 id = "789abcde-1234-4678-90ab-cdef12345678",
-                name = "Xuanyuan (China)",
+                name = "Xuanyuan",
                 url = "https://docker.xuanyuan.me",
                 priority = 90,
+                tags = listOf("China"),
                 type = RegistryType.BuiltinMirror,
             ),
             RegistryEntity(
                 id = "87654321-abcd-4f12-3456-7890abcdef12",
-                name = "Huawei Cloud (China)",
+                name = "Huawei Cloud",
                 url = "https://mirrors.huaweicloud.com",
                 priority = 80,
+                tags = listOf("China"),
                 type = RegistryType.BuiltinMirror,
             )
         )

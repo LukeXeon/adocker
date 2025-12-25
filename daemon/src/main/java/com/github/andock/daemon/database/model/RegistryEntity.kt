@@ -19,6 +19,7 @@ data class RegistryEntity(
     val name: String,
     val bearerToken: String? = null,
     val type: RegistryType,
+    val tags: List<String>? = null,
     val priority: Int = 0,
 ) : Comparable<RegistryEntity> {
     override fun compareTo(other: RegistryEntity): Int {

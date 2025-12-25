@@ -1,7 +1,6 @@
 package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.database.model.ContainerEntity
 import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.utils.execute
 import com.github.andock.daemon.utils.inState
@@ -81,16 +80,6 @@ class Container @AssistedInject constructor(
             SharingStarted.Eagerly,
             null
         )
-
-
-    suspend fun getMetadata(): Result<ContainerEntity> {
-        val entity = containerDao.getContainerById(id)
-        return if (entity != null) {
-            Result.success(entity)
-        } else {
-            Result.failure(NoSuchElementException("Container not found: $id"))
-        }
-    }
 
     suspend fun start() {
         stateMachine.dispatch(ContainerOperation.Start)

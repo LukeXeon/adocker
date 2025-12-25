@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -27,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +66,21 @@ fun RegistryCard(
             }
         }
     }.collectAsState("N/A")
+    val isCustom = metadata.type == RegistryType.CustomMirror
+    val tags = remember(metadata.tags, isCustom, isBest) {
+        buildList {
+            val tags = metadata.tags
+            if (!tags.isNullOrEmpty()) {
+                addAll(tags)
+            }
+            if (isBest) {
+                add("Best")
+            }
+            if (isCustom) {
+                add("Custom")
+            }
+        }
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -96,31 +114,20 @@ fun RegistryCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(
+                LazyRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
-                    Text(
-                        text = metadata.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (isBest) {
+                    item {
                         Text(
-                            "Best",
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(
-                                    MaterialTheme.colorScheme.tertiaryContainer
-                                )
-                                .padding(horizontal = 4.dp)
+                            text = metadata.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    if (metadata.type == RegistryType.CustomMirror) {
+                    items(tags, key = { it }) {
                         Text(
-                            "Custom",
+                            it,
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
                             modifier = Modifier
@@ -129,11 +136,9 @@ fun RegistryCard(
                                     MaterialTheme.colorScheme.tertiaryContainer
                                 )
                                 .padding(horizontal = 4.dp)
-
                         )
                     }
                 }
-
                 Text(
                     text = metadata.url.removePrefix("https://"),
                     style = MaterialTheme.typography.bodySmall,

@@ -1,7 +1,6 @@
 package com.github.andock.daemon.registries
 
 import com.github.andock.daemon.database.dao.RegistryDao
-import com.github.andock.daemon.database.model.RegistryEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -50,15 +49,6 @@ class Registry @AssistedInject constructor(
             SharingStarted.Eagerly,
             null
         )
-
-    suspend fun getMetadata(): Result<RegistryEntity> {
-        val entity = registryDao.getRegistryById(id)
-        return if (entity != null) {
-            Result.success(entity)
-        } else {
-            Result.failure(NoSuchElementException("Registry server not found: $id"))
-        }
-    }
 
     suspend fun check() {
         stateMachine.dispatch(RegistryOperation.Check)
