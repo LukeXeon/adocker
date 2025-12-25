@@ -4,10 +4,8 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.AuthTokenResponse
 import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
-import com.github.andock.daemon.client.model.ImageReference
+import com.github.andock.daemon.client.ImageReference
 import com.github.andock.daemon.client.model.ManifestListResponse
-import com.github.andock.daemon.client.model.SearchResponse
-import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.client.model.TagsListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.LayerEntity
@@ -17,7 +15,6 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.parameter
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
@@ -62,7 +59,6 @@ class RegistryClient @Inject constructor(
         registry: String = AppContext.DEFAULT_REGISTRY
     ): Result<String> = runCatching {
         Timber.d("Authenticating for repository: $repository, registry: $registry")
-
         try {
             // Check if this specific registry URL has a Bearer Token configured
             val bearerToken = registryDao.getBearerTokenByUrl(registry)
@@ -274,7 +270,7 @@ class RegistryClient @Inject constructor(
                 destFile.parentFile?.mkdirs()
                 FileOutputStream(destFile).use { fos ->
                     val channel = response.bodyAsChannel()
-                    val buffer = ByteArray(AppContext.DOWNLOAD_BUFFER_SIZE)
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
                     while (!channel.isClosedForRead) {
                         val bytesRead = channel.readAvailable(buffer)
                         if (bytesRead > 0) {
@@ -293,20 +289,6 @@ class RegistryClient @Inject constructor(
             Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
         }
     }
-
-    /**
-     * Search Docker Hub for images
-     */
-    suspend fun search(query: String, limit: Int = 25): Result<List<SearchResult>> =
-        runCatching {
-            val response = client.get("https://hub.docker.com/v2/search/repositories/") {
-                parameter("query", query)
-                parameter("page_size", limit)
-            }
-            val body = response.body<SearchResponse>()
-            // Filter out invalid results (missing name field)
-            body.results.filter { it.repoName != null }
-        }
 
     /**
      * Get tags for a repository
@@ -328,7 +310,7 @@ class RegistryClient @Inject constructor(
         response.tags
     }
 
-    private fun getBestRegistry(): String {
+    private fun getBestServer(): String {
         return registryManager.bestServer.value?.metadata?.value?.url ?: AppContext.DEFAULT_REGISTRY
     }
 
@@ -344,7 +326,7 @@ class RegistryClient @Inject constructor(
                     || originalRegistry == "registry-1.docker.io"
                     || originalRegistry.contains(
                 "docker.io"
-            ) -> getBestRegistry()
+            ) -> getBestServer()
 
             // Other registries - use as-is
             originalRegistry.startsWith("http") -> originalRegistry

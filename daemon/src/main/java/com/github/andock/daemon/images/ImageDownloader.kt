@@ -1,6 +1,6 @@
 package com.github.andock.daemon.images
 
-import com.github.andock.daemon.client.model.ImageReference
+import com.github.andock.daemon.client.ImageReference
 import com.github.andock.daemon.database.model.ImageEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory

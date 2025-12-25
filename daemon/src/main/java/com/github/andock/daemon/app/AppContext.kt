@@ -71,9 +71,6 @@ class AppContext @Inject constructor(
         const val NETWORK_TIMEOUT = 30000L
         const val DOWNLOAD_TIMEOUT = 300000L
 
-        // Buffer sizes
-        const val DOWNLOAD_BUFFER_SIZE = 8192
-
         // Directories (relative to app's files directory)
         const val DIR_CONTAINERS = "containers"
         const val DIR_LAYERS = "layers"
