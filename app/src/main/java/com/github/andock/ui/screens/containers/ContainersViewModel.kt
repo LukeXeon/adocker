@@ -15,6 +15,9 @@ class ContainersViewModel @Inject constructor(
 
     val containers = containerManager.containers
 
+    val sortedList = containerManager.sortedList
+
+
     // Delete a container
     fun deleteContainer(containerId: String) {
         viewModelScope.launch {

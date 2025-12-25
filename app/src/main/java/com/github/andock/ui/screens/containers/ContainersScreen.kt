@@ -40,7 +40,6 @@ import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,13 +48,7 @@ fun ContainersScreen(
     onNavigateToDetail: (String) -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ContainersViewModel>()
-    val containers by viewModel.containers.map {
-        it.asSequence().sortedBy { container -> container.key }
-            .map { container ->
-                container.value
-            }.toList()
-    }.collectAsState(emptyList())
-
+    val containers by viewModel.sortedList.collectAsState()
     val containerStates = containers.map { container ->
         container.state.collectAsState().value
     }
@@ -98,11 +91,12 @@ fun ContainersScreen(
                     FilterChip(
                         selected = filterType == type,
                         onClick = {
-                            filterType = if (filterType == type && type != ContainerFilterType.All) {
-                                ContainerFilterType.All
-                            } else {
-                                type
-                            }
+                            filterType =
+                                if (filterType == type && type != ContainerFilterType.All) {
+                                    ContainerFilterType.All
+                                } else {
+                                    type
+                                }
                         },
                         label = {
                             Text(

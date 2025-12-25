@@ -8,7 +8,10 @@ import com.github.andock.daemon.database.model.ContainerEntity
 import com.github.andock.daemon.io.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -30,6 +33,12 @@ class ContainerManager @Inject constructor(
     private val _containers = MutableStateFlow<Map<String, Container>>(emptyMap())
 
     val containers = _containers.asStateFlow()
+
+    val sortedList = _containers.map {
+        it.asSequence().sortedBy { container -> container.key }
+            .map { container -> container.value }
+            .toList()
+    }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     init {
         scope.launch {

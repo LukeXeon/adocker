@@ -68,13 +68,13 @@ fun PhantomProcessScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val dismissMessage = stringResource(R.string.action_dismiss)
     // Show error or success messages
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(
                 message = error,
-                actionLabel = context.getString(R.string.action_dismiss),
+                actionLabel = dismissMessage,
                 duration = SnackbarDuration.Long
             )
             viewModel.clearError()
