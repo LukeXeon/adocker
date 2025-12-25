@@ -1,5 +1,6 @@
 package com.github.andock.ui.screens.registries
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
@@ -27,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.andock.R
@@ -103,38 +106,32 @@ fun RegistryCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (isBest) {
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    "Best",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1
+                        Text(
+                            "Best",
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(
+                                    MaterialTheme.colorScheme.tertiaryContainer
                                 )
-                            },
-                            modifier = Modifier.height(Spacing.Large),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            )
+                                .padding(horizontal = 4.dp)
                         )
                     }
                     if (metadata.type == RegistryType.CustomMirror) {
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    "Custom",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1
+                        Text(
+                            "Custom",
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(
+                                    MaterialTheme.colorScheme.tertiaryContainer
                                 )
-                            },
-                            modifier = Modifier.height(Spacing.Large),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            )
+                                .padding(horizontal = 4.dp)
+
                         )
                     }
-
                 }
 
                 Text(
