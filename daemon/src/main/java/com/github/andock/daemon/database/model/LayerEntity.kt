@@ -7,12 +7,12 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "layers",
     indices = [
-        Index("digest")
+        Index("id")
     ]
 )
 data class LayerEntity(
     @PrimaryKey
-    val digest: String,
+    val id: String,
     val size: Long,
     val mediaType: String,
     val downloaded: Boolean,

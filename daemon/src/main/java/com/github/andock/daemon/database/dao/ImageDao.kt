@@ -13,11 +13,11 @@ interface ImageDao {
     @Query("SELECT * FROM images ORDER BY created DESC")
     fun getAllImages(): Flow<List<ImageEntity>>
 
-    @Query("SELECT * FROM images WHERE digest = :digest")
-    suspend fun getImageByDigest(digest: String): ImageEntity?
+    @Query("SELECT * FROM images WHERE id = :id")
+    suspend fun getImageById(id: String): ImageEntity?
 
-    @Query("SELECT * FROM images WHERE digest = :digest")
-    fun getImageFlowByDigest(digest: String): Flow<ImageEntity?>
+    @Query("SELECT * FROM images WHERE id = :id")
+    fun getImageFlowById(id: String): Flow<ImageEntity?>
 
     @Query("SELECT * FROM images WHERE repository = :repository AND tag = :tag")
     suspend fun getImageByRepoTag(repository: String, tag: String): ImageEntity?
@@ -27,6 +27,6 @@ interface ImageDao {
     @Delete
     suspend fun deleteImage(image: ImageEntity)
 
-    @Query("DELETE FROM images WHERE digest = :digest")
-    suspend fun deleteImageByDigest(digest: String)
+    @Query("DELETE FROM images WHERE id = :id")
+    suspend fun deleteImageById(id: String)
 }

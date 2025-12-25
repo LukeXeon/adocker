@@ -14,19 +14,20 @@ import com.github.andock.daemon.client.model.ImageConfig
 @Entity(
     tableName = "images",
     indices = [
-        Index("digest"),
+        Index("id"),
     ]
 )
 @TypeConverters(Converters::class)
 data class ImageEntity(
     @PrimaryKey
-    val digest: String,
+    val id: String,
     val repository: String,
     val tag: String,
     val architecture: String,
     val os: String,
     val created: Long,
-    val layerDigests: List<String>,
+    val size: Long,
+    val layerIds: List<String>,
     val config: ImageConfig?
 ) {
     @get:Ignore

@@ -20,7 +20,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,7 +45,7 @@ class ImageRepository @Inject constructor(
      * Get image by ID
      */
     suspend fun getImageById(id: String): ImageEntity? {
-        return imageDao.getImageByDigest(id)
+        return imageDao.getImageById(id)
     }
 
 
@@ -83,7 +82,7 @@ class ImageRepository @Inject constructor(
             try {
                 Timber.d("About to check database for existing layer")
                 // Check if layer already exists
-                existingLayer = layerDao.getLayerByDigest(layerDigest)
+                existingLayer = layerDao.getLayerById(layerDigest)
                 Timber.d("Database check complete: $existingLayer")
 
                 layerFile =
@@ -134,7 +133,7 @@ class ImageRepository @Inject constructor(
             // Save layer info (keep compressed file only)
             layerDao.insertLayer(
                 LayerEntity(
-                    digest = layerDigest,
+                    id = layerDigest,
                     size = layerDescriptor.size,
                     mediaType = layerDescriptor.mediaType,
                     downloaded = true,
@@ -173,11 +172,10 @@ class ImageRepository @Inject constructor(
         val imageEntity = ImageEntity(
             repository = imageRef.repository,
             tag = imageRef.tag,
-            digest = manifest.config.digest,
+            id = manifest.config.digest,
             architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
             os = configResponse.os ?: AppContext.DEFAULT_OS,
-            size = totalSize,
-            layerDigests = layerIds,
+            layerIds = layerIds,
             config = imageConfig
         )
 
@@ -193,15 +191,15 @@ class ImageRepository @Inject constructor(
      */
     suspend fun deleteImage(imageId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val image = imageDao.getImageByDigest(imageId)
+            val image = imageDao.getImageById(imageId)
                 ?: throw IllegalArgumentException("Image not found: $imageId")
 
             // Decrement layer references
-            image.layerDigests.forEach { digest ->
+            image.layerIds.forEach { digest ->
 //                layerDao.decrementRefCount(digest)
 
                 // Delete layer if no longer referenced
-                val layer = layerDao.getLayerByDigest(digest)
+                val layer = layerDao.getLayerById(digest)
                 if (layer != null
 //                    && layer.refCount <= 1
                 ) {
@@ -212,7 +210,7 @@ class ImageRepository @Inject constructor(
                 }
             }
 
-            imageDao.deleteImageByDigest(imageId)
+            imageDao.deleteImageById(imageId)
         }
     }
 
@@ -222,7 +220,6 @@ class ImageRepository @Inject constructor(
     suspend fun importImage(tarFile: File, repository: String, tag: String): Result<ImageEntity> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val imageId = UUID.randomUUID().toString()
                 val extractDir = File(appContext.layersDir, imageId)
 
                 FileInputStream(tarFile).use { fis ->
@@ -232,20 +229,18 @@ class ImageRepository @Inject constructor(
                 val size = getDirectorySize(extractDir)
 
                 val imageEntity = ImageEntity(
-                    id = imageId,
                     repository = repository,
                     tag = tag,
-                    digest = "sha256:$imageId",
+                    id = "sha256:$imageId",
                     architecture = AppContext.ARCHITECTURE,
                     os = AppContext.DEFAULT_OS,
-                    size = size,
-                    layerDigests = listOf("sha256:$imageId")
+                    layerIds = listOf("sha256:$imageId")
                 )
 
                 // Save layer
                 layerDao.insertLayer(
                     LayerEntity(
-                        digest = "sha256:$imageId",
+                        id = "sha256:$imageId",
                         size = size,
                         mediaType = "application/vnd.docker.image.rootfs.diff.tar",
                         downloaded = true,
@@ -264,7 +259,7 @@ class ImageRepository @Inject constructor(
     suspend fun exportImage(imageId: String, destFile: File): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                val image = imageDao.getImageByDigest(imageId)
+                val image = imageDao.getImageById(imageId)
                     ?: throw IllegalArgumentException("Image not found: $imageId")
 
                 // Create tar from layers
@@ -272,7 +267,7 @@ class ImageRepository @Inject constructor(
                 tempDir.mkdirs()
 
                 // Copy all layers
-                image.layerDigests.forEach { digest ->
+                image.layerIds.forEach { digest ->
                     val layerDir = File(appContext.layersDir, digest.removePrefix("sha256:"))
                     if (layerDir.exists()) {
                         copyDirectory(layerDir, File(tempDir, "layer"))

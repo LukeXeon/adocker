@@ -257,9 +257,9 @@ class RegistryClient @Inject constructor(
                 authenticate(imageRef.repository, registry).getOrThrow()
             }
 
-            Timber.d("Starting layer download: ${layer.digest.take(16)}, size: ${layer.size}")
+            Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
 
-            client.prepareGet("$registry/v2/${imageRef.repository}/blobs/${layer.digest}") {
+            client.prepareGet("$registry/v2/${imageRef.repository}/blobs/${layer.id}") {
                 if (!authToken.isNullOrEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
@@ -287,10 +287,10 @@ class RegistryClient @Inject constructor(
                         }
                     }
                 }
-                Timber.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
+                Timber.i("Layer download completed: ${layer.id.take(16)}, downloaded: $downloaded bytes")
             }
         }.onFailure { e ->
-            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
+            Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
         }
     }
 

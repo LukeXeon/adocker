@@ -6,10 +6,10 @@ import androidx.room.Index
 
 @Entity(
     tableName = "layer_references",
-    primaryKeys = ["imageId", "layerDigest"],
+    primaryKeys = ["imageId", "layerId"],
     indices = [
         Index(value = ["imageId"]),
-        Index(value = ["layerDigest"])
+        Index(value = ["layerId"])
     ],
     foreignKeys = [
         // 给imageId加外键：关联image表的id
@@ -24,7 +24,7 @@ import androidx.room.Index
         ForeignKey(
             entity = LayerEntity::class,
             parentColumns = ["digest"],
-            childColumns = ["layerDigest"],
+            childColumns = ["layerId"],
             onDelete = ForeignKey.RESTRICT, // 删除Layer时，若有引用则禁止删除（避免误删）
             onUpdate = ForeignKey.CASCADE
         )
@@ -32,5 +32,5 @@ import androidx.room.Index
 )
 data class LayerReference(
     val imageId: String,
-    val layerDigest: String,
+    val layerId: String,
 )

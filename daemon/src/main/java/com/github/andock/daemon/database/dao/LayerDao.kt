@@ -8,8 +8,8 @@ import com.github.andock.daemon.database.model.LayerEntity
 
 @Dao
 interface LayerDao {
-    @Query("SELECT * FROM layers WHERE digest = :digest")
-    suspend fun getLayerByDigest(digest: String): LayerEntity?
+    @Query("SELECT * FROM layers WHERE id = :id")
+    suspend fun getLayerById(id: String): LayerEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLayer(layer: LayerEntity)
@@ -17,11 +17,11 @@ interface LayerDao {
     @Query(
         """
         DELETE FROM layers
-        WHERE digest = :digest
+        WHERE id = :id
         AND NOT EXISTS (
-            SELECT 1 FROM layer_references WHERE layerDigest = :digest
+            SELECT 1 FROM layer_references WHERE layerId = :id
         )
     """
     )
-    suspend fun deleteUnreferencedLayer(digest: String): Int
+    suspend fun deleteUnreferencedLayer(id: String): Int
 }

@@ -66,7 +66,7 @@ class ContainerManager @Inject constructor(
         name: String?,
         config: ContainerConfig = ContainerConfig(),
     ): Result<Container> {
-        val image = imageDao.getImageByDigest(imageId) ?: return Result.failure(
+        val image = imageDao.getImageById(imageId) ?: return Result.failure(
             IllegalArgumentException("Image not found: $imageId")
         )
         val containerName = if (name == null) {
@@ -86,7 +86,7 @@ class ContainerManager @Inject constructor(
         val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
         rootfsDir.mkdirs()
         // Extract layers directly to rootfs
-        for (digest in image.layerDigests) {
+        for (digest in image.layerIds) {
             val layerFile = File(
                 appContext.layersDir, "${digest.removePrefix("sha256:")}.tar.gz"
             )

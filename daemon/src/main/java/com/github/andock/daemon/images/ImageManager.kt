@@ -57,12 +57,12 @@ class ImageManager @Inject constructor(
                         )
                         // Save image to database
                         val imageEntity = ImageEntity(
-                            digest = manifest.config.digest,
+                            id = manifest.config.digest,
                             repository = imageRef.repository,
                             tag = imageRef.tag,
                             architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
                             os = configResponse.os ?: AppContext.DEFAULT_OS,
-                            layerDigests = manifest.layers.map { it.digest },
+                            layerIds = manifest.layers.map { it.digest },
                             created = System.currentTimeMillis(),
                             config = imageConfig
                         )

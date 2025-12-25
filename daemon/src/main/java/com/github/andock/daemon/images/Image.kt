@@ -29,14 +29,15 @@ class Image @AssistedInject constructor(
         get() = stateMachine.state
 
     val digest
-        get() = state.value.digest
+        get() = state.value.id
 
     val metadata
-        get() = imageDao.getImageFlowByDigest(digest).stateIn(
+        get() = imageDao.getImageFlowById(digest).stateIn(
             scope,
             SharingStarted.Lazily,
             null
         )
+
 
     init {
         scope.launch {

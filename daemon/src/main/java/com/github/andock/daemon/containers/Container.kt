@@ -41,6 +41,13 @@ class Container @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
+    val metadata
+        get() = containerDao.getContainerFlowById(id).stateIn(
+            scope,
+            SharingStarted.Eagerly,
+            null
+        )
+
     init {
         scope.launch {
             stateMachine.state.collect {
@@ -74,12 +81,7 @@ class Container @AssistedInject constructor(
         }
     }
 
-    val metadata
-        get() = containerDao.getContainerFlowById(id).stateIn(
-            scope,
-            SharingStarted.Eagerly,
-            null
-        )
+
 
     suspend fun start() {
         stateMachine.dispatch(ContainerOperation.Start)
