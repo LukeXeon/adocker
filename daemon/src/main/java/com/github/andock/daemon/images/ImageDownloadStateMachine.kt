@@ -78,59 +78,78 @@ class ImageDownloadStateMachine @AssistedInject constructor(
         }
     }
 
+    private suspend inline fun <T> ChangeableState<ImageDownloadState.Downloading>.downloadStep(
+        name: String,
+        total: Long,
+        crossinline block: suspend () -> T
+    ): T {
+        var exception: Exception? = null
+        snapshot.updateProgress { from ->
+            buildMap(from.size + 1) {
+                putAll(from)
+                put(name, DownloadProgress(0, total))
+            }
+        }
+        try {
+            return block()
+        } catch (e: Exception) {
+            exception = e
+            throw e
+        } finally {
+            if (exception == null) {
+                snapshot.updateProgress { from ->
+                    buildMap(from.size) {
+                        putAll(from)
+                        put(name, DownloadProgress(total, total))
+                    }
+                }
+            }
+        }
+    }
+
     private suspend fun ChangeableState<ImageDownloadState.Downloading>.downloadImage(): ChangedState<ImageDownloadState> {
         try {
-            snapshot.updateProgress {
-                mapOf(
-                    "manifest" to DownloadProgress(0, 1)
-                )
-            }
             val imageRef = snapshot.imageRef
-            val manifest = client.getManifest(imageRef).getOrThrow()
-            snapshot.updateProgress {
-                mapOf(
-                    "manifest" to DownloadProgress(1, 1),
-                    "config" to DownloadProgress(0, 1)
-                )
+            val manifest = downloadStep("manifest", 1) {
+                client.getManifest(imageRef).getOrThrow()
             }
             val configDigest = manifest.config.digest
-            val configResponse = client.getImageConfig(
-                imageRef,
-                configDigest
-            ).getOrThrow()
-            snapshot.updateProgress {
-                mapOf(
-                    "manifest" to DownloadProgress(1, 1),
-                    "config" to DownloadProgress(1, 1)
-                )
+            val configResponse = downloadStep("config", 1) {
+                client.getImageConfig(
+                    imageRef,
+                    configDigest
+                ).getOrThrow()
             }
             coroutineScope {
                 manifest.layers.map { layer ->
                     launch {
-                        layerDao.getLayerById(layer.digest.removePrefix("sha256:"))
-                        val layerFile = File(
-                            appContext.layersDir,
-                            "${layer.digest.removePrefix("sha256:")}.tar.gz"
-                        )
-                        client.downloadLayer(
-                            imageRef,
-                            layer,
-                            layerFile
-                        ) { progress ->
-                            snapshot.updateProgress { from ->
-                                buildMap(from.size) {
-                                    putAll(from)
-                                    put(layer.digest, progress)
-                                }
-                            }
-                        }.getOrThrow()
-                        layerDao.insertLayer(
-                            LayerEntity(
-                                id = layer.digest.removePrefix("sha256:"),
-                                size = layer.size,
-                                mediaType = layer.mediaType,
+                        val id = layer.digest.removePrefix("sha256:")
+                        downloadStep(id.take(16), layer.size) {
+                            val layerEntity = layerDao.getLayerById(id)
+                            val destFile = File(
+                                appContext.layersDir,
+                                "${id}.tar.gz"
                             )
-                        )
+                            client.downloadLayer(
+                                imageRef,
+                                layer,
+                                destFile
+                            ) { progress ->
+                                snapshot.updateProgress { from ->
+                                    buildMap(from.size) {
+                                        putAll(from)
+                                        put(layer.digest, progress)
+                                    }
+                                }
+                            }.getOrThrow()
+                            layerDao.insertLayer(
+                                LayerEntity(
+                                    id = id,
+                                    size = layer.size,
+                                    mediaType = layer.mediaType,
+                                )
+                            )
+                        }
                     }
                 }.joinAll()
             }

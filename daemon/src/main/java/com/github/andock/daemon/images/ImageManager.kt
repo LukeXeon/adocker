@@ -2,15 +2,23 @@ package com.github.andock.daemon.images
 
 import com.github.andock.daemon.client.ImageReference
 import com.github.andock.daemon.database.dao.ImageDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ImageManager @Inject constructor(
     private val imageDao: ImageDao,
-    private val downloaderFactory: ImageDownloader.Factory
+    private val downloaderFactory: ImageDownloader.Factory,
+    scope: CoroutineScope,
 ) {
-    val images = imageDao.getAllImages()
+    val images = imageDao.getAllImages().stateIn(
+        scope,
+        SharingStarted.Eagerly,
+        emptyList()
+    )
 
     fun getImageById(id: String) = imageDao.getImageFlowById(id)
 

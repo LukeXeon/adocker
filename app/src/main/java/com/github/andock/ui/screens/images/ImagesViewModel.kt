@@ -10,7 +10,8 @@ class ImagesViewModel @Inject constructor(
     private val imageManager: ImageManager,
 ) : ViewModel() {
 
-    val images = imageManager.images
+    val images
+        get() = imageManager.images
 
     fun getImageById(id: String) = imageManager.getImageById(id)
 
