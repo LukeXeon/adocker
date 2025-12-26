@@ -17,13 +17,6 @@ class ImageStateMachine @AssistedInject constructor(
     init {
         initializeWith { initialState }
         spec {
-            inState<ImageState.Downloading> {
-                onEnter {
-
-                    noChange()
-                }
-
-            }
             inState<ImageState.Downloaded> {
                 onEnter {
 

@@ -54,18 +54,19 @@ class ImageDownloader @AssistedInject constructor(
         val total: Long,
     )
 
-    private val _state = MutableStateFlow<State>(State.Downloading(emptyMap()))
+    private val _state = MutableStateFlow<State>(
+        State.Downloading(
+            mapOf(
+                "manifest" to Progress(0, 1)
+            )
+        )
+    )
 
     val state = _state.asStateFlow()
 
     init {
         scope.launch {
             runCatching {
-                _state.value = State.Downloading(
-                    mapOf(
-                        "manifest" to Progress(0, 1)
-                    )
-                )
                 val manifest = client.getManifest(imageRef).getOrThrow()
                 _state.value = State.Downloading(
                     mapOf(
