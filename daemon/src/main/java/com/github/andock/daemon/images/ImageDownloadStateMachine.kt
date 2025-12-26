@@ -13,7 +13,9 @@ import com.github.andock.daemon.client.model.ImageConfig
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
+import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.model.ImageEntity
+import com.github.andock.daemon.database.model.LayerReferenceEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,6 +34,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val client: ImageClient,
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
+    private val layerReferenceDao: LayerReferenceDao,
     private val database: AppDatabase,
     private val appContext: AppContext,
 ) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
@@ -146,7 +149,14 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 config = imageConfig
             )
             database.withTransaction {
-
+                layerReferenceDao.insertLayerReference(
+                    manifest.layers.map {
+                        LayerReferenceEntity(
+                            imageId = imageEntity.id,
+                            layerId = it.digest
+                        )
+                    }
+                )
                 imageDao.insertImage(imageEntity)
             }
             return override {

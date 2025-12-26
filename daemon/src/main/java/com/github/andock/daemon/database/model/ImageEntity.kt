@@ -19,6 +19,9 @@ import com.github.andock.daemon.client.model.ImageConfig
 )
 @TypeConverters(Converters::class)
 data class ImageEntity(
+    /**
+     * digest
+     * */
     @PrimaryKey
     val id: String,
     val registry: String,

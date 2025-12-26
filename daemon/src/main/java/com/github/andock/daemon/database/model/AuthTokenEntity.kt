@@ -5,10 +5,10 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    "tokens",
+    "auth_tokens",
     indices = [Index("url")]
 )
-data class TokenEntity(
+data class AuthTokenEntity(
     @PrimaryKey
     val url: String,
     val token: String,

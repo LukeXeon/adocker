@@ -11,6 +11,9 @@ import androidx.room.PrimaryKey
     ]
 )
 data class LayerEntity(
+    /**
+     * digest
+     * */
     @PrimaryKey
     val id: String,
     val size: Long,

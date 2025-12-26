@@ -7,8 +7,8 @@ import com.github.andock.daemon.client.model.ImageManifestV2
 import com.github.andock.daemon.client.model.LayerDescriptor
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
-import com.github.andock.daemon.database.dao.TokenDao
-import com.github.andock.daemon.database.model.TokenEntity
+import com.github.andock.daemon.database.dao.AuthTokenDao
+import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -34,7 +34,7 @@ class ImageClient @Inject constructor(
     private val client: HttpClient,
     private val registryDao: RegistryDao,
     private val registryManager: RegistryManager,
-    private val tokenDao: TokenDao,
+    private val tokenDao: AuthTokenDao,
 ) {
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
     private val serviceRegex = Regex("service=\"([^\"]+)\"")
@@ -103,7 +103,7 @@ class ImageClient @Inject constructor(
             val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
             val authToken = tokenResponse.token ?: tokenResponse.accessToken ?: ""
             tokenDao.insertToken(
-                TokenEntity(
+                AuthTokenEntity(
                     authUrl,
                     authToken,
                     System.currentTimeMillis() + tokenResponse.expiresIn * 1000L

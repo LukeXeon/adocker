@@ -2,11 +2,12 @@ package com.github.andock.daemon.database
 
 import android.content.Context
 import androidx.room.Room
+import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
+import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.dao.RegistryDao
-import com.github.andock.daemon.database.dao.TokenDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,7 +55,14 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun tokenDao(database: AppDatabase): TokenDao {
-        return database.tokenDao()
+    fun authTokenDao(database: AppDatabase): AuthTokenDao {
+        return database.authTokenDao()
     }
+
+    @Provides
+    @Singleton
+    fun layerReferenceDao(database: AppDatabase): LayerReferenceDao {
+        return database.layerReferenceDao()
+    }
+
 }

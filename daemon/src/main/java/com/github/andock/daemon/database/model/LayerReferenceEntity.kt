@@ -30,7 +30,7 @@ import androidx.room.Index
         )
     ]
 )
-data class LayerReference(
+data class LayerReferenceEntity(
     val imageId: String,
     val layerId: String,
 )
