@@ -2,7 +2,6 @@ package com.github.andock.daemon.images
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.ImageReference
-import com.github.andock.daemon.client.RegistryClient
 import com.github.andock.daemon.client.model.ImageConfig
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao

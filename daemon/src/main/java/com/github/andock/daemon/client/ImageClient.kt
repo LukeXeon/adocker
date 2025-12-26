@@ -7,17 +7,25 @@ import com.github.andock.daemon.client.model.ImageManifestV2
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.TokenDao
+import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.TokenEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentLength
 import io.ktor.http.contentType
+import io.ktor.utils.io.readAvailable
 import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -237,5 +245,52 @@ class ImageClient @Inject constructor(
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
         response.body()
+    }
+
+    /**
+     * Download a layer blob
+     */
+    suspend fun downloadLayer(
+        imageRef: ImageReference,
+        layer: LayerEntity,
+        destFile: File,
+        onProgress: suspend (Long, Long) -> Unit
+    ): Result<Unit> {
+        return runCatching {
+            val registryUrl = getRegistryUrl(imageRef.registry)
+            val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
+            Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
+            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.id}") {
+                if (authToken.isNotEmpty()) {
+                    header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+                timeout {
+                    requestTimeoutMillis = AppContext.DOWNLOAD_TIMEOUT
+                }
+            }.execute { response ->
+                Timber.d("Layer download response status: ${response.status}")
+                val contentLength = response.contentLength() ?: layer.size
+                var downloaded = 0L
+                destFile.parentFile?.mkdirs()
+                FileOutputStream(destFile).use { fos ->
+                    val channel = response.bodyAsChannel()
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (!channel.isClosedForRead) {
+                        val bytesRead = channel.readAvailable(buffer)
+                        if (bytesRead > 0) {
+                            fos.write(buffer, 0, bytesRead)
+                            downloaded += bytesRead
+                            onProgress(downloaded, contentLength)
+                            if (downloaded % (512 * 1024) == 0L || downloaded == contentLength) {
+                                Timber.d("Download progress: $downloaded/$contentLength bytes")
+                            }
+                        }
+                    }
+                }
+                Timber.i("Layer download completed: ${layer.id.take(16)}, downloaded: $downloaded bytes")
+            }
+        }.onFailure { e ->
+            Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
+        }
     }
 }
