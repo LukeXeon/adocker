@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import com.github.andock.daemon.database.Converters
 
 @Entity(
     tableName = "registries",

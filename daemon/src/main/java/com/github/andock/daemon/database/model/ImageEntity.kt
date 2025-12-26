@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.github.andock.daemon.client.model.ImageConfig
+import com.github.andock.daemon.database.Converters
 
 /**
  * Room database entities

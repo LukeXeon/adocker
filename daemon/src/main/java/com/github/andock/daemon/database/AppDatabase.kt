@@ -11,7 +11,7 @@ import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.database.model.ContainerEntity
-import com.github.andock.daemon.database.model.Converters
+import com.github.andock.daemon.database.Converters
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
