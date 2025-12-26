@@ -53,7 +53,7 @@ class AppInitializer @Inject constructor(
     private object UninitializedValue
 
     abstract class Task<T> {
-        protected abstract fun create(): T
+        protected abstract suspend fun create(): T
         private val lock = Mutex()
 
         @Volatile

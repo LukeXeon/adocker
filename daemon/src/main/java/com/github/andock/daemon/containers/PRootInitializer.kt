@@ -3,10 +3,11 @@ package com.github.andock.daemon.containers
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.app.AppInitializer
 import com.github.andock.daemon.os.Process
+import com.github.andock.daemon.os.ProcessAwaiter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -15,11 +16,12 @@ import javax.inject.Singleton
 @Singleton
 class PRootInitializer @Inject constructor(
     private val appContext: AppContext,
+    private val processAwaiter: ProcessAwaiter
 ) : AppInitializer.Task<String?>() {
     private val nativeLibDir = appContext.nativeLibDir
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
-    override fun create(): String? {
+    override suspend fun create(): String? {
         when {
             !prootBinary.canExecute() -> {
                 Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
@@ -43,7 +45,7 @@ class PRootInitializer @Inject constructor(
                         environment = env,
                         redirectErrorStream = false
                     )
-                    val (code, outputs) = runBlocking {
+                    val (code, outputs) = supervisorScope {
                         val jobs = sequenceOf(
                             process.inputStream,
                             process.errorStream
@@ -56,7 +58,7 @@ class PRootInitializer @Inject constructor(
                                 }
                             }
                         }.toList()
-                        process.waitFor() to jobs.awaitAll()
+                        processAwaiter.await(process) to jobs.awaitAll()
                     }
                     val (stdout, stderr) = outputs
                     val available = code == 0 || stdout.contains("proot", ignoreCase = true)

@@ -14,7 +14,7 @@ import javax.inject.Singleton
 class TimberInitializer @Inject constructor(
     private val application: Application,
 ) : AppInitializer.Task<Unit>() {
-    override fun create() {
+    override suspend fun create() {
         // Check if app is debuggable
         val isDebuggable =
             (application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0

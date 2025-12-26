@@ -9,7 +9,7 @@ import javax.inject.Singleton
 class ApiServerInitializer @Inject constructor(
     private val servers: Set<@JvmSuppressWildcards Http4kServer>
 ) : AppInitializer.Task<Unit>() {
-    override fun create() {
+    override suspend fun create() {
         servers.forEach {
             it.start()
         }
