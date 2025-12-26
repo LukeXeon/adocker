@@ -6,8 +6,8 @@ import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
 import com.github.andock.daemon.client.model.LayerDescriptor
 import com.github.andock.daemon.client.model.ManifestListResponse
-import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.AuthTokenDao
+import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
@@ -34,7 +34,7 @@ class ImageClient @Inject constructor(
     private val client: HttpClient,
     private val registryDao: RegistryDao,
     private val registryManager: RegistryManager,
-    private val tokenDao: AuthTokenDao,
+    private val authTokenDao: AuthTokenDao,
 ) {
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
     private val serviceRegex = Regex("service=\"([^\"]+)\"")
@@ -90,19 +90,19 @@ class ImageClient @Inject constructor(
                 append("&scope=repository:$repository:pull")
             }
 
-            val token = tokenDao.getTokenByUrl(authUrl)
+            val token = authTokenDao.getTokenByUrl(authUrl)
             if (token != null) {
                 if (System.currentTimeMillis() < token.expiry) {
                     return@runCatching token.token
                 } else {
-                    tokenDao.deleteExpiredTokens()
+                    authTokenDao.deleteExpiredTokens()
                 }
             }
 
             Timber.d("Requesting token from: $authUrl")
             val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
             val authToken = tokenResponse.token ?: tokenResponse.accessToken ?: ""
-            tokenDao.insertToken(
+            authTokenDao.insertToken(
                 AuthTokenEntity(
                     authUrl,
                     authToken,
