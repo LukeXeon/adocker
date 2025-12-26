@@ -75,6 +75,10 @@ class RegistryManager @Inject constructor(
         if (registries.isEmpty()) {
             flowOf(emptyList())
         } else {
+            data class Snapshot(
+                val registry: Registry,
+                val metadata: RegistryEntity,
+            )
             // Combine all metadata flows
             combine(
                 registries.asSequence()
@@ -90,12 +94,12 @@ class RegistryManager @Inject constructor(
                     .mapNotNull { metadata ->
                         val registry = registries[metadata.id]
                         if (registry != null) {
-                            return@mapNotNull registry to metadata
+                            return@mapNotNull Snapshot(registry, metadata)
                         } else {
                             return@mapNotNull null
                         }
-                    }.sortedBy { it.second }
-                    .map { it.first }
+                    }.sortedBy { it.metadata }
+                    .map { it.registry }
                     .toList()
             }
         }
@@ -105,6 +109,24 @@ class RegistryManager @Inject constructor(
         if (registries.isEmpty()) {
             flowOf(null)
         } else {
+            data class Snapshot(
+                val registry: Registry,
+                val state: RegistryState.Healthy,
+                val metadata: RegistryEntity,
+            ) : Comparable<Snapshot> {
+                override fun compareTo(other: Snapshot): Int {
+                    var c = this.state.compareTo(other.state)
+                    if (c != 0) {
+                        return c
+                    }
+                    c = this.metadata.compareTo(other.metadata)
+                    if (c != 0) {
+                        return c
+                    }
+                    return 0
+                }
+            }
+
             combine(
                 registries.asSequence()
                     .sortedBy { it.key }
@@ -119,7 +141,7 @@ class RegistryManager @Inject constructor(
                     if (metadata != null && state is RegistryState.Healthy) {
                         val registry = registries[metadata.id]
                         if (registry != null) {
-                            return@mapNotNull Triple(
+                            return@mapNotNull Snapshot(
                                 registry,
                                 state,
                                 metadata,
@@ -127,18 +149,8 @@ class RegistryManager @Inject constructor(
                         }
                     }
                     return@mapNotNull null
-                }.sortedWith { a, b ->
-                    var c = a.second.compareTo(b.second)
-                    if (c != 0) {
-                        return@sortedWith c
-                    }
-                    c = a.third.compareTo(b.third)
-                    if (c != 0) {
-                        return@sortedWith c
-                    }
-                    return@sortedWith 0
-                }.map {
-                    it.first
+                }.sorted().map {
+                    it.registry
                 }.firstOrNull()
             }
         }
