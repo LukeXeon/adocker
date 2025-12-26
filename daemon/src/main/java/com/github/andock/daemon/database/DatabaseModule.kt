@@ -6,6 +6,7 @@ import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.dao.RegistryDao
+import com.github.andock.daemon.database.dao.TokenDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,13 +30,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideImageDao(database: AppDatabase): ImageDao {
+    fun imageDao(database: AppDatabase): ImageDao {
         return database.imageDao()
     }
 
     @Provides
     @Singleton
-    fun provideContainerDao(database: AppDatabase): ContainerDao {
+    fun containerDao(database: AppDatabase): ContainerDao {
         return database.containerDao()
     }
 
@@ -47,7 +48,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideLayerDao(database: AppDatabase): LayerDao {
+    fun layerDao(database: AppDatabase): LayerDao {
         return database.layerDao()
+    }
+
+    @Provides
+    @Singleton
+    fun tokenDao(database: AppDatabase): TokenDao {
+        return database.tokenDao()
     }
 }

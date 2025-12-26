@@ -6,6 +6,8 @@ import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
+import com.github.andock.daemon.database.dao.TokenDao
+import com.github.andock.daemon.database.model.TokenEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,8 +17,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,10 +25,9 @@ import javax.inject.Singleton
 class ImageClient @Inject constructor(
     private val client: HttpClient,
     private val registryDao: RegistryDao,
-    private val registryManager: RegistryManager
+    private val registryManager: RegistryManager,
+    private val tokenDao: TokenDao,
 ) {
-    private val mutex = Mutex()
-    private val authTokens = HashMap<String, AuthToken>()
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
     private val serviceRegex = Regex("service=\"([^\"]+)\"")
 
@@ -44,36 +43,23 @@ class ImageClient @Inject constructor(
      */
     private suspend fun authenticate(
         repository: String,
-        registry: String
+        registryUrl: String
     ): Result<String> = runCatching {
-        Timber.d("Authenticating for repository: $repository, registry: $registry")
+        Timber.d("Authenticating for repository: $repository, registry: $registryUrl")
         try {
             // Check if this specific registry URL has a Bearer Token configured
-            val bearerToken = registryDao.getBearerTokenByUrl(registry)
+            val bearerToken = registryDao.getBearerTokenByUrl(registryUrl)
             if (!bearerToken.isNullOrEmpty()) {
-                Timber.i("Using configured Bearer Token for registry: $registry")
-                mutex.withLock {
-                    // 24 hours for manually configured tokens
-                    authTokens[registry] = AuthToken(
-                        bearerToken,
-                        System.currentTimeMillis() + 86400000
-                    )
-                }
+                Timber.i("Using configured Bearer Token for registry: $registryUrl")
                 return@runCatching bearerToken
             }
             // Step 1: Try to access /v2/ without auth to get WWW-Authenticate header
-            val pingResponse = client.get("$registry/v2/")
+            val pingResponse = client.get("$registryUrl/v2/")
             // Don't follow redirects, we want to see 401
             Timber.d("Ping response status: ${pingResponse.status}")
             // If 200 OK, no auth needed (shouldn't happen but handle it)
             if (pingResponse.status == HttpStatusCode.OK) {
                 Timber.i("Registry allows anonymous access")
-                mutex.withLock {
-                    authTokens[registry] = AuthToken(
-                        "",
-                        System.currentTimeMillis() + 3600000
-                    )
-                }
                 return@runCatching ""
             }
 
@@ -96,32 +82,31 @@ class ImageClient @Inject constructor(
                 append("&scope=repository:$repository:pull")
             }
 
-            Timber.d("Requesting token from: $authUrl")
+            val token = tokenDao.getTokenByUrl(authUrl)
+            if (token != null) {
+                if (System.currentTimeMillis() < token.expiry) {
+                    return@runCatching token.token
+                } else {
+                    tokenDao.deleteExpiredTokens()
+                }
+            }
 
+            Timber.d("Requesting token from: $authUrl")
             val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
             val authToken = tokenResponse.token ?: tokenResponse.accessToken ?: ""
-            mutex.withLock {
-                authTokens[registry] = AuthToken(
+            tokenDao.insertToken(
+                TokenEntity(
+                    authUrl,
                     authToken,
                     System.currentTimeMillis() + tokenResponse.expiresIn * 1000L
                 )
-            }
+            )
             Timber.i("Successfully obtained auth token (expires in ${tokenResponse.expiresIn}s)")
             return@runCatching authToken
         } catch (e: Exception) {
-            Timber.e(e, "Authentication failed for $registry: ${e.message}")
+            Timber.e(e, "Authentication failed for registry: $registryUrl")
             throw e
         }
-    }
-
-    private suspend fun getValidAuthToken(registry: String): String? {
-        mutex.withLock {
-            val authToken = authTokens[registry]
-            if (authToken != null && System.currentTimeMillis() < authToken.expiry) {
-                return authToken.token
-            }
-        }
-        return null
     }
 
     /**
@@ -155,12 +140,12 @@ class ImageClient @Inject constructor(
         imageRef: ImageReference,
         digest: String
     ): Result<ImageManifestV2> = runCatching {
-        val registry = getRegistryUrl(imageRef.registry)
-        val authToken = getValidAuthToken(registry) ?: authenticate(
+        val registryUrl = getRegistryUrl(imageRef.registry)
+        val authToken = authenticate(
             imageRef.repository,
-            registry
+            registryUrl
         ).getOrThrow()
-        val response = client.get("$registry/v2/${imageRef.repository}/manifests/$digest") {
+        val response = client.get("$registryUrl/v2/${imageRef.repository}/manifests/$digest") {
             if (authToken.isNotEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
@@ -180,14 +165,14 @@ class ImageClient @Inject constructor(
     suspend fun getManifest(
         imageRef: ImageReference
     ): Result<ImageManifestV2> = runCatching {
-        val registry = getRegistryUrl(imageRef.registry)
-        val authToken = getValidAuthToken(registry) ?: authenticate(
+        val registryUrl = getRegistryUrl(imageRef.registry)
+        val authToken = authenticate(
             imageRef.repository,
-            registry
+            registryUrl
         ).getOrThrow()
         // First try to get the manifest list
         val manifestListResponse = client.get(
-            "$registry/v2/${imageRef.repository}/manifests/${imageRef.tag}"
+            "$registryUrl/v2/${imageRef.repository}/manifests/${imageRef.tag}"
         ) {
             // Only add Authorization header if we have a token
             if (authToken.isNotEmpty()) {
@@ -240,7 +225,7 @@ class ImageClient @Inject constructor(
         configDigest: String
     ): Result<ImageConfigResponse> = runCatching {
         val registry = getRegistryUrl(imageRef.registry)
-        val authToken = getValidAuthToken(registry) ?: authenticate(
+        val authToken = authenticate(
             imageRef.repository,
             registry
         ).getOrThrow()
