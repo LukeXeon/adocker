@@ -1,10 +1,11 @@
 package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.client.model.ContainerConfig
+import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.os.Process
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -41,7 +42,9 @@ class PRootEngine @Inject constructor(
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
     val version = runBlocking {
-        prootInitializer.getValue()
+        withTimeoutOrNull(500) {
+            prootInitializer.getValue()
+        }
     }
     val isAvailable: Boolean
         get() {
