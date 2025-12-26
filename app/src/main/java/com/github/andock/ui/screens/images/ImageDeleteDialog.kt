@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import com.github.andock.R
-import com.github.andock.daemon.images.Image
 
 @Composable
 fun ImageDeleteDialog(

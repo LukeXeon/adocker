@@ -29,7 +29,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
-import com.github.andock.daemon.images.Image
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.utils.formatDate
