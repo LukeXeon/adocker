@@ -30,7 +30,6 @@ class AppInitializer @Inject constructor(
                 }
             }
             GlobalScope.launch(Dispatchers.Main) {
-                yield()
                 tasks.map {
                     launch {
                         it.getValue()
