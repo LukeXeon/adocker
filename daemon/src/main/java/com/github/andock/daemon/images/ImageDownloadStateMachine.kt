@@ -34,7 +34,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val layerDao: LayerDao,
     private val database: AppDatabase,
     private val appContext: AppContext,
-) : FlowReduxStateMachineFactory<ImageDownloadState, Unit>() {
+) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
 
     companion object {
         private fun getRegistryUrl(originalRegistry: String): String {
@@ -65,9 +65,9 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 onEnter {
                     downloadImage()
                 }
-                on<Unit> {
+                on<CancellationException> { action ->
                     override {
-                        ImageDownloadState.Error(CancellationException())
+                        ImageDownloadState.Error(action)
                     }
                 }
             }
