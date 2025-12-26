@@ -17,6 +17,7 @@ import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
+import com.github.andock.daemon.io.sha256
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -81,7 +82,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private suspend inline fun <T> ChangeableState<ImageDownloadState.Downloading>.downloadStep(
         name: String,
         total: Long,
-        crossinline block: suspend () -> T
+        block: suspend () -> T
     ): T {
         var exception: Exception? = null
         snapshot.updateProgress { from ->
@@ -130,6 +131,12 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 appContext.layersDir,
                                 "${id}.tar.gz"
                             )
+                            if (layerEntity != null
+                                && layerEntity.size == destFile.length()
+                                && destFile.sha256() == id
+                            ) {
+                                return@downloadStep
+                            }
                             client.downloadLayer(
                                 imageRef,
                                 layer,
@@ -142,6 +149,10 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                     }
                                 }
                             }.getOrThrow()
+                            val sha256 = destFile.sha256()
+                            if (sha256 == id) {
+                                throw IllegalStateException("Layer sha256 mismatch: ${sha256}!=${id}")
+                            }
                             layerDao.insertLayer(
                                 LayerEntity(
                                     id = id,

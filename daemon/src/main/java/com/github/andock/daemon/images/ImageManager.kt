@@ -22,7 +22,11 @@ class ImageManager @Inject constructor(
 
     fun getImageById(id: String) = imageDao.getImageFlowById(id)
 
-    fun pull(imageName: String): ImageDownloader {
+    fun pullImage(imageName: String): ImageDownloader {
         return downloaderFactory.create(ImageReference.parse(imageName))
+    }
+
+    suspend fun deleteImage(id: String) {
+
     }
 }

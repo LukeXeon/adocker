@@ -47,7 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
-import com.github.andock.ui2.components.PullImageDialog
 import com.github.andock.ui.screens.settings.SettingsViewModel
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -272,14 +271,14 @@ fun HomeScreen(
         }
     }
 
-    // Pull Image Dialog
-    if (showPullDialog) {
-        PullImageDialog(
-            onDismiss = { showPullDialog = false },
-            onNavigateToSearch = {
-                showPullDialog = false
-                // Navigate to Discover tab would be handled at MainScreen level
-            }
-        )
-    }
+//    // Pull Image Dialog
+//    if (showPullDialog) {
+//        PullImageDialog(
+//            onDismiss = { showPullDialog = false },
+//            onNavigateToSearch = {
+//                showPullDialog = false
+//                // Navigate to Discover tab would be handled at MainScreen level
+//            }
+//        )
+//    }
 }
