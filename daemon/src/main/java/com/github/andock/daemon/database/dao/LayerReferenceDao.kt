@@ -7,5 +7,5 @@ import com.github.andock.daemon.database.model.LayerReferenceEntity
 @Dao
 interface LayerReferenceDao {
     @Insert
-    suspend fun insertLayerReference(references: List<LayerReferenceEntity>)
+    suspend fun insertLayerReferences(references: List<LayerReferenceEntity>)
 }

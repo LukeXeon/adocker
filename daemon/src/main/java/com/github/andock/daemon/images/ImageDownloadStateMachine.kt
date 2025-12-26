@@ -148,15 +148,14 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 created = System.currentTimeMillis(),
                 config = imageConfig
             )
-            database.withTransaction {
-                layerReferenceDao.insertLayerReference(
-                    manifest.layers.map {
-                        LayerReferenceEntity(
-                            imageId = imageEntity.id,
-                            layerId = it.digest
-                        )
-                    }
+            val references = manifest.layers.map {
+                LayerReferenceEntity(
+                    imageId = imageEntity.id,
+                    layerId = it.digest
                 )
+            }
+            database.withTransaction {
+                layerReferenceDao.insertLayerReferences(references)
                 imageDao.insertImage(imageEntity)
             }
             return override {
