@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.images.ImageRepository
-import com.github.andock.daemon.images.PullProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

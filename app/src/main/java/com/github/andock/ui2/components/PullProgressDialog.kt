@@ -13,8 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.R
-import com.github.andock.daemon.images.PullProgress
-import com.github.andock.daemon.images.PullStatus
 
 @Composable
 fun PullProgressDialog(

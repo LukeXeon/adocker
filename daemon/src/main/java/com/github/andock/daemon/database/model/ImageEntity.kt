@@ -21,6 +21,7 @@ import com.github.andock.daemon.client.model.ImageConfig
 data class ImageEntity(
     @PrimaryKey
     val id: String,
+    val registry: String,
     val repository: String,
     val tag: String,
     val architecture: String,
