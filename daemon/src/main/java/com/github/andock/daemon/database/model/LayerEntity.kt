@@ -18,5 +18,4 @@ data class LayerEntity(
     val id: String,
     val size: Long,
     val mediaType: String,
-    val downloaded: Boolean,
 )

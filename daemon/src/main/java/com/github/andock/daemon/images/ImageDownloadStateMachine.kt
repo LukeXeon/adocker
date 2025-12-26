@@ -15,6 +15,7 @@ import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.model.ImageEntity
+import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -106,6 +107,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             coroutineScope {
                 manifest.layers.map { layer ->
                     launch {
+                        layerDao.getLayerById(layer.digest.removePrefix("sha256:"))
                         val layerFile = File(
                             appContext.layersDir,
                             "${layer.digest.removePrefix("sha256:")}.tar.gz"
@@ -122,6 +124,13 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 }
                             }
                         }.getOrThrow()
+                        layerDao.insertLayer(
+                            LayerEntity(
+                                id = layer.digest.removePrefix("sha256:"),
+                                size = layer.size,
+                                mediaType = layer.mediaType,
+                            )
+                        )
                     }
                 }.joinAll()
             }
@@ -151,7 +160,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             val references = manifest.layers.map {
                 LayerReferenceEntity(
                     imageId = imageEntity.id,
-                    layerId = it.digest
+                    layerId = it.digest.removePrefix("sha256:")
                 )
             }
             database.withTransaction {
