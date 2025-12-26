@@ -23,6 +23,7 @@ class LoggingInitializer @Inject constructor(
         Timber.d("Timber initialized")
         withContext(Dispatchers.IO) {
             appContext.logDir.deleteRecursively()
+            appContext.logDir.mkdirs()
         }
     }
 }

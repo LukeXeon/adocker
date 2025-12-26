@@ -47,7 +47,6 @@ class AppContext @Inject constructor(
         listOf(
             containersDir,
             layersDir,
-            logDir
         ).forEach { dir ->
             if (!dir.exists()) {
                 dir.mkdirs()
