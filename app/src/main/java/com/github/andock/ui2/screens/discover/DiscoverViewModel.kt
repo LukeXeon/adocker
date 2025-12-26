@@ -4,27 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.client.model.SearchResult
 import com.github.andock.daemon.containers.ContainerManager
-import com.github.andock.daemon.images.ImageRepository
+import com.github.andock.daemon.images.ImageManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
-    private val imageRepository: ImageRepository,
+    private val imageRepository: ImageManager,
     private val containerManager: ContainerManager
 ) : ViewModel() {
 
     // Images
-    val images = imageRepository.getAllImages()
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val images = imageRepository.images
 
     // Containers
     val containers = containerManager.containers
@@ -40,8 +37,6 @@ class DiscoverViewModel @Inject constructor(
     val searchResults: StateFlow<List<SearchResult>> = _searchResults.asStateFlow()
 
     // Pull progress
-    private val _pullProgress = MutableStateFlow<Map<String, PullProgress>>(emptyMap())
-    val pullProgress: StateFlow<Map<String, PullProgress>> = _pullProgress.asStateFlow()
 
     // Loading states
     private val _isLoading = MutableStateFlow(false)
@@ -80,30 +75,31 @@ class DiscoverViewModel @Inject constructor(
 
     // Pull an image
     fun pullImage(imageName: String) {
-        viewModelScope.launch {
-            _isPulling.value = true
-            _error.value = null
-
-            try {
-                imageRepository.pullImage(imageName)
-                    .catch { e ->
-                        _error.value = "Pull failed: ${e.message}"
-                        _isPulling.value = false
-                    }
-                    .collect { progress ->
-                        _pullProgress.value = _pullProgress.value.toMutableMap().apply {
-                            put(progress.layerDigest, progress)
-                        }
-                    }
-
-                _message.value = "Image pulled successfully: $imageName"
-            } catch (e: Exception) {
-                _error.value = "Pull failed: ${e.message}"
-            } finally {
-                _isPulling.value = false
-                _pullProgress.value = emptyMap()
-            }
-        }
+//        viewModelScope.launch {
+//            _isPulling.value = true
+//            _error.value = null
+//
+//            try {
+//                imageRepository.pullImage(imageName)
+//                    .catch { e ->
+//                        _error.value = "Pull failed: ${e.message}"
+//                        _isPulling.value = false
+//                    }
+//                    .collect { progress ->
+//                        _pullProgress.value = _pullProgress.value.toMutableMap().apply {
+//                            put(progress.layerDigest, progress)
+//                        }
+//                    }
+//
+//                _message.value = "Image pulled successfully: $imageName"
+//            } catch (e: Exception) {
+//                _error.value = "Pull failed: ${e.message}"
+//            } finally {
+//                _isPulling.value = false
+//                _pullProgress.value = emptyMap()
+//            }
+//        }
+        TODO()
     }
 
 }
