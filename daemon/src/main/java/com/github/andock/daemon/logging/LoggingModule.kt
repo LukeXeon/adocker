@@ -12,5 +12,5 @@ import dagger.multibindings.IntoSet
 object LoggingModule {
     @Provides
     @IntoSet
-    fun initializer(initializer: TimberInitializer): AppInitializer.Task<*> = initializer
+    fun initializer(initializer: LoggingInitializer): AppInitializer.Task<*> = initializer
 }

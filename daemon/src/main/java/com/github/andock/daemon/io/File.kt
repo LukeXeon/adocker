@@ -72,13 +72,6 @@ fun createHardLink(newPath: File, existingPath: File) {
 }
 
 /**
- * Delete directory recursively
- */
-suspend fun deleteRecursively(file: File): Boolean = withContext(Dispatchers.IO) {
-    file.deleteRecursively()
-}
-
-/**
  * Get directory size
  */
 suspend fun getDirectorySize(dir: File): Long = withContext(Dispatchers.IO) {

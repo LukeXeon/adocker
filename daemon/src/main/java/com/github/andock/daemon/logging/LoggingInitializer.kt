@@ -1,8 +1,9 @@
 package com.github.andock.daemon.logging
 
-import android.app.Application
-import android.content.pm.ApplicationInfo
+import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.app.AppInitializer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,16 +12,17 @@ import javax.inject.Singleton
  * Initializes Timber logging library
  */
 @Singleton
-class TimberInitializer @Inject constructor(
-    private val application: Application,
+class LoggingInitializer @Inject constructor(
+    private val appContext: AppContext,
 ) : AppInitializer.Task<Unit>() {
     override suspend fun create() {
         // Check if app is debuggable
-        val isDebuggable =
-            (application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        if (isDebuggable) {
+        if (appContext.isDebuggable) {
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("Timber initialized")
+        withContext(Dispatchers.IO) {
+            appContext.logDir.deleteRecursively()
+        }
     }
 }

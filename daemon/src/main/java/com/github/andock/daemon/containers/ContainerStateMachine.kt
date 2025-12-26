@@ -7,7 +7,6 @@ import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.io.deleteRecursively
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -176,7 +175,7 @@ class ContainerStateMachine @AssistedInject constructor(
     ): ChangedState<ContainerState> {
         // Delete container directory
         val containerDir = File(appContext.containersDir, containerId)
-        deleteRecursively(containerDir)
+        containerDir.deleteRecursively()
         // Delete from database
         containerManager.removeContainer(containerId)
         return override {

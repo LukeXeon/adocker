@@ -43,7 +43,6 @@ class AppContext @Inject constructor(
         }
 
     init {
-        logDir.deleteRecursively()
         // Create directories on initialization
         listOf(
             containersDir,
