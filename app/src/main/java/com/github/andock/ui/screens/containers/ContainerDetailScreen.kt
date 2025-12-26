@@ -187,14 +187,16 @@ fun ContainerDetailScreen(
             }
         }
     }
-    ContainerDeleteDialog(
-        showDeleteDialog,
-        onDelete = {
-            viewModel.deleteContainer(it.id)
-            setDeleteDialog(null)
-        },
-        onDismissRequest = {
-            setDeleteDialog(null)
-        }
-    )
+    if (showDeleteDialog != null) {
+        ContainerDeleteDialog(
+            showDeleteDialog,
+            onDelete = {
+                viewModel.deleteContainer(it.id)
+                setDeleteDialog(null)
+            },
+            onDismissRequest = {
+                setDeleteDialog(null)
+            }
+        )
+    }
 }

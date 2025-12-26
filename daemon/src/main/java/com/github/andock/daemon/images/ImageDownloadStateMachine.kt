@@ -110,7 +110,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ImageDownloadState.Downloading>.downloadImage(): ChangedState<ImageDownloadState> {
         try {
-            val imageRef = snapshot.imageRef
+            val imageRef = snapshot.ref
             val manifest = downloadStep("manifest", 1) {
                 client.getManifest(imageRef).getOrThrow()
             }
@@ -198,11 +198,11 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 imageDao.insertImage(imageEntity)
             }
             return override {
-                ImageDownloadState.Done(imageRef)
+                ImageDownloadState.Done(ref)
             }
         } catch (e: Exception) {
             return override {
-                ImageDownloadState.Error(imageRef, e)
+                ImageDownloadState.Error(ref, e)
             }
         }
     }

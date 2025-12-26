@@ -39,8 +39,8 @@ class ImageDownloader @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    val imageRef
-        get() = state.value.imageRef
+    val ref
+        get() = state.value.ref
 
     @Singleton
     @AssistedFactory

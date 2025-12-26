@@ -152,41 +152,36 @@ fun ImagesScreen(
         }
     }
     // Delete confirmation dialog
-    ImageDeleteDialog(
-        showDeleteDialog,
-        onDelete = {
-            viewModel.deleteImage(it.id)
-            setDeleteDialog(null)
-        },
-        onDismissRequest = {
-            setDeleteDialog(null)
-        }
-    )
+    if (showDeleteDialog != null) {
+        ImageDeleteDialog(
+            showDeleteDialog,
+            onDelete = {
+                viewModel.deleteImage(it.id)
+                setDeleteDialog(null)
+            },
+            onDismissRequest = {
+                setDeleteDialog(null)
+            }
+        )
+    }
     // Pull Image Dialog
     if (showPullDialog) {
         ImagePullDialog(
             onPullImage = {
                 setProgressDialog(viewModel.pullImage(it))
+                setPullDialog(false)
             },
             onDismissRequest = {
                 setPullDialog(false)
             }
         )
     }
-//
-//    // Pull Progress Dialog
-//    if (showProgressDialog) {
-//        PullProgressDialog(
-//            pullProgress = pullProgress,
-//            onCancel = {
-//                // Close dialog but continue pulling in background
-//                showProgressDialog = false
-//            },
-//            onDismiss = {
-//                if (!isPulling) {
-//                    showProgressDialog = false
-//                }
-//            }
-//        )
-//    }
+    if (showProgressDialog != null) {
+        ImageDownloadDialog(
+            downloader = showProgressDialog,
+            onDismissRequest = {
+                setProgressDialog(null)
+            }
+        )
+    }
 }

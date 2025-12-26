@@ -15,35 +15,33 @@ import com.github.andock.daemon.database.model.ImageEntity
 
 @Composable
 fun ImageDeleteDialog(
-    image: ImageEntity?,
+    image: ImageEntity,
     onDelete: (ImageEntity) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    if (image != null) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
-            title = { Text(stringResource(R.string.images_delete_confirm_title)) },
-            text = {
-                Text(stringResource(R.string.images_delete_confirm_message, image.fullName))
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete(image)
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.common_delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(stringResource(R.string.common_cancel))
-                }
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+        title = { Text(stringResource(R.string.images_delete_confirm_title)) },
+        text = {
+            Text(stringResource(R.string.images_delete_confirm_message, image.fullName))
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDelete(image)
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(stringResource(R.string.common_delete))
             }
-        )
-    }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(R.string.common_cancel))
+            }
+        }
+    )
 }

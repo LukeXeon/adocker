@@ -16,11 +16,11 @@ import com.github.andock.daemon.registries.Registry
 
 @Composable
 fun RegistryDeleteDialog(
-    registry: Registry?,
+    registry: Registry,
     onDelete: (Registry) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val metadata = registry?.metadata?.collectAsState()?.value ?: return
+    val metadata = registry.metadata.collectAsState().value ?: return
     AlertDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(Icons.Default.Delete, contentDescription = null) },

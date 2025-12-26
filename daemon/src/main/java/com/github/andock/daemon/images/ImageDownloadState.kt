@@ -10,10 +10,10 @@ import kotlinx.coroutines.sync.withLock
 
 sealed interface ImageDownloadState {
 
-    val imageRef: ImageReference
+    val ref: ImageReference
 
     class Downloading(
-        override val imageRef: ImageReference
+        override val ref: ImageReference
     ) : ImageDownloadState {
         private val mutex = Mutex()
         private val _progress = MutableStateFlow(emptyMap<String, DownloadProgress>())
@@ -29,11 +29,11 @@ sealed interface ImageDownloadState {
     }
 
     data class Error(
-        override val imageRef: ImageReference,
+        override val ref: ImageReference,
         val throwable: Throwable
     ) : ImageDownloadState
 
     data class Done(
-        override val imageRef: ImageReference
+        override val ref: ImageReference
     ) : ImageDownloadState
 }

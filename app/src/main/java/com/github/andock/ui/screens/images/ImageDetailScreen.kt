@@ -182,15 +182,17 @@ fun ImageDetailScreen(
         }
     }
     // Delete confirmation dialog
-    ImageDeleteDialog(
-        showDeleteDialog,
-        onDelete = {
-            viewModel.deleteImage(it.id)
-            setDeleteDialog(null)
-            onNavigateBack()
-        },
-        onDismissRequest = {
-            setDeleteDialog(null)
-        }
-    )
+    if (showDeleteDialog != null) {
+        ImageDeleteDialog(
+            showDeleteDialog,
+            onDelete = {
+                viewModel.deleteImage(it.id)
+                setDeleteDialog(null)
+                onNavigateBack()
+            },
+            onDismissRequest = {
+                setDeleteDialog(null)
+            }
+        )
+    }
 }

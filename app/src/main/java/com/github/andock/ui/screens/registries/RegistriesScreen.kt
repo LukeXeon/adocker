@@ -149,16 +149,18 @@ fun RegistriesScreen(
             }
         }
     }
-    RegistryDeleteDialog(
-        serverToDelete,
-        onDelete = { registry ->
-            viewModel.viewModelScope.launch {
-                viewModel.deleteCustomMirror(registry.id)
-                snackbarHostState.showSnackbar("Mirror deleted")
+    if (serverToDelete != null) {
+        RegistryDeleteDialog(
+            serverToDelete,
+            onDelete = { registry ->
+                viewModel.viewModelScope.launch {
+                    viewModel.deleteCustomMirror(registry.id)
+                    snackbarHostState.showSnackbar("Mirror deleted")
+                }
+            },
+            onDismissRequest = {
+                setServerToDelete(null)
             }
-        },
-        onDismissRequest = {
-            setServerToDelete(null)
-        }
-    )
+        )
+    }
 }

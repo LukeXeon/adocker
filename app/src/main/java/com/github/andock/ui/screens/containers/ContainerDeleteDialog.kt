@@ -16,11 +16,11 @@ import com.github.andock.daemon.containers.Container
 
 @Composable
 fun ContainerDeleteDialog(
-    container: Container?,
+    container: Container,
     onDelete: (Container) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val metadata = container?.metadata?.collectAsState()?.value ?: return
+    val metadata = container.metadata.collectAsState().value ?: return
     AlertDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(Icons.Default.Delete, contentDescription = null) },
