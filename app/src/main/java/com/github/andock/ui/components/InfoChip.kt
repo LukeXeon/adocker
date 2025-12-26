@@ -1,4 +1,4 @@
-package com.github.andock.ui2.components
+package com.github.andock.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

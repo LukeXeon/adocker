@@ -50,7 +50,7 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import com.github.andock.ui2.components.InfoChip
+import com.github.andock.ui.components.InfoChip
 
 /**
  * Material Design 3 镜像卡片组件
