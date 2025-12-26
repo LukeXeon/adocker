@@ -50,9 +50,9 @@ class AppInitializer @Inject constructor(
         }
     }
 
-    abstract class Task<T : Any> {
-        private companion object UninitializedValue
+    private object UninitializedValue
 
+    abstract class Task<T : Any> {
         protected abstract fun create(): T
         private val lock = Mutex()
 
