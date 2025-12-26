@@ -75,10 +75,6 @@ class RegistryManager @Inject constructor(
         if (registries.isEmpty()) {
             flowOf(emptyList())
         } else {
-            data class Snapshot(
-                val registry: Registry,
-                val metadata: RegistryEntity,
-            )
             // Combine all metadata flows
             combine(
                 registries.asSequence()
@@ -94,12 +90,12 @@ class RegistryManager @Inject constructor(
                     .mapNotNull { metadata ->
                         val registry = registries[metadata.id]
                         if (registry != null) {
-                            return@mapNotNull Snapshot(registry, metadata)
+                            return@mapNotNull registry to metadata
                         } else {
                             return@mapNotNull null
                         }
-                    }.sortedBy { it.metadata }
-                    .map { it.registry }
+                    }.sortedBy { it.second }
+                    .map { it.first }
                     .toList()
             }
         }
