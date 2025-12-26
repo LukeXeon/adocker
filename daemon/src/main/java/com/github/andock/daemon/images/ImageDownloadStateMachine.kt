@@ -70,7 +70,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 }
                 on<CancellationException> { action ->
                     override {
-                        ImageDownloadState.Error(action)
+                        ImageDownloadState.Error(imageRef, action)
                     }
                 }
             }
@@ -160,11 +160,11 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 imageDao.insertImage(imageEntity)
             }
             return override {
-                ImageDownloadState.Done
+                ImageDownloadState.Done(imageRef)
             }
         } catch (e: Exception) {
             return override {
-                ImageDownloadState.Error(e)
+                ImageDownloadState.Error(imageRef, e)
             }
         }
     }
