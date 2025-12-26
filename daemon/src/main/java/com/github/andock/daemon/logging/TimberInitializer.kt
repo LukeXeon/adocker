@@ -1,26 +1,26 @@
 package com.github.andock.daemon.logging
 
-import android.content.Context
+import android.app.Application
 import android.content.pm.ApplicationInfo
-import androidx.startup.Initializer
+import com.github.andock.daemon.app.AppInitializer
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Initializes Timber logging library
  */
-class TimberInitializer : Initializer<Unit> {
-
-    override fun create(context: Context) {
+@Singleton
+class TimberInitializer @Inject constructor(
+    private val application: Application,
+) : AppInitializer.Task<Unit>() {
+    override fun create() {
         // Check if app is debuggable
-        val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        val isDebuggable =
+            (application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (isDebuggable) {
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("Timber initialized")
-    }
-
-    override fun dependencies(): List<Class<out Initializer<*>>> {
-        // No dependencies
-        return emptyList()
     }
 }

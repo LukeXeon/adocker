@@ -9,21 +9,6 @@
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <application android:extractNativeLibs="true">
-        <!-- App Startup: Automatic initialization -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <!-- Timber Initializer -->
-            <meta-data
-                android:name="com.github.andock.daemon.logging.TimberInitializer"
-                android:value="androidx.startup" />
-            <meta-data
-                android:name="com.github.andock.daemon.server.ApiServerInitializer"
-                android:value="androidx.startup" />
-        </provider>
-
         <!-- Shizuku Provider -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

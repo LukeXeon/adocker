@@ -52,9 +52,6 @@ camerax = "1.5.2"
 # Timber Logging
 timber = "5.0.1"
 
-# App Startup
-startup = "1.2.0"
-
 # Shizuku
 shizuku = "13.1.5"
 
@@ -140,8 +137,6 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 # Timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
-# App Startup
-androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
 
 # Shizuku
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }

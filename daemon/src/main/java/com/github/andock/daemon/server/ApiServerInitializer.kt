@@ -1,24 +1,17 @@
 package com.github.andock.daemon.server
 
-import android.content.Context
-import androidx.startup.Initializer
-import com.github.andock.daemon.app.AppGlobals
-import kotlinx.coroutines.Dispatchers
-import kotlin.coroutines.EmptyCoroutineContext
+import com.github.andock.daemon.app.AppInitializer
+import org.http4k.server.Http4kServer
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ApiServerInitializer : Initializer<Unit>, Runnable {
-
-    override fun create(context: Context) {
-        Dispatchers.Main.dispatch(EmptyCoroutineContext, this)
-    }
-
-    override fun run() {
-        AppGlobals.servers().forEach {
+@Singleton
+class ApiServerInitializer @Inject constructor(
+    private val servers: Set<@JvmSuppressWildcards Http4kServer>
+) : AppInitializer.Task<Unit>() {
+    override fun create() {
+        servers.forEach {
             it.start()
         }
-    }
-
-    override fun dependencies(): List<Class<out Initializer<*>>> {
-        return emptyList()
     }
 }

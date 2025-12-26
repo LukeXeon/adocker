@@ -1,11 +1,9 @@
-package com.github.andock.daemon.app
+package com.github.andock.daemon.database
 
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
-import org.http4k.server.Http4kServer
 
 /**
  * EntryPoint for accessing Hilt dependencies in Room TypeConverter
@@ -15,13 +13,6 @@ import org.http4k.server.Http4kServer
  */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-interface AppGlobals {
+interface DatabaseEntryPoint {
     fun json(): Json
-
-    fun servers(): Set<@JvmSuppressWildcards Http4kServer>
-
-    companion object : AppGlobals by EntryPointAccessors.fromApplication(
-        AppContext.application,
-        AppGlobals::class.java
-    )
 }

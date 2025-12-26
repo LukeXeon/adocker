@@ -88,9 +88,6 @@ dependencies {
     // Timber Logging
     implementation(libs.timber)
 
-    // App Startup
-    implementation(libs.androidx.startup.runtime)
-
     // Shizuku
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
