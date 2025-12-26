@@ -1,5 +1,6 @@
 package com.github.andock.daemon.app
 
+import android.app.Application
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,7 +53,8 @@ object AppModule {
     @Singleton
     fun httpClient(
         json: Json,
-        appContext: AppContext
+        appContext: AppContext,
+        app: Application,
     ): HttpClient {
         return HttpClient(OkHttp) {
             install(ContentNegotiation) {
@@ -69,7 +71,7 @@ object AppModule {
             defaultRequest {
                 header(
                     HttpHeaders.UserAgent,
-                    "${appContext.applicationInfo.name}/${appContext.packageInfo.versionName}"
+                    "${app.resources.getString(app.applicationInfo.labelRes)}/${appContext.packageInfo.versionName}"
                 )
             }
         }
