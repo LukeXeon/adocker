@@ -11,7 +11,8 @@ class ImagesViewModel @Inject constructor(
 ) : ViewModel() {
 
     val images = imageManager.images
-    val sortedList = imageManager.sortedList
+
+    fun getImageById(id: String) = imageManager.getImageById(id)
 
     fun deleteImage(imageId: String) {
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
+import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.utils.formatDate
@@ -42,10 +43,8 @@ fun ImageDetailScreen(
     onNavigateToCreate: (String) -> Unit = {}
 ) {
     val viewModel = hiltViewModel<ImagesViewModel>()
-    val images by viewModel.images.collectAsState()
-    val image = images[imageId] ?: return
-    val metadata = image.metadata.collectAsState().value ?: return
-    val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Image?>(null) }
+    val image = viewModel.getImageById(imageId).collectAsState(null).value
+    val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -182,7 +181,7 @@ fun ImageDetailScreen(
     ImageDeleteDialog(
         showDeleteDialog,
         onDelete = {
-            viewModel.deleteImage(metadata.id)
+            viewModel.deleteImage(it.id)
             setDeleteDialog(null)
             onNavigateBack()
         },
