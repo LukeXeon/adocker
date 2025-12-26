@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 class ImageDownloader @AssistedInject constructor(
     @Assisted
-    private val imageRef: ImageReference,
+    imageRef: ImageReference,
     parent: CoroutineScope,
     factory: ImageDownloadStateMachine.Factory
 ) {

@@ -4,10 +4,10 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.AuthTokenResponse
 import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
+import com.github.andock.daemon.client.model.LayerDescriptor
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.TokenDao
-import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.TokenEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
@@ -252,15 +252,15 @@ class ImageClient @Inject constructor(
      */
     suspend fun downloadLayer(
         imageRef: ImageReference,
-        layer: LayerEntity,
+        layer: LayerDescriptor,
         destFile: File,
-        onProgress: suspend (Long, Long) -> Unit
+        onProgress: suspend (DownloadProgress) -> Unit = { }
     ): Result<Unit> {
         return runCatching {
             val registryUrl = getRegistryUrl(imageRef.registry)
             val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
-            Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
-            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.id}") {
+            Timber.d("Starting layer download: ${layer.digest.take(16)}, size: ${layer.size}")
+            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.digest}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
@@ -280,17 +280,17 @@ class ImageClient @Inject constructor(
                         if (bytesRead > 0) {
                             fos.write(buffer, 0, bytesRead)
                             downloaded += bytesRead
-                            onProgress(downloaded, contentLength)
+                            onProgress(DownloadProgress(downloaded, contentLength))
                             if (downloaded % (512 * 1024) == 0L || downloaded == contentLength) {
                                 Timber.d("Download progress: $downloaded/$contentLength bytes")
                             }
                         }
                     }
                 }
-                Timber.i("Layer download completed: ${layer.id.take(16)}, downloaded: $downloaded bytes")
+                Timber.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
             }
         }.onFailure { e ->
-            Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
+            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
         }
     }
 }
