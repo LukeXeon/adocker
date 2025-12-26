@@ -4,8 +4,10 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.ContainerConfig
 import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.os.Process
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -33,6 +35,7 @@ class PRootEngine @Inject constructor(
     private val mapping: Map<String, String>,
     private val factory: JobProcess.Factory,
     private val prootInitializer: PRootInitializer,
+    private val scope: CoroutineScope,
 ) {
     private val nativeLibDir = appContext.nativeLibDir
 
@@ -41,15 +44,13 @@ class PRootEngine @Inject constructor(
      * */
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
-    val version = runBlocking {
-        withTimeoutOrNull(500) {
-            prootInitializer.getValue()
+    val version = run {
+        val state = MutableStateFlow<String?>(null)
+        scope.launch {
+            state.value = prootInitializer.getValue()
         }
+        state.asStateFlow()
     }
-    val isAvailable: Boolean
-        get() {
-            return !version.isNullOrEmpty()
-        }
 
     /**
      * Build the PRoot command for running a container

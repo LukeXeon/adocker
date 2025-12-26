@@ -53,7 +53,7 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         viewModel.loadStorageUsage()
     }
-    val prootVersion = viewModel.prootVersion
+    val prootVersion by viewModel.prootVersion.collectAsState()
     val (isShowClearDataDialog, setShowDataDialogState) = remember { mutableStateOf(false) }
     Scaffold(
         topBar = {

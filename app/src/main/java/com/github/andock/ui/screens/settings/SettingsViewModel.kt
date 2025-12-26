@@ -19,10 +19,8 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
     private val _storageUsage = MutableStateFlow<Long?>(null)
     val storageUsage: StateFlow<Long?> = _storageUsage.asStateFlow()
-    val prootVersion: String?
-        get() {
-            return prootEngine.version
-        }
+    val prootVersion
+        get() = prootEngine.version
 
     init {
         viewModelScope.launch {
