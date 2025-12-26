@@ -23,7 +23,7 @@ import androidx.room.Index
         // 给layerDigest加外键：关联layer表的id
         ForeignKey(
             entity = LayerEntity::class,
-            parentColumns = ["digest"],
+            parentColumns = ["id"],
             childColumns = ["layerId"],
             onDelete = ForeignKey.RESTRICT, // 删除Layer时，若有引用则禁止删除（避免误删）
             onUpdate = ForeignKey.CASCADE

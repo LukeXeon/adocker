@@ -224,12 +224,12 @@ class ImageClient @Inject constructor(
         imageRef: ImageReference,
         configDigest: String
     ): Result<ImageConfigResponse> = runCatching {
-        val registry = getRegistryUrl(imageRef.registry)
+        val registryUrl = getRegistryUrl(imageRef.registry)
         val authToken = authenticate(
             imageRef.repository,
-            registry
+            registryUrl
         ).getOrThrow()
-        val response = client.get("$registry/v2/${imageRef.repository}/blobs/$configDigest") {
+        val response = client.get("$registryUrl/v2/${imageRef.repository}/blobs/$configDigest") {
             if (authToken.isNotEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }

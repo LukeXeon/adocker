@@ -1,20 +1,15 @@
 package com.github.andock.daemon.images
 
-import com.github.andock.daemon.client.ImageReference
 import com.github.andock.daemon.database.model.ImageEntity
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Singleton
 
-class ImageDownloader @AssistedInject constructor(
-    @Assisted
+class ImageDownloader constructor(
+
     private val imageReference: ImageEntity,
     scope: CoroutineScope
 ) {
@@ -33,12 +28,12 @@ class ImageDownloader @AssistedInject constructor(
         }
     }
 
-    @Singleton
-    @AssistedFactory
-    interface Factory {
-        fun create(
-            @Assisted
-            imageReference: ImageReference,
-        ): ImageDownloader
-    }
+//    @Singleton
+//    @AssistedFactory
+//    interface Factory {
+//        fun create(
+//            @Assisted
+//            imageReference: ImageReference,
+//        ): ImageDownloader
+//    }
 }
