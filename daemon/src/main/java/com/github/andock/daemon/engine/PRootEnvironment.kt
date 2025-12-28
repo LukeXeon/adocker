@@ -14,7 +14,7 @@ class PRootEnvironment @Inject constructor(
      * */
     val binary = File(appContext.nativeLibDir, "libproot.so")
 
-    val values = run {
+    val values: Map<String, String> = run {
         val env = mutableMapOf<String, String>()
         // 64-bit loader
         val loaderPath = File(appContext.nativeLibDir, "libproot_loader.so")
