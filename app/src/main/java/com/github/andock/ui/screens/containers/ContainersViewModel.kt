@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.client.model.ContainerConfig
 import com.github.andock.daemon.containers.ContainerManager
+import com.github.andock.daemon.containers.ContainerState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,6 +18,7 @@ class ContainersViewModel @Inject constructor(
 
     val sortedList = containerManager.sortedList
 
+    fun stateList(predicate: (ContainerState) -> Boolean) = containerManager.stateList(predicate)
 
     // Delete a container
     fun deleteContainer(containerId: String) {

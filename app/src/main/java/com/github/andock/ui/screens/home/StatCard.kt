@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.home
+package com.github.andock.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

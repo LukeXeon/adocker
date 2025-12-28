@@ -37,22 +37,22 @@ class PRootVersion @Inject constructor(
         val nativeLibDir = appContext.nativeLibDir
         when {
             !prootBinary.canExecute() -> {
-                Timber.Forest.d("PRoot binary not executable: ${prootBinary.absolutePath}")
+                Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
             }
 
             !prootBinary.exists() -> {
-                Timber.Forest.d("PRoot binary not found at: ${prootBinary.absolutePath}")
+                Timber.d("PRoot binary not found at: ${prootBinary.absolutePath}")
             }
 
             else -> {
-                Timber.Forest.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
+                Timber.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
                 // List files in native lib dir for debugging
                 nativeLibDir.listFiles()?.forEach { file ->
-                    Timber.Forest.d("  Native lib: ${file.name} (${file.length()} bytes)")
+                    Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
                 }
                 val env = prootEnv.values
                 try {
-                    Timber.Forest.d("Running proot --version with env: $env")
+                    Timber.d("Running proot --version with env: $env")
                     val process = Process(
                         command = listOf(prootBinary.absolutePath, "--version"),
                         environment = env,
@@ -76,13 +76,13 @@ class PRootVersion @Inject constructor(
                     val (stdout, stderr) = outputs
                     val available = code == 0 || stdout.contains("proot", ignoreCase = true)
                     if (!available) {
-                        Timber.Forest.w("PRoot check failed. Exit code: ${code}, stdout: ${stdout}, stderr: $stderr")
+                        Timber.w("PRoot check failed. Exit code: ${code}, stdout: ${stdout}, stderr: $stderr")
                     } else {
-                        Timber.Forest.d("PRoot available. Version output:\n $stdout")
+                        Timber.d("PRoot available. Version output:\n $stdout")
                     }
                     return parseVersion(stdout)
                 } catch (e: Exception) {
-                    Timber.Forest.e(
+                    Timber.e(
                         e,
                         "Failed to get PRoot version，PRoot availability check failed with exception"
                     )

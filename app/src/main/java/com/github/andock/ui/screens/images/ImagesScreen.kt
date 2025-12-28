@@ -54,7 +54,6 @@ fun ImagesScreen(
 ) {
     val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
-
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }

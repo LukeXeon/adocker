@@ -52,21 +52,16 @@ fun ContainersScreen(
     val containerStates = containers.map { container ->
         container.state.collectAsState().value
     }
-
     val statesCount = remember(containers, containerStates) {
         ContainerFilterType.entries.asSequence().map {
             it to containers.asSequence().map { container -> container.state.value }
                 .filter(it.predicate).count()
         }.toMap()
     }
-
     var filterType by remember { mutableStateOf(ContainerFilterType.All) }
-
-    val filteredContainers = remember(containers, filterType) {
-        containers.asSequence()
-            .filter { container -> filterType.predicate(container.state.value) }.toList()
-    }
-
+    val filteredContainers by remember(filterType) {
+        viewModel.stateList(filterType.predicate)
+    }.collectAsState(emptyList())
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
 
     Scaffold(

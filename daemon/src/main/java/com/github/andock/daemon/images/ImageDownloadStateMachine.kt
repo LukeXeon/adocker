@@ -18,6 +18,7 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
 import com.github.andock.daemon.io.sha256
+import com.github.andock.daemon.registries.RegistryManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -40,6 +41,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val layerReferenceDao: LayerReferenceDao,
     private val database: AppDatabase,
     private val appContext: AppContext,
+    private val registryManager: RegistryManager,
 ) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
 
     companion object {
@@ -221,6 +223,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 ImageDownloadState.Done(ref)
             }
         } catch (e: Exception) {
+            registryManager.checkAll()
             return override {
                 ImageDownloadState.Error(ref, e)
             }

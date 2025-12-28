@@ -7,9 +7,14 @@ import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.model.ContainerEntity
 import com.github.andock.daemon.io.extractTarGz
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -21,6 +26,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class ContainerManager @Inject constructor(
     private val factory: Container.Factory,
@@ -33,12 +39,42 @@ class ContainerManager @Inject constructor(
     private val _containers = MutableStateFlow<Map<String, Container>>(emptyMap())
 
     val containers = _containers.asStateFlow()
-
     val sortedList = _containers.map {
         it.asSequence().sortedBy { container -> container.key }
             .map { container -> container.value }
             .toList()
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    fun stateList(predicate: (ContainerState) -> Boolean): Flow<List<Container>> {
+        return _containers.flatMapLatest { containers ->
+            if (containers.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                // Combine all metadata flows
+                combine(
+                    containers.asSequence()
+                        .sortedBy { it.key }
+                        .map {
+                            it.value
+                        }.map { it.state }
+                        .asIterable()
+                ) { metadataArray ->
+                    // Pair each metadata with its registry and sort by metadata
+                    metadataArray.asSequence()
+                        .filter(predicate)
+                        .mapNotNull { metadata ->
+                            val container = containers[metadata.id]
+                            if (container != null) {
+                                return@mapNotNull container
+                            } else {
+                                return@mapNotNull null
+                            }
+                        }.sortedBy { it.id }
+                        .toList()
+                }
+            }
+        }
+    }
 
     init {
         scope.launch {
