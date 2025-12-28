@@ -5,19 +5,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import javax.inject.Provider
+import java.util.concurrent.Callable
 import kotlin.reflect.KClass
 
 typealias InState<T> = Pair<StateFlow<T>, Set<KClass<out T>>>
 
-interface Collector : Provider<Any?>, suspend (Boolean) -> Unit
 @PublishedApi
 internal inline fun InState<*>.collector(
     crossinline block: suspend () -> Any?
-): Collector {
+): suspend (Boolean) -> Unit {
     return object : CancellationException(
         "Flow was aborted, no more elements needed"
-    ), Collector {
+    ), Callable<Any?>, suspend (Boolean) -> Unit {
         private var value: Any? = this
 
         override fun fillInStackTrace(): Throwable {
@@ -34,7 +33,7 @@ internal inline fun InState<*>.collector(
             }
         }
 
-        override fun get(): Any? {
+        override fun call(): Any? {
             if (value == this) {
                 throw NoSuchElementException("Expected at least one element")
             }
@@ -61,7 +60,7 @@ suspend inline fun <reified R> InState<*>.execute(
             throw e
         }
     }
-    return collector.get() as R
+    return (collector as Callable<*>).call() as R
 }
 
 fun <T : Any> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
