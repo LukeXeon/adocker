@@ -50,6 +50,9 @@ sealed interface ProcessAwaiter {
                             callbacks
                         )
                         con.invokeOnCancellation(callbacks)
+                        if (!process.isAlive) {
+                            con.resume(Unit)
+                        }
                     },
                     {
                         Timber.d(it)

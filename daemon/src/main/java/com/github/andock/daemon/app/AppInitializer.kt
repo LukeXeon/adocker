@@ -8,6 +8,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +23,7 @@ class AppInitializer @Inject constructor(
         val mainLooper = Looper.getMainLooper()
         require(mainLooper.isCurrentThread) { "must be main thread" }
         if (called.compareAndSet(false, true)) {
-            val jumpOutException = object : RuntimeException(), Runnable {
+            val jumpOutException = object : RuntimeException("Jump out"), Runnable {
                 override fun fillInStackTrace(): Throwable {
                     stackTrace = emptyArray()
                     return this
@@ -33,7 +34,7 @@ class AppInitializer @Inject constructor(
                 }
             }
             val mainHandler = Handler(mainLooper)
-            scope.launch(mainHandler.asCoroutineDispatcher()) {
+            scope.launch(mainHandler.asCoroutineDispatcher().immediate) {
                 tasks.map {
                     launch {
                         it.getValue()
@@ -46,6 +47,8 @@ class AppInitializer @Inject constructor(
             } catch (e: Throwable) {
                 if (jumpOutException != e) {
                     throw e
+                } else {
+                    Timber.d(e)
                 }
             }
         }
