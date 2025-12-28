@@ -1,9 +1,8 @@
 package com.github.andock.daemon.app
 
 import android.os.Looper
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -13,30 +12,32 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.EmptyCoroutineContext
 
-@OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AppInitializer @Inject constructor(
-    private val tasks: Set<@JvmSuppressWildcards Task<*>>
+    private val tasks: Set<@JvmSuppressWildcards Task<*>>,
+    private val scope: CoroutineScope,
 ) {
     private val called = AtomicBoolean(false)
     fun onCreate() {
         require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
         if (called.compareAndSet(false, true)) {
-            val jumpOutException = object : RuntimeException() {
+            val jumpOutException = object : RuntimeException(), Runnable {
                 override fun fillInStackTrace(): Throwable {
                     stackTrace = emptyArray()
                     return this
                 }
+
+                override fun run() {
+                    throw this
+                }
             }
-            GlobalScope.launch(Dispatchers.Main) {
+            scope.launch(Dispatchers.Main) {
                 tasks.map {
                     launch {
                         it.getValue()
                     }
                 }.joinAll()
-                Dispatchers.Main.dispatch(EmptyCoroutineContext) {
-                    throw jumpOutException
-                }
+                Dispatchers.Main.dispatch(EmptyCoroutineContext, jumpOutException)
             }
             try {
                 Looper.loop()
