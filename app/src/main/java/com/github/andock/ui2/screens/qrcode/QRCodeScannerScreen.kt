@@ -49,7 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
-import com.github.andock.ui.screens.qrcode.CameraPreview
+import com.github.andock.ui.screens.qrcode.QrcodeScanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +115,7 @@ fun QRCodeScannerScreen(
         ) {
             if (hasCameraPermission) {
                 // Camera preview
-                CameraPreview(
+                QrcodeScanner(
                     flashEnabled = flashEnabled,
                     onBarcodeDetected = { barcode ->
                         val data = barcode.rawValue
