@@ -19,11 +19,11 @@ import kotlinx.coroutines.guava.await
 
 @OptIn(ExperimentalGetImage::class)
 @Composable
-fun QrcodeScanner(
+fun QrcodeCamera(
     flashEnabled: Boolean,
     onBarcodeDetected: (Barcode) -> Unit
 ) {
-    val viewModel = hiltViewModel<QrcodeScannerModel>()
+    val viewModel = hiltViewModel<QrcodeCameraViewModel>()
     val lifecycleOwner = LocalLifecycleOwner.current
     val (previewView, setPreviewView) = remember { mutableStateOf<PreviewView?>(null) }
     val (camera, setCamera) = remember { mutableStateOf<Camera?>(null) }

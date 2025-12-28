@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalGetImage::class)
 @HiltViewModel
-class QrcodeScannerModel @Inject constructor(
+class QrcodeCameraViewModel @Inject constructor(
     private val application: Application
 ) : ViewModel(), ImageAnalysis.Analyzer {
     private val barcodeScanner = BarcodeScanning.getClient()
@@ -33,7 +33,10 @@ class QrcodeScannerModel @Inject constructor(
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         .build()
         .apply {
-            setAnalyzer(Dispatchers.IO.asExecutor(), this@QrcodeScannerModel)
+            setAnalyzer(
+                Dispatchers.IO.asExecutor(),
+                this@QrcodeCameraViewModel
+            )
         }
     var onBarcodeDetected: ((Barcode) -> Unit)? = null
 
