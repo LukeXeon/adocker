@@ -12,18 +12,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PRootVersion @Inject constructor(
     private val appContext: AppContext,
+    private val prootEnv: PRootEnvironment,
     private val processAwaiter: ProcessAwaiter,
     scope: CoroutineScope
 ) {
-    private val nativeLibDir = appContext.nativeLibDir
-    private val prootBinary = File(nativeLibDir, "libproot.so")
     private val _value = MutableStateFlow<String?>(null)
 
     val value = _value.asStateFlow()
@@ -35,6 +33,8 @@ class PRootVersion @Inject constructor(
     }
 
     private suspend fun loadVersion(): String? {
+        val prootBinary = prootEnv.binary
+        val nativeLibDir = appContext.nativeLibDir
         when {
             !prootBinary.canExecute() -> {
                 Timber.Forest.d("PRoot binary not executable: ${prootBinary.absolutePath}")
@@ -50,7 +50,7 @@ class PRootVersion @Inject constructor(
                 nativeLibDir.listFiles()?.forEach { file ->
                     Timber.Forest.d("  Native lib: ${file.name} (${file.length()} bytes)")
                 }
-                val env = buildProotEnvironment()
+                val env = prootEnv.values
                 try {
                     Timber.Forest.d("Running proot --version with env: $env")
                     val process = Process(
@@ -90,42 +90,6 @@ class PRootVersion @Inject constructor(
             }
         }
         return null
-    }
-
-    /**
-     * Build environment for PRoot process itself.
-     *
-     * The PRoot loader must be in the native lib directory as libproot_loader.so.
-     * This is required because:
-     * 1. PRoot uses an unbundled loader architecture
-     * 2. The loader must also be in a location with executable SELinux context
-     */
-    private fun buildProotEnvironment(): Map<String, String> {
-        val env = mutableMapOf<String, String>()
-
-        // 64-bit loader
-        val loaderPath = File(nativeLibDir, "libproot_loader.so")
-        if (loaderPath.exists()) {
-            env["PROOT_LOADER"] = loaderPath.absolutePath
-            Timber.Forest.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
-        } else {
-            Timber.Forest.w("PRoot loader not found at: ${loaderPath.absolutePath}")
-        }
-
-        // 32-bit loader (for running 32-bit programs on 64-bit devices)
-        val loader32Path = File(nativeLibDir, "libproot_loader32.so")
-        if (loader32Path.exists()) {
-            env["PROOT_LOADER_32"] = loader32Path.absolutePath
-            Timber.Forest.d("PROOT_LOADER_32 set to: ${loader32Path.absolutePath}")
-        }
-
-        // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
-        val tmpDir = appContext.tmpDir
-        tmpDir.mkdirs()  // Ensure directory exists
-        env["PROOT_TMP_DIR"] = tmpDir.absolutePath
-        Timber.Forest.d("PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
-
-        return env
     }
 
     companion object {

@@ -30,15 +30,9 @@ class PRootEngine @Inject constructor(
     @param:Named("redirect")
     private val mapping: Map<String, String>,
     private val factory: JobProcess.Factory,
-    private val prootVersion: PRootVersion
+    private val prootVersion: PRootVersion,
+    private val prootEnv: PRootEnvironment,
 ) {
-    private val nativeLibDir = appContext.nativeLibDir
-
-    /**
-     * Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
-     * */
-    private val prootBinary = File(nativeLibDir, "libproot.so")
-
     val version
         get() = prootVersion.value
 
@@ -51,8 +45,7 @@ class PRootEngine @Inject constructor(
         command: List<String>?,
     ): List<String> {
         val cmd = mutableListOf<String>()
-
-        cmd.add(prootBinary.absolutePath)
+        cmd.add(prootEnv.binary.absolutePath)
 
         // Root emulation (fake root user)
         cmd.add("-0")
@@ -98,41 +91,13 @@ class PRootEngine @Inject constructor(
      * Build environment variables for the process
      */
     private fun buildEnvironment(container: ContainerConfig): Map<String, String> {
-        val env = mutableMapOf<String, String>()
-
-        // 64-bit loader
-        val loaderPath = File(nativeLibDir, "libproot_loader.so")
-        if (loaderPath.exists()) {
-            env["PROOT_LOADER"] = loaderPath.absolutePath
-        }
-
-        // 32-bit loader (for running 32-bit programs on 64-bit devices)
-        val loader32Path = File(nativeLibDir, "libproot_loader32.so")
-        if (loader32Path.exists()) {
-            env["PROOT_LOADER_32"] = loader32Path.absolutePath
-        }
-
-        // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
-        // Use app's tmp directory which has write permissions
-        val tmpDir = appContext.tmpDir
-        tmpDir.mkdirs()  // Ensure directory exists
-        env["PROOT_TMP_DIR"] = tmpDir.absolutePath
-
+        val env = HashMap<String, String>(prootEnv.values)
         // Default environment
         env["HOME"] = "/root"
         env["USER"] = container.user.ifEmpty { "root" }
         env["HOSTNAME"] = container.hostname
-        env["TERM"] = "xterm-256color"
-        env["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-        env["LANG"] = "C.UTF-8"
-
         // Container-specific environment
         env.putAll(container.env)
-
-        // Android-specific
-        env["ANDROID_ROOT"] = "/system"
-        env["ANDROID_DATA"] = "/data"
-
         return env
     }
 
