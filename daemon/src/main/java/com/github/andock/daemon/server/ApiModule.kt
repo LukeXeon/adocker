@@ -4,6 +4,7 @@ import android.net.LocalSocketAddress.Namespace
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.http.TcpServerConfig
 import com.github.andock.daemon.http.UnixServerConfig
+import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
 import dagger.Provides
@@ -42,7 +43,7 @@ object ApiModule {
     @Provides
     @Singleton
     @IntoSet
-    fun initializer(servers: Set<@JvmSuppressWildcards Http4kServer>) = suspendLazy {
+    fun initializer(servers: Set<@JvmSuppressWildcards Http4kServer>): SuspendLazy<*> = suspendLazy {
         servers.forEach {
             it.start()
         }
