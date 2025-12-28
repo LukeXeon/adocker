@@ -1,6 +1,8 @@
 package com.github.andock.ui.screens.containers
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import com.github.andock.R
 import com.github.andock.daemon.containers.ContainerState
 
@@ -12,5 +14,9 @@ enum class ContainerFilterType(
     All(R.string.containers_tab_all, { true }),
     Created(R.string.containers_tab_created, { it is ContainerState.Created }),
     Running(R.string.containers_tab_running, { it is ContainerState.Running }),
-    Exited(R.string.containers_tab_exited, { it is ContainerState.Exited })
+    Exited(R.string.containers_tab_exited, { it is ContainerState.Exited });
+
+    val label: String
+        @Composable
+        get() = stringResource(labelResId)
 }

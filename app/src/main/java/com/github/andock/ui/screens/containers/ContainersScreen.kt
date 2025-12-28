@@ -100,9 +100,7 @@ fun ContainersScreen(
                         },
                         label = {
                             Text(
-                                "${stringResource(type.labelResId)} (${
-                                    statesCount.getOrDefault(type, 0)
-                                })"
+                                "${type.label} (${statesCount.getOrDefault(type, 0)})"
                             )
                         },
                         leadingIcon = if (filterType == type) {
