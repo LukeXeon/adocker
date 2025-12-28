@@ -84,9 +84,10 @@ class QrcodeCameraViewModel @Inject constructor(
         val mediaImage = imageProxy.image
         val onBarcodeDetected = onBarcodeDetected
         if (mediaImage != null && onBarcodeDetected != null) {
+            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
             val image = InputImage.fromMediaImage(
                 mediaImage,
-                imageProxy.imageInfo.rotationDegrees
+                rotationDegrees
             )
             val callbacks = object : OnSuccessListener<List<Barcode>>,
                 OnCompleteListener<List<Barcode>> {
