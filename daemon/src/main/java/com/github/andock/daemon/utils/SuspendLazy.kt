@@ -124,6 +124,15 @@ private class UnsafeSuspendLazyImpl<out T>(initializer: () -> T) : SuspendLazy<T
 
 }
 
+private class SuspendLazyAdapter<T>(
+    private val lazy: Lazy<T>
+) : SuspendLazy<T> {
+
+    override fun isInitialized() = lazy.isInitialized()
+
+    override suspend fun getValue(): T = lazy.value
+}
+
 sealed interface SuspendLazy<out T> {
     fun isInitialized(): Boolean
 
@@ -142,4 +151,8 @@ fun <T> suspendLazy(mode: LazyThreadSafetyMode, initializer: () -> T): SuspendLa
         LazyThreadSafetyMode.PUBLICATION -> SafePublicationSuspendLazyImpl(initializer)
         LazyThreadSafetyMode.NONE -> UnsafeSuspendLazyImpl(initializer)
     }
+
+fun <T> Lazy<T>.asSuspendLazy(): SuspendLazy<T> {
+    return SuspendLazyAdapter(this)
+}
 
