@@ -18,6 +18,7 @@ import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,6 +48,7 @@ class QrcodeCameraViewModel @Inject constructor(
             var provider: ProcessCameraProvider? = null
             try {
                 provider = ProcessCameraProvider.getInstance(application).await()
+                awaitCancellation()
             } finally {
                 provider?.unbindAll()
                 barcodeScanner.close()
