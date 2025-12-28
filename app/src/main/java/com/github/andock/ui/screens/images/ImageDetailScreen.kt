@@ -27,12 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.utils.formatDate
 import com.github.andock.ui.utils.formatSize
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +48,7 @@ fun ImageDetailScreen(
     val viewModel = hiltViewModel<ImagesViewModel>()
     val image = viewModel.getImageById(imageId).collectAsState(null).value
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
     if (image != null) {
         Scaffold(
             topBar = {
@@ -183,16 +188,31 @@ fun ImageDetailScreen(
     }
     // Delete confirmation dialog
     if (showDeleteDialog != null) {
+
         ImageDeleteDialog(
             showDeleteDialog,
             onDelete = {
-                viewModel.deleteImage(it.id)
-                setDeleteDialog(null)
-                onNavigateBack()
+                viewModel.viewModelScope.launch {
+                    try {
+                        setLoading(true)
+                        setDeleteDialog(null)
+                        val delayJob = launch {
+                            delay(500)
+                        }
+                        viewModel.deleteImage(it.id)
+                        delayJob.join()
+                    } finally {
+                        setLoading(false)
+                        onNavigateBack()
+                    }
+                }
             },
             onDismissRequest = {
                 setDeleteDialog(null)
             }
         )
+    }
+    if (isLoading) {
+        LoadingDialog()
     }
 }

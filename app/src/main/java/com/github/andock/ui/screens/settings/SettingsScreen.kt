@@ -37,7 +37,9 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.io.formatFileSize
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.theme.Spacing
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +51,8 @@ fun SettingsScreen(
     val viewModel = hiltViewModel<SettingsViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
     val storageUsage by viewModel.storageUsage.collectAsState()
-    val clearSuccessMessage = stringResource(R.string.settings_clear_data_success)
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.loadStorageUsage()
     }
@@ -152,13 +155,35 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(Spacing.Medium))
         }
     }
-    SettingsClearDataDialog(
-        isShowClearDataDialog,
-        onDismissRequest = {
-            setShowDataDialogState(false)
-            viewModel.viewModelScope.launch {
-                snackbarHostState.showSnackbar(clearSuccessMessage)
+    if (isShowClearDataDialog) {
+        val clearSuccessMessage = stringResource(R.string.settings_clear_data_success)
+        SettingsClearDataDialog(
+            onClear = {
+                viewModel.viewModelScope.launch {
+                    try {
+                        setLoading(true)
+                        setShowDataDialogState(false)
+                        val delayJob = launch {
+                            delay(500)
+                        }
+                        viewModel.clearAllData()
+                        delayJob.join()
+                    } finally {
+                        setLoading(false)
+
+                    }
+                }
+            },
+            onDismissRequest = {
+                setShowDataDialogState(false)
+                viewModel.viewModelScope.launch {
+                    snackbarHostState.showSnackbar(clearSuccessMessage)
+                }
             }
-        }
-    )
+        )
+    }
+    if (isLoading) {
+        LoadingDialog()
+    }
+
 }

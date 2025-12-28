@@ -35,11 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +58,7 @@ fun ImagesScreen(
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
-
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -156,8 +160,19 @@ fun ImagesScreen(
         ImageDeleteDialog(
             showDeleteDialog,
             onDelete = {
-                viewModel.deleteImage(it.id)
-                setDeleteDialog(null)
+                viewModel.viewModelScope.launch {
+                    try {
+                        setLoading(true)
+                        setDeleteDialog(null)
+                        val delayJob = launch {
+                            delay(500)
+                        }
+                        viewModel.deleteImage(it.id)
+                        delayJob.join()
+                    } finally {
+                        setLoading(false)
+                    }
+                }
             },
             onDismissRequest = {
                 setDeleteDialog(null)
@@ -183,5 +198,8 @@ fun ImagesScreen(
                 setProgressDialog(null)
             }
         )
+    }
+    if (isLoading) {
+        LoadingDialog()
     }
 }

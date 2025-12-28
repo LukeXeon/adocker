@@ -113,14 +113,20 @@ fun ImageDownloadDialog(
                                             progress = {
                                                 if (progress.total > 0) {
                                                     (progress.downloaded.toFloat() / progress.total)
-                                                } else 0f
+                                                } else {
+                                                    0f
+                                                }
                                             },
                                             modifier = Modifier
                                                 .weight(0.5f)
                                                 .height(8.dp),
                                         )
                                         Text(
-                                            text = if (progress.downloaded == progress.total) "Done" else "Downloading",
+                                            text = if (progress.downloaded == progress.total) {
+                                                "Done"
+                                            } else {
+                                                "Downloading"
+                                            },
                                             style = MaterialTheme.typography.labelSmall,
                                             modifier = Modifier.weight(0.2f)
                                         )
@@ -134,6 +140,7 @@ fun ImageDownloadDialog(
                         is ImageDownloadState.Done -> {
                             Row(
                                 horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Surface(
