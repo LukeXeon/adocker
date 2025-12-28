@@ -144,7 +144,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                             mediaType = layer.mediaType,
                         )
                         val id = layer.id
-                        downloadStep(id.take(16), layer.size) {
+                        downloadStep(id, layer.size) {
                             val layerEntity = layerDao.getLayerById(id)
                             val destFile = File(
                                 appContext.layersDir,
@@ -169,7 +169,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 }
                             }.getOrThrow()
                             val sha256 = destFile.sha256()
-                            if (sha256 == id) {
+                            if (sha256 != id) {
                                 throw IllegalStateException("Layer sha256 mismatch: ${sha256}!=${id}")
                             }
                             layerDao.insertLayer(

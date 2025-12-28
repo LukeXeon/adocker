@@ -1,7 +1,6 @@
 package com.github.andock.daemon.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -21,9 +20,6 @@ interface ImageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImage(image: ImageEntity)
-
-    @Delete
-    suspend fun deleteImage(image: ImageEntity)
 
     @Query("DELETE FROM images WHERE id = :id")
     suspend fun deleteImageById(id: String)

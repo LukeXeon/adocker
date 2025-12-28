@@ -262,7 +262,7 @@ class ImageClient @Inject constructor(
             val registryUrl = getRegistryUrl(imageRef.registry)
             val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
             Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
-            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.id}") {
+            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/sha256:${layer.id}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }

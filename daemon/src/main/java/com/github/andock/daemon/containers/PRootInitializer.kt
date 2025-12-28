@@ -8,6 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -22,6 +24,14 @@ class PRootInitializer @Inject constructor(
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
     override suspend fun create(): String? {
+        return withContext(Dispatchers.IO) {
+            withTimeoutOrNull(2000) {
+                loadVersion()
+            }
+        }
+    }
+
+    private suspend fun loadVersion(): String? {
         when {
             !prootBinary.canExecute() -> {
                 Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
@@ -69,8 +79,10 @@ class PRootInitializer @Inject constructor(
                     }
                     return parseVersion(stdout)
                 } catch (e: Exception) {
-                    Timber.e(e, "Failed to get PRoot version")
-                    Timber.e(e, "PRoot availability check failed with exception")
+                    Timber.e(
+                        e,
+                        "Failed to get PRoot version，PRoot availability check failed with exception"
+                    )
                 }
             }
         }
