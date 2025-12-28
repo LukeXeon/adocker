@@ -102,8 +102,16 @@ fun RegistryCard(
                 )
             } else {
                 Icon(
-                    imageVector = if (isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
-                    contentDescription = if (isHealthy) "Healthy" else "Unhealthy",
+                    imageVector = if (isHealthy) {
+                        Icons.Default.CheckCircle
+                    } else {
+                        Icons.Default.Error
+                    },
+                    contentDescription = if (isHealthy) {
+                        "Healthy"
+                    } else {
+                        "Unhealthy"
+                    },
                     tint = if (isHealthy) {
                         MaterialTheme.colorScheme.tertiary
                     } else {

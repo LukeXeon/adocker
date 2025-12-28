@@ -92,7 +92,7 @@
     <string name="pull_image_pulling">拉取中...</string>
     <string name="pull_image_cancel">取消</string>
     <string name="pull_image_success">镜像拉取成功</string>
-    <string name="pull_image_error">拉取失败：%1$s</string>
+    <string name="pull_image_error">拉取失败</string>
     <string name="pull_image_downloading">下载中 %1$s</string>
     <string name="pull_progress_title">正在拉取镜像</string>
     <string name="pull_progress_overall">进度：%1$d / %2$d 层</string>

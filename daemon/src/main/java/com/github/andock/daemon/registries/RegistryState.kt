@@ -16,6 +16,7 @@ sealed interface RegistryState {
         override val id: String,
         val latencyMs: Long,
         val failures: Int
+
     ) : RegistryState, Comparable<Healthy> {
         override fun compareTo(other: Healthy): Int {
             var compare = latencyMs.compareTo(other.latencyMs)

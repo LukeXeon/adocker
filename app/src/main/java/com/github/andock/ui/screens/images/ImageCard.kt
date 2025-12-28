@@ -48,9 +48,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.io.formatFileSize
+import com.github.andock.ui.components.InfoChip
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import com.github.andock.ui.components.InfoChip
 
 /**
  * Material Design 3 镜像卡片组件
@@ -72,9 +72,6 @@ fun ImageCard(
             .fillMaxWidth()
             .animateContentSize()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = Spacing.ExtraSmall
-        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )

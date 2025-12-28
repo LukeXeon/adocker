@@ -4,11 +4,11 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.AuthTokenResponse
 import com.github.andock.daemon.client.model.ImageConfigResponse
 import com.github.andock.daemon.client.model.ImageManifestV2
-import com.github.andock.daemon.client.model.LayerDescriptor
 import com.github.andock.daemon.client.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
+import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -23,6 +23,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.utils.io.readAvailable
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
@@ -35,6 +36,7 @@ class ImageClient @Inject constructor(
     private val registryDao: RegistryDao,
     private val registryManager: RegistryManager,
     private val authTokenDao: AuthTokenDao,
+    private val json: Json,
 ) {
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
     private val serviceRegex = Regex("service=\"([^\"]+)\"")
@@ -204,7 +206,7 @@ class ImageClient @Inject constructor(
         when {
             contentType.contains("manifest.list") || contentType.contains("image.index") -> {
                 // It's a manifest list, find the right architecture
-                val manifestList = manifestListResponse.body<ManifestListResponse>()
+                val manifestList = json.decodeFromString<ManifestListResponse>(bodyText)
                 val platformManifest = manifestList.manifests?.find { manifest ->
                     manifest.platform?.architecture == AppContext.ARCHITECTURE &&
                             manifest.platform.os == AppContext.DEFAULT_OS
@@ -220,7 +222,7 @@ class ImageClient @Inject constructor(
 
             else -> {
                 // Direct manifest
-                manifestListResponse.body<ImageManifestV2>()
+                json.decodeFromString<ImageManifestV2>(bodyText)
             }
         }
     }
@@ -244,7 +246,7 @@ class ImageClient @Inject constructor(
         }
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
-        response.body()
+        json.decodeFromString(response.bodyAsText())
     }
 
     /**
@@ -252,15 +254,15 @@ class ImageClient @Inject constructor(
      */
     suspend fun downloadLayer(
         imageRef: ImageReference,
-        layer: LayerDescriptor,
+        layer: LayerEntity,
         destFile: File,
         onProgress: suspend (DownloadProgress) -> Unit = { }
     ): Result<Unit> {
         return runCatching {
             val registryUrl = getRegistryUrl(imageRef.registry)
             val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
-            Timber.d("Starting layer download: ${layer.digest.take(16)}, size: ${layer.size}")
-            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.digest}") {
+            Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
+            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/${layer.id}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
@@ -287,10 +289,10 @@ class ImageClient @Inject constructor(
                         }
                     }
                 }
-                Timber.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
+                Timber.i("Layer download completed: ${layer.id.take(16)}, downloaded: $downloaded bytes")
             }
         }.onFailure { e ->
-            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
+            Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
         }
     }
 }

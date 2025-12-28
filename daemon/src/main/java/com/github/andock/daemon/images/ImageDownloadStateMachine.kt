@@ -22,9 +22,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
@@ -76,6 +77,12 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                     }
                 }
             }
+            inState<ImageDownloadState.Error> {
+                onEnter {
+                    Timber.e(snapshot.throwable)
+                    noChange()
+                }
+            }
         }
     }
 
@@ -115,16 +122,28 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 client.getManifest(imageRef).getOrThrow()
             }
             val configDigest = manifest.config.digest
+            val imageId = configDigest.removePrefix("sha256:")
+            var imageEntity = imageDao.getImageById(imageId)
+            if (imageEntity != null) {
+                return override {
+                    ImageDownloadState.Done(ref)
+                }
+            }
             val configResponse = downloadStep("config", 1) {
                 client.getImageConfig(
                     imageRef,
                     configDigest
                 ).getOrThrow()
             }
-            coroutineScope {
+            val layers = coroutineScope {
                 manifest.layers.map { layer ->
-                    launch {
-                        val id = layer.digest.removePrefix("sha256:")
+                    async {
+                        val layer = LayerEntity(
+                            id = layer.digest.removePrefix("sha256:"),
+                            size = layer.size,
+                            mediaType = layer.mediaType,
+                        )
+                        val id = layer.id
                         downloadStep(id.take(16), layer.size) {
                             val layerEntity = layerDao.getLayerById(id)
                             val destFile = File(
@@ -145,7 +164,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 snapshot.updateProgress { from ->
                                     buildMap(from.size) {
                                         putAll(from)
-                                        put(layer.digest, progress)
+                                        put(layer.id, progress)
                                     }
                                 }
                             }.getOrThrow()
@@ -161,8 +180,9 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 )
                             )
                         }
+                        return@async layer
                     }
-                }.joinAll()
+                }.awaitAll()
             }
             // Create image config
             val imageConfig = configResponse.config?.let { config ->
@@ -175,8 +195,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 )
             }
             // Save image to database
-            val imageEntity = ImageEntity(
-                id = manifest.config.digest,
+            imageEntity = ImageEntity(
+                id = imageId,
                 registry = getRegistryUrl(imageRef.registry),
                 repository = imageRef.repository,
                 tag = imageRef.tag,
@@ -187,15 +207,15 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 created = System.currentTimeMillis(),
                 config = imageConfig
             )
-            val references = manifest.layers.map {
+            val references = layers.map { layer ->
                 LayerReferenceEntity(
-                    imageId = imageEntity.id,
-                    layerId = it.digest.removePrefix("sha256:")
+                    imageId = imageId,
+                    layerId = layer.id
                 )
             }
             database.withTransaction {
-                layerReferenceDao.insertLayerReferences(references)
                 imageDao.insertImage(imageEntity)
+                layerReferenceDao.insertLayerReferences(references)
             }
             return override {
                 ImageDownloadState.Done(ref)

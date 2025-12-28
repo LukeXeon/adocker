@@ -92,7 +92,7 @@
     <string name="pull_image_pulling">Pulling...</string>
     <string name="pull_image_cancel">Cancel</string>
     <string name="pull_image_success">Image pulled successfully</string>
-    <string name="pull_image_error">Pull failed: %1$s</string>
+    <string name="pull_image_error">Pull failed</string>
     <string name="pull_image_downloading">Downloading %1$s</string>
     <string name="pull_progress_title">Pulling Image</string>
     <string name="pull_progress_overall">Progress: %1$d / %2$d layers</string>

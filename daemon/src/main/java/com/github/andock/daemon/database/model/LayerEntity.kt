@@ -1,6 +1,7 @@
 package com.github.andock.daemon.database.model
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
