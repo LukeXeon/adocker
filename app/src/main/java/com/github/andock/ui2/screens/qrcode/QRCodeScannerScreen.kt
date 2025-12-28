@@ -4,13 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,19 +47,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.andock.R
-import com.google.mlkit.vision.barcode.BarcodeScanner
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.github.andock.ui.screens.qrcode.CameraPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -301,8 +283,7 @@ fun QRCodeScannerScreen(
 
     // Confirmation dialog
     if (showConfirmDialog && scannedData != null) {
-        val parsedImage = parseImageFromQRCode(scannedData!!)
-
+        val parsedImage = scannedData!!
         AlertDialog(
             onDismissRequest = {
                 showConfirmDialog = false
@@ -349,142 +330,5 @@ fun QRCodeScannerScreen(
                 }
             }
         )
-    }
-}
-
-@androidx.annotation.OptIn(ExperimentalGetImage::class)
-@Composable
-private fun CameraPreview(
-    flashEnabled: Boolean,
-    onBarcodeDetected: (Barcode) -> Unit
-) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val previewView = remember { PreviewView(context) }
-    val barcodeScanner = remember { BarcodeScanning.getClient() }
-
-    DisposableEffect(Unit) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            // Preview use case
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.surfaceProvider = previewView.surfaceProvider
-                }
-
-            // Image analysis use case for barcode scanning
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .apply {
-                    setAnalyzer(Dispatchers.Default.asExecutor()) { imageProxy ->
-                        processImageProxy(barcodeScanner, imageProxy, onBarcodeDetected)
-                    }
-                }
-
-            // Camera selector
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind all use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                val camera = cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    preview,
-                    imageAnalysis
-                )
-
-                // Enable/disable flash
-                camera.cameraControl.enableTorch(flashEnabled)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, ContextCompat.getMainExecutor(context))
-
-        onDispose {
-            cameraProviderFuture.get().unbindAll()
-            barcodeScanner.close()
-        }
-    }
-
-    // Update flash when changed
-    LaunchedEffect(flashEnabled) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        try {
-            val cameraProvider = cameraProviderFuture.get()
-            val camera = cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA
-            )
-            camera.cameraControl.enableTorch(flashEnabled)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    AndroidView(
-        factory = { previewView },
-        modifier = Modifier.fillMaxSize()
-    )
-}
-
-@androidx.annotation.OptIn(ExperimentalGetImage::class)
-private fun processImageProxy(
-    barcodeScanner: BarcodeScanner,
-    imageProxy: ImageProxy,
-    onBarcodeDetected: (Barcode) -> Unit
-) {
-    val mediaImage = imageProxy.image
-    if (mediaImage != null) {
-        val image = InputImage.fromMediaImage(
-            mediaImage,
-            imageProxy.imageInfo.rotationDegrees
-        )
-
-        barcodeScanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    onBarcodeDetected(barcode)
-                }
-            }
-            .addOnCompleteListener {
-                imageProxy.close()
-            }
-    } else {
-        imageProxy.close()
-    }
-}
-
-/**
- * Parse image name from QR code data
- * Supports multiple formats:
- * - Simple: "ubuntu:22.04"
- * - JSON: {"type": "docker-image", "image": "ubuntu:22.04"}
- * - URL: "andock://pull?image=ubuntu:22.04"
- */
-private fun parseImageFromQRCode(data: String): String? {
-    return try {
-        when {
-            // JSON format
-            data.trim().startsWith("{") -> {
-                val json = Json.parseToJsonElement(data).jsonObject
-                json["image"]?.jsonPrimitive?.content
-            }
-            // URL format
-            data.startsWith("andock://pull?image=") -> {
-                data.substringAfter("image=").substringBefore("&")
-            }
-            // Simple format (direct image name)
-            else -> data
-        }
-    } catch (e: Exception) {
-        // If parsing fails, return the raw data
-        data
     }
 }

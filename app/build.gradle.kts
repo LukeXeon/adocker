@@ -146,6 +146,9 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
+    // Guava
+    implementation(libs.kotlinx.coroutines.guava)
+
     implementation(project(":daemon"))
 
     // Testing
