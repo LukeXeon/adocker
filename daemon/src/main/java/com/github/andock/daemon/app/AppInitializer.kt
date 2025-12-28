@@ -2,12 +2,11 @@ package com.github.andock.daemon.app
 
 import android.os.Handler
 import android.os.Looper
+import com.github.andock.daemon.utils.SuspendLazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -15,7 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AppInitializer @Inject constructor(
-    private val tasks: Set<@JvmSuppressWildcards Task<*>>,
+    private val tasks: Set<@JvmSuppressWildcards SuspendLazy<*>>,
     private val scope: CoroutineScope,
 ) {
     private val called = AtomicBoolean(false)
@@ -49,34 +48,6 @@ class AppInitializer @Inject constructor(
                     throw e
                 } else {
                     Timber.d(e)
-                }
-            }
-        }
-    }
-
-    private object UninitializedValue
-
-    abstract class Task<T> {
-        protected abstract suspend fun create(): T
-        private val lock = Mutex()
-
-        @Volatile
-        private var value: Any? = UninitializedValue
-
-        suspend fun getValue(): T {
-            val v1 = value
-            if (v1 !== UninitializedValue) {
-                @Suppress("UNCHECKED_CAST")
-                return v1 as T
-            }
-            return lock.withLock {
-                val v2 = value
-                if (v2 !== UninitializedValue) {
-                    @Suppress("UNCHECKED_CAST") (v2 as T)
-                } else {
-                    val typedValue = create()
-                    value = typedValue
-                    typedValue
                 }
             }
         }

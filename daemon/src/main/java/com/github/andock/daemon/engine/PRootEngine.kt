@@ -1,4 +1,4 @@
-package com.github.andock.daemon.containers
+package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.client.model.ContainerConfig
@@ -34,7 +34,7 @@ class PRootEngine @Inject constructor(
     @param:Named("redirect")
     private val mapping: Map<String, String>,
     private val factory: JobProcess.Factory,
-    private val prootInitializer: PRootInitializer,
+    private val prootVersion: PRootVersion,
     private val scope: CoroutineScope,
 ) {
     private val nativeLibDir = appContext.nativeLibDir
@@ -47,7 +47,7 @@ class PRootEngine @Inject constructor(
     val version = run {
         val state = MutableStateFlow<String?>(null)
         scope.launch {
-            state.value = prootInitializer.getValue()
+            state.value = prootVersion.get()
         }
         state.asStateFlow()
     }
@@ -153,13 +153,13 @@ class PRootEngine @Inject constructor(
     ): Result<Process> = runCatching {
         val command = buildCommand(container, rootfsDir, command)
         val env = buildEnvironment(container)
-        Timber.d("=== RUN IN CONTAINER ===")
-        Timber.d("Command to execute: $command")
-        Timber.d("PRoot command size: ${command.size}")
+        Timber.Forest.d("=== RUN IN CONTAINER ===")
+        Timber.Forest.d("Command to execute: $command")
+        Timber.Forest.d("PRoot command size: ${command.size}")
         command.forEachIndexed { index, arg ->
-            Timber.d("  [$index] = '$arg'")
+            Timber.Forest.d("  [$index] = '$arg'")
         }
-        Timber.d("========================")
+        Timber.Forest.d("========================")
         Process(
             command = command,
             workingDir = rootfsDir,
@@ -176,7 +176,7 @@ class PRootEngine @Inject constructor(
         config: ContainerConfig = ContainerConfig(),
     ): Result<JobProcess> {
         val containerDir = File(appContext.containersDir, containerId)
-        val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
+        val rootfsDir = File(containerDir, AppContext.Companion.ROOTFS_DIR)
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }

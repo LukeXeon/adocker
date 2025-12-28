@@ -1,9 +1,9 @@
-package com.github.andock.daemon.containers
+package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.app.AppInitializer
 import com.github.andock.daemon.os.Process
 import com.github.andock.daemon.os.ProcessAwaiter
+import com.github.andock.daemon.utils.suspendLazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -14,36 +14,37 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PRootInitializer @Inject constructor(
+class PRootVersion @Inject constructor(
     private val appContext: AppContext,
-    private val processAwaiter: ProcessAwaiter
-) : AppInitializer.Task<String?>() {
+    private val processAwaiter: ProcessAwaiter,
+) {
     private val nativeLibDir = appContext.nativeLibDir
     private val prootBinary = File(nativeLibDir, "libproot.so")
+    private val version = suspendLazy(::loadVersion)
 
-    override suspend fun create(): String? {
-        return loadVersion()
+    suspend fun get(): String? {
+        return version.getValue()
     }
 
     private suspend fun loadVersion(): String? {
         when {
             !prootBinary.canExecute() -> {
-                Timber.d("PRoot binary not executable: ${prootBinary.absolutePath}")
+                Timber.Forest.d("PRoot binary not executable: ${prootBinary.absolutePath}")
             }
 
             !prootBinary.exists() -> {
-                Timber.d("PRoot binary not found at: ${prootBinary.absolutePath}")
+                Timber.Forest.d("PRoot binary not found at: ${prootBinary.absolutePath}")
             }
 
             else -> {
-                Timber.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
+                Timber.Forest.d("Initializing PRoot from native lib dir: ${prootBinary.absolutePath}")
                 // List files in native lib dir for debugging
                 nativeLibDir.listFiles()?.forEach { file ->
-                    Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
+                    Timber.Forest.d("  Native lib: ${file.name} (${file.length()} bytes)")
                 }
                 val env = buildProotEnvironment()
                 try {
-                    Timber.d("Running proot --version with env: $env")
+                    Timber.Forest.d("Running proot --version with env: $env")
                     val process = Process(
                         command = listOf(prootBinary.absolutePath, "--version"),
                         environment = env,
@@ -67,13 +68,13 @@ class PRootInitializer @Inject constructor(
                     val (stdout, stderr) = outputs
                     val available = code == 0 || stdout.contains("proot", ignoreCase = true)
                     if (!available) {
-                        Timber.w("PRoot check failed. Exit code: ${code}, stdout: ${stdout}, stderr: $stderr")
+                        Timber.Forest.w("PRoot check failed. Exit code: ${code}, stdout: ${stdout}, stderr: $stderr")
                     } else {
-                        Timber.d("PRoot available. Version output:\n $stdout")
+                        Timber.Forest.d("PRoot available. Version output:\n $stdout")
                     }
                     return parseVersion(stdout)
                 } catch (e: Exception) {
-                    Timber.e(
+                    Timber.Forest.e(
                         e,
                         "Failed to get PRoot version，PRoot availability check failed with exception"
                     )
@@ -98,23 +99,23 @@ class PRootInitializer @Inject constructor(
         val loaderPath = File(nativeLibDir, "libproot_loader.so")
         if (loaderPath.exists()) {
             env["PROOT_LOADER"] = loaderPath.absolutePath
-            Timber.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
+            Timber.Forest.d("PROOT_LOADER set to: ${loaderPath.absolutePath}")
         } else {
-            Timber.w("PRoot loader not found at: ${loaderPath.absolutePath}")
+            Timber.Forest.w("PRoot loader not found at: ${loaderPath.absolutePath}")
         }
 
         // 32-bit loader (for running 32-bit programs on 64-bit devices)
         val loader32Path = File(nativeLibDir, "libproot_loader32.so")
         if (loader32Path.exists()) {
             env["PROOT_LOADER_32"] = loader32Path.absolutePath
-            Timber.d("PROOT_LOADER_32 set to: ${loader32Path.absolutePath}")
+            Timber.Forest.d("PROOT_LOADER_32 set to: ${loader32Path.absolutePath}")
         }
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
         val tmpDir = appContext.tmpDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
-        Timber.d("PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
+        Timber.Forest.d("PROOT_TMP_DIR set to: ${tmpDir.absolutePath}")
 
         return env
     }

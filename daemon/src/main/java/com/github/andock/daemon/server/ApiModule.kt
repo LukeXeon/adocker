@@ -2,9 +2,9 @@ package com.github.andock.daemon.server
 
 import android.net.LocalSocketAddress.Namespace
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.app.AppInitializer
 import com.github.andock.daemon.http.TcpServerConfig
 import com.github.andock.daemon.http.UnixServerConfig
+import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,6 +40,11 @@ object ApiModule {
     }
 
     @Provides
+    @Singleton
     @IntoSet
-    fun initializer(initializer: ApiServerInitializer): AppInitializer.Task<*> = initializer
+    fun initializer(servers: Set<@JvmSuppressWildcards Http4kServer>) = suspendLazy {
+        servers.forEach {
+            it.start()
+        }
+    }
 }
