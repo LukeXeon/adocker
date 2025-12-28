@@ -12,6 +12,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
@@ -63,7 +66,9 @@ class QrcodeCameraViewModel @Inject constructor(
     suspend fun setupCamera(
         lifecycleOwner: LifecycleOwner,
     ): Camera {
-        val provider = ProcessCameraProvider.getInstance(application).await()
+        val provider = ProcessCameraProvider
+            .getInstance(application)
+            .await()
         // Unbind all use cases before rebinding
         provider.unbindAll()
         // Bind use cases to camera
@@ -83,13 +88,21 @@ class QrcodeCameraViewModel @Inject constructor(
                 mediaImage,
                 imageProxy.imageInfo.rotationDegrees
             )
-            barcodeScanner.process(image).addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    onBarcodeDetected(barcode)
+            val callbacks = object : OnSuccessListener<List<Barcode>>,
+                OnCompleteListener<List<Barcode>> {
+                override fun onSuccess(barcodes: List<Barcode>) {
+                    for (barcode in barcodes) {
+                        onBarcodeDetected(barcode)
+                    }
                 }
-            }.addOnCompleteListener {
-                imageProxy.close()
+
+                override fun onComplete(p0: Task<List<Barcode>>) {
+                    imageProxy.close()
+                }
             }
+            barcodeScanner.process(image)
+                .addOnSuccessListener(callbacks)
+                .addOnCompleteListener(callbacks)
         } else {
             imageProxy.close()
         }
