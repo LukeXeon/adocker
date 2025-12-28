@@ -7,6 +7,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Singleton
@@ -20,7 +22,7 @@ object EngineModule {
     @IntoSet
     fun initializer(version: PRootVersion): SuspendLazy<*> = suspendLazy {
         withTimeoutOrNull(1000) {
-            Timber.i(version.get())
+            Timber.i(version.value.filterNotNull().first())
         }
     }
 }

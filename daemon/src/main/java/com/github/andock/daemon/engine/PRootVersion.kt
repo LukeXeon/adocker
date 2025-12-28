@@ -3,10 +3,13 @@ package com.github.andock.daemon.engine
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.os.Process
 import com.github.andock.daemon.os.ProcessAwaiter
-import com.github.andock.daemon.utils.suspendLazy
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.io.File
@@ -17,13 +20,18 @@ import javax.inject.Singleton
 class PRootVersion @Inject constructor(
     private val appContext: AppContext,
     private val processAwaiter: ProcessAwaiter,
+    scope: CoroutineScope
 ) {
     private val nativeLibDir = appContext.nativeLibDir
     private val prootBinary = File(nativeLibDir, "libproot.so")
-    private val version = suspendLazy(::loadVersion)
+    private val _value = MutableStateFlow<String?>(null)
 
-    suspend fun get(): String? {
-        return version.getValue()
+    val value = _value.asStateFlow()
+
+    init {
+        scope.launch {
+            _value.value = loadVersion()
+        }
     }
 
     private suspend fun loadVersion(): String? {
