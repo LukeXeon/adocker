@@ -43,7 +43,7 @@ fun QrcodeScanner(
     }
     AndroidView(
         factory = ::PreviewView,
-        modifier = Modifier.Companion.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) { view ->
         setPreviewView(view)
     }
