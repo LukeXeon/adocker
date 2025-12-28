@@ -8,8 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -24,11 +22,7 @@ class PRootInitializer @Inject constructor(
     private val prootBinary = File(nativeLibDir, "libproot.so")
 
     override suspend fun create(): String? {
-        return withContext(Dispatchers.IO) {
-            withTimeoutOrNull(2000) {
-                loadVersion()
-            }
-        }
+        return loadVersion()
     }
 
     private suspend fun loadVersion(): String? {
