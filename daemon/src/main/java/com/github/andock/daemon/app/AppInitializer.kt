@@ -18,20 +18,23 @@ class AppInitializer @Inject constructor(
     private val scope: CoroutineScope,
 ) {
     private val called = AtomicBoolean(false)
+
+    private class JumpOutException : RuntimeException("Jump out"), Runnable {
+        override fun fillInStackTrace(): Throwable {
+            stackTrace = emptyArray()
+            return this
+        }
+
+        override fun run() {
+            throw this
+        }
+    }
+
     fun onCreate() {
         val mainLooper = Looper.getMainLooper()
         require(mainLooper.isCurrentThread) { "must be main thread" }
         if (called.compareAndSet(false, true)) {
-            val jumpOutException = object : RuntimeException("Jump out"), Runnable {
-                override fun fillInStackTrace(): Throwable {
-                    stackTrace = emptyArray()
-                    return this
-                }
-
-                override fun run() {
-                    throw this
-                }
-            }
+            val jumpOutException = JumpOutException()
             val mainHandler = Handler(mainLooper)
             scope.launch(mainHandler.asCoroutineDispatcher().immediate) {
                 tasks.map {
@@ -43,12 +46,8 @@ class AppInitializer @Inject constructor(
             }
             try {
                 Looper.loop()
-            } catch (e: Throwable) {
-                if (jumpOutException != e) {
-                    throw e
-                } else {
-                    Timber.d(e)
-                }
+            } catch (e: JumpOutException) {
+                Timber.d(e)
             }
         }
     }

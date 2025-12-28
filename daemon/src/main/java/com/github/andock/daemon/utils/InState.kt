@@ -10,28 +10,47 @@ import kotlin.reflect.KClass
 typealias InState<T> = Pair<StateFlow<T>, Set<KClass<out T>>>
 
 @PublishedApi
-internal suspend inline fun InState<*>.executeUnchecked(
+internal abstract class Collector(
+    private val inState: InState<*>,
+) : CancellationException(
+    "Flow was aborted, no more elements needed"
+), suspend (Boolean) -> Unit {
+
+    var result: Any? = this
+
+    override fun fillInStackTrace(): Throwable {
+        stackTrace = emptyArray()
+        return this
+    }
+
+    override suspend fun invoke(value: Boolean) {
+        if (value) {
+            result = execute()
+            throw this
+        } else {
+            throw IllegalStateException("${inState.first} is not ${inState.second}")
+        }
+    }
+
+    abstract suspend fun execute(): Any?
+}
+
+@PublishedApi
+internal inline fun Collector(
+    inState: InState<*>,
     crossinline block: suspend () -> Any?
-): Any? {
+): Collector {
+    return object : Collector(inState) {
+        override suspend fun execute() = block()
+    }
+}
+
+suspend inline fun <reified R> InState<*>.execute(
+    crossinline block: suspend () -> R
+): R {
     val (state, classes) = this
-    val collector = object : CancellationException(
-        "Flow was aborted, no more elements needed"
-    ), suspend (Boolean) -> Unit {
-        var result: Any? = this
-
-        override fun fillInStackTrace(): Throwable {
-            stackTrace = emptyArray()
-            return this
-        }
-
-        override suspend fun invoke(value: Boolean) {
-            if (value) {
-                result = block()
-                throw this
-            } else {
-                throw IllegalStateException("container is not $classes")
-            }
-        }
+    val collector = Collector(this) {
+        block()
     }
     try {
         state.map { state ->
@@ -39,7 +58,7 @@ internal suspend inline fun InState<*>.executeUnchecked(
                 clazz.isInstance(state)
             }
         }.distinctUntilChanged().collectLatest(collector)
-    } catch (e: CancellationException) {
+    } catch (e: Collector) {
         if (e != collector) {
             throw e
         }
@@ -47,13 +66,7 @@ internal suspend inline fun InState<*>.executeUnchecked(
     if (collector.result == collector) {
         throw NoSuchElementException("Expected at least one element")
     }
-    return collector.result
-}
-
-suspend inline fun <reified R> InState<*>.execute(
-    crossinline block: suspend () -> R
-): R {
-    return executeUnchecked { block() } as R
+    return collector.result as R
 }
 
 fun <T : Any> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
