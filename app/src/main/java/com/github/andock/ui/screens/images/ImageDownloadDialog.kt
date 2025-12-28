@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -47,8 +48,14 @@ fun ImageDownloadDialog(
 ) {
     val imageName = downloader.ref.fullName
     val state = downloader.state.collectAsState().value
+    val onDismissRequest = remember(downloader, onDismissRequest) {
+        {
+            downloader.cancel()
+            onDismissRequest()
+        }
+    }
     AlertDialog(
-        onDismissRequest = { },
+        onDismissRequest = onDismissRequest,
         icon = {
             when (state) {
                 is ImageDownloadState.Done -> Icon(
@@ -179,5 +186,16 @@ fun ImageDownloadDialog(
                 }
             }
         },
+        dismissButton = {
+            if (state is ImageDownloadState.Downloading) {
+                Button(
+                    onClick = onDismissRequest,
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_cancel)
+                    )
+                }
+            }
+        }
     )
 }

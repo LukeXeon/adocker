@@ -4,6 +4,7 @@ import com.github.andock.daemon.client.ImageReference
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,6 +42,10 @@ class ImageDownloader @AssistedInject constructor(
 
     val ref
         get() = state.value.ref
+
+    fun cancel() {
+        stateMachine.dispatchAction(CancellationException())
+    }
 
     @Singleton
     @AssistedFactory
