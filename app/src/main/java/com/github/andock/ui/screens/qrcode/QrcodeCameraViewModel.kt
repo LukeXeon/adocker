@@ -38,6 +38,8 @@ class QrcodeCameraViewModel @Inject constructor(
                 this@QrcodeCameraViewModel
             )
         }
+
+    @Volatile
     var onBarcodeDetected: ((Barcode) -> Unit)? = null
 
     init {
