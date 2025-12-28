@@ -42,7 +42,7 @@ import com.github.andock.daemon.images.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import kotlinx.coroutines.delay
+import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,11 +164,9 @@ fun ImagesScreen(
                     try {
                         setLoading(true)
                         setDeleteDialog(null)
-                        val delayJob = launch {
-                            delay(500)
+                        withAtLeast(200) {
+                            viewModel.deleteImage(it.id)
                         }
-                        viewModel.deleteImage(it.id)
-                        delayJob.join()
                     } finally {
                         setLoading(false)
                     }

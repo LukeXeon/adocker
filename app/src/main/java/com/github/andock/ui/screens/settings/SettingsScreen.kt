@@ -39,7 +39,7 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.theme.Spacing
-import kotlinx.coroutines.delay
+import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,14 +163,11 @@ fun SettingsScreen(
                     try {
                         setLoading(true)
                         setShowDataDialogState(false)
-                        val delayJob = launch {
-                            delay(500)
+                        withAtLeast(200) {
+                            viewModel.clearAllData()
                         }
-                        viewModel.clearAllData()
-                        delayJob.join()
                     } finally {
                         setLoading(false)
-
                     }
                 }
             },
