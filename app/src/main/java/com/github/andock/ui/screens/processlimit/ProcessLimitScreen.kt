@@ -87,7 +87,7 @@ fun ProcessLimitScreen(
                     }
                 }
             } else {
-                ProcessLimitInfoList(
+                ProcessLimitDesc(
                     onMessage = {
                         snackbarHostState.showSnackbar(it)
                     }

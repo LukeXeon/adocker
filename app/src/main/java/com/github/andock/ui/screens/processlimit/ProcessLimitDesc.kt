@@ -53,7 +53,7 @@ import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProcessLimitInfoList(
+fun ProcessLimitDesc(
     onMessage: suspend (String) -> Unit
 ) {
     val viewModel = hiltViewModel<ProcessLimitViewModel>()
