@@ -39,3 +39,12 @@ suspend inline fun withAtLeast(
         job.join()
     }
 }
+
+fun parseEnvVars(input: String): Map<String, String> {
+    return input.lines()
+        .filter { it.isNotBlank() && it.contains("=") }
+        .associate { line ->
+            val parts = line.split("=", limit = 2)
+            parts[0].trim() to parts.getOrElse(1) { "" }.trim()
+        }
+}

@@ -50,6 +50,7 @@ import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.parseEnvVars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,15 +68,6 @@ fun ContainerCreateScreen(
     var envVars by remember { mutableStateOf("") }
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
-
-    fun parseEnvVars(input: String): Map<String, String> {
-        return input.lines()
-            .filter { it.isNotBlank() && it.contains("=") }
-            .associate { line ->
-                val parts = line.split("=", limit = 2)
-                parts[0].trim() to parts.getOrElse(1) { "" }.trim()
-            }
-    }
 
     Scaffold(
         topBar = {
