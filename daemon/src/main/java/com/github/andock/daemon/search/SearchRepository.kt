@@ -24,7 +24,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SearchRepository @Inject constructor(
-    private val factory: SearchPagingSource.Factory
+    private val factory: SearchPagingSource.Factory,
 ) {
     /**
      * Search Docker Hub for images with pagination.

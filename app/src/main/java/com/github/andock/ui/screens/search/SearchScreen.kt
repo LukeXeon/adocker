@@ -32,6 +32,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -66,16 +67,16 @@ import kotlinx.coroutines.flow.map
 @Composable
 fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchHistory by viewModel.searchHistory.collectAsState()
+    val searchQuery by viewModel.query.collectAsState()
+    val searchHistory by viewModel.history.collectAsState()
     val focusManager = LocalFocusManager.current
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (showOnlyOfficial, setShowOnlyOfficial) = remember { mutableStateOf(false) }
-    val (minStars, setMinStars) = remember { mutableStateOf(0) }
+    val (minStars, setMinStars) = remember { mutableIntStateOf(0) }
     val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
     val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
     val searchResults = remember(minStars, showOnlyOfficial) {
-        viewModel.searchResults.map {
+        viewModel.results.map {
             it.filter { result ->
                 if (minStars > 0) {
                     result.starCount >= minStars
@@ -134,7 +135,7 @@ fun SearchScreen() {
             ) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { viewModel.updateSearchQuery(it) },
+                    onValueChange = { viewModel.setQuery(it) },
                     placeholder = { Text(stringResource(R.string.discover_search_placeholder)) },
                     leadingIcon = {
                         Icon(
@@ -145,7 +146,7 @@ fun SearchScreen() {
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(
-                                onClick = { viewModel.updateSearchQuery("") }
+                                onClick = { viewModel.setQuery("") }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
@@ -157,7 +158,7 @@ fun SearchScreen() {
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(
                         onSearch = {
-                            viewModel.performSearch(searchQuery)
+                            viewModel.setQuery(searchQuery)
                             focusManager.clearFocus()
                         }
                     ),
@@ -188,12 +189,12 @@ fun SearchScreen() {
                 SearchHistoryPanel(
                     history = searchHistory,
                     onHistoryItemClick = {
-                        viewModel.searchFromHistory(it)
+                        viewModel.setQuery(it)
                         setShowHistory(false)
                     },
-                    onRemoveItem = { viewModel.removeFromHistory(it) },
+                    onRemoveItem = { viewModel.removeHistory(it) },
                     onClearHistory = {
-                        viewModel.clearSearchHistory()
+                        viewModel.clearHistory()
                         setShowHistory(false)
                     },
                     modifier = Modifier.padding(horizontal = Spacing.Medium)

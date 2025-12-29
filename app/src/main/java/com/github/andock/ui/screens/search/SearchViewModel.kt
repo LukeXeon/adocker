@@ -64,17 +64,16 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
-    private val searchHistoryManager: SearchHistory,
+    private val searchHistory: SearchHistory,
     private val imageManager: ImageManager
 ) : ViewModel() {
-
     // Search query input
-    private val _searchQuery = MutableStateFlow("")
+    private val _query = MutableStateFlow("")
 
-    val searchQuery = _searchQuery.asStateFlow()
+    val query = _query.asStateFlow()
 
     // Search history
-    val searchHistory = searchHistoryManager.records
+    val history = searchHistory.records
         .stateIn(
             viewModelScope,
             SharingStarted.Lazily,
@@ -82,12 +81,14 @@ class SearchViewModel @Inject constructor(
         )
 
     // Paginated search results with debounce
-    val searchResults = _searchQuery
+    val results = _query
         .debounce(400) // 400ms debounce
         .distinctUntilChanged()
         .filter { it.isNotBlank() }
         .flatMapLatest { query ->
-            searchRepository.search(query.trim())
+            val query = query.trim()
+            searchHistory.add(query)
+            searchRepository.search(query)
         }.cachedIn(viewModelScope)
 
     /**
@@ -95,43 +96,19 @@ class SearchViewModel @Inject constructor(
      *
      * The search will be triggered automatically after 400ms of no input changes.
      */
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
+    fun setQuery(query: String) {
+        _query.value = query.trim()
     }
 
-    /**
-     * Perform search and add to history.
-     *
-     * This method immediately sets the search query and adds it to history.
-     * Use this when the user explicitly triggers a search (e.g., pressing the search button).
-     */
-    fun performSearch(query: String) {
-        if (query.isBlank()) {
-            return
-        }
-        _searchQuery.value = query.trim()
-        viewModelScope.launch {
-            searchHistoryManager.add(query.trim())
-        }
-    }
-
-    /**
-     * Search from history item.
-     *
-     * Convenience method for searching when a history item is clicked.
-     */
-    fun searchFromHistory(query: String) {
-        performSearch(query)
-    }
 
     /**
      * Clear search history.
      *
      * Removes all saved search queries from DataStore.
      */
-    fun clearSearchHistory() {
+    fun clearHistory() {
         viewModelScope.launch {
-            searchHistoryManager.clear()
+            searchHistory.clear()
         }
     }
 
@@ -140,9 +117,9 @@ class SearchViewModel @Inject constructor(
      *
      * @param query The query to remove from history
      */
-    fun removeFromHistory(query: String) {
+    fun removeHistory(query: String) {
         viewModelScope.launch {
-            searchHistoryManager.remove(query)
+            searchHistory.remove(query)
         }
     }
 
