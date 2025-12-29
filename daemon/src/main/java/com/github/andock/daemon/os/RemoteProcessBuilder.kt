@@ -21,8 +21,7 @@ import kotlin.random.Random
 @Singleton
 class RemoteProcessBuilder @Inject constructor(
     appContext: AppContext
-) : Shizuku.OnRequestPermissionResultListener {
-
+) : Shizuku.OnRequestPermissionResultListener, ServiceConnection {
     private val userServiceArgs = UserServiceArgs(
         ComponentName(
             appContext.applicationInfo.packageName,
@@ -36,20 +35,6 @@ class RemoteProcessBuilder @Inject constructor(
         )
 
     private val connected = MutableStateFlow<IRemoteProcessBuilderService?>(null)
-
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(
-            name: ComponentName,
-            service: IBinder
-        ) {
-            connected.value = IRemoteProcessBuilderService.Stub.asInterface(service)
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            connected.value = null
-        }
-    }
-
     private suspend fun getService(): IRemoteProcessBuilderService {
         val service = connected.value
         if (service != null) {
@@ -57,7 +42,7 @@ class RemoteProcessBuilder @Inject constructor(
         }
         Shizuku.bindUserService(
             userServiceArgs,
-            connection
+            this
         )
         return connected.filterNotNull().first()
     }
@@ -138,6 +123,19 @@ class RemoteProcessBuilder @Inject constructor(
                 return true
             }
         }
+    }
+
+    @Deprecated("Shizuku ues only", level = DeprecationLevel.HIDDEN)
+    override fun onServiceConnected(
+        name: ComponentName,
+        service: IBinder
+    ) {
+        connected.value = IRemoteProcessBuilderService.Stub.asInterface(service)
+    }
+
+    @Deprecated("Shizuku ues only", level = DeprecationLevel.HIDDEN)
+    override fun onServiceDisconnected(name: ComponentName) {
+        connected.value = null
     }
 
     @Deprecated("Shizuku ues only", level = DeprecationLevel.HIDDEN)
