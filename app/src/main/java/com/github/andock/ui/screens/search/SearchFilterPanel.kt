@@ -2,28 +2,35 @@ package com.github.andock.ui.screens.search
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchFilterPanel(
     showOnlyOfficial: Boolean,
@@ -32,31 +39,39 @@ fun SearchFilterPanel(
     onMinStarsChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var starsInput by remember(minStars) {
-        mutableStateOf(
-            if (minStars <= 0) {
-                ""
-            } else {
-                minStars.toString()
-            }
-        )
-    }
+    // Predefined star count options
+    val starOptions = listOf(0, 10, 100, 1000)
 
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(Spacing.Medium),
-            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+            verticalArrangement = Arrangement.spacedBy(Spacing.Small)
         ) {
-            Text(
-                text = "Filters",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Header with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = null,
+                    modifier = Modifier.size(IconSize.Small),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Filters",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
 
             // Official images toggle
             Row(
@@ -64,35 +79,78 @@ fun SearchFilterPanel(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Official images only",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.Small),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Official images only",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Switch(
                     checked = showOnlyOfficial,
                     onCheckedChange = { onToggleOfficial() }
                 )
             }
 
-            // Minimum stars input
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
+
+            // Minimum stars section
+            Column(
+                verticalArrangement = Arrangement.spacedBy(Spacing.Small)
             ) {
-                Text(
-                    text = "Minimum stars",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                OutlinedTextField(
-                    value = starsInput,
-                    onValueChange = { input ->
-                        onMinStarsChange(input.toIntOrNull() ?: 0)
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.width(120.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.Small),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Minimum stars",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Star count filter chips
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    starOptions.forEach { stars ->
+                        FilterChip(
+                            selected = minStars == stars,
+                            onClick = { onMinStarsChange(stars) },
+                            label = {
+                                Text(
+                                    text = if (stars == 0) "Any" else "${stars}+",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            leadingIcon = if (minStars == stars) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                    )
+                                }
+                            } else null
+                        )
+                    }
+                }
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
@@ -22,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 
@@ -37,7 +39,8 @@ fun SearchHistoryPanel(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(Spacing.Medium)) {
             Row(
@@ -45,11 +48,22 @@ fun SearchHistoryPanel(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Recent Searches",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.Small),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Recent Searches",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 TextButton(onClick = onClearHistory) {
                     Text("Clear All")
                 }

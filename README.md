@@ -1,8 +1,8 @@
-# ADocker - Android Docker Container Runner
+# Andock - Android Docker Container Runner
 
 **[English](README.en.md) | 中文**
 
-ADocker 是一个在 Android 上运行 Docker 容器的应用，基于 udocker 概念用 Kotlin 重新实现，使用 PRoot 作为执行引擎。
+Andock 是一个在 Android 上运行 Docker 容器的应用，基于 udocker 概念用 Kotlin 重新实现，使用 PRoot 作为执行引擎。
 
 ## ✨ 核心特性
 
@@ -31,32 +31,34 @@ ADocker 是一个在 Android 上运行 Docker 容器的应用，基于 udocker �
 项目采用多模块架构，清晰分离业务逻辑和UI层：
 
 ```
-adocker/
+andock/
 ├── daemon/                  # 核心业务逻辑模块 (Android Library)
-│   ├── config/             # 配置管理
+│   ├── api/                # Docker API 路由
+│   ├── app/                # 应用配置和模块
+│   ├── containers/         # 容器状态机和管理
 │   ├── database/           # Room数据库、DAO、Entity
-│   ├── di/                 # 依赖注入
-│   ├── containers/         # 容器执行和管理
-│   ├── images/             # 镜像仓库
-│   ├── registry/           # Docker Registry API
+│   ├── http/               # Unix Socket HTTP 服务器
+│   ├── images/             # 镜像仓库和下载器
 │   ├── os/                 # 系统集成 (PhantomProcessManager)
-│   ├── utils/              # 工具类
-│   └── startup/            # 应用初始化
+│   ├── registry/           # Docker Registry API 客户端
+│   ├── search/             # Docker Hub 搜索 (Paging 3)
+│   ├── slf4j/              # Timber 日志集成
+│   ├── startup/            # 应用初始化
+│   └── utils/              # 文件和进程工具
 └── app/                     # UI模块 (Android Application)
     └── ui/
-        ├── model/          # UI层数据模型
-        ├── screens/        # 页面
-        │   ├── home/       # 主页
-        │   ├── discover/   # 发现页
-        │   ├── containers/ # 容器页
-        │   ├── images/     # 镜像页
-        │   ├── settings/   # 设置页
-        │   ├── terminal/   # 终端页
-        │   └── qrcode/     # 二维码扫描
-        ├── viewmodel/      # ViewModel层
         ├── components/     # 通用UI组件
         ├── navigation/     # 导航配置
-        └── theme/          # Material3 主题
+        ├── screens/        # 页面
+        │   ├── containers/ # 容器管理页
+        │   ├── home/       # 主页
+        │   ├── images/     # 镜像管理页
+        │   ├── qrcode/     # 二维码扫描
+        │   ├── search/     # 镜像搜索页
+        │   ├── settings/   # 设置页
+        │   └── terminal/   # 终端页
+        ├── theme/          # Material3 主题
+        └── viewmodel/      # ViewModel层
 ```
 
 ## 技术栈
@@ -79,7 +81,7 @@ adocker/
 ```bash
 # 1. 克隆项目
 git clone <repository-url>
-cd adocker
+cd andock
 
 # 2. 使用 Android Studio 打开并同步 Gradle
 

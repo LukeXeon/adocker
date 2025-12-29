@@ -1,8 +1,8 @@
-# ADocker - Android Docker Container Runner
+# Andock - Android Docker Container Runner
 
 **English | [中文](README.md)**
 
-ADocker is an Android application that runs Docker containers without root privileges using PRoot (user-space chroot). It's a Kotlin reimplementation of the udocker concept, designed specifically for Android with full internationalization support.
+Andock is an Android application that runs Docker containers without root privileges using PRoot (user-space chroot). It's a Kotlin reimplementation of the udocker concept, designed specifically for Android with full internationalization support.
 
 ## ✨ Key Features
 
@@ -31,32 +31,34 @@ The app features a modern 5-tab bottom navigation design:
 Multi-module architecture with clear separation of business logic and UI:
 
 ```
-adocker/
+andock/
 ├── daemon/                  # Core business logic module (Android Library)
-│   ├── config/             # Configuration management
+│   ├── api/                # Docker API routes
+│   ├── app/                # App configuration and modules
+│   ├── containers/         # Container state machine & management
 │   ├── database/           # Room database, DAOs, Entities
-│   ├── di/                 # Dependency injection
-│   ├── containers/         # Container execution & management
-│   ├── images/             # Image repository
-│   ├── registry/           # Docker Registry API
+│   ├── http/               # Unix socket HTTP server
+│   ├── images/             # Image repository & downloader
 │   ├── os/                 # OS integration (PhantomProcessManager)
-│   ├── utils/              # Utilities
-│   └── startup/            # App initialization
+│   ├── registry/           # Docker Registry API client
+│   ├── search/             # Docker Hub search (Paging 3)
+│   ├── slf4j/              # Timber logging integration
+│   ├── startup/            # App initialization
+│   └── utils/              # File and process utilities
 └── app/                     # UI module (Android Application)
     └── ui/
-        ├── model/          # UI-layer data models
-        ├── screens/        # Screen composables
-        │   ├── home/       # Home screen
-        │   ├── discover/   # Discover screen
-        │   ├── containers/ # Containers screen
-        │   ├── images/     # Images screen
-        │   ├── settings/   # Settings screen
-        │   ├── terminal/   # Terminal screen
-        │   └── qrcode/     # QR code scanner
-        ├── viewmodel/      # ViewModels
         ├── components/     # Reusable UI components
         ├── navigation/     # Navigation configuration
-        └── theme/          # Material3 theme
+        ├── screens/        # Screen composables
+        │   ├── containers/ # Containers management
+        │   ├── home/       # Home screen
+        │   ├── images/     # Images management
+        │   ├── qrcode/     # QR code scanner
+        │   ├── search/     # Image search
+        │   ├── settings/   # Settings screen
+        │   └── terminal/   # Terminal screen
+        ├── theme/          # Material3 theme
+        └── viewmodel/      # ViewModels
 ```
 
 ## Tech Stack
@@ -79,7 +81,7 @@ adocker/
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd adocker
+cd andock
 
 # 2. Open in Android Studio and sync Gradle
 
