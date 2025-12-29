@@ -5,12 +5,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.github.andock.daemon.images.ImageManager
-import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.images.downloader.ImageDownloadState
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.search.SearchHistoryManager
 import com.github.andock.daemon.search.SearchRepository
 import com.github.andock.daemon.search.model.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,7 +62,10 @@ import javax.inject.Inject
  * }
  * ```
  */
-@OptIn(FlowPreview::class)
+@OptIn(
+    FlowPreview::class,
+    ExperimentalCoroutinesApi::class
+)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
@@ -90,7 +94,7 @@ class SearchViewModel @Inject constructor(
         .distinctUntilChanged()
         .filter { it.isNotBlank() }
         .flatMapLatest { query ->
-            searchRepository.searchImages(query.trim())
+            searchRepository.search(query.trim())
         }
         .cachedIn(viewModelScope)
 
@@ -188,13 +192,13 @@ class SearchViewModel @Inject constructor(
 
         val downloader = imageManager.pullImage(imageName)
 
-        _activeDownloads.value = _activeDownloads.value + (imageName to downloader)
+        _activeDownloads.value += (imageName to downloader)
 
         // Monitor download completion
         viewModelScope.launch {
             downloader.state.collect { state ->
                 if (state is ImageDownloadState.Done || state is ImageDownloadState.Error) {
-                    _activeDownloads.value = _activeDownloads.value - imageName
+                    _activeDownloads.value -= imageName
                 }
             }
         }
@@ -207,7 +211,7 @@ class SearchViewModel @Inject constructor(
      */
     fun cancelDownload(imageName: String) {
         _activeDownloads.value[imageName]?.cancel()
-        _activeDownloads.value = _activeDownloads.value - imageName
+        _activeDownloads.value -= imageName
     }
 
     /**

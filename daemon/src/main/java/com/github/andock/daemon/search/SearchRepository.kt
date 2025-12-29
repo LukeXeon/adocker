@@ -20,14 +20,11 @@ import javax.inject.Singleton
  *     .cachedIn(viewModelScope) // Cache to survive configuration changes
  * ```
  *
- * @param searchClient Client for Docker Hub search API
- *
  * @see SearchPagingSource
- * @see SearchClient
  */
 @Singleton
 class SearchRepository @Inject constructor(
-    private val searchClient: SearchClient
+    private val factory: SearchPagingSource.Factory
 ) {
     /**
      * Search Docker Hub for images with pagination.
@@ -42,7 +39,7 @@ class SearchRepository @Inject constructor(
      * @param pageSize Number of results per page (default: 25, max: 100)
      * @return Flow of PagingData containing search results
      */
-    fun searchImages(query: String, pageSize: Int = 25): Flow<PagingData<SearchResult>> {
+    fun search(query: String, pageSize: Int = 25): Flow<PagingData<SearchResult>> {
         return Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -50,7 +47,7 @@ class SearchRepository @Inject constructor(
                 initialLoadSize = pageSize
             ),
             pagingSourceFactory = {
-                SearchPagingSource(query, pageSize, searchClient)
+                factory.create(query, pageSize)
             }
         ).flow
     }

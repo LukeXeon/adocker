@@ -242,7 +242,7 @@ fun SearchScreen(
 
                         items(
                             count = filteredIndices.size,
-                            key = { index -> searchResults[filteredIndices[index]]?.repoName ?: index }
+                            key = { index -> filteredIndices[index] }
                         ) { index ->
                             val result = searchResults[filteredIndices[index]]
                             if (result != null) {
