@@ -36,12 +36,13 @@ class QrcodeCameraViewModel @Inject constructor(
     private val imageAnalysis = ImageAnalysis.Builder()
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         .build()
-        .apply {
-            setAnalyzer(
-                Dispatchers.IO.asExecutor(),
-                this@QrcodeCameraViewModel
-            )
-        }
+
+    init {
+        imageAnalysis.setAnalyzer(
+            Dispatchers.IO.asExecutor(),
+            this
+        )
+    }
 
     @Volatile
     var onBarcodeDetected: ((Barcode) -> Unit)? = null
@@ -80,6 +81,7 @@ class QrcodeCameraViewModel @Inject constructor(
         )
     }
 
+    @Deprecated("ImageAnalysis use only", level = DeprecationLevel.HIDDEN)
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         val onBarcodeDetected = onBarcodeDetected

@@ -42,20 +42,30 @@ class SearchPagingSource @AssistedInject constructor(
     private val pageSize: Int = 25,
     private val client: HttpClient
 ) : PagingSource<String, SearchResult>() {
+    private val names = HashSet<String>()
 
     override suspend fun load(params: LoadParams<String>): LoadResult<String, SearchResult> {
         return try {
-            val response = if (params.key == null) {
+            val key = params.key
+            val response = if (key == null) {
                 // Initial load - use query-based search
                 search(query, pageSize).getOrThrow()
             } else {
                 // Subsequent loads - use next URL
-                searchByUrl(params.key!!).getOrThrow()
+                searchByUrl(key).getOrThrow()
             }
             LoadResult.Page(
-                data = response.results.filter { it.repoName != null },
-                prevKey = response.previous,
-                nextKey = response.next
+                data = response.results.filter { it.repoName != null && names.add(it.repoName) },
+                prevKey = if (!response.previous.isNullOrBlank()) {
+                    response.previous
+                } else {
+                    null
+                },
+                nextKey = if (!response.next.isNullOrBlank()) {
+                    response.next
+                } else {
+                    null
+                }
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to load search results for query: $query")

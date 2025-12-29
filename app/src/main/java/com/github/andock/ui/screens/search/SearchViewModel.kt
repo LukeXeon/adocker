@@ -2,20 +2,16 @@ package com.github.andock.ui.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.search.SearchHistory
 import com.github.andock.daemon.search.SearchRepository
-import com.github.andock.daemon.search.model.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -75,10 +71,10 @@ class SearchViewModel @Inject constructor(
     // Search query input
     private val _searchQuery = MutableStateFlow("")
 
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    val searchQuery = _searchQuery.asStateFlow()
 
     // Search history
-    val searchHistory: StateFlow<List<String>> = searchHistoryManager.searchRecords
+    val searchHistory = searchHistoryManager.searchRecords
         .stateIn(
             viewModelScope,
             SharingStarted.Lazily,
@@ -86,7 +82,7 @@ class SearchViewModel @Inject constructor(
         )
 
     // Paginated search results with debounce
-    val searchResults: Flow<PagingData<SearchResult>> = _searchQuery
+    val searchResults = _searchQuery
         .debounce(400) // 400ms debounce
         .distinctUntilChanged()
         .filter { it.isNotBlank() }

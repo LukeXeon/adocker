@@ -43,11 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import androidx.paging.filter
 import com.github.andock.R
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.PaginationErrorItem
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.theme.Spacing
+import kotlinx.coroutines.flow.map
 
 /**
  * Search screen for discovering Docker Hub images.
@@ -65,14 +68,29 @@ fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchHistory by viewModel.searchHistory.collectAsState()
-    val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (showOnlyOfficial, setShowOnlyOfficial) = remember { mutableStateOf(false) }
     val (minStars, setMinStars) = remember { mutableStateOf(0) }
     val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
     val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
-
+    val searchResults = remember(minStars, showOnlyOfficial) {
+        viewModel.searchResults.map {
+            it.filter { result ->
+                if (minStars > 0) {
+                    result.starCount >= minStars
+                } else {
+                    true
+                }
+            }.filter { result ->
+                if (showOnlyOfficial) {
+                    result.isOfficial
+                } else {
+                    true
+                }
+            }
+        }
+    }.collectAsLazyPagingItems()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -123,7 +141,9 @@ fun SearchScreen() {
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.updateSearchQuery("") }) {
+                            IconButton(
+                                onClick = { viewModel.updateSearchQuery("") }
+                            ) {
                                 Icon(Icons.Default.Clear, contentDescription = "Clear")
                             }
                         }
@@ -177,6 +197,11 @@ fun SearchScreen() {
 
             // Content
             when {
+                searchQuery.isBlank() -> {
+                    // Initial/empty state - check this first to avoid showing loading on empty query
+                    SearchInitialState()
+                }
+
                 searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0 -> {
                     // Initial loading
                     Box(
@@ -200,11 +225,6 @@ fun SearchScreen() {
                     SearchNoResultsState()
                 }
 
-                searchQuery.isBlank() -> {
-                    // Initial/empty state
-                    SearchInitialState()
-                }
-
                 else -> {
                     // Results list
                     LazyColumn(
@@ -216,21 +236,11 @@ fun SearchScreen() {
                         ),
                         verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
-                        // Filter results in UI
-                        val filteredIndices = (0 until searchResults.itemCount).filter { index ->
-                            val result = searchResults[index]
-                            result != null && run {
-                                val officialMatch = !showOnlyOfficial || result.isOfficial
-                                val starsMatch = result.starCount >= minStars
-                                officialMatch && starsMatch
-                            }
-                        }
-
                         items(
-                            count = filteredIndices.size,
-                            key = { index -> filteredIndices[index] }
+                            count = searchResults.itemCount,
+                            key = searchResults.itemKey { it.repoName ?: "" }
                         ) { index ->
-                            val result = searchResults[filteredIndices[index]]
+                            val result = searchResults[index]
                             if (result != null) {
                                 SearchResultCard(
                                     result = result,
