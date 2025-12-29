@@ -34,7 +34,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -45,7 +44,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.PaginationErrorItem
+import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.theme.Spacing
 
 /**
@@ -64,15 +65,13 @@ fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchHistory by viewModel.searchHistory.collectAsState()
-    val showOnlyOfficial by viewModel.showOnlyOfficial.collectAsState()
-    val minStars by viewModel.minStars.collectAsState()
-    val activeDownloads by viewModel.activeDownloads.collectAsState()
-
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
-
-    var showFilters by remember { mutableStateOf(false) }
-    var showHistory by remember { mutableStateOf(false) }
+    val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
+    val (showOnlyOfficial, setShowOnlyOfficial) = remember { mutableStateOf(false) }
+    val (minStars, setMinStars) = remember { mutableStateOf(0) }
+    val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
+    val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -80,7 +79,7 @@ fun SearchScreen() {
                 title = { Text(stringResource(R.string.nav_discover)) },
                 actions = {
                     // Filter button
-                    IconButton(onClick = { showFilters = !showFilters }) {
+                    IconButton(onClick = { setShowFilters(!showFilters) }) {
                         Badge(
                             containerColor = if (showOnlyOfficial || minStars > 0) {
                                 MaterialTheme.colorScheme.primary
@@ -94,7 +93,7 @@ fun SearchScreen() {
 
                     // History button
                     if (searchHistory.isNotEmpty()) {
-                        IconButton(onClick = { showHistory = !showHistory }) {
+                        IconButton(onClick = { setShowHistory(!showHistory) }) {
                             Icon(Icons.Default.History, contentDescription = "Search History")
                         }
                     }
@@ -147,8 +146,12 @@ fun SearchScreen() {
                 SearchFilterPanel(
                     showOnlyOfficial = showOnlyOfficial,
                     minStars = minStars,
-                    onToggleOfficial = { viewModel.toggleOfficialFilter() },
-                    onMinStarsChange = { viewModel.updateMinStars(it) },
+                    onToggleOfficial = {
+                        setShowOnlyOfficial(!showOnlyOfficial)
+                    },
+                    onMinStarsChange = {
+                        setMinStars(it)
+                    },
                     modifier = Modifier.padding(horizontal = Spacing.Medium)
                 )
                 Spacer(modifier = Modifier.height(Spacing.Small))
@@ -160,12 +163,12 @@ fun SearchScreen() {
                     history = searchHistory,
                     onHistoryItemClick = {
                         viewModel.searchFromHistory(it)
-                        showHistory = false
+                        setShowHistory(false)
                     },
                     onRemoveItem = { viewModel.removeFromHistory(it) },
                     onClearHistory = {
                         viewModel.clearSearchHistory()
-                        showHistory = false
+                        setShowHistory(false)
                     },
                     modifier = Modifier.padding(horizontal = Spacing.Medium)
                 )
@@ -229,16 +232,13 @@ fun SearchScreen() {
                         ) { index ->
                             val result = searchResults[filteredIndices[index]]
                             if (result != null) {
-                                val isDownloading = activeDownloads.containsKey(result.repoName)
-
                                 SearchResultCard(
                                     result = result,
                                     onPull = {
                                         result.repoName?.let { name ->
-                                            viewModel.pullImage(name)
+                                            setProgressDialog(viewModel.pullImage(name))
                                         }
                                     },
-                                    isPulling = isDownloading
                                 )
                             }
                         }
@@ -269,5 +269,13 @@ fun SearchScreen() {
                 }
             }
         }
+    }
+    if (showProgressDialog != null) {
+        ImageDownloadDialog(
+            downloader = showProgressDialog,
+            onDismissRequest = {
+                setProgressDialog(null)
+            }
+        )
     }
 }

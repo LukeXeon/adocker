@@ -58,13 +58,13 @@ class SearchHistory @Inject constructor(
      * @param query The search query to add
      */
     suspend fun addToHistory(query: String) {
-        if (query.isBlank()) return
-
+        if (query.isBlank()) {
+            return
+        }
         val record = SearchRecordEntity(
             query = query.trim(),
             updateAt = System.currentTimeMillis()
         )
-
         // Insert or replace (updates timestamp if already exists)
         searchRecordDao.insertSearchRecord(record)
 

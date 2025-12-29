@@ -37,7 +37,6 @@ fun SearchResultCard(
     result: SearchResult,
     onPull: () -> Unit,
     modifier: Modifier = Modifier,
-    isPulling: Boolean = false
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -106,13 +105,11 @@ fun SearchResultCard(
 
             IconButton(
                 onClick = onPull,
-                enabled = !isPulling
             ) {
                 Icon(
                     imageVector = Icons.Default.CloudDownload,
                     contentDescription = stringResource(R.string.action_pull),
-                    tint = if (isPulling) MaterialTheme.colorScheme.onSurfaceVariant
-                    else MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

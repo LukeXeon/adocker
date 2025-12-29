@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.github.andock.daemon.images.ImageManager
-import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.search.SearchHistory
 import com.github.andock.daemon.search.SearchRepository
@@ -75,18 +74,16 @@ class SearchViewModel @Inject constructor(
 
     // Search query input
     private val _searchQuery = MutableStateFlow("")
+
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-
-    // Filter states
-    private val _showOnlyOfficial = MutableStateFlow(false)
-    val showOnlyOfficial: StateFlow<Boolean> = _showOnlyOfficial.asStateFlow()
-
-    private val _minStars = MutableStateFlow(0)
-    val minStars: StateFlow<Int> = _minStars.asStateFlow()
 
     // Search history
     val searchHistory: StateFlow<List<String>> = searchHistoryManager.searchRecords
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            emptyList()
+        )
 
     // Paginated search results with debounce
     val searchResults: Flow<PagingData<SearchResult>> = _searchQuery
@@ -95,12 +92,7 @@ class SearchViewModel @Inject constructor(
         .filter { it.isNotBlank() }
         .flatMapLatest { query ->
             searchRepository.search(query.trim())
-        }
-        .cachedIn(viewModelScope)
-
-    // Active image downloads (repoName -> ImageDownloader)
-    private val _activeDownloads = MutableStateFlow<Map<String, ImageDownloader>>(emptyMap())
-    val activeDownloads: StateFlow<Map<String, ImageDownloader>> = _activeDownloads.asStateFlow()
+        }.cachedIn(viewModelScope)
 
     /**
      * Update search query with debouncing.
@@ -118,10 +110,10 @@ class SearchViewModel @Inject constructor(
      * Use this when the user explicitly triggers a search (e.g., pressing the search button).
      */
     fun performSearch(query: String) {
-        if (query.isBlank()) return
-
+        if (query.isBlank()) {
+            return
+        }
         _searchQuery.value = query.trim()
-
         viewModelScope.launch {
             searchHistoryManager.addToHistory(query.trim())
         }
@@ -159,25 +151,6 @@ class SearchViewModel @Inject constructor(
     }
 
     /**
-     * Toggle official images filter.
-     *
-     * When enabled, only official Docker images will be shown in the UI.
-     * Note: This filter is applied in the UI layer, not in the PagingSource.
-     */
-    fun toggleOfficialFilter() {
-        _showOnlyOfficial.value = !_showOnlyOfficial.value
-    }
-
-    /**
-     * Update minimum stars filter.
-     *
-     * @param stars Minimum number of stars (will be coerced to >= 0)
-     */
-    fun updateMinStars(stars: Int) {
-        _minStars.value = stars.coerceAtLeast(0)
-    }
-
-    /**
      * Pull an image from Docker Hub.
      *
      * Creates an [ImageDownloader] instance and tracks its progress.
@@ -185,52 +158,6 @@ class SearchViewModel @Inject constructor(
      *
      * @param imageName Full repository name (e.g., "alpine", "nginx")
      */
-    fun pullImage(imageName: String) {
-        if (_activeDownloads.value.containsKey(imageName)) {
-            return // Already downloading
-        }
+    fun pullImage(imageName: String) = imageManager.pullImage(imageName)
 
-        val downloader = imageManager.pullImage(imageName)
-
-        _activeDownloads.value += (imageName to downloader)
-
-        // Monitor download completion
-        viewModelScope.launch {
-            downloader.state.collect { state ->
-                if (state is ImageDownloadState.Done || state is ImageDownloadState.Error) {
-                    _activeDownloads.value -= imageName
-                }
-            }
-        }
-    }
-
-    /**
-     * Cancel an active image download.
-     *
-     * @param imageName The repository name of the image to cancel
-     */
-    fun cancelDownload(imageName: String) {
-        _activeDownloads.value[imageName]?.cancel()
-        _activeDownloads.value -= imageName
-    }
-
-    /**
-     * Check if an image is currently being downloaded.
-     *
-     * @param imageName The repository name to check
-     * @return True if the image is being downloaded
-     */
-    fun isDownloading(imageName: String): Boolean {
-        return _activeDownloads.value.containsKey(imageName)
-    }
-
-    /**
-     * Get the download state for an image.
-     *
-     * @param imageName The repository name
-     * @return The download state, or null if not downloading
-     */
-    fun getDownloadState(imageName: String): ImageDownloadState? {
-        return _activeDownloads.value[imageName]?.state?.value
-    }
 }
