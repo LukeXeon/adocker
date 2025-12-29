@@ -220,7 +220,7 @@
     <string name="qr_permission_title">Camera Permission Required</string>
     <string name="qr_permission_message">Camera permission is required to scan QR codes</string>
     <string name="qr_permission_grant">Grant Permission</string>
-    <string name="qr_image_detected">Image detected: %1$s</string>
+    <string name="qr_image_detected">detected: %1$s</string>
     <string name="qr_invalid">Invalid QR code</string>
 
     <!-- Terminal -->

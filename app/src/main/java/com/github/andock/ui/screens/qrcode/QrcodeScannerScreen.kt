@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.qrcode
+package com.github.andock.ui.screens.qrcode
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,14 +26,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -49,17 +45,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
-import com.github.andock.ui.screens.qrcode.QrcodeCamera
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QRCodeScannerScreen(
-    onBarcodeScanned: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+fun QrcodeScannerScreen(
+    onBarcodeScanned: (String) -> Unit = {},
+    onNavigateBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    var hasCameraPermission by remember {
+    val (hasCameraPermission, setHasCameraPermission) = remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
                 context,
@@ -67,15 +61,13 @@ fun QRCodeScannerScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    var flashEnabled by remember { mutableStateOf(false) }
-    var scannedData by remember { mutableStateOf<String?>(null) }
-    var showConfirmDialog by remember { mutableStateOf(false) }
+    val (flashEnabled, setFlashEnabled) = remember { mutableStateOf(false) }
+    val (scannedData, setScannedData) = remember { mutableStateOf<String?>(null) }
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        hasCameraPermission = isGranted
+        setHasCameraPermission(isGranted)
     }
-
     LaunchedEffect(hasCameraPermission) {
         if (!hasCameraPermission) {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -96,9 +88,13 @@ fun QRCodeScannerScreen(
                 },
                 actions = {
                     if (hasCameraPermission) {
-                        IconButton(onClick = { flashEnabled = !flashEnabled }) {
+                        IconButton(onClick = { setFlashEnabled(!flashEnabled) }) {
                             Icon(
-                                if (flashEnabled) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                                if (flashEnabled) {
+                                    Icons.Default.FlashOn
+                                } else {
+                                    Icons.Default.FlashOff
+                                },
                                 contentDescription = null
                             )
                         }
@@ -106,7 +102,6 @@ fun QRCodeScannerScreen(
                 }
             )
         },
-        modifier = modifier
     ) { padding ->
         Box(
             modifier = Modifier
@@ -120,8 +115,7 @@ fun QRCodeScannerScreen(
                     onBarcodeDetected = { barcode ->
                         val data = barcode.rawValue
                         if (data != null && scannedData != data) {
-                            scannedData = data
-                            showConfirmDialog = true
+                            setScannedData(data)
                         }
                     }
                 )
@@ -280,54 +274,16 @@ fun QRCodeScannerScreen(
             }
         }
     }
-
-    // Confirmation dialog
-    if (showConfirmDialog && scannedData != null) {
-        val parsedImage = scannedData!!
-        AlertDialog(
+    if (scannedData != null) {
+        QrcodeConfirmDialog(
+            scannedData = scannedData,
+            onConfirm = {
+                setScannedData(null)
+                onBarcodeScanned(it)
+                onNavigateBack()
+            },
             onDismissRequest = {
-                showConfirmDialog = false
-                scannedData = null
-            },
-            icon = { Icon(Icons.Default.FlashOn, contentDescription = null) },
-            title = { Text(stringResource(R.string.qr_title)) },
-            text = {
-                Column {
-                    Text(stringResource(R.string.qr_image_detected, parsedImage ?: scannedData!!))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Text(
-                            text = parsedImage ?: scannedData!!,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onBarcodeScanned(parsedImage ?: scannedData!!)
-                        showConfirmDialog = false
-                        onNavigateBack()
-                    }
-                ) {
-                    Text(stringResource(R.string.images_pull))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showConfirmDialog = false
-                        scannedData = null
-                    }
-                ) {
-                    Text(stringResource(R.string.action_cancel))
-                }
+                setScannedData(null)
             }
         )
     }

@@ -220,7 +220,7 @@
     <string name="qr_permission_title">需要相机权限</string>
     <string name="qr_permission_message">需要相机权限才能扫描二维码</string>
     <string name="qr_permission_grant">授予权限</string>
-    <string name="qr_image_detected">检测到镜像：%1$s</string>
+    <string name="qr_image_detected">检测到：%1$s</string>
     <string name="qr_invalid">无效的二维码</string>
 
     <!-- 终端 -->
