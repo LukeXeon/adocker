@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.discover
+package com.github.andock.ui.screens.search
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,10 +57,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
-import com.github.andock.ui.screens.search.SearchViewModel
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import com.github.andock.ui2.components.SearchResultCard
 
 /**
  * Search screen for discovering Docker Hub images.
