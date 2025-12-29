@@ -5,6 +5,7 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted

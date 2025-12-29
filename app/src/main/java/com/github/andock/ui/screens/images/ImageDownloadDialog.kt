@@ -37,8 +37,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.andock.R
-import com.github.andock.daemon.images.ImageDownloadState
-import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.daemon.images.downloader.ImageDownloadState
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.theme.IconSize
 
 @Composable

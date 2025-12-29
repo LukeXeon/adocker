@@ -1,7 +1,7 @@
 package com.github.andock.ui.screens.images
 
 import androidx.lifecycle.ViewModel
-import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.images.ImageManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

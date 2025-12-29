@@ -1,5 +1,7 @@
-package com.github.andock.daemon.images
+package com.github.andock.daemon.images.downloader
 
+import com.github.andock.daemon.images.DownloadProgress
+import com.github.andock.daemon.images.ImageReference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

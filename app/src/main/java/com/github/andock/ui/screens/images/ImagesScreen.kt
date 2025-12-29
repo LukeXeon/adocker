@@ -38,7 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
-import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing

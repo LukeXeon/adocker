@@ -1,4 +1,4 @@
-package com.github.andock.daemon.images
+package com.github.andock.daemon.images.downloader
 
 import androidx.room.withTransaction
 import com.freeletics.flowredux2.ChangeableState
@@ -6,7 +6,6 @@ import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
@@ -14,6 +13,10 @@ import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
+import com.github.andock.daemon.images.DownloadProgress
+import com.github.andock.daemon.images.ImageClient
+import com.github.andock.daemon.images.ImageReference
+import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.io.sha256
 import com.github.andock.daemon.registries.RegistryManager
 import dagger.assisted.Assisted

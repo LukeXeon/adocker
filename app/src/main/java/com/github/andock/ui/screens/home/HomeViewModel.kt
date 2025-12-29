@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.daemon.engine.PRootEngine
-import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.images.ImageManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.map

@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
-import com.github.andock.daemon.images.ImageDownloader
+import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
