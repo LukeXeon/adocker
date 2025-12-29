@@ -41,7 +41,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
@@ -60,10 +60,8 @@ import com.github.andock.ui.theme.Spacing
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
-    viewModel: SearchViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
-) {
+fun SearchScreen() {
+    val viewModel = hiltViewModel<SearchViewModel>()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchHistory by viewModel.searchHistory.collectAsState()
     val showOnlyOfficial by viewModel.showOnlyOfficial.collectAsState()
@@ -103,7 +101,6 @@ fun SearchScreen(
                 }
             )
         },
-        modifier = modifier
     ) { paddingValues ->
         Column(
             modifier = Modifier
