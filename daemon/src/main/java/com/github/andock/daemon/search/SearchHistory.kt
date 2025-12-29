@@ -47,7 +47,7 @@ class SearchHistory @Inject constructor(
      * with the most recent search query at index 0.
      * Limited to the most recent 20 items.
      */
-    val searchRecords: Flow<List<String>> = searchRecordDao.getSearchRecords()
+    val records: Flow<List<String>> = searchRecordDao.getSearchRecords()
 
     /**
      * Add a search query to history.
@@ -57,7 +57,7 @@ class SearchHistory @Inject constructor(
      *
      * @param query The search query to add
      */
-    suspend fun addToHistory(query: String) {
+    suspend fun add(query: String) {
         if (query.isBlank()) {
             return
         }
@@ -77,7 +77,7 @@ class SearchHistory @Inject constructor(
      *
      * Removes all stored search queries from the database.
      */
-    suspend fun clearHistory() {
+    suspend fun clear() {
         searchRecordDao.clearAllSearchRecords()
     }
 
@@ -88,7 +88,7 @@ class SearchHistory @Inject constructor(
      *
      * @param query The query to remove
      */
-    suspend fun removeFromHistory(query: String) {
+    suspend fun remove(query: String) {
         searchRecordDao.deleteSearchRecord(query)
     }
 }

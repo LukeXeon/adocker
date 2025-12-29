@@ -74,7 +74,7 @@ class SearchViewModel @Inject constructor(
     val searchQuery = _searchQuery.asStateFlow()
 
     // Search history
-    val searchHistory = searchHistoryManager.searchRecords
+    val searchHistory = searchHistoryManager.records
         .stateIn(
             viewModelScope,
             SharingStarted.Lazily,
@@ -111,7 +111,7 @@ class SearchViewModel @Inject constructor(
         }
         _searchQuery.value = query.trim()
         viewModelScope.launch {
-            searchHistoryManager.addToHistory(query.trim())
+            searchHistoryManager.add(query.trim())
         }
     }
 
@@ -131,7 +131,7 @@ class SearchViewModel @Inject constructor(
      */
     fun clearSearchHistory() {
         viewModelScope.launch {
-            searchHistoryManager.clearHistory()
+            searchHistoryManager.clear()
         }
     }
 
@@ -142,7 +142,7 @@ class SearchViewModel @Inject constructor(
      */
     fun removeFromHistory(query: String) {
         viewModelScope.launch {
-            searchHistoryManager.removeFromHistory(query)
+            searchHistoryManager.remove(query)
         }
     }
 
