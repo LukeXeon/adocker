@@ -1,6 +1,5 @@
 package com.github.andock.daemon.images
 
-import com.github.andock.daemon.client.ImageReference
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

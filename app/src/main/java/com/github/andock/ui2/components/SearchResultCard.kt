@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.R
-import com.github.andock.daemon.client.model.SearchResult
+import com.github.andock.daemon.search.model.SearchResult
 
 @Composable
 fun SearchResultCard(

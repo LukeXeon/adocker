@@ -2,7 +2,7 @@ package com.github.andock.ui.screens.containers
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.andock.daemon.client.model.ContainerConfig
+import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
 import dagger.hilt.android.lifecycle.HiltViewModel

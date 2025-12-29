@@ -1,4 +1,4 @@
-package com.github.andock.daemon.client.model
+package com.github.andock.daemon.images.model
 
 import kotlinx.serialization.Serializable
 

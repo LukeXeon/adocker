@@ -1,4 +1,4 @@
-package com.github.andock.daemon.client.model
+package com.github.andock.daemon.search.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

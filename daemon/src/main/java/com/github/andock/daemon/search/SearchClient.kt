@@ -1,7 +1,7 @@
-package com.github.andock.daemon.client
+package com.github.andock.daemon.search
 
-import com.github.andock.daemon.client.model.SearchResponse
-import com.github.andock.daemon.client.model.SearchResult
+import com.github.andock.daemon.search.model.SearchResponse
+import com.github.andock.daemon.search.model.SearchResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

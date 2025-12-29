@@ -2,8 +2,8 @@ package com.github.andock.daemon.database
 
 import androidx.room.TypeConverter
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.client.model.ContainerConfig
-import com.github.andock.daemon.client.model.ImageConfig
+import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.database.model.RegistryType
 import dagger.hilt.android.EntryPointAccessors
 

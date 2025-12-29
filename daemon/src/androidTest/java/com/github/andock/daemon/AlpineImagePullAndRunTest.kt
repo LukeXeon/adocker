@@ -3,7 +3,7 @@ package com.github.andock.daemon
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.images.ImageRepository
-import com.github.andock.daemon.client.model.ContainerConfig
+import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.containers.ContainerManager
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

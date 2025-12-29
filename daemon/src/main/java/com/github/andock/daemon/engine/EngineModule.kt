@@ -34,7 +34,7 @@ object EngineModule {
     @Singleton
     @IntoSet
     fun initializer(version: PRootVersion): SuspendLazy<*> = suspendLazy {
-        withTimeoutOrNull(1000) {
+        withTimeoutOrNull(200) {
             Timber.i(version.value.filterNotNull().first())
         }
     }

@@ -6,10 +6,7 @@ import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.client.DownloadProgress
-import com.github.andock.daemon.client.ImageClient
-import com.github.andock.daemon.client.ImageReference
-import com.github.andock.daemon.client.model.ImageConfig
+import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao

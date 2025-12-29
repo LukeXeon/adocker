@@ -46,7 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
-import com.github.andock.daemon.client.model.ContainerConfig
+import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.ui.screens.containers.ContainersViewModel
 import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.theme.IconSize

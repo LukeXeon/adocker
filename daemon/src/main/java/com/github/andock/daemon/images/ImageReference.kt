@@ -1,4 +1,4 @@
-package com.github.andock.daemon.client
+package com.github.andock.daemon.images
 
 /**
  * Docker image reference

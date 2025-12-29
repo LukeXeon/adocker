@@ -1,10 +1,10 @@
-package com.github.andock.daemon.client
+package com.github.andock.daemon.images
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.client.model.AuthTokenResponse
-import com.github.andock.daemon.client.model.ImageConfigResponse
-import com.github.andock.daemon.client.model.ImageManifestV2
-import com.github.andock.daemon.client.model.ManifestListResponse
+import com.github.andock.daemon.images.model.AuthTokenResponse
+import com.github.andock.daemon.images.model.ImageConfigResponse
+import com.github.andock.daemon.images.model.ImageManifestV2
+import com.github.andock.daemon.images.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
