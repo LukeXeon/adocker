@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,9 @@ fun SearchFilterPanel(
     modifier: Modifier = Modifier
 ) {
     // Predefined star count options
-    val starOptions = listOf(0, 10, 100, 1000)
+    val starOptions = remember {
+        listOf(0, 10, 100, 1000)
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
