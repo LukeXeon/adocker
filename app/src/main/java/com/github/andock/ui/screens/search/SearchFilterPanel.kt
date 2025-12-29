@@ -32,7 +32,15 @@ fun SearchFilterPanel(
     onMinStarsChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var starsInput by remember(minStars) { mutableStateOf(minStars.toString()) }
+    var starsInput by remember(minStars) {
+        mutableStateOf(
+            if (minStars <= 0) {
+                ""
+            } else {
+                minStars.toString()
+            }
+        )
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -81,7 +89,6 @@ fun SearchFilterPanel(
                     onValueChange = { input ->
                         onMinStarsChange(input.toIntOrNull() ?: 0)
                     },
-                    placeholder = { Text("0") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.width(120.dp)
