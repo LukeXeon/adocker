@@ -1,4 +1,4 @@
-package com.github.andock.ui2.screens.containers
+package com.github.andock.ui.screens.containers
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,25 +47,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
 import com.github.andock.daemon.images.model.ContainerConfig
-import com.github.andock.ui.screens.containers.ContainersViewModel
 import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateContainerScreen(
+fun ContainerCreateScreen(
     imageId: String,
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val imagesViewModel = hiltViewModel<ImagesViewModel>()
     val containersViewModel = hiltViewModel<ContainersViewModel>()
     val images by imagesViewModel.images.collectAsState()
     val image = remember(images, imageId) { images.find { it.id == imageId } }
-//    val error by viewModel.error.collectAsState()
-//    val message by viewModel.message.collectAsState()
-
     var containerName by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
     var workingDir by remember { mutableStateOf("/") }
@@ -73,23 +68,14 @@ fun CreateContainerScreen(
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
 
-//
-//    LaunchedEffect(error) {
-//        error?.let {
-//            snackbarHostState.showSnackbar(it)
-//            viewModel.clearError()
-//        }
-//    }
-//
-//    LaunchedEffect(message) {
-//        message?.let {
-//            snackbarHostState.showSnackbar(it)
-//            viewModel.clearMessage()
-//            if (it.contains("created") || it.contains("running")) {
-//                onNavigateBack()
-//            }
-//        }
-//    }
+    fun parseEnvVars(input: String): Map<String, String> {
+        return input.lines()
+            .filter { it.isNotBlank() && it.contains("=") }
+            .associate { line ->
+                val parts = line.split("=", limit = 2)
+                parts[0].trim() to parts.getOrElse(1) { "" }.trim()
+            }
+    }
 
     Scaffold(
         topBar = {
@@ -105,8 +91,6 @@ fun CreateContainerScreen(
                 }
             )
         },
-//        snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = modifier
     ) { padding ->
         if (image == null) {
             Box(
@@ -218,7 +202,6 @@ fun CreateContainerScreen(
                     supportingText = { Text("Format: KEY=value, one per line") }
                 )
 
-
                 // Auto start option
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -270,6 +253,7 @@ fun CreateContainerScreen(
                                 config = config
                             )
                         }
+                        onNavigateBack()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -292,13 +276,4 @@ fun CreateContainerScreen(
             }
         }
     }
-}
-
-private fun parseEnvVars(input: String): Map<String, String> {
-    return input.lines()
-        .filter { it.isNotBlank() && it.contains("=") }
-        .associate { line ->
-            val parts = line.split("=", limit = 2)
-            parts[0].trim() to parts.getOrElse(1) { "" }.trim()
-        }
 }
