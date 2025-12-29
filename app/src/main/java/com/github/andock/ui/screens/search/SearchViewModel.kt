@@ -7,7 +7,7 @@ import androidx.paging.cachedIn
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
-import com.github.andock.daemon.search.SearchHistoryManager
+import com.github.andock.daemon.search.SearchHistory
 import com.github.andock.daemon.search.SearchRepository
 import com.github.andock.daemon.search.model.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -69,7 +69,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
-    private val searchHistoryManager: SearchHistoryManager,
+    private val searchHistoryManager: SearchHistory,
     private val imageManager: ImageManager
 ) : ViewModel() {
 
@@ -85,7 +85,7 @@ class SearchViewModel @Inject constructor(
     val minStars: StateFlow<Int> = _minStars.asStateFlow()
 
     // Search history
-    val searchHistory: StateFlow<List<String>> = searchHistoryManager.searchHistory
+    val searchHistory: StateFlow<List<String>> = searchHistoryManager.searchRecords
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // Paginated search results with debounce

@@ -83,9 +83,6 @@ dependencies {
     // Paging 3
     implementation(libs.androidx.paging.runtime)
 
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
-
     // Logging - SLF4J API only (provider implemented in code)
     implementation(libs.slf4j.api)
     compileOnly(libs.auto.service.annotations)

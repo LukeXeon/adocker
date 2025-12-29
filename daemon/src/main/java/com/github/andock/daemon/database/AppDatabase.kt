@@ -9,13 +9,14 @@ import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.dao.RegistryDao
+import com.github.andock.daemon.database.dao.SearchRecordDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.database.model.ContainerEntity
-import com.github.andock.daemon.database.Converters
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
 import com.github.andock.daemon.database.model.RegistryEntity
+import com.github.andock.daemon.database.model.SearchRecordEntity
 
 @Database(
     entities = [
@@ -24,7 +25,8 @@ import com.github.andock.daemon.database.model.RegistryEntity
         LayerEntity::class,
         LayerReferenceEntity::class,
         RegistryEntity::class,
-        AuthTokenEntity::class
+        AuthTokenEntity::class,
+        SearchRecordEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -39,4 +41,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun authTokenDao(): AuthTokenDao
 
     abstract fun layerReferenceDao(): LayerReferenceDao
+    abstract fun searchRecordDao(): SearchRecordDao
 }

@@ -93,9 +93,6 @@ dependencies {
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
 
-    // DataStore
-    implementation(libs.androidx.datastore.preferences)
-
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

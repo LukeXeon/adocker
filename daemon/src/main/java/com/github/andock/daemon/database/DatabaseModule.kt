@@ -8,6 +8,7 @@ import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.dao.RegistryDao
+import com.github.andock.daemon.database.dao.SearchRecordDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,4 +66,9 @@ object DatabaseModule {
         return database.layerReferenceDao()
     }
 
+    @Provides
+    @Singleton
+    fun searchRecordDao(database: AppDatabase): SearchRecordDao {
+        return database.searchRecordDao()
+    }
 }
