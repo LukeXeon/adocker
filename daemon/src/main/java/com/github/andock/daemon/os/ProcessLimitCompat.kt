@@ -11,7 +11,7 @@ import javax.inject.Singleton
  * Manager for handling Android 12+ phantom process restrictions using Shizuku
  */
 @Singleton
-class PhantomProcessKillerCompat @Inject constructor(
+class ProcessLimitCompat @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
     private val processAwaiter: ProcessAwaiter,
 ) {
@@ -19,7 +19,7 @@ class PhantomProcessKillerCompat @Inject constructor(
      * Disable phantom process killer
      * @return Result with success message or error
      */
-    suspend fun unrestrict(): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun unrestrict(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             if (!remoteProcessBuilder.hasPermission) {
                 throw SecurityException("Shizuku permission not granted")
@@ -42,9 +42,12 @@ class PhantomProcessKillerCompat @Inject constructor(
             }
             executeCommand(command)
             Timber.i("Phantom process killer disabled successfully")
-        }.onFailure { error ->
+        }.fold({
+            true
+        }, { error ->
             Timber.e(error, "Failed to disable phantom process killer")
-        }
+            false
+        })
     }
 
     /**
