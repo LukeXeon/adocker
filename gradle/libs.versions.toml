@@ -59,6 +59,12 @@ shizuku = "13.1.5"
 # http4k
 http4k = "6.23.1.0"
 
+# Paging 3
+paging = "3.3.5"
+
+# DataStore
+datastore = "1.1.1"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 flowredux = { module = "com.freeletics.flowredux2:flowredux", version.ref = "flowredux" }
@@ -146,6 +152,13 @@ shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref
 
 # http4k
 http4k-core = { group = "org.http4k", name = "http4k-core", version.ref = "http4k" }
+
+# Paging 3
+androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
+androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
+
+# DataStore
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

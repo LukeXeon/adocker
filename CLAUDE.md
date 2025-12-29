@@ -879,6 +879,93 @@ Mirrors can be imported via QR code in JSON format:
 }
 ```
 
+## Docker Hub Search (Paging 3)
+
+The app provides Docker Hub image search with infinite scroll pagination powered by Paging 3.
+
+### Architecture
+
+**Data Layer** (`daemon/search/`):
+- `SearchClient` - Ktor HTTP client for Docker Hub Search API with URL-based pagination support
+- `SearchPagingSource` - Paging 3 source using URL-based pagination (follows `next` URLs)
+- `SearchRepository` - Repository exposing `Flow<PagingData<SearchResult>>`
+- `SearchHistoryManager` - DataStore-based search history (max 20 items)
+
+**UI Layer** (`app/ui/screens/search/`):
+- `SearchViewModel` - ViewModel with debounced search (400ms), filters, pull tracking
+- `SearchScreen` - Compose UI with `collectAsLazyPagingItems()` (`app/ui2/screens/discover/`)
+
+### Key Features
+
+1. **URL-based Pagination**:
+   - Initial load: `GET /v2/search/repositories/?query={q}&page_size=25`
+   - Subsequent loads: `GET {next_url}` (from response)
+   - Uses `String?` as PagingSource key (next URL)
+
+2. **Real-time Search**:
+   - Debounced with 400ms delay using `Flow.debounce()`
+   - Automatically triggers search on query change
+   - Manual search adds to history
+
+3. **Search History**:
+   - Stored in DataStore Preferences (`search_history` key)
+   - Max 20 items, most recent first
+   - Quick access panel with remove/clear actions
+
+4. **Advanced Filters** (UI-side filtering):
+   - Official images only toggle
+   - Minimum star count (0, 10, 100, 1000+)
+   - Applied after data load in UI layer
+
+5. **Image Pull Integration**:
+   - Tracks active downloads via `Map<String, ImageDownloader>`
+   - Shows pull state in search results
+   - Can pull directly from search without navigating away
+
+### Usage Pattern
+
+```kotlin
+// In ViewModel
+@HiltViewModel
+class SearchViewModel @Inject constructor(
+    private val searchRepository: SearchRepository,
+    private val searchHistoryManager: SearchHistoryManager
+) : ViewModel() {
+    val searchResults: Flow<PagingData<SearchResult>> = _searchQuery
+        .debounce(400)
+        .flatMapLatest { query ->
+            searchRepository.searchImages(query)
+        }
+        .cachedIn(viewModelScope)
+}
+
+// In Composable
+@Composable
+fun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {
+    val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+
+    LazyColumn {
+        items(count = searchResults.itemCount) { index ->
+            val result = searchResults[index]
+            SearchResultCard(result = result, ...)
+        }
+
+        // Handle load states
+        when (searchResults.loadState.refresh) {
+            is LoadState.Loading -> ShowLoadingIndicator()
+            is LoadState.Error -> ShowError()
+        }
+    }
+}
+```
+
+### Important Notes
+
+- **DataStore Context**: `SearchHistoryManager` requires `@ApplicationContext`
+- **Paging 3 Caching**: Use `.cachedIn(viewModelScope)` to survive configuration changes
+- **Filter Strategy**: Filters applied in UI (not in PagingSource) for simplicity
+- **Download Tracking**: Active downloads survive screen rotation via ViewModel
+
 ## Internationalization
 
 All UI strings must be defined in:
