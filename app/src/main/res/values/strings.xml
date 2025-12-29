@@ -172,7 +172,7 @@
     <string name="mirror_settings_token_hint">Optional Bearer token for authenticated registries</string>
 
     <!-- Phantom process management -->
-    <string name="phantom_title">Background Process Management</string>
+    <string name="phantom_title">Background Process Limit</string>
     <string name="phantom_no_restriction">Your Android version doesn\'t have phantom process restrictions</string>
     <string name="phantom_status">Status Overview</string>
     <string name="phantom_current_limit">Current Limit</string>

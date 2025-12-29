@@ -20,8 +20,8 @@ import kotlinx.coroutines.guava.await
 @OptIn(ExperimentalGetImage::class)
 @Composable
 fun QrcodeCamera(
-    flashEnabled: Boolean,
-    onBarcodeDetected: (Barcode) -> Unit
+    flashEnabled: Boolean = false,
+    onBarcodeDetected: (Barcode) -> Unit = {}
 ) {
     val viewModel = hiltViewModel<QrcodeCameraViewModel>()
     val lifecycleOwner = LocalLifecycleOwner.current

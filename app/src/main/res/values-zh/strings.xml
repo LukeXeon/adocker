@@ -172,7 +172,7 @@
     <string name="mirror_settings_token_hint">需要身份验证的镜像源可选填 Bearer token</string>
 
     <!-- 后台进程管理 -->
-    <string name="phantom_title">后台进程管理</string>
+    <string name="phantom_title">后台进程限制</string>
     <string name="phantom_no_restriction">您的 Android 版本没有后台进程限制</string>
     <string name="phantom_status">状态概览</string>
     <string name="phantom_current_limit">当前限制</string>
