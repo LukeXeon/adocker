@@ -5,7 +5,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import com.github.andock.daemon.app.AppContext
-import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -13,16 +13,16 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import rikka.shizuku.Shizuku
 import rikka.shizuku.Shizuku.UserServiceArgs
 import timber.log.Timber
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
+import kotlin.random.Random
 
 @Singleton
 class RemoteProcessBuilder @Inject constructor(
     appContext: AppContext
-) {
-    private val nextCode = AtomicInteger(1)
+) : Shizuku.OnRequestPermissionResultListener {
+
     private val userServiceArgs = UserServiceArgs(
         ComponentName(
             appContext.applicationInfo.packageName,
@@ -87,7 +87,6 @@ class RemoteProcessBuilder @Inject constructor(
             }
         }
 
-
     /**
      * Check if we have Shizuku permission
      */
@@ -100,6 +99,20 @@ class RemoteProcessBuilder @Inject constructor(
             }
         }
 
+    private val requests = HashMap<Int, CancellableContinuation<Boolean>>()
+
+    private fun toRequestCode(con: CancellableContinuation<Boolean>): Int {
+        synchronized(requests) {
+            while (true) {
+                val code = Random.nextInt(1, UShort.MAX_VALUE.toInt())
+                if (!requests.containsKey(code)) {
+                    requests[code] = con
+                    return code
+                }
+            }
+        }
+    }
+
     /**
      * Request Shizuku permission
      */
@@ -110,28 +123,13 @@ class RemoteProcessBuilder @Inject constructor(
             }
 
             !hasPermission -> {
-                val code = nextCode.getAndIncrement()
-                if (code == UShort.MAX_VALUE.toInt()) {
-                    throw OutOfMemoryError("The request code is tired")
-                }
                 return suspendCancellableCoroutine { con ->
-                    val l = object : Shizuku.OnRequestPermissionResultListener, CompletionHandler {
-                        override fun onRequestPermissionResult(
-                            requestCode: Int,
-                            grantResult: Int
-                        ) {
-                            if (requestCode == code) {
-                                con.resume(grantResult == PackageManager.PERMISSION_GRANTED)
-                                Shizuku.removeRequestPermissionResultListener(this)
-                            }
-                        }
-
-                        override fun invoke(p1: Throwable?) {
-                            Shizuku.removeRequestPermissionResultListener(this)
+                    val code = toRequestCode(con)
+                    con.invokeOnCancellation {
+                        synchronized(requests) {
+                            requests.remove(code)
                         }
                     }
-                    Shizuku.addRequestPermissionResultListener(l)
-                    con.invokeOnCancellation(l)
                     Shizuku.requestPermission(code)
                 }
             }
@@ -140,5 +138,18 @@ class RemoteProcessBuilder @Inject constructor(
                 return true
             }
         }
+    }
+
+    @Deprecated("Shizuku ues only", level = DeprecationLevel.HIDDEN)
+    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+        synchronized(requests) {
+            requests.remove(requestCode)
+        }?.resume(
+            grantResult == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    init {
+        Shizuku.addRequestPermissionResultListener(this)
     }
 }
