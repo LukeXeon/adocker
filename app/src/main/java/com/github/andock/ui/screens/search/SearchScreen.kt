@@ -137,14 +137,20 @@ fun SearchScreen() {
                     onValueChange = { viewModel.updateSearchQuery(it) },
                     placeholder = { Text(stringResource(R.string.discover_search_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null
+                        )
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(
                                 onClick = { viewModel.updateSearchQuery("") }
                             ) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Clear"
+                                )
                             }
                         }
                     },

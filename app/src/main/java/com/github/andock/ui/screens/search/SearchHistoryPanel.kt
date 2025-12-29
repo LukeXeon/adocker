@@ -47,7 +47,7 @@ fun SearchHistoryPanel(
             ) {
                 Text(
                     text = "Recent Searches",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(onClick = onClearHistory) {
