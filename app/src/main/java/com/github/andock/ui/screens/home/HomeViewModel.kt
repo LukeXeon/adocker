@@ -8,6 +8,7 @@ import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.os.ProcessLimitCompat
+import com.github.andock.ui.utils.withAtLeast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,7 +54,9 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _isShowWarning.value = !processLimitCompat.isUnrestricted()
+            _isShowWarning.value = withAtLeast(1000) {
+                !processLimitCompat.isUnrestricted()
+            }
         }
     }
 

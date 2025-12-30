@@ -39,16 +39,17 @@ fun formatSize(bytes: Long): String {
     }
 }
 
-suspend inline fun withAtLeast(
+suspend inline fun <T> withAtLeast(
     timeMillis: Long,
-    crossinline block: suspend CoroutineScope.() -> Unit
-) {
-    coroutineScope {
+    crossinline block: suspend CoroutineScope.() -> T
+): T {
+    return coroutineScope {
         val job = launch {
             delay(timeMillis)
         }
-        block()
+        val value = block()
         job.join()
+        value
     }
 }
 
