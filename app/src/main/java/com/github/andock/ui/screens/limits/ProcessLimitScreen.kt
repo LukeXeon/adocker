@@ -24,6 +24,7 @@ import com.github.andock.ui.utils.debounceClick
 @Composable
 fun ProcessLimitScreen() {
     val navController = LocalNavController.current
+    val isLimited = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,10 +50,10 @@ fun ProcessLimitScreen() {
                 .padding(padding)
                 .padding(Spacing.Medium)
         ) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                ProcessUnlimit()
-            } else {
+            if (isLimited) {
                 ProcessLimited()
+            } else {
+                ProcessUnlimit()
             }
         }
     }
