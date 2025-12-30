@@ -22,8 +22,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,6 +39,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.github.andock.R
 import com.github.andock.daemon.registries.Registry
+import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
@@ -52,7 +51,7 @@ fun RegistriesScreen(
     onNavigateToAddMirror: () -> Unit = {}
 ) {
     val viewModel = hiltViewModel<RegistriesViewModel>()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val registries by viewModel.sortedList.collectAsState()
     val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
@@ -92,7 +91,6 @@ fun RegistriesScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

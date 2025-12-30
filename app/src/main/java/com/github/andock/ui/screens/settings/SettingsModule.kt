@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import com.github.andock.R
-import com.github.andock.ui.screens.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.MainBottomTab

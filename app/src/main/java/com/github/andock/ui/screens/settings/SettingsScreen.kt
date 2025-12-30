@@ -20,8 +20,6 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,6 +36,7 @@ import com.github.andock.R
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
@@ -49,10 +48,9 @@ fun SettingsScreen(
     onNavigateToPhantomProcess: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<SettingsViewModel>()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val storageUsage by viewModel.storageUsage.collectAsState()
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
-
     LaunchedEffect(Unit) {
         viewModel.loadStorageUsage()
     }
@@ -64,12 +62,6 @@ fun SettingsScreen(
                 title = { Text(stringResource(R.string.settings_title)) }
             )
         },
-        snackbarHost = {
-            // Snackbar - 放在底部中央
-            SnackbarHost(
-                hostState = snackbarHostState,
-            )
-        }
     ) { padding ->
         Column(
             modifier = Modifier
