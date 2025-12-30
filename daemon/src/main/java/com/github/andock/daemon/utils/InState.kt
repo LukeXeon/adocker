@@ -5,19 +5,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import java.util.concurrent.Callable
 import kotlin.reflect.KClass
 
 typealias InState<T> = Pair<StateFlow<T>, Set<KClass<out T>>>
 
 @PublishedApi
-internal inline fun InState<*>.collector(
+internal suspend inline fun executeImpl(
+    state: StateFlow<*>,
+    classes: Set<KClass<*>>,
     crossinline block: suspend () -> Any?
-): suspend (Boolean) -> Unit {
-    return object : CancellationException(
+): Any? {
+    val collector = object : CancellationException(
         "Flow was aborted, no more elements needed"
-    ), Callable<Any?>, suspend (Boolean) -> Unit {
-        private var value: Any? = this
+    ), suspend (Boolean) -> Unit {
+        var result: Any? = this
 
         override fun fillInStackTrace(): Throwable {
             stackTrace = emptyArray()
@@ -25,29 +26,10 @@ internal inline fun InState<*>.collector(
         }
 
         override suspend fun invoke(value: Boolean) {
-            if (value) {
-                this.value = block()
-                throw this
-            } else {
-                throw IllegalStateException("$first is not $second")
-            }
+            check(value) { "$state is not $classes" }
+            result = block()
+            throw this
         }
-
-        override fun call(): Any? {
-            if (value == this) {
-                throw NoSuchElementException("Expected at least one element")
-            }
-            return value
-        }
-    }
-}
-
-suspend inline fun <reified R> InState<*>.execute(
-    crossinline block: suspend () -> R
-): R {
-    val (state, classes) = this
-    val collector = collector {
-        block()
     }
     try {
         state.map { state ->
@@ -60,7 +42,14 @@ suspend inline fun <reified R> InState<*>.execute(
             throw e
         }
     }
-    return (collector as Callable<*>).call() as R
+    check(collector.result != collector)
+    return collector.result
+}
+
+suspend inline fun <reified R> InState<*>.execute(
+    crossinline block: suspend () -> R
+): R {
+    return executeImpl(first, second, block) as R
 }
 
 fun <T : Any> StateFlow<T>.inState(vararg classes: KClass<out T>): InState<T> {
