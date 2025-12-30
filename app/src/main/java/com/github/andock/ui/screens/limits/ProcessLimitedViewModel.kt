@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProcessLimitViewModel @Inject constructor(
+class ProcessLimitedViewModel @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
     private val processLimitCompat: ProcessLimitCompat
 ) : ViewModel() {

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -55,16 +54,19 @@ import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProcessLimitDesc() {
+fun ProcessLimited() {
     val snackbarHostState = LocalSnackbarHostState.current
-    val viewModel = hiltViewModel<ProcessLimitViewModel>()
+    val viewModel = hiltViewModel<ProcessLimitedViewModel>()
     val stats by viewModel.stats.collectAsState()
     val (isProcessing, setProcessing) = remember { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {}
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+    ) {
         // Status overview card
         item {
             Card {
