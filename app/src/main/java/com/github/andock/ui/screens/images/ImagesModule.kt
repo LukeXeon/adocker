@@ -4,25 +4,41 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.outlined.Layers
 import com.github.andock.R
+import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ImagesScreenModule {
+object ImagesModule {
     @Provides
-    @IntoSet
+    @IntoMap
+    @ClassKey(ImagesRoute::class)
     fun tab() = MainBottomTab(
-        route = Any::class,
         titleResId = R.string.nav_images,
         selectedIcon = Icons.Filled.Layers,
         unselectedIcon = Icons.Outlined.Layers,
         priority = 3,
     ) {
 
+    }
+
+    @Provides
+    @IntoMap
+    @ClassKey(ImagesRoute::class)
+    fun screen() = Screen {
+        ImagesScreen()
+    }
+
+    @Provides
+    @IntoMap
+    @ClassKey(ImageDetailRoute::class)
+    fun detailScreen() = Screen {
+        ImageDetailScreen("")
     }
 }

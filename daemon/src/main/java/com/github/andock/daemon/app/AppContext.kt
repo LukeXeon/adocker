@@ -2,10 +2,8 @@ package com.github.andock.daemon.app
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Build
-import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -18,7 +16,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AppContext @Inject constructor(
-    @ApplicationContext context: Context
+    context: Application
 ) {
     // Directories
     val baseDir = requireNotNull(context.dataDir)

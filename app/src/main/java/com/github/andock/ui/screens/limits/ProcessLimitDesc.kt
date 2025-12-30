@@ -1,4 +1,4 @@
-package com.github.andock.ui.screens.processlimit
+package com.github.andock.ui.screens.limits
 
 import android.content.Intent
 import android.os.Build

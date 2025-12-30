@@ -1,4 +1,4 @@
-package com.github.andock.ui.screens.processlimit
+package com.github.andock.ui.screens.limits
 
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement

@@ -56,7 +56,7 @@ import com.github.andock.ui.utils.parseEnvVars
 @Composable
 fun ContainerCreateScreen(
     imageId: String,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit = {},
 ) {
     val imagesViewModel = hiltViewModel<ImagesViewModel>()
     val containersViewModel = hiltViewModel<ContainersViewModel>()
