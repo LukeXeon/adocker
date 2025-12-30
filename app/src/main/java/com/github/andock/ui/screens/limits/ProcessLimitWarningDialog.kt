@@ -1,6 +1,5 @@
-package com.github.andock.ui.components
+package com.github.andock.ui.screens.limits
 
-import android.os.Build
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -13,19 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.github.andock.R
+import com.github.andock.ui.screens.main.LocalNavController
 
 @Composable
 fun ProcessLimitWarningDialog(
-    onDismiss: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onDismissRequest: () -> Unit,
 ) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-        // No warning needed for Android 11 and below
-        return
-    }
-
+    val navController = LocalNavController.current
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         icon = {
             Icon(
                 imageVector = Icons.Default.Warning,
@@ -50,15 +45,15 @@ fun ProcessLimitWarningDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onDismiss()
-                    onNavigateToSettings()
+                    onDismissRequest()
+                    navController.navigate(ProcessLimitRoute())
                 }
             ) {
                 Text(stringResource(R.string.phantom_warning_open_settings))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismissRequest) {
                 Text(stringResource(R.string.phantom_warning_later))
             }
         }

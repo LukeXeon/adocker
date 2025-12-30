@@ -54,6 +54,7 @@ import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
+import com.github.andock.ui.screens.limits.ProcessLimitWarningDialog
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.registries.RegistriesRoute
 import com.github.andock.ui.theme.IconSize
@@ -69,6 +70,7 @@ fun HomeScreen() {
     val totalContainers by viewModel.totalContainers.collectAsState(0)
     val runningContainers by viewModel.runningContainers.collectAsState(0)
     val stoppedContainers by viewModel.stoppedContainers.collectAsState(0)
+    val isShowWarning by viewModel.isShowWarning.collectAsState()
     val prootVersion by viewModel.prootVersion.collectAsState()
     val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
@@ -305,6 +307,13 @@ fun HomeScreen() {
             downloader = showProgressDialog,
             onDismissRequest = {
                 setProgressDialog(null)
+            }
+        )
+    }
+    if (isShowWarning == true) {
+        ProcessLimitWarningDialog(
+            onDismissRequest = {
+                viewModel.dismissWarning()
             }
         )
     }
