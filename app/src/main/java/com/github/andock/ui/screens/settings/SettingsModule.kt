@@ -9,6 +9,7 @@ import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.MainBottomTab
 import com.github.andock.ui.screens.registries.AddMirrorRoute
+import com.github.andock.ui.screens.registries.RegistriesRoute
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,7 +45,7 @@ object SettingsModule {
         val navController = LocalNavController.current
         SettingsScreen(
             onNavigateToMirrorSettings = {
-                navController.navigate(AddMirrorRoute())
+                navController.navigate(RegistriesRoute())
             },
             onNavigateToPhantomProcess = {
                 navController.navigate(ProcessLimitRoute())
