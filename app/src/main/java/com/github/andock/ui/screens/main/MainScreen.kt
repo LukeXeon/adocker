@@ -3,7 +3,6 @@ package com.github.andock.ui.screens.main
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -20,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -100,11 +98,7 @@ fun MainScreen() {
                 navController = navController,
                 startDestination = HomeRoute::class,
                 modifier = Modifier.padding(
-                    if (showBottomBar) {
-                        paddingValues
-                    } else {
-                        PaddingValues(0.dp)
-                    }
+                    paddingValues
                 )
             ) {
                 screens.forEach { (route, screen) ->
