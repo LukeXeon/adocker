@@ -156,7 +156,7 @@ fun HomeScreen() {
             item {
                 Text(
                     text = stringResource(R.string.home_overview),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
