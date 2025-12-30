@@ -12,7 +12,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     val screens = screens.asSequence().map {
         it.key.kotlin to it.value
-    }.toMap()
+    }.toList()
     val bottomTabs = bottomTabs.asSequence().map {
         it.key.kotlin to it.value
     }.sortedBy { it.second.priority }.toList()
