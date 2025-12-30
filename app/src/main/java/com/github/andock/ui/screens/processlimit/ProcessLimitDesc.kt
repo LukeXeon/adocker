@@ -31,6 +31,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +56,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ProcessLimitDesc(
-    onMessage: suspend (String) -> Unit
+    hostState: SnackbarHostState,
 ) {
     val viewModel = hiltViewModel<ProcessLimitViewModel>()
     val stats by viewModel.stats.collectAsState()
@@ -212,7 +213,7 @@ fun ProcessLimitDesc(
                                         setProcessing(true)
                                         val success = viewModel.unrestrict()
                                         setProcessing(false)
-                                        onMessage(
+                                        hostState.showSnackbar(
                                             if (success) {
                                                 successMessage
                                             } else {

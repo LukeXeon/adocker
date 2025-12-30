@@ -87,11 +87,7 @@ fun ProcessLimitScreen(
                     }
                 }
             } else {
-                ProcessLimitDesc(
-                    onMessage = {
-                        snackbarHostState.showSnackbar(it)
-                    }
-                )
+                ProcessLimitDesc(snackbarHostState)
             }
         }
     }
