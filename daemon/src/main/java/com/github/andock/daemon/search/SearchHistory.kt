@@ -2,7 +2,6 @@ package com.github.andock.daemon.search
 
 import com.github.andock.daemon.database.dao.SearchRecordDao
 import com.github.andock.daemon.database.model.SearchRecordEntity
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -47,7 +46,7 @@ class SearchHistory @Inject constructor(
      * with the most recent search query at index 0.
      * Limited to the most recent 20 items.
      */
-    val records: Flow<List<String>> = searchRecordDao.getSearchRecords()
+    val records = searchRecordDao.getSearchRecords()
 
     /**
      * Add a search query to history.
