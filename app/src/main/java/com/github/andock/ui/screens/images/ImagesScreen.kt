@@ -29,6 +29,7 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.downloader.ImageDownloader
@@ -47,15 +49,17 @@ import com.github.andock.ui.screens.containers.ContainerCreateRoute
 import com.github.andock.ui.screens.containers.ContainerDetailRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
+import com.github.andock.ui.screens.qrcode.ScannedData
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
+import com.github.andock.ui.utils.get
 import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImagesScreen() {
+fun ImagesScreen(backStackEntry: NavBackStackEntry) {
     val navController = LocalNavController.current
     val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
@@ -63,6 +67,10 @@ fun ImagesScreen() {
     val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
+    val scannedData = backStackEntry.savedStateHandle[ScannedData]
+    LaunchedEffect(scannedData) {
+
+    }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal

@@ -16,7 +16,7 @@ object RegistriesModule {
     @IntoMap
     @ClassKey(RegistriesRoute::class)
     fun screen() = Screen {
-        RegistriesScreen()
+        RegistriesScreen(it)
     }
 
     @Provides

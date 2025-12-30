@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -26,11 +28,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,26 +49,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
+import com.github.andock.ui.utils.savedStateHandleKey
+import com.github.andock.ui.utils.set
+
+val ScannedData by savedStateHandleKey<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrcodeScannerScreen(
-    onBarcodeScanned: (String) -> Unit = {},
+    backStackEntry: NavBackStackEntry,
 ) {
     val navController = LocalNavController.current
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-    val isActive = remember(currentDestination) {
-        currentDestination?.hierarchy?.any {
-            it.hasRoute(QrcodeScannerRoute::class)
-        } == true
-    }
+    val isActive = backStackEntry.lifecycle.currentStateFlow
+        .collectAsState().value == Lifecycle.State.RESUMED
     val context = LocalContext.current
     val (hasCameraPermission, setHasCameraPermission) = remember {
         mutableStateOf(
@@ -90,8 +91,10 @@ fun QrcodeScannerScreen(
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
-
     Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
+            WindowInsetsSides.Top
+        ),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.qr_title)) },
@@ -307,7 +310,10 @@ fun QrcodeScannerScreen(
             scannedData = scannedData,
             onConfirm = {
                 setScannedData(null)
-                onBarcodeScanned(it)
+                val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
+                if (savedStateHandle != null) {
+                    savedStateHandle[ScannedData] = it
+                }
                 onNavigateBack()
             },
             onDismissRequest = {

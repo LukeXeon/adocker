@@ -28,6 +28,7 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,24 +39,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.registries.Registry
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
+import com.github.andock.ui.screens.qrcode.ScannedData
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
+import com.github.andock.ui.utils.get
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistriesScreen() {
+fun RegistriesScreen(
+    backStackEntry: NavBackStackEntry,
+) {
     val navController = LocalNavController.current
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val registries by viewModel.sortedList.collectAsState()
     val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
+    val scannedData = backStackEntry.savedStateHandle[ScannedData]
+    LaunchedEffect(scannedData) {
+
+    }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
