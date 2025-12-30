@@ -24,8 +24,14 @@ object HomeModule {
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home,
         priority = 0
-    ) {
-
+    ) { navController ->
+        navController.navigate(HomeRoute()) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     @Provides

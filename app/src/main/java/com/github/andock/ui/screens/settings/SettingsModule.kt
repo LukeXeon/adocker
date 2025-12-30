@@ -24,8 +24,14 @@ object SettingsModule {
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings,
         priority = 4
-    ) {
-
+    ) { navController ->
+        navController.navigate(SettingsRoute()) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     @Provides

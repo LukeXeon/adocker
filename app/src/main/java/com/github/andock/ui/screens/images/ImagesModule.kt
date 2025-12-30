@@ -24,8 +24,14 @@ object ImagesModule {
         selectedIcon = Icons.Filled.Layers,
         unselectedIcon = Icons.Outlined.Layers,
         priority = 3,
-    ) {
-
+    ) { navController ->
+        navController.navigate(ImagesRoute()) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     @Provides

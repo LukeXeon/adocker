@@ -24,8 +24,14 @@ object ContainersModule {
         selectedIcon = Icons.Filled.ViewInAr,
         unselectedIcon = Icons.Outlined.ViewInAr,
         priority = 2
-    ) {
-
+    ) { navController ->
+        navController.navigate(ContainersRoute()) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     @Provides

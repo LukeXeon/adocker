@@ -24,8 +24,14 @@ object SearchModule {
         selectedIcon = Icons.Filled.Explore,
         unselectedIcon = Icons.Outlined.Explore,
         priority = 1
-    ) {
-
+    ) { navController ->
+        navController.navigate(SearchRoute()) {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     @Provides
