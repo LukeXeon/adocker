@@ -20,7 +20,8 @@ import kotlin.random.Random
 
 @Singleton
 class RemoteProcessBuilder @Inject constructor(
-    appContext: AppContext
+    appContext: AppContext,
+    private val factory: JobProcess.Factory,
 ) : Shizuku.OnRequestPermissionResultListener, ServiceConnection {
     private val userServiceArgs = UserServiceArgs(
         ComponentName(
@@ -51,8 +52,8 @@ class RemoteProcessBuilder @Inject constructor(
         cmd: Array<String>,
         env: Array<String> = emptyArray(),
         dir: String? = null
-    ): RemoteProcess {
-        return RemoteProcess(getService().newProcess(cmd, env, dir))
+    ): JobProcess {
+        return factory.create(RemoteProcess(getService().newProcess(cmd, env, dir)))
     }
 
     /**

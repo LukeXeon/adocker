@@ -7,9 +7,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import dagger.multibindings.IntoMap
+import dagger.multibindings.StringKey
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -18,16 +17,13 @@ import javax.inject.Singleton
 object LoggingModule {
     @Provides
     @Singleton
-    @IntoSet
+    @IntoMap
+    @StringKey("logging")
     fun initializer(appContext: AppContext): SuspendLazy<*> = suspendLazy {
         // Check if app is debuggable
         if (appContext.isDebuggable) {
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("Timber initialized")
-        withContext(Dispatchers.IO) {
-            appContext.logDir.deleteRecursively()
-            appContext.logDir.mkdirs()
-        }
     }
 }

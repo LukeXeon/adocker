@@ -10,7 +10,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
 import dagger.multibindings.IntoSet
+import dagger.multibindings.StringKey
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 import javax.inject.Singleton
@@ -42,8 +44,11 @@ object ApiModule {
 
     @Provides
     @Singleton
-    @IntoSet
-    fun initializer(servers: Set<@JvmSuppressWildcards Http4kServer>): SuspendLazy<*> = suspendLazy {
+    @IntoMap
+    @StringKey("server")
+    fun initializer(
+        servers: Set<@JvmSuppressWildcards Http4kServer>
+    ): SuspendLazy<*> = suspendLazy {
         servers.forEach {
             it.start()
         }

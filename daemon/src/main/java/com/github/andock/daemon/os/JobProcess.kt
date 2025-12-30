@@ -19,7 +19,7 @@ class JobProcess @AssistedInject constructor(
 ) {
 
     val pid by lazy {
-        locator.getPid(process)
+        locator.locate(process)
     }
 
     val job = scope.async {

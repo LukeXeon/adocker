@@ -13,7 +13,6 @@ import javax.inject.Singleton
 @Singleton
 class ProcessLimitCompat @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
-    private val processAwaiter: ProcessAwaiter,
 ) {
     /**
      * Disable phantom process killer
@@ -113,16 +112,14 @@ class ProcessLimitCompat @Inject constructor(
             throw RuntimeException("Failed to execute command: ${e.message}", e)
         }
 
-        val output = process.inputStream.bufferedReader().use { reader ->
+        val output = process.stdout.bufferedReader().use { reader ->
             reader.readText()
         }
 
-        val error = process.errorStream.bufferedReader().use { reader ->
+        val error = process.stderr.bufferedReader().use { reader ->
             reader.readText()
         }
-
-        val exitCode = processAwaiter.await(process)
-
+        val exitCode = process.job.await()
         if (exitCode != 0) {
             Timber.e("Command failed with exit code %d: %s", exitCode, error)
             throw RuntimeException("Command execution failed (exit=$exitCode): $error")

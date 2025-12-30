@@ -1,8 +1,8 @@
 package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.os.Process
-import com.github.andock.daemon.os.ProcessAwaiter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +20,7 @@ import javax.inject.Singleton
 class PRootVersion @Inject constructor(
     private val appContext: AppContext,
     private val prootEnv: PRootEnvironment,
-    private val processAwaiter: ProcessAwaiter,
+    private val factory: JobProcess.Factory,
     scope: CoroutineScope
 ) {
     private val _value = MutableStateFlow<String?>(null)
@@ -28,7 +29,11 @@ class PRootVersion @Inject constructor(
 
     init {
         scope.launch {
-            _value.value = loadVersion()
+            while (_value.value == null) {
+                _value.value = withTimeoutOrNull(1000) {
+                    loadVersion()
+                }
+            }
         }
     }
 
@@ -51,17 +56,19 @@ class PRootVersion @Inject constructor(
                     Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
                 }
                 val env = prootEnv.values
-                try {
-                    Timber.d("Running proot --version with env: $env")
-                    val process = Process(
+                val process = factory.create(
+                    Process(
                         command = listOf(prootBinary.absolutePath, "--version"),
                         environment = env,
                         redirectErrorStream = false
                     )
+                )
+                try {
+                    Timber.d("Running proot --version with env: $env")
                     val (code, outputs) = supervisorScope {
                         val jobs = sequenceOf(
-                            process.inputStream,
-                            process.errorStream
+                            process.stdout,
+                            process.stderr
                         ).map { stream ->
                             async(Dispatchers.IO) {
                                 stream.bufferedReader().useLines { lines ->
@@ -71,7 +78,7 @@ class PRootVersion @Inject constructor(
                                 }
                             }
                         }.toList()
-                        processAwaiter.await(process) to jobs.awaitAll()
+                        process.job.await() to jobs.awaitAll()
                     }
                     val (stdout, stderr) = outputs
                     val available = code == 0 || stdout.contains("proot", ignoreCase = true)
@@ -86,6 +93,8 @@ class PRootVersion @Inject constructor(
                         e,
                         "Failed to get PRoot version，PRoot availability check failed with exception"
                     )
+                } finally {
+                    process.job.cancel()
                 }
             }
         }

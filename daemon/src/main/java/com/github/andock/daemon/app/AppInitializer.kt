@@ -3,9 +3,11 @@ package com.github.andock.daemon.app
 import android.os.Handler
 import android.os.Looper
 import com.github.andock.daemon.utils.SuspendLazy
+import com.github.andock.daemon.utils.measureTimeMillis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.asCoroutineDispatcher
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -14,7 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AppInitializer @Inject constructor(
-    private val tasks: Set<@JvmSuppressWildcards SuspendLazy<*>>,
+    private val tasks: Map<String, @JvmSuppressWildcards SuspendLazy<*>>,
     private val scope: CoroutineScope,
 ) {
     private val called = AtomicBoolean(false)
@@ -37,11 +39,18 @@ class AppInitializer @Inject constructor(
             val jumpOutException = JumpOutException()
             val mainHandler = Handler(mainLooper)
             scope.launch(mainHandler.asCoroutineDispatcher().immediate) {
-                tasks.map {
-                    launch {
-                        it.getValue()
+                val ms = measureTimeMillis {
+                    tasks.map { (key, task) ->
+                        async {
+                            key to measureTimeMillis {
+                                task.getValue()
+                            }
+                        }
+                    }.awaitAll().forEach { (key, ms) ->
+                        Timber.d("task ${key}: ${ms}ms")
                     }
-                }.joinAll()
+                }
+                Timber.d("task all: ${ms}ms")
                 mainHandler.postAtFrontOfQueue(jumpOutException)
             }
             try {

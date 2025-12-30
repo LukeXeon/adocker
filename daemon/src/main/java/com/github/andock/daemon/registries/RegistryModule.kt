@@ -6,7 +6,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoSet
+import dagger.multibindings.IntoMap
+import dagger.multibindings.StringKey
 import javax.inject.Singleton
 
 
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 object RegistryModule {
     @Provides
     @Singleton
-    @IntoSet
+    @IntoMap
+    @StringKey("registry")
     fun initializer(registryManager: RegistryManager): SuspendLazy<*> = suspendLazy {
         registryManager.checkAll()
     }

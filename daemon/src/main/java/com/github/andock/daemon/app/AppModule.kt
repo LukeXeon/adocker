@@ -1,10 +1,14 @@
 package com.github.andock.daemon.app
 
 import android.app.Application
+import com.github.andock.daemon.utils.SuspendLazy
+import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
+import dagger.multibindings.StringKey
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -20,6 +24,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Singleton
@@ -74,6 +79,17 @@ object AppModule {
                     "${app.resources.getString(app.applicationInfo.labelRes)}/${appContext.packageInfo.versionName}"
                 )
             }
+        }
+    }
+
+    @Provides
+    @Singleton
+    @IntoMap
+    @StringKey("app")
+    fun initializer(appContext: AppContext): SuspendLazy<*> = suspendLazy {
+        withContext(Dispatchers.IO) {
+            appContext.logDir.deleteRecursively()
+            appContext.logDir.mkdirs()
         }
     }
 }
