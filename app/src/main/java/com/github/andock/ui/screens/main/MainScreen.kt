@@ -3,15 +3,17 @@ package com.github.andock.ui.screens.main
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -32,12 +34,11 @@ fun MainScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     // Check if we should show bottom navigation
-    val showBottomBar = remember(currentDestination, bottomTabs) {
-        bottomTabs.any { (route, _) ->
-            currentDestination?.hierarchy?.any { it.hasRoute(route) } == true
-        }
+    val showBottomBar = bottomTabs.any { (route, _) ->
+        currentDestination?.hierarchy?.any { it.hasRoute(route) } == true
     }
     Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Bottom),
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -46,10 +47,8 @@ fun MainScreen() {
             ) {
                 NavigationBar {
                     bottomTabs.forEach { (route, screen) ->
-                        val selected = remember(currentDestination, screen) {
-                            currentDestination?.hierarchy
-                                ?.any { it.hasRoute(route) } == true
-                        }
+                        val selected = currentDestination?.hierarchy
+                            ?.any { it.hasRoute(route) } == true
                         NavigationBarItem(
                             icon = {
                                 Icon(
