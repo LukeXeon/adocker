@@ -107,7 +107,7 @@ fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateH
 
 @Composable
 operator fun <T> SavedStateHandle.get(key: SavedStateHandleKey<T>): State<T> {
-    return getStateFlow(key.first, key.second).collectAsState(key.second)
+    return getStateFlow(key.first, key.second).collectAsState()
 }
 
 operator fun <T> SavedStateHandle.set(key: SavedStateHandleKey<T>, value: T) {
