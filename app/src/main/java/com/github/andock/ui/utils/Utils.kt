@@ -48,3 +48,4 @@ fun parseEnvVars(input: String): Map<String, String> {
             parts[0].trim() to parts.getOrElse(1) { "" }.trim()
         }
 }
+

@@ -4,8 +4,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import com.github.andock.R
+import com.github.andock.ui.screens.LocalNavController
 import com.github.andock.ui.screens.Screen
+import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.MainBottomTab
+import com.github.andock.ui.screens.registries.AddMirrorRoute
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,6 +41,14 @@ object SettingsModule {
     @IntoMap
     @ClassKey(SettingsRoute::class)
     fun screen() = Screen {
-        SettingsScreen()
+        val navController = LocalNavController.current
+        SettingsScreen(
+            onNavigateToMirrorSettings = {
+                navController.navigate(AddMirrorRoute())
+            },
+            onNavigateToPhantomProcess = {
+                navController.navigate(ProcessLimitRoute())
+            }
+        )
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.github.andock.ui.screens.LocalNavController
 import com.github.andock.ui.screens.home.HomeRoute
 
 @Composable
@@ -39,51 +41,55 @@ fun MainScreen() {
     val showBottomBar = bottomTabs.any { (route, _) ->
         currentDestination?.hierarchy?.any { it.hasRoute(route) } == true
     }
-    Scaffold(
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Bottom),
-        bottomBar = {
-            AnimatedVisibility(
-                visible = showBottomBar,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                NavigationBar {
-                    bottomTabs.forEach { (route, screen) ->
-                        val selected = currentDestination?.hierarchy
-                            ?.any { it.hasRoute(route) } == true
-                        NavigationBarItem(
-                            icon = {
-                                Icon(
-                                    imageVector = if (selected) {
-                                        screen.selectedIcon
-                                    } else {
-                                        screen.unselectedIcon
-                                    },
-                                    contentDescription = stringResource(screen.titleResId)
-                                )
-                            },
-                            label = { Text(stringResource(screen.titleResId)) },
-                            selected = selected,
-                            onClick = { screen.onCLick(navController) }
-                        )
+    CompositionLocalProvider(
+        LocalNavController provides navController
+    ) {
+        Scaffold(
+            contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Bottom),
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = showBottomBar,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = slideOutVertically(targetOffsetY = { it })
+                ) {
+                    NavigationBar {
+                        bottomTabs.forEach { (route, screen) ->
+                            val selected = currentDestination?.hierarchy
+                                ?.any { it.hasRoute(route) } == true
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) {
+                                            screen.selectedIcon
+                                        } else {
+                                            screen.unselectedIcon
+                                        },
+                                        contentDescription = stringResource(screen.titleResId)
+                                    )
+                                },
+                                label = { Text(stringResource(screen.titleResId)) },
+                                selected = selected,
+                                onClick = { screen.onCLick(navController) }
+                            )
+                        }
                     }
                 }
             }
-        }
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = HomeRoute::class,
-            modifier = Modifier.padding(
-                if (showBottomBar) {
-                    paddingValues
-                } else {
-                    PaddingValues(0.dp)
+        ) { paddingValues ->
+            NavHost(
+                navController = navController,
+                startDestination = HomeRoute::class,
+                modifier = Modifier.padding(
+                    if (showBottomBar) {
+                        paddingValues
+                    } else {
+                        PaddingValues(0.dp)
+                    }
+                )
+            ) {
+                screens.forEach { (route, screen) ->
+                    composable(route = route, content = screen.content)
                 }
-            )
-        ) {
-            screens.forEach { (route, screen) ->
-                composable(route = route, content = screen.content)
             }
         }
     }
