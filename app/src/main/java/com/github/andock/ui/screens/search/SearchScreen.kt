@@ -32,7 +32,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,13 +45,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import androidx.paging.filter
 import com.github.andock.R
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.PaginationErrorItem
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.theme.Spacing
-import kotlinx.coroutines.flow.map
 
 /**
  * Search screen for discovering Docker Hub images.
@@ -69,30 +66,14 @@ import kotlinx.coroutines.flow.map
 fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
     val searchQuery by viewModel.query.collectAsState()
+    val isOfficialOnly by viewModel.isOfficialOnly.collectAsState()
     val searchHistory by viewModel.history.collectAsState()
+    val searchResults = viewModel.results.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
-    val (showOnlyOfficial, setShowOnlyOfficial) = remember { mutableStateOf(false) }
-    val (minStars, setMinStars) = remember { mutableIntStateOf(0) }
     val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
     val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
-    val searchResults = remember(minStars, showOnlyOfficial) {
-        viewModel.results.map {
-            it.filter { result ->
-                if (minStars > 0) {
-                    result.starCount >= minStars
-                } else {
-                    true
-                }
-            }.filter { result ->
-                if (showOnlyOfficial) {
-                    result.isOfficial
-                } else {
-                    true
-                }
-            }
-        }
-    }.collectAsLazyPagingItems()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,7 +82,7 @@ fun SearchScreen() {
                     // Filter button
                     IconButton(onClick = { setShowFilters(!showFilters) }) {
                         Badge(
-                            containerColor = if (showOnlyOfficial || minStars > 0) {
+                            containerColor = if (isOfficialOnly) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 Color.Transparent
@@ -172,13 +153,9 @@ fun SearchScreen() {
             // Filters panel
             if (showFilters) {
                 SearchFilterPanel(
-                    showOnlyOfficial = showOnlyOfficial,
-                    minStars = minStars,
+                    showOnlyOfficial = isOfficialOnly,
                     onToggleOfficial = {
-                        setShowOnlyOfficial(!showOnlyOfficial)
-                    },
-                    onMinStarsChange = {
-                        setMinStars(it)
+                        viewModel.setOfficialOnly(!isOfficialOnly)
                     },
                     modifier = Modifier.padding(horizontal = Spacing.Medium)
                 )

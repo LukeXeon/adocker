@@ -6,6 +6,7 @@ import androidx.paging.cachedIn
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.daemon.search.SearchHistory
+import com.github.andock.daemon.search.SearchParameters
 import com.github.andock.daemon.search.SearchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +14,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -67,10 +69,19 @@ class SearchViewModel @Inject constructor(
     private val searchHistory: SearchHistory,
     private val imageManager: ImageManager
 ) : ViewModel() {
-    // Search query input
     private val _query = MutableStateFlow("")
-
     val query = _query.asStateFlow()
+    private val _isOfficialOnly = MutableStateFlow(false)
+    val isOfficialOnly = _isOfficialOnly.asStateFlow()
+    private val parameters = combine(
+        query,
+        isOfficialOnly,
+    ) { query, isOfficialOnly ->
+        SearchParameters(
+            query = query,
+            isOfficialOnly = isOfficialOnly
+        )
+    }
 
     // Search history
     val history = searchHistory.records
@@ -81,14 +92,16 @@ class SearchViewModel @Inject constructor(
         )
 
     // Paginated search results with debounce
-    val results = _query
+    val results = parameters
         .debounce(400) // 400ms debounce
         .distinctUntilChanged()
-        .filter { it.isNotBlank() }
-        .flatMapLatest { query ->
-            val query = query.trim()
+        .filter {
+            it.query.isNotBlank()
+        }
+        .flatMapLatest { parameters ->
+            val query = parameters.query.trim()
             searchHistory.add(query)
-            searchRepository.search(query)
+            searchRepository.search(parameters)
         }.cachedIn(viewModelScope)
 
     /**
@@ -97,9 +110,12 @@ class SearchViewModel @Inject constructor(
      * The search will be triggered automatically after 400ms of no input changes.
      */
     fun setQuery(query: String) {
-        _query.value = query.trim()
+        _query.value = query
     }
 
+    fun setOfficialOnly(isOfficialOnly: Boolean) {
+        _isOfficialOnly.value = isOfficialOnly
+    }
 
     /**
      * Clear search history.

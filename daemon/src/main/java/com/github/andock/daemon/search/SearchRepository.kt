@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.github.andock.daemon.search.model.SearchResult
+import io.ktor.http.URLBuilder
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,20 +36,28 @@ class SearchRepository @Inject constructor(
      * **Important**: Always use `.cachedIn(scope)` on the returned Flow to cache
      * the PagingData and survive configuration changes.
      *
-     * @param query Search query string (e.g., "alpine", "nginx")
-     * @param pageSize Number of results per page (default: 25, max: 100)
      * @return Flow of PagingData containing search results
      */
-    fun search(query: String, pageSize: Int = 25): Flow<PagingData<SearchResult>> {
+    fun search(parameters: SearchParameters): Flow<PagingData<SearchResult>> {
         return Pager(
             config = PagingConfig(
-                pageSize = pageSize,
+                pageSize = parameters.pageSize,
                 enablePlaceholders = false,
-                initialLoadSize = pageSize
+                initialLoadSize = parameters.pageSize,
             ),
-            pagingSourceFactory = {
-                factory.create(query, pageSize)
-            }
+            initialKey = URLBuilder("https://hub.docker.com/v2/search/repositories/")
+                .also {
+                    it.parameters.append("query", parameters.query)
+                    it.parameters.append("page_size", parameters.pageSize.toString())
+                    it.parameters.append("page", parameters.page.toString())
+                    if (parameters.isOfficialOnly) {
+                        it.parameters.append("is_official", true.toString())
+                    }
+                    it.parameters.append("type", parameters.type)
+                }
+                .build(),
+            pagingSourceFactory = factory
         ).flow
     }
+
 }
