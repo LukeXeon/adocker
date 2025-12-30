@@ -4,17 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ADocker is an Android application that runs Docker containers without root privileges using PRoot (user-space chroot). It's a Kotlin reimplementation of the udocker concept, designed specifically for Android with full internationalization support (Chinese/English).
+**Andock** (package: `com.github.andock`) is an Android application that runs Docker containers without root privileges using PRoot (user-space chroot). It's a complete Kotlin reimplementation of the udocker concept, designed specifically for Android with full internationalization support (Chinese/English).
 
 **Key Technologies:**
-- Kotlin + Jetpack Compose (Material Design 3)
-- Hilt dependency injection
-- Ktor HTTP client
-- Room database
+- Kotlin 2.2.21 + Jetpack Compose (Material Design 3, BOM 2025.12.00)
+- Hilt 2.57.2 dependency injection with AssistedInject
+- Ktor 3.3.3 HTTP client (OkHttp engine)
+- Room 2.8.4 database
+- FlowRedux 2.0.0 state machines (containers, downloads, registries)
 - PRoot v0.15 execution engine (from green-green-avk/proot)
-- Coroutines & Flow for async/reactive programming
-- CameraX + ML Kit for QR code scanning
-- Shizuku for system service integration
+- Coroutines 1.10.2 & Flow for async/reactive programming
+- Paging 3.3.5 for Docker Hub search
+- CameraX 1.5.2 + ML Kit 17.3.0 for QR code scanning
+- Shizuku 13.1.5 for system service integration
+- http4k 6.23.1.0 for Docker API server
 
 ## Build & Development Commands
 
@@ -68,78 +71,188 @@ ls -la app/src/main/jniLibs/arm64-v8a/
 The project uses a multi-module architecture with clear separation:
 
 ```
-adocker/
-├── daemon/                  # Core business logic module (Android Library)
-│   └── src/main/java/com/github/adocker/daemon/
-│       ├── api/            # Docker-compatible REST API (http4k routes)
-│       ├── app/            # AppConfig, AppGlobals, AppModule
-│       ├── database/       # Room database, DAOs, and entities
-│       ├── containers/     # PRootEngine, ContainerExecutor, RunningContainer
-│       ├── http/           # UnixHttp4kServer - Unix domain socket server
-│       ├── images/         # ImageRepository - image pull/storage/deletion
-│       ├── registry/       # Docker Registry API client & models
-│       ├── os/             # PhantomProcessManager, OS utilities
-│       ├── utils/          # File operations, extraction, execution helpers
-│       ├── slf4j/          # Timber logging integration
-│       └── startup/        # App initialization (App Startup library)
-└── app/                     # UI module (Android Application)
-    └── src/main/java/com/github/adocker/ui/
-        ├── model/          # UI-layer models (ContainerStatus)
-        ├── screens/        # Screen composables (Home, Images, Containers, Terminal, Settings, QRCode)
-        ├── viewmodel/      # ViewModels for each screen
-        ├── components/     # Reusable UI components
-        ├── navigation/     # Navigation graph
-        └── theme/          # Material3 theme configuration
+andock/
+├── daemon/                           # Core business logic module (Android Library)
+│   └── src/main/java/com/github/andock/daemon/
+│       ├── app/                      # AppContext, AppInitializer, AppModule
+│       ├── containers/               # Container, ContainerManager, ContainerState, ContainerStateMachine
+│       ├── database/                 # Room database, DAOs, entities
+│       │   ├── dao/                  # ImageDao, LayerDao, ContainerDao, RegistryDao, AuthTokenDao, SearchRecordDao
+│       │   └── model/                # ImageEntity, LayerEntity, ContainerEntity, RegistryEntity, etc.
+│       ├── engine/                   # PRootEngine, PRootEnvironment, PRootVersion
+│       ├── images/                   # ImageManager, ImageClient, ImageReference
+│       │   ├── downloader/           # ImageDownloader, ImageDownloadState (FlowRedux)
+│       │   └── model/                # Registry API models (manifests, auth, configs)
+│       ├── http/                     # UnixHttp4kServer, TcpHttp4kServer, HttpProcessor
+│       ├── server/                   # DockerApiServer
+│       │   └── routes/               # ContainerRoutes, ImageRoutes, SystemRoutes, etc. (Hilt multibinding)
+│       ├── registries/               # Registry, RegistryManager, RegistryStateMachine (FlowRedux)
+│       ├── search/                   # SearchPagingSource, SearchRepository, SearchHistory (Paging 3 + DataStore)
+│       │   └── model/                # SearchResponse, SearchResult
+│       ├── io/                       # File, Zip, Tailer (symlink handling, tar extraction)
+│       ├── os/                       # ProcessLimitCompat, RemoteProcess, Process (Shizuku integration)
+│       └── logging/                  # TimberLogger, TimberServiceProvider (SLF4J + Timber)
+└── app/                              # UI module (Android Application)
+    └── src/main/java/com/github/andock/
+        ├── AndockApplication.kt      # Application class
+        └── ui/
+            ├── MainActivity.kt       # Single Activity + Compose
+            ├── screens/              # Screen composables (by feature)
+            │   ├── main/             # MainScreen (bottom navigation)
+            │   ├── home/             # HomeScreen, HomeViewModel
+            │   ├── containers/       # ContainersScreen, ContainerDetailScreen, ContainerCreateScreen, etc.
+            │   ├── images/           # ImagesScreen, ImageDetailScreen, ImagePullDialog, etc.
+            │   ├── search/           # SearchScreen, SearchFilterPanel, SearchHistoryPanel, etc.
+            │   ├── registries/       # RegistriesScreen, AddMirrorScreen, etc.
+            │   ├── qrcode/           # QrcodeScannerScreen, QrcodeCamera
+            │   ├── terminal/         # TerminalScreen, TerminalViewModel
+            │   ├── limits/           # ProcessLimitScreen
+            │   └── settings/         # SettingsScreen, SettingsViewModel
+            ├── components/           # Reusable UI components (DetailCard, StatusIndicator, etc.)
+            └── theme/                # Spacing.kt, IconSize.kt (Material Design 3)
 ```
 
 ### Package Structure (daemon module)
 
 ```
-com.github.adocker.daemon/
-├── api/
-│   ├── DockerApiServer.kt        # Main Docker-compatible API server
-│   └── routes/                   # http4k route modules (Hilt multibinding)
-│       ├── ContainerRoutes.kt    # Container API endpoints
-│       ├── ImageRoutes.kt        # Image API endpoints
-│       ├── SystemRoutes.kt       # System/info endpoints
-│       ├── VolumeRoutes.kt       # Volume API endpoints
-│       └── ...                   # Other Docker API route modules
+com.github.andock.daemon/
 ├── app/
-│   ├── AppConfig.kt              # Centralized configuration (directories, constants)
-│   ├── AppModule.kt              # Hilt module (provides DB, HTTP client, etc.)
-│   └── AppGlobals.kt             # Hilt EntryPoint for non-Hilt contexts
-├── database/
-│   ├── AppDatabase.kt            # Room database definition
-│   ├── dao/                      # DAOs (ImageDao, ContainerDao, LayerDao, MirrorDao)
-│   └── model/                    # Entities (ImageEntity, ContainerEntity, LayerEntity, MirrorEntity)
+│   ├── AppContext.kt             # Centralized app configuration (directories, constants)
+│   ├── AppInitializer.kt         # App Startup initialization
+│   └── AppModule.kt              # Hilt module (provides DB, HTTP client, etc.)
+│
 ├── containers/
-│   ├── PRootEngine.kt            # PRoot command builder and execution
-│   ├── ContainerManager.kt       # Container creation and management
-│   ├── Container.kt              # Container instance with lifecycle methods
-│   ├── ContainerState.kt         # Container state machine states
-│   ├── ContainerStateMachine.kt  # State machine for container lifecycle
+│   ├── Container.kt              # Container instance with FlowRedux state machine
+│   ├── ContainerManager.kt       # Container creation, tracking, deletion
+│   ├── ContainerState.kt         # 8 states: Created, Starting, Running, Stopping, Exited, Dead, Removing, Removed
+│   ├── ContainerStateMachine.kt  # FlowRedux state machine for container lifecycle
+│   ├── ContainerOperation.kt     # Operations: Start, Stop, Exec, Remove
 │   ├── ContainerProcess.kt       # Wrapper for container processes
-│   ├── ContainerOperation.kt     # Operations that can be performed on containers
-│   ├── ContainerName.kt          # Container name generator
-│   └── InState.kt                # State machine helper for state checks
-├── http/
-│   ├── UnixHttp4kServer.kt       # Unix domain socket HTTP server (supports FILESYSTEM & ABSTRACT)
-│   ├── HttpProcessor.kt          # HTTP/1.1 request/response processor
-│   └── UnixClientConnection.kt   # LocalSocket client wrapper
+│   ├── ContainerName.kt          # Random container name generator
+│   └── ContainerModule.kt        # Hilt module
+│
+├── database/
+│   ├── AppDatabase.kt            # Room database (version 1)
+│   ├── Converters.kt             # Type converters for Room
+│   ├── DatabaseModule.kt         # Hilt module for database dependencies
+│   ├── dao/
+│   │   ├── ImageDao.kt           # Image CRUD operations
+│   │   ├── LayerDao.kt           # Layer management with reference counting
+│   │   ├── LayerReferenceDao.kt  # Image-layer relationship management
+│   │   ├── ContainerDao.kt       # Container CRUD operations
+│   │   ├── RegistryDao.kt        # Registry mirror management
+│   │   ├── AuthTokenDao.kt       # Registry authentication tokens
+│   │   └── SearchRecordDao.kt    # Search history storage
+│   └── model/
+│       ├── ImageEntity.kt        # Image metadata with layer references
+│       ├── LayerEntity.kt        # Layer metadata (digest, size, mediaType)
+│       ├── LayerReferenceEntity.kt  # Many-to-many image-layer relationship
+│       ├── ContainerEntity.kt    # Container metadata (NO status field)
+│       ├── RegistryEntity.kt     # Registry mirror configuration
+│       ├── RegistryType.kt       # Enum: Official, BuiltinMirror, CustomMirror
+│       ├── AuthTokenEntity.kt    # Bearer tokens for registries
+│       └── SearchRecordEntity.kt # Docker Hub search history
+│
+├── engine/
+│   ├── PRootEngine.kt            # PRoot command builder and execution
+│   ├── PRootEnvironment.kt       # PRoot environment setup
+│   └── PRootVersion.kt           # PRoot version detection
+│
 ├── images/
-│   ├── ImageRepository.kt        # Image pull/delete/search
-│   ├── ImageReference.kt         # Image name parser
-│   └── PullProgress.kt           # Pull progress tracking
-├── registry/
-│   ├── DockerRegistryApi.kt      # Docker Registry V2 API client
-│   ├── RegistryRepository.kt     # Mirror management & health checks
-│   ├── MirrorHealthChecker.kt    # Background mirror health monitoring
-│   └── model/                    # Registry API models (manifests, auth, etc.)
+│   ├── ImageManager.kt           # Image repository operations (pull, delete, get)
+│   ├── ImageClient.kt            # Docker Registry API client
+│   ├── ImageReference.kt         # Image name parser (registry/repo:tag)
+│   ├── DownloadProgress.kt       # Download progress tracking
+│   ├── downloader/
+│   │   ├── ImageDownloader.kt    # Download state machine orchestrator
+│   │   ├── ImageDownloadState.kt # States: Downloading, Done, Error
+│   │   └── ImageDownloadStateMachine.kt  # FlowRedux state machine
+│   └── model/                    # Registry API models
+│       ├── AuthTokenResponse.kt
+│       ├── ImageManifestV2.kt
+│       ├── ImageConfigResponse.kt
+│       ├── LayerDescriptor.kt
+│       ├── ContainerConfig.kt
+│       └── ... (more models)
+│
+├── http/
+│   ├── UnixHttp4kServer.kt       # Unix socket HTTP server (FILESYSTEM/ABSTRACT)
+│   ├── TcpHttp4kServer.kt        # TCP HTTP server (for debugging)
+│   ├── HttpProcessor.kt          # HTTP/1.1 protocol processor
+│   ├── UnixClientConnection.kt   # LocalSocket client wrapper
+│   ├── TcpClientConnection.kt    # TCP socket client wrapper
+│   ├── ClientConnection.kt       # Connection abstraction interface
+│   ├── UnixServerConfig.kt       # Unix socket configuration
+│   └── TcpServerConfig.kt        # TCP server configuration
+│
+├── server/
+│   ├── DockerApiServer.kt        # Main Docker API server (combines all routes)
+│   ├── ApiModule.kt              # Hilt module for API routes
+│   └── routes/                   # Docker API v1.45 route modules (Hilt multibinding)
+│       ├── ContainerRoutes.kt    # /containers endpoints
+│       ├── ImageRoutes.kt        # /images endpoints
+│       ├── SystemRoutes.kt       # /info, /version, /ping endpoints
+│       ├── VolumeRoutes.kt       # /volumes endpoints
+│       ├── ExecRoutes.kt         # /exec endpoints
+│       ├── NetworkRoutes.kt      # /networks endpoints
+│       ├── ConfigRoutes.kt       # /configs endpoints
+│       ├── DistributionRoutes.kt # /distribution endpoints
+│       ├── NodeRoutes.kt         # /nodes endpoints
+│       ├── PluginRoutes.kt       # /plugins endpoints
+│       ├── SecretRoutes.kt       # /secrets endpoints
+│       ├── ServiceRoutes.kt      # /services endpoints
+│       ├── SwarmRoutes.kt        # /swarm endpoints
+│       └── TaskRoutes.kt         # /tasks endpoints
+│
+├── registries/
+│   ├── Registry.kt               # Registry instance with FlowRedux state machine
+│   ├── RegistryManager.kt        # Registry tracking and health checks
+│   ├── RegistryModule.kt         # Hilt module
+│   ├── RegistryOperation.kt      # Operations: Check, Remove
+│   ├── RegistryState.kt          # States: Healthy, Unhealthy, Checking, Removed
+│   └── RegistryStateMachine.kt   # FlowRedux state machine for health checks
+│
+├── search/
+│   ├── SearchPagingSource.kt     # Paging 3 source with URL-based pagination
+│   ├── SearchRepository.kt       # Search repository exposing PagingData
+│   ├── SearchHistory.kt          # DataStore-based search history (max 20 items)
+│   ├── SearchParameters.kt       # Search query parameters
+│   └── model/
+│       ├── SearchResponse.kt     # Docker Hub search API response
+│       └── SearchResult.kt       # Individual search result
+│
+├── io/
+│   ├── File.kt                   # Symlink handling, chmod, SHA256 calculation
+│   ├── Zip.kt                    # Tar/GZ extraction with symlink preservation
+│   └── Tailer.kt                 # File tailing for log streaming
+│
 ├── os/
-│   └── PhantomProcessManager.kt  # Shizuku integration for Android 12+
+│   ├── ProcessLimitCompat.kt     # Phantom Process Killer management (Shizuku)
+│   ├── RemoteProcess.kt          # Shizuku remote process wrapper
+│   ├── RemoteProcessBuilder.kt   # Shizuku process builder
+│   ├── RemoteProcessBuilderService.kt  # Shizuku service implementation (AIDL)
+│   ├── RemoteProcessSession.kt   # Shizuku session management
+│   ├── OsModule.kt               # Hilt module for OS utilities
+│   ├── JobProcess.kt             # Process wrapper with Job tracking
+│   ├── Process.kt                # Process execution wrapper
+│   ├── ProcessAwaiter.kt         # Process exit code awaiter
+│   └── ProcessLocator.kt         # Process PID locator
+│
+├── logging/
+│   ├── LoggingModule.kt          # Hilt module for logging
+│   ├── TimberLogger.kt           # Timber-based SLF4J logger
+│   └── TimberServiceProvider.kt  # SLF4J service provider (AutoService)
+│
 └── utils/
-    ├── File.kt                   # File extraction, symlink handling
-    └── Process.kt                # Process management utilities
+    ├── InState.kt                # State machine helper for state checks
+    └── SuspendLazy.kt            # Lazy initialization for suspend functions
+```
+
+**AIDL Files** (for Shizuku integration):
+```
+daemon/src/main/aidl/com/github/andock/daemon/os/
+├── IRemoteProcessBuilderService.aidl
+└── IRemoteProcessSession.aidl
 ```
 
 ### Data Flow
