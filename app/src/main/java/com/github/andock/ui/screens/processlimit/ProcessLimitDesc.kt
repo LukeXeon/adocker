@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
@@ -63,92 +64,96 @@ fun ProcessLimitDesc(
         ActivityResultContracts.StartActivityForResult()
     ) {}
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         // Status overview card
-        Card {
-            Column(
-                modifier = Modifier.padding(Spacing.Medium),
-                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-            ) {
-                Text(
-                    text = stringResource(R.string.phantom_status),
-                    style = MaterialTheme.typography.titleMedium
-                )
+        item {
+            Card {
+                Column(
+                    modifier = Modifier.padding(Spacing.Medium),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+                ) {
+                    Text(
+                        text = stringResource(R.string.phantom_status),
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                HorizontalDivider()
+                    HorizontalDivider()
 
-                // Shizuku status
-                StatusRow(
-                    label = "Shizuku",
-                    status = when {
-                        !stats.isAvailable -> stringResource(R.string.phantom_shizuku_not_running)
-                        !stats.hasPermission -> stringResource(R.string.phantom_permission_denied)
-                        else -> stringResource(R.string.phantom_ready)
-                    },
-                    isGood = stats.isAvailable && stats.hasPermission,
-                    icon = Icons.Default.Security
-                )
+                    // Shizuku status
+                    StatusRow(
+                        label = "Shizuku",
+                        status = when {
+                            !stats.isAvailable -> stringResource(R.string.phantom_shizuku_not_running)
+                            !stats.hasPermission -> stringResource(R.string.phantom_permission_denied)
+                            else -> stringResource(R.string.phantom_ready)
+                        },
+                        isGood = stats.isAvailable && stats.hasPermission,
+                        icon = Icons.Default.Security
+                    )
 
-                // Phantom process restriction status
-                StatusRow(
-                    label = stringResource(R.string.phantom_current_limit),
-                    status = when {
-                        stats.isUnrestricted -> stringResource(R.string.phantom_disabled)
-                        else -> stringResource(
-                            R.string.phantom_active,
-                            stats.currentLimit
-                        )
-                    },
-                    isGood = stats.isUnrestricted,
-                    icon = Icons.Default.Block
-                )
+                    // Phantom process restriction status
+                    StatusRow(
+                        label = stringResource(R.string.phantom_current_limit),
+                        status = when {
+                            stats.isUnrestricted -> stringResource(R.string.phantom_disabled)
+                            else -> stringResource(
+                                R.string.phantom_active,
+                                stats.currentLimit
+                            )
+                        },
+                        isGood = stats.isUnrestricted,
+                        icon = Icons.Default.Block
+                    )
+                }
             }
         }
         // Action buttons
         when {
             !stats.isAvailable -> {
                 // Shizuku not installed
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Spacing.Medium),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                text = stringResource(R.string.phantom_shizuku_required),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.phantom_shizuku_message),
-                            style = MaterialTheme.typography.bodyMedium
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
                         )
-                        Button(
-                            onClick = {
-                                launcher.launch(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        "https://github.com/RikkaApps/Shizuku/releases".toUri()
-                                    )
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spacing.Medium),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
-                            Icon(Icons.Default.Download, contentDescription = null)
-                            Spacer(Modifier.width(Spacing.Small))
-                            Text(stringResource(R.string.phantom_shizuku_install))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = stringResource(R.string.phantom_shizuku_required),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.phantom_shizuku_message),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(
+                                onClick = {
+                                    launcher.launch(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            "https://github.com/RikkaApps/Shizuku/releases".toUri()
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null)
+                                Spacer(Modifier.width(Spacing.Small))
+                                Text(stringResource(R.string.phantom_shizuku_install))
+                            }
                         }
                     }
                 }
@@ -156,26 +161,28 @@ fun ProcessLimitDesc(
 
             !stats.hasPermission -> {
                 // Shizuku permission needed
-                Card {
-                    Column(
-                        modifier = Modifier.padding(Spacing.Medium),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.phantom_permission_denied),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.phantom_permission_message),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Button(
-                            onClick = { viewModel.requestPermission() },
-                            modifier = Modifier.fillMaxWidth()
+                item {
+                    Card {
+                        Column(
+                            modifier = Modifier.padding(Spacing.Medium),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
-                            Icon(Icons.Default.Lock, contentDescription = null)
-                            Spacer(Modifier.width(Spacing.Small))
-                            Text(stringResource(R.string.phantom_grant_permission))
+                            Text(
+                                text = stringResource(R.string.phantom_permission_denied),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.phantom_permission_message),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(
+                                onClick = { viewModel.requestPermission() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Lock, contentDescription = null)
+                                Spacer(Modifier.width(Spacing.Small))
+                                Text(stringResource(R.string.phantom_grant_permission))
+                            }
                         }
                     }
                 }
@@ -183,44 +190,52 @@ fun ProcessLimitDesc(
 
             !stats.isUnrestricted -> {
                 // Phantom killer active - offer to disable
-                val successMessage = stringResource(R.string.phantom_restrictions_disabled)
-                val errorMessage = stringResource(R.string.message_error)
-                Card {
-                    Column(
-                        modifier = Modifier.padding(Spacing.Medium),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.phantom_restrictions_active),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.phantom_restrictions_message),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Button(
-                            onClick = {
-                                viewModel.viewModelScope.launch {
-                                    setProcessing(true)
-                                    val success = viewModel.unrestrict()
-                                    setProcessing(false)
-                                    onMessage(if (success) successMessage else errorMessage)
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !isProcessing
+                item {
+                    val successMessage = stringResource(R.string.phantom_restrictions_disabled)
+                    val errorMessage = stringResource(R.string.message_error)
+                    Card {
+                        Column(
+                            modifier = Modifier.padding(Spacing.Medium),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
-                            if (isProcessing) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(IconSize.Small),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                Icon(Icons.Default.Block, contentDescription = null)
+                            Text(
+                                text = stringResource(R.string.phantom_restrictions_active),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.phantom_restrictions_message),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(
+                                onClick = {
+                                    viewModel.viewModelScope.launch {
+                                        setProcessing(true)
+                                        val success = viewModel.unrestrict()
+                                        setProcessing(false)
+                                        onMessage(
+                                            if (success) {
+                                                successMessage
+                                            } else {
+                                                errorMessage
+                                            }
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isProcessing
+                            ) {
+                                if (isProcessing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(IconSize.Small),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Block, contentDescription = null)
+                                }
+                                Spacer(Modifier.width(Spacing.Small))
+                                Text(stringResource(R.string.phantom_disable_restrictions))
                             }
-                            Spacer(Modifier.width(Spacing.Small))
-                            Text(stringResource(R.string.phantom_disable_restrictions))
                         }
                     }
                 }
@@ -228,50 +243,52 @@ fun ProcessLimitDesc(
 
             else -> {
                 // Phantom killer disabled - success state
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Spacing.Medium),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = stringResource(R.string.phantom_restrictions_disabled),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.phantom_restrictions_disabled_message),
-                            style = MaterialTheme.typography.bodyMedium
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
-                        OutlinedButton(
-                            onClick = {
-
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !isProcessing
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(Spacing.Medium),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
-                            if (isProcessing) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(IconSize.Small),
-                                    strokeWidth = 2.dp
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
-                            } else {
-                                Icon(Icons.Default.Restore, contentDescription = null)
+                                Text(
+                                    text = stringResource(R.string.phantom_restrictions_disabled),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
                             }
-                            Spacer(Modifier.width(Spacing.Small))
-                            Text(stringResource(R.string.phantom_restore_default))
+                            Text(
+                                text = stringResource(R.string.phantom_restrictions_disabled_message),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            OutlinedButton(
+                                onClick = {
+
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isProcessing
+                            ) {
+                                if (isProcessing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(IconSize.Small),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Restore, contentDescription = null)
+                                }
+                                Spacer(Modifier.width(Spacing.Small))
+                                Text(stringResource(R.string.phantom_restore_default))
+                            }
                         }
                     }
                 }
@@ -279,87 +296,91 @@ fun ProcessLimitDesc(
         }
 
         // Help section
-        Card {
-            Column(
-                modifier = Modifier.padding(Spacing.Medium),
-                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-            ) {
-                Text(
-                    text = stringResource(R.string.phantom_how_to_use),
-                    style = MaterialTheme.typography.titleMedium
-                )
+        item {
+            Card {
+                Column(
+                    modifier = Modifier.padding(Spacing.Medium),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+                ) {
+                    Text(
+                        text = stringResource(R.string.phantom_how_to_use),
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                HorizontalDivider()
+                    HorizontalDivider()
 
-                HelpStep(
-                    number = "1",
-                    title = stringResource(R.string.phantom_step1_title),
-                    description = stringResource(R.string.phantom_step1_desc)
-                )
+                    HelpStep(
+                        number = "1",
+                        title = stringResource(R.string.phantom_step1_title),
+                        description = stringResource(R.string.phantom_step1_desc)
+                    )
 
-                HelpStep(
-                    number = "2",
-                    title = stringResource(R.string.phantom_step2_title),
-                    description = stringResource(R.string.phantom_step2_desc),
-                    code = true
-                )
+                    HelpStep(
+                        number = "2",
+                        title = stringResource(R.string.phantom_step2_title),
+                        description = stringResource(R.string.phantom_step2_desc),
+                        code = true
+                    )
 
-                HelpStep(
-                    number = "3",
-                    title = stringResource(R.string.phantom_step3_title),
-                    description = stringResource(R.string.phantom_step3_desc)
-                )
+                    HelpStep(
+                        number = "3",
+                        title = stringResource(R.string.phantom_step3_title),
+                        description = stringResource(R.string.phantom_step3_desc)
+                    )
 
-                HelpStep(
-                    number = "4",
-                    title = stringResource(R.string.phantom_step4_title),
-                    description = stringResource(R.string.phantom_step4_desc)
-                )
+                    HelpStep(
+                        number = "4",
+                        title = stringResource(R.string.phantom_step4_title),
+                        description = stringResource(R.string.phantom_step4_desc)
+                    )
+                }
             }
         }
 
         // Alternative methods card
-        Card {
-            Column(
-                modifier = Modifier.padding(Spacing.Medium),
-                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-            ) {
-                Text(
-                    text = stringResource(R.string.phantom_alternative_methods),
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                HorizontalDivider()
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        item {
+            Card {
+                Column(
+                    modifier = Modifier.padding(Spacing.Medium),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
+                ) {
                     Text(
-                        text = stringResource(R.string.phantom_manual_setting),
+                        text = stringResource(R.string.phantom_alternative_methods),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    HorizontalDivider()
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        Text(
+                            text = stringResource(R.string.phantom_manual_setting),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.phantom_manual_setting_desc),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(Modifier.height(Spacing.Small))
+                    }
+
+                    Text(
+                        text = stringResource(R.string.phantom_adb_command),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = stringResource(R.string.phantom_manual_setting_desc),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(Modifier.height(Spacing.Small))
-                }
-
-                Text(
-                    text = stringResource(R.string.phantom_adb_command),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                val adbCommand = stringResource(R.string.adb_shell_command)
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = adbCommand,
-                        modifier = Modifier.padding(Spacing.ListItemSpacing),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace
-                    )
+                    val adbCommand = stringResource(R.string.adb_shell_command)
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = adbCommand,
+                            modifier = Modifier.padding(Spacing.ListItemSpacing),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
             }
         }
