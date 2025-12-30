@@ -3,6 +3,7 @@ package com.github.andock.ui.screens.containers
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material.icons.outlined.ViewInAr
+import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
@@ -24,14 +25,8 @@ object ContainersModule {
         selectedIcon = Icons.Filled.ViewInAr,
         unselectedIcon = Icons.Outlined.ViewInAr,
         priority = 2
-    ) { navController ->
-        navController.navigate(ContainersRoute()) {
-            popUpTo(navController.graph.startDestinationId) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
+    ) {
+        ContainersRoute()
     }
 
     @Provides
@@ -45,13 +40,17 @@ object ContainersModule {
     @IntoMap
     @ClassKey(ContainerDetailRoute::class)
     fun detailScreen() = Screen {
-        ContainerDetailScreen("")
+        ContainerDetailScreen(
+            containerId = it.toRoute<ContainerDetailRoute>().containerId,
+        )
     }
 
     @Provides
     @IntoMap
     @ClassKey(ContainerCreateRoute::class)
     fun createScreen() = Screen {
-        ContainerCreateScreen("")
+        ContainerCreateScreen(
+            imageId = it.toRoute<ContainerCreateRoute>().imageId
+        )
     }
 }

@@ -35,14 +35,15 @@ import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.terminal.TerminalRoute
+import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerDetailScreen(
     containerId: String,
-    onNavigateBack: () -> Unit = {},
-    onNavigateToTerminal: (String) -> Unit = {}
 ) {
     val viewModel = hiltViewModel<ContainersViewModel>()
     val container = viewModel.containers.collectAsState().value[containerId] ?: return
@@ -50,12 +51,17 @@ fun ContainerDetailScreen(
     // Observe container state in real-time
     val containerState by container.state.collectAsState()
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
+    val navController = LocalNavController.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_container_detail)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = debounceClick {
+                            navController.popBackStack()
+                        }
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.common_back)
@@ -65,7 +71,9 @@ fun ContainerDetailScreen(
                 actions = {
                     // Terminal button (only for running containers)
                     if (containerState is ContainerState.Running) {
-                        IconButton(onClick = { onNavigateToTerminal(container.id) }) {
+                        IconButton(onClick = {
+                            navController.navigate(TerminalRoute(container.id))
+                        }) {
                             Icon(
                                 Icons.Default.Terminal,
                                 contentDescription = stringResource(R.string.action_terminal)

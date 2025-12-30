@@ -35,21 +35,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.github.andock.R
 import com.github.andock.daemon.registries.Registry
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
+import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistriesScreen(
-    navController: NavHostController = rememberNavController(),
-    onNavigateToQRCodeScanner: () -> Unit = {},
-    onNavigateToAddMirror: () -> Unit = {}
-) {
+fun RegistriesScreen() {
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val registries by viewModel.sortedList.collectAsState()
@@ -61,7 +59,7 @@ fun RegistriesScreen(
                 title = { Text(stringResource(R.string.mirror_settings_title)) },
                 navigationIcon = {
                     IconButton(
-                        onClick = {
+                        onClick = debounceClick {
                             navController.popBackStack()
                         }
                     ) {
@@ -81,7 +79,9 @@ fun RegistriesScreen(
                         )
                     }
                     IconButton(
-                        onClick = onNavigateToQRCodeScanner
+                        onClick = debounceClick {
+                            navController.navigate(QrcodeScannerRoute())
+                        },
                     ) {
                         Icon(
                             Icons.Default.QrCodeScanner,
@@ -122,7 +122,9 @@ fun RegistriesScreen(
             item {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
-                    onClick = onNavigateToAddMirror,
+                    onClick = debounceClick {
+                        navController.navigate(AddMirrorRoute())
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(

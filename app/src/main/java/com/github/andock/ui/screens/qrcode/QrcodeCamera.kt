@@ -15,6 +15,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.guava.await
+import timber.log.Timber
 
 
 @OptIn(ExperimentalGetImage::class)
@@ -38,12 +39,17 @@ fun QrcodeCamera(
     }
     if (camera != null) {
         LaunchedEffect(camera, flashEnabled) {
-            camera.cameraControl.enableTorch(flashEnabled).await()
+            camera.cameraControl.enableTorch(flashEnabled).runCatching {
+                await()
+            }.onFailure {
+                Timber.e(it)
+            }
         }
     }
     AndroidView(
         factory = ::PreviewView,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) { view ->
         setPreviewView(view)
     }

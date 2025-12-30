@@ -1,6 +1,5 @@
 package com.github.andock.ui.screens.limits
 
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.os.ProcessLimitCompat
@@ -21,31 +20,20 @@ class ProcessLimitedViewModel @Inject constructor(
     private val _stats = MutableStateFlow(ProcessLimitStats())
     val stats = _stats.asStateFlow()
     private suspend fun refresh() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            _stats.value = ProcessLimitStats(
-                isAvailable = remoteProcessBuilder.isAvailable,
-                hasPermission = remoteProcessBuilder.hasPermission,
-                isUnrestricted = processLimitCompat.isUnrestricted(),
-                currentLimit = processLimitCompat.getMaxCount()
-            )
-        }
+        _stats.value = ProcessLimitStats(
+            isAvailable = remoteProcessBuilder.isAvailable,
+            hasPermission = remoteProcessBuilder.hasPermission,
+            isUnrestricted = processLimitCompat.isUnrestricted(),
+            currentLimit = processLimitCompat.getMaxCount()
+        )
     }
 
     init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            viewModelScope.launch {
-                while (isActive) {
-                    refresh()
-                    delay(1000)
-                }
+        viewModelScope.launch {
+            while (isActive) {
+                refresh()
+                delay(1000)
             }
-        } else {
-            _stats.value = ProcessLimitStats(
-                isAvailable = false,
-                hasPermission = false,
-                isUnrestricted = true,
-                currentLimit = 999999
-            )
         }
     }
 

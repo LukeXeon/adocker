@@ -45,13 +45,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrcodeScannerScreen(
     onBarcodeScanned: (String) -> Unit = {},
-    onNavigateBack: () -> Unit = {},
 ) {
+    val navController = LocalNavController.current
     val context = LocalContext.current
     val (hasCameraPermission, setHasCameraPermission) = remember {
         mutableStateOf(
@@ -60,6 +62,9 @@ fun QrcodeScannerScreen(
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         )
+    }
+    val onNavigateBack = debounceClick {
+        navController.popBackStack()
     }
     val (flashEnabled, setFlashEnabled) = remember { mutableStateOf(false) }
     val (scannedData, setScannedData) = remember { mutableStateOf<String?>(null) }
@@ -79,7 +84,9 @@ fun QrcodeScannerScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.qr_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)

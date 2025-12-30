@@ -16,19 +16,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.github.andock.R
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProcessLimitScreen(
-    onNavigateBack: () -> Unit = {},
-) {
+fun ProcessLimitScreen() {
+    val navController = LocalNavController.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.phantom_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = debounceClick {
+                            navController.popBackStack()
+                        }
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)

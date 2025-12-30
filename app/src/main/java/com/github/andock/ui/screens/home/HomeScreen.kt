@@ -51,14 +51,16 @@ import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.registries.RegistriesRoute
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    onNavigateToMirrorSettings: () -> Unit = {},
-) {
+fun HomeScreen() {
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<HomeViewModel>()
     val totalImages by viewModel.totalImages.collectAsState(0)
     val totalContainers by viewModel.totalContainers.collectAsState(0)
@@ -159,13 +161,13 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
-                    StatCard(
+                    HomeStatCard(
                         title = stringResource(R.string.home_images_count),
                         value = "$totalImages",
                         icon = Icons.Default.Layers,
                         modifier = Modifier.weight(1f)
                     )
-                    StatCard(
+                    HomeStatCard(
                         title = stringResource(R.string.home_containers_count),
                         value = "$totalContainers",
                         icon = Icons.Default.ViewInAr,
@@ -179,13 +181,13 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
-                    StatCard(
+                    HomeStatCard(
                         title = stringResource(R.string.home_running_count),
                         value = "$runningContainers",
                         icon = Icons.Default.PlayCircle,
                         modifier = Modifier.weight(1f)
                     )
-                    StatCard(
+                    HomeStatCard(
                         title = stringResource(R.string.home_stopped_count),
                         value = "$stoppedContainers",
                         icon = Icons.Default.StopCircle,
@@ -209,18 +211,20 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                 ) {
-                    QuickActionCard(
+                    HomeQuickActionCard(
                         title = stringResource(R.string.home_pull_image),
                         description = stringResource(R.string.home_pull_image_desc),
                         icon = Icons.Default.CloudDownload,
                         onClick = { setPullDialog(true) },
                         modifier = Modifier.weight(1f)
                     )
-                    QuickActionCard(
+                    HomeQuickActionCard(
                         title = stringResource(R.string.home_mirror_settings),
                         description = stringResource(R.string.home_mirror_settings_desc),
                         icon = Icons.Default.Public,
-                        onClick = onNavigateToMirrorSettings,
+                        onClick = debounceClick {
+                            navController.navigate(RegistriesRoute())
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }

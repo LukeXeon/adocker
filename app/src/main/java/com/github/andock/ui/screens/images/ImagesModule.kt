@@ -3,6 +3,7 @@ package com.github.andock.ui.screens.images
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.outlined.Layers
+import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
@@ -24,14 +25,8 @@ object ImagesModule {
         selectedIcon = Icons.Filled.Layers,
         unselectedIcon = Icons.Outlined.Layers,
         priority = 3,
-    ) { navController ->
-        navController.navigate(ImagesRoute()) {
-            popUpTo(navController.graph.startDestinationId) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
+    ) {
+        ImagesRoute()
     }
 
     @Provides
@@ -45,6 +40,6 @@ object ImagesModule {
     @IntoMap
     @ClassKey(ImageDetailRoute::class)
     fun detailScreen() = Screen {
-        ImageDetailScreen("")
+        ImageDetailScreen(it.toRoute<ImageDetailRoute>().imageId)
     }
 }

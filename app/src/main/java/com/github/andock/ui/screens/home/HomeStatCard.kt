@@ -31,7 +31,7 @@ import com.github.andock.ui.theme.Spacing
  * @param modifier 修饰符
  */
 @Composable
-fun StatCard(
+fun HomeStatCard(
     title: String,
     value: String,
     icon: ImageVector,

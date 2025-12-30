@@ -4,12 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import com.github.andock.R
-import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.Screen
-import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.MainBottomTab
-import com.github.andock.ui.screens.registries.AddMirrorRoute
-import com.github.andock.ui.screens.registries.RegistriesRoute
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,28 +24,14 @@ object SettingsModule {
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings,
         priority = 4
-    ) { navController ->
-        navController.navigate(SettingsRoute()) {
-            popUpTo(navController.graph.startDestinationId) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
+    ) {
+        SettingsRoute()
     }
 
     @Provides
     @IntoMap
     @ClassKey(SettingsRoute::class)
     fun screen() = Screen {
-        val navController = LocalNavController.current
-        SettingsScreen(
-            onNavigateToMirrorSettings = {
-                navController.navigate(RegistriesRoute())
-            },
-            onNavigateToPhantomProcess = {
-                navController.navigate(ProcessLimitRoute())
-            }
-        )
+        SettingsScreen()
     }
 }

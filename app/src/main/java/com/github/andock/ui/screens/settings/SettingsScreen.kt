@@ -36,17 +36,19 @@ import com.github.andock.R
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.screens.limits.ProcessLimitRoute
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
+import com.github.andock.ui.screens.registries.RegistriesRoute
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    onNavigateToMirrorSettings: () -> Unit = {},
-    onNavigateToPhantomProcess: () -> Unit = {},
-) {
+fun SettingsScreen() {
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<SettingsViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val storageUsage by viewModel.storageUsage.collectAsState()
@@ -76,7 +78,9 @@ fun SettingsScreen(
                     iconTint = MaterialTheme.colorScheme.primary,
                     title = stringResource(R.string.settings_registry_mirror),
                     subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
-                    onClick = onNavigateToMirrorSettings
+                    onClick = debounceClick {
+                        navController.navigate(RegistriesRoute())
+                    }
                 )
             }
 
@@ -87,7 +91,9 @@ fun SettingsScreen(
                     iconTint = MaterialTheme.colorScheme.error,
                     title = stringResource(R.string.settings_phantom_process),
                     subtitle = stringResource(R.string.settings_phantom_process_subtitle),
-                    onClick = onNavigateToPhantomProcess,
+                    onClick = debounceClick {
+                        navController.navigate(ProcessLimitRoute())
+                    },
                     isWarning = true
                 )
                 SettingsItem(

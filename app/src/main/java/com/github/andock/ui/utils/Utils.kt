@@ -1,7 +1,12 @@
 package com.github.andock.ui.utils
 
+import android.os.SystemClock
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -49,3 +54,19 @@ fun parseEnvVars(input: String): Map<String, String> {
         }
 }
 
+
+@Composable
+fun debounceClick(debounceTime: Long = 500, onClick: () -> Unit): () -> Unit {
+    var lastClickTime by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
+    val onClick by rememberUpdatedState(onClick)
+    val debounceTime by rememberUpdatedState(debounceTime)
+    return remember(debounceTime) {
+        {
+            val currentTime = SystemClock.uptimeMillis()
+            if (currentTime - lastClickTime >= debounceTime) {
+                lastClickTime = currentTime
+                onClick()
+            }
+        }
+    }
+}

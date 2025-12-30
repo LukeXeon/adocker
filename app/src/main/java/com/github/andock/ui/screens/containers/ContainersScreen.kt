@@ -38,26 +38,25 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
 import com.github.andock.daemon.containers.Container
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.terminal.TerminalRoute
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import kotlinx.coroutines.flow.combine
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainersScreen(
-    onNavigateToTerminal: (String) -> Unit = {},
-    onNavigateToDetail: (String) -> Unit = {},
-) {
+fun ContainersScreen() {
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<ContainersViewModel>()
     val containers by viewModel.sortedList.collectAsState()
-    val containerStates = containers.map { container ->
-        container.state.collectAsState().value
-    }
-    val statesCount = remember(containers, containerStates) {
-        ContainerFilterType.entries.asSequence().map {
-            it to containers.asSequence().map { container -> container.state.value }
-                .filter(it.predicate).count()
-        }.toMap()
-    }
+    val statesCount by remember(containers) {
+        combine(containers.map { it.state }) { states ->
+            ContainerFilterType.entries.asSequence().map {
+                it to states.asSequence().filter(it.predicate).count()
+            }.toMap()
+        }
+    }.collectAsState(emptyMap())
     var filterType by remember { mutableStateOf(ContainerFilterType.All) }
     val filteredContainers by remember(filterType) {
         viewModel.stateList(filterType.predicate)
@@ -188,8 +187,16 @@ fun ContainersScreen(
                                 onStart = { viewModel.startContainer(container.id) },
                                 onStop = { viewModel.stopContainer(container.id) },
                                 onDelete = { setDeleteDialog(container) },
-                                onTerminal = { onNavigateToTerminal(container.id) },
-                                onClick = { onNavigateToDetail(container.id) }
+                                onTerminal = {
+                                    navController.navigate(
+                                        TerminalRoute(container.id)
+                                    )
+                                },
+                                onClick = {
+                                    navController.navigate(
+                                        ContainerDetailRoute(container.id)
+                                    )
+                                }
                             )
                         }
                     }

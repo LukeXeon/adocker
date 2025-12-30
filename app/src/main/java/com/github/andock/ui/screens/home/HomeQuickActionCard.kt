@@ -21,7 +21,7 @@ import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 
 @Composable
-fun QuickActionCard(
+fun HomeQuickActionCard(
     title: String,
     description: String,
     icon: ImageVector,

@@ -40,18 +40,20 @@ import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.screens.containers.ContainerCreateRoute
+import com.github.andock.ui.screens.containers.ContainerDetailRoute
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImagesScreen(
-    onNavigateToCreate: (String) -> Unit = {},
-    onNavigateToDetail: (String) -> Unit = {},
-    onNavigateToQRScanner: () -> Unit = {},
-) {
+fun ImagesScreen() {
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
@@ -63,7 +65,11 @@ fun ImagesScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.images_title)) },
                 actions = {
-                    IconButton(onClick = onNavigateToQRScanner) {
+                    IconButton(
+                        onClick = debounceClick {
+                            navController.navigate(QrcodeScannerRoute())
+                        }
+                    ) {
                         Icon(
                             Icons.Default.QrCodeScanner,
                             contentDescription = stringResource(R.string.images_scan_qr)
@@ -145,9 +151,13 @@ fun ImagesScreen(
                     items(images, key = { it.id }) { image ->
                         ImageCard(
                             image = image,
-                            onRun = { onNavigateToCreate(image.id) },
-                            onDelete = { setDeleteDialog(image) },
-                            onClick = { onNavigateToDetail(image.id) }
+                            onRun = debounceClick {
+                                navController.navigate(ContainerCreateRoute(image.id))
+                            },
+                            onDelete = debounceClick { setDeleteDialog(image) },
+                            onClick = debounceClick {
+                                navController.navigate(ContainerDetailRoute(image.id))
+                            }
                         )
                     }
                 }

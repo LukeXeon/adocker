@@ -48,16 +48,18 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
 import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.ui.screens.images.ImagesViewModel
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.parseEnvVars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerCreateScreen(
     imageId: String,
-    onNavigateBack: () -> Unit = {},
 ) {
+    val navController = LocalNavController.current
     val imagesViewModel = hiltViewModel<ImagesViewModel>()
     val containersViewModel = hiltViewModel<ContainersViewModel>()
     val images by imagesViewModel.images.collectAsState()
@@ -68,13 +70,18 @@ fun ContainerCreateScreen(
     var envVars by remember { mutableStateOf("") }
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
+    val onNavigateBack = debounceClick {
+        navController.popBackStack()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.create_container_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
