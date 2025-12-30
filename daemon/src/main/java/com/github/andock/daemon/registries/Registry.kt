@@ -19,7 +19,7 @@ class Registry @AssistedInject constructor(
     id: String,
     stateMachineFactory: RegistryStateMachine.Factory,
     parent: CoroutineScope,
-    private val registryDao: RegistryDao,
+    registryDao: RegistryDao,
 ) {
     private val scope = CoroutineScope(
         SupervisorJob(parent.coroutineContext[Job]) + Dispatchers.IO
@@ -43,12 +43,11 @@ class Registry @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    val metadata
-        get() = registryDao.getRegistryFlowById(id).stateIn(
-            scope,
-            SharingStarted.Eagerly,
-            null
-        )
+    val metadata = registryDao.getRegistryFlowById(id).stateIn(
+        scope,
+        SharingStarted.Eagerly,
+        null
+    )
 
     suspend fun check() {
         stateMachine.dispatch(RegistryOperation.Check)

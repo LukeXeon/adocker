@@ -24,7 +24,7 @@ class Container @AssistedInject constructor(
     initialState: ContainerState,
     stateMachineFactory: ContainerStateMachine.Factory,
     parent: CoroutineScope,
-    private val containerDao: ContainerDao,
+    containerDao: ContainerDao,
 ) {
     init {
         require(initialState is ContainerState.Created || initialState is ContainerState.Exited)
@@ -41,12 +41,11 @@ class Container @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    val metadata
-        get() = containerDao.getContainerFlowById(id).stateIn(
-            scope,
-            SharingStarted.Eagerly,
-            null
-        )
+    val metadata = containerDao.getContainerFlowById(id).stateIn(
+        scope,
+        SharingStarted.Eagerly,
+        null
+    )
 
     init {
         scope.launch {
@@ -80,7 +79,6 @@ class Container @AssistedInject constructor(
             Result.failure(e)
         }
     }
-
 
 
     suspend fun start() {

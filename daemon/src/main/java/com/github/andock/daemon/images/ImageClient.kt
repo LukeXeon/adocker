@@ -1,14 +1,14 @@
 package com.github.andock.daemon.images
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.images.model.AuthTokenResponse
-import com.github.andock.daemon.images.model.ImageConfigResponse
-import com.github.andock.daemon.images.model.ImageManifestV2
-import com.github.andock.daemon.images.model.ManifestListResponse
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.database.model.LayerEntity
+import com.github.andock.daemon.images.model.AuthTokenResponse
+import com.github.andock.daemon.images.model.ImageConfigResponse
+import com.github.andock.daemon.images.model.ImageManifestV2
+import com.github.andock.daemon.images.model.ManifestListResponse
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -124,7 +124,7 @@ class ImageClient @Inject constructor(
      * For Docker Hub, automatically selects best mirror
      * For other registries, returns the original URL
      */
-    private fun getRegistryUrl(originalRegistry: String): String {
+    private fun getBestServerUrl(originalRegistry: String): String {
         return when {
             // Docker Hub - use best available mirror
             originalRegistry == "registry-1.docker.io"
@@ -150,7 +150,7 @@ class ImageClient @Inject constructor(
         imageRef: ImageReference,
         digest: String
     ): Result<ImageManifestV2> = runCatching {
-        val registryUrl = getRegistryUrl(imageRef.registry)
+        val registryUrl = getBestServerUrl(imageRef.registry)
         val authToken = authenticate(
             imageRef.repository,
             registryUrl
@@ -175,7 +175,7 @@ class ImageClient @Inject constructor(
     suspend fun getManifest(
         imageRef: ImageReference
     ): Result<ImageManifestV2> = runCatching {
-        val registryUrl = getRegistryUrl(imageRef.registry)
+        val registryUrl = getBestServerUrl(imageRef.registry)
         val authToken = authenticate(
             imageRef.repository,
             registryUrl
@@ -234,7 +234,7 @@ class ImageClient @Inject constructor(
         imageRef: ImageReference,
         configDigest: String
     ): Result<ImageConfigResponse> = runCatching {
-        val registryUrl = getRegistryUrl(imageRef.registry)
+        val registryUrl = getBestServerUrl(imageRef.registry)
         val authToken = authenticate(
             imageRef.repository,
             registryUrl
@@ -259,7 +259,7 @@ class ImageClient @Inject constructor(
         onProgress: suspend (DownloadProgress) -> Unit = { }
     ): Result<Unit> {
         return runCatching {
-            val registryUrl = getRegistryUrl(imageRef.registry)
+            val registryUrl = getBestServerUrl(imageRef.registry)
             val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
             Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
             client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/sha256:${layer.id}") {
