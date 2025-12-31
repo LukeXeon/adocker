@@ -68,7 +68,7 @@ fun debounceClick(debounceTime: Long = 500, onClick: () -> Unit): () -> Unit {
     var lastClickTime by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     val onClick by rememberUpdatedState(onClick)
     val debounceTime by rememberUpdatedState(debounceTime)
-    return remember(debounceTime) {
+    return remember {
         {
             val currentTime = SystemClock.uptimeMillis()
             if (currentTime - lastClickTime >= debounceTime) {
