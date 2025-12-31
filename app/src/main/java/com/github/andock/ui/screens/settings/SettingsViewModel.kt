@@ -44,10 +44,11 @@ class SettingsViewModel @Inject constructor(
             // Clear temp
             appContext.tmpDir.deleteRecursively()
             appContext.tmpDir.mkdirs()
+            loadStorageUsage()
         }
     }
 
-    suspend fun loadStorageUsage() {
+    private suspend fun loadStorageUsage() {
         _storageUsage.value = getDirectorySize(appContext.baseDir)
     }
 

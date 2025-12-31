@@ -26,7 +26,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,9 +55,6 @@ fun SettingsScreen() {
     val snackbarHostState = LocalSnackbarHostState.current
     val storageUsage by viewModel.storageUsage.collectAsState()
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        viewModel.loadStorageUsage()
-    }
     val prootVersion by viewModel.prootVersion.collectAsState()
     val (isShowClearDataDialog, setShowDataDialogState) = remember { mutableStateOf(false) }
     Scaffold(
@@ -173,13 +169,11 @@ fun SettingsScreen() {
                     } finally {
                         setLoading(false)
                     }
+                    snackbarHostState.showSnackbar(clearSuccessMessage)
                 }
             },
             onDismissRequest = {
                 setShowDataDialogState(false)
-                viewModel.viewModelScope.launch {
-                    snackbarHostState.showSnackbar(clearSuccessMessage)
-                }
             }
         )
     }
