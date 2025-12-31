@@ -70,7 +70,7 @@ fun ImagesScreen() {
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     if (lifecycleOwner is NavBackStackEntry) {
-        val scannedData = lifecycleOwner.savedStateHandle[ScannedData]
+        val scannedData = lifecycleOwner.savedStateHandle[ScannedData].collectAsState()
         LaunchedEffect(scannedData) {
 
         }

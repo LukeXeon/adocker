@@ -63,7 +63,7 @@ fun RegistriesScreen() {
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
     if (lifecycleOwner is NavBackStackEntry) {
-        val scannedData = lifecycleOwner.savedStateHandle[ScannedData]
+        val scannedData = lifecycleOwner.savedStateHandle[ScannedData].collectAsState()
         LaunchedEffect(scannedData) {
 
         }

@@ -54,8 +54,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.andock.R
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
+import com.github.andock.ui.utils.get
 import com.github.andock.ui.utils.savedStateHandleKey
-import com.github.andock.ui.utils.set
 
 val ScannedData by savedStateHandleKey<String?>(null)
 
@@ -75,6 +75,10 @@ fun QrcodeScannerScreen() {
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
+    val prevScannedData = navController
+        .previousBackStackEntry
+        ?.savedStateHandle
+        ?.get(ScannedData)
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
@@ -309,10 +313,7 @@ fun QrcodeScannerScreen() {
             scannedData = scannedData,
             onConfirm = {
                 setScannedData(null)
-                val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
-                if (savedStateHandle != null) {
-                    savedStateHandle[ScannedData] = it
-                }
+                prevScannedData?.value = it
                 onNavigateBack()
             },
             onDismissRequest = {

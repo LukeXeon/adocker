@@ -2,8 +2,6 @@ package com.github.andock.ui.utils
 
 import android.os.SystemClock
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -14,12 +12,15 @@ import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Composable
 fun formatDate(timestamp: Long): String {
@@ -81,18 +82,20 @@ fun debounceClick(debounceTime: Long = 500, onClick: () -> Unit): () -> Unit {
 
 typealias SavedStateHandleKey<T> = Pair<String, T>
 
+@OptIn(ExperimentalUuidApi::class)
 fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateHandleKey<T>> {
     return object : ReadOnlyProperty<Any?, SavedStateHandleKey<T>> {
         @Volatile
         private var value: SavedStateHandleKey<T>? = null
 
         override fun getValue(thisRef: Any?, property: KProperty<*>): SavedStateHandleKey<T> {
+            hashCode()
             val v = value
             if (v == null) {
                 synchronized(this) {
                     var v2 = value
                     if (v2 == null) {
-                        v2 = property.name to initialValue
+                        v2 = "${property.name}@${Uuid.random()}" to initialValue
                         value = v2
                     }
                     return v2
@@ -104,11 +107,6 @@ fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateH
     }
 }
 
-@Composable
-operator fun <T> SavedStateHandle.get(key: SavedStateHandleKey<T>): State<T> {
-    return getStateFlow(key.first, key.second).collectAsState()
-}
-
-operator fun <T> SavedStateHandle.set(key: SavedStateHandleKey<T>, value: T) {
-    return set(key.first, value)
+operator fun <T> SavedStateHandle.get(key: SavedStateHandleKey<T>): MutableStateFlow<T> {
+    return getMutableStateFlow(key.first, key.second)
 }
