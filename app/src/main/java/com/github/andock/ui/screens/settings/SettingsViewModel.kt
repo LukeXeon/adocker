@@ -1,7 +1,6 @@
 package com.github.andock.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.io.getDirectorySize
@@ -9,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,13 +20,7 @@ class SettingsViewModel @Inject constructor(
     val prootVersion
         get() = prootEngine.version
 
-    init {
-        viewModelScope.launch {
-            loadStorageUsage()
-        }
-    }
-
-    private suspend fun loadStorageUsage() {
+    suspend fun loadStorageUsage() {
         _storageUsage.value = getDirectorySize(appContext.baseDir)
     }
 

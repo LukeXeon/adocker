@@ -30,12 +30,16 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.github.andock.R
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.io.formatFileSize
@@ -49,6 +53,7 @@ import com.github.andock.ui.utils.debounceClick
 @Composable
 fun SettingsScreen() {
     val navController = LocalNavController.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = hiltViewModel<SettingsViewModel>()
     val storageUsage by viewModel.storageUsage.collectAsState()
     val prootVersion by viewModel.prootVersion.collectAsState()
@@ -56,6 +61,11 @@ fun SettingsScreen() {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
+    LaunchedEffect(Unit) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.loadStorageUsage()
+        }
+    }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
