@@ -6,7 +6,7 @@ import com.github.andock.daemon.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -114,7 +114,7 @@ class ProcessLimitCompat @Inject constructor(
             Timber.e(e, "Failed to create process")
             throw RuntimeException("Failed to execute command: ${e.message}", e)
         }
-        val (exitCode, outputs) = coroutineScope {
+        val (exitCode, outputs) = supervisorScope {
             val jobs = arrayOf(process.stdout, process.stderr).map { out ->
                 async {
                     out.bufferedReader().use { reader ->
