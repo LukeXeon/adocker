@@ -72,14 +72,6 @@ fun createHardLink(newPath: File, existingPath: File) {
 }
 
 /**
- * Get directory size
- */
-suspend fun getDirectorySize(dir: File): Long = withContext(Dispatchers.IO) {
-    if (!dir.exists()) return@withContext 0L
-    dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-}
-
-/**
  * Copy directory recursively
  */
 suspend fun copyDirectory(src: File, dest: File): Result<Unit> = withContext(Dispatchers.IO) {
