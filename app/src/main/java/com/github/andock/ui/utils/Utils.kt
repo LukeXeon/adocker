@@ -89,7 +89,6 @@ fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateH
         private var value: SavedStateHandleKey<T>? = null
 
         override fun getValue(thisRef: Any?, property: KProperty<*>): SavedStateHandleKey<T> {
-            hashCode()
             val v = value
             if (v == null) {
                 synchronized(this) {
