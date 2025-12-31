@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.os.ProcessLimitCompat
 import com.github.andock.daemon.os.RemoteProcessBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,12 +29,11 @@ class ProcessLimitedViewModel @Inject constructor(
         )
     }
 
-    init {
-        viewModelScope.launch {
-            while (isActive) {
-                refresh()
-                delay(1000)
-            }
+    suspend fun scheduleRefresh() {
+        val context = currentCoroutineContext()
+        while (context.isActive) {
+            refresh()
+            delay(1000)
         }
     }
 

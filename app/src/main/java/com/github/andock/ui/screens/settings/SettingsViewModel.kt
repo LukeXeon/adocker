@@ -11,9 +11,11 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.engine.PRootEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -29,19 +31,22 @@ class SettingsViewModel @Inject constructor(
     val prootVersion
         get() = prootEngine.version
 
-    suspend fun loadStorageUsage() {
+    suspend fun scheduleRefresh() {
         val storageStatsManager = application.getSystemService<StorageStatsManager>() ?: return
         val storageManager = application.getSystemService<StorageManager>() ?: return
+        val storageVolume = storageManager.primaryStorageVolume
+        val uuid = storageVolume.uuid?.let { UUID.fromString(it) }
+            ?: StorageManager.UUID_DEFAULT
         withContext(Dispatchers.IO) {
-            val storageVolume = storageManager.primaryStorageVolume
-            val uuid = storageVolume.uuid?.let { UUID.fromString(it) }
-                ?: StorageManager.UUID_DEFAULT
-            val storageStats = storageStatsManager.queryStatsForPackage(
-                uuid,
-                application.packageName,
-                UserHandle.getUserHandleForUid(Process.myUid())
-            )
-            _storageUsage.value = storageStats.dataBytes
+            while (isActive) {
+                val storageStats = storageStatsManager.queryStatsForPackage(
+                    uuid,
+                    application.packageName,
+                    UserHandle.getUserHandleForUid(Process.myUid())
+                )
+                _storageUsage.value = storageStats.dataBytes
+                delay(1000)
+            }
         }
     }
 

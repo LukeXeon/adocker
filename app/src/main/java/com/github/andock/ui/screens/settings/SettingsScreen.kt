@@ -64,7 +64,7 @@ fun SettingsScreen() {
     ) { }
     LaunchedEffect(Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.loadStorageUsage()
+            viewModel.scheduleRefresh()
         }
     }
     Scaffold(
