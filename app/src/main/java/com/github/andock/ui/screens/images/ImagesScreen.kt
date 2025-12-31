@@ -85,7 +85,7 @@ fun ImagesScreen() {
                 actions = {
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerRoute())
+                            navController.navigate(QrcodeScannerRoute)
                         }
                     ) {
                         Icon(

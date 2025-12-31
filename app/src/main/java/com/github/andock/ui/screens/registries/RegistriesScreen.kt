@@ -98,7 +98,7 @@ fun RegistriesScreen() {
                     }
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerRoute())
+                            navController.navigate(QrcodeScannerRoute)
                         },
                     ) {
                         Icon(
@@ -141,7 +141,7 @@ fun RegistriesScreen() {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
                     onClick = debounceClick {
-                        navController.navigate(AddMirrorRoute())
+                        navController.navigate(AddMirrorRoute)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

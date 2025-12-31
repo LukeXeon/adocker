@@ -98,7 +98,7 @@ fun SettingsScreen() {
                     title = stringResource(R.string.settings_phantom_process),
                     subtitle = stringResource(R.string.settings_phantom_process_subtitle),
                     onClick = debounceClick {
-                        navController.navigate(ProcessLimitRoute())
+                        navController.navigate(ProcessLimitRoute)
                     },
                     isWarning = true
                 )

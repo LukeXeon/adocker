@@ -46,7 +46,7 @@ fun ProcessLimitWarningDialog(
             Button(
                 onClick = {
                     onDismissRequest()
-                    navController.navigate(ProcessLimitRoute())
+                    navController.navigate(ProcessLimitRoute)
                 }
             ) {
                 Text(stringResource(R.string.phantom_warning_open_settings))
