@@ -47,7 +47,6 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.containers.ContainerCreateRoute
-import com.github.andock.ui.screens.containers.ContainerDetailRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
 import com.github.andock.ui.screens.qrcode.ScannedData
@@ -174,7 +173,7 @@ fun ImagesScreen() {
                             },
                             onDelete = debounceClick { setDeleteDialog(image) },
                             onClick = debounceClick {
-                                navController.navigate(ContainerDetailRoute(image.id))
+                                navController.navigate(ImageDetailRoute(image.id))
                             }
                         )
                     }

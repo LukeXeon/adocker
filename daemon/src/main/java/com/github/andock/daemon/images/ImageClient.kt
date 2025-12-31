@@ -211,7 +211,7 @@ class ImageClient @Inject constructor(
                     manifest.platform?.architecture == AppContext.ARCHITECTURE &&
                             manifest.platform.os == AppContext.DEFAULT_OS
                 } ?: manifestList.manifests?.firstOrNull()
-                ?: throw NoSuchElementException("No suitable manifest found for $AppContext.ARCHITECTURE")
+                ?: throw NoSuchElementException("No suitable manifest found for ${AppContext.DEFAULT_OS}:${AppContext.ARCHITECTURE}")
 
                 // Get the specific manifest
                 getManifestByDigest(
@@ -246,7 +246,11 @@ class ImageClient @Inject constructor(
         }
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
-        json.decodeFromString(response.bodyAsText())
+        val body = json.decodeFromString<ImageConfigResponse>(response.bodyAsText())
+        if (body.architecture != AppContext.ARCHITECTURE || body.os != AppContext.DEFAULT_OS) {
+            throw NoSuchElementException("No config found for ${AppContext.DEFAULT_OS}:${AppContext.ARCHITECTURE}")
+        }
+        return@runCatching body
     }
 
     /**
