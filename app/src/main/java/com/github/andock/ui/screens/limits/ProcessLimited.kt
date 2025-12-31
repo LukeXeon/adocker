@@ -316,7 +316,6 @@ fun ProcessLimited() {
                         number = "2",
                         title = stringResource(R.string.phantom_step2_title),
                         description = stringResource(R.string.phantom_step2_desc),
-                        code = true
                     )
 
                     HelpStep(
