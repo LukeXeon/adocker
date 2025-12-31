@@ -24,6 +24,7 @@
         <item>fancy</item>
     </string-array>
 
+    <string name="qq_email">imlkluo@qq.com</string>
     <string name="unrestrict_command_32">settings put global settings_enable_monitor_phantom_procs false</string>
     <string name="unrestrict_command_31"><![CDATA[device_config set_sync_disabled_for_tests persistent && device_config put activity_manager max_phantom_processes 2147483647]]></string>
     <string name="test_limit_command_32">settings get global settings_enable_monitor_phantom_procs</string>

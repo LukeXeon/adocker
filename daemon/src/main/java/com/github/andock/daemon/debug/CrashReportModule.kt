@@ -1,6 +1,7 @@
 package com.github.andock.daemon.debug
 
 import android.app.Application
+import com.github.andock.daemon.R
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
@@ -38,7 +39,7 @@ object CrashReportModule {
             }.firstOrNull() ?: throw AssertionError("No found BuildConfig class")
             reportFormat = StringFormat.JSON
             mailSender {
-                mailTo = "acra@yourserver.com"
+                mailTo = application.getString(R.string.qq_email)
             }
         }
     }
