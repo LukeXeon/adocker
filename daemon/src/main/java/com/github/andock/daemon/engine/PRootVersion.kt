@@ -23,18 +23,16 @@ class PRootVersion @Inject constructor(
     private val factory: JobProcess.Factory,
     scope: CoroutineScope
 ) {
-    private val _value = MutableStateFlow<String?>(null)
-
-    val value = _value.asStateFlow()
-
-    init {
+    val value by lazy {
+        val state = MutableStateFlow<String?>(null)
         scope.launch {
-            while (_value.value == null) {
-                _value.value = withTimeoutOrNull(1000) {
+            while (state.value == null) {
+                state.value = withTimeoutOrNull(1000) {
                     loadVersion()
                 }
             }
         }
+        state.asStateFlow()
     }
 
     private suspend fun loadVersion(): String? {

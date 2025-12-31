@@ -10,20 +10,29 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import timber.log.Timber
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object LoggingModule {
+
     @Provides
     @Singleton
-    @IntoMap
-    @StringKey("logging")
-    fun initializer(appContext: AppContext): SuspendLazy<*> = suspendLazy {
+    @Named("logging")
+    fun initializer(appContext: AppContext) = suspendLazy {
         // Check if app is debuggable
         if (appContext.isDebuggable) {
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("Timber initialized")
     }
+
+    @Provides
+    @IntoMap
+    @StringKey("logging")
+    fun initializerToMap(
+        @Named("logging")
+        task: SuspendLazy<Unit>
+    ): SuspendLazy<*> = task
 }

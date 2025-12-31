@@ -15,6 +15,7 @@ import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -44,13 +45,22 @@ object ServerModule {
 
     @Provides
     @Singleton
-    @IntoMap
-    @StringKey("server")
+    @Named("server")
     fun initializer(
-        servers: Set<@JvmSuppressWildcards Http4kServer>
-    ): SuspendLazy<*> = suspendLazy {
+        servers: Set<@JvmSuppressWildcards Http4kServer>,
+        @Named("logging")
+        task: SuspendLazy<Unit>
+    ) = suspendLazy {
+        task.getValue()
         servers.forEach {
             it.start()
         }
     }
+
+    @Provides
+    @IntoMap
+    @StringKey("server")
+    fun initializerToMap(
+        @Named("server") task: SuspendLazy<Unit>
+    ): SuspendLazy<*> = task
 }

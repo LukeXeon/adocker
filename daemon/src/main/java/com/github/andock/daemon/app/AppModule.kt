@@ -27,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -84,12 +85,33 @@ object AppModule {
 
     @Provides
     @Singleton
-    @IntoMap
-    @StringKey("app")
-    fun initializer(appContext: AppContext): SuspendLazy<*> = suspendLazy {
+    @Named("app")
+    fun initializer(
+        appContext: AppContext,
+        @Named("logging")
+        task: SuspendLazy<Unit>
+    ) = suspendLazy {
+        task.getValue()
         withContext(Dispatchers.IO) {
             appContext.logDir.deleteRecursively()
             appContext.logDir.mkdirs()
+            // Create directories on initialization
+            listOf(
+                appContext.containersDir,
+                appContext.layersDir,
+            ).forEach { dir ->
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+            }
+            Timber.d("AppConfig initialized: baseDir=${appContext.baseDir.absolutePath}")
         }
     }
+
+    @Provides
+    @IntoMap
+    @StringKey("app")
+    fun initializerToMap(
+        @Named("app") task: SuspendLazy<Unit>
+    ): SuspendLazy<*> = task
 }

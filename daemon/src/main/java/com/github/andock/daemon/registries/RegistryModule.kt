@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
+import javax.inject.Named
 import javax.inject.Singleton
 
 
@@ -16,9 +17,21 @@ import javax.inject.Singleton
 object RegistryModule {
     @Provides
     @Singleton
-    @IntoMap
-    @StringKey("registry")
-    fun initializer(registryManager: RegistryManager): SuspendLazy<*> = suspendLazy {
+    @Named("registry")
+    fun initializer(
+        registryManager: RegistryManager,
+        @Named("logging")
+        task: SuspendLazy<Unit>
+    ) = suspendLazy {
+        task.getValue()
         registryManager.checkAll()
     }
+
+    @Provides
+    @IntoMap
+    @StringKey("registry")
+    fun initializerToMap(
+        @Named("registry")
+        task: SuspendLazy<Unit>
+    ): SuspendLazy<*> = task
 }

@@ -33,11 +33,23 @@ object EngineModule {
 
     @Provides
     @Singleton
-    @IntoMap
-    @StringKey("engine")
-    fun initializer(version: PRootVersion): SuspendLazy<*> = suspendLazy {
+    @Named("engine")
+    fun initializer(
+        version: PRootVersion,
+        @Named("logging")
+        task: SuspendLazy<Unit>
+    ) = suspendLazy {
+        task.getValue()
         withTimeoutOrNull(200) {
             Timber.i(version.value.filterNotNull().first())
         }
     }
+
+    @Provides
+    @IntoMap
+    @StringKey("engine")
+    fun initializerToMap(
+        @Named("engine")
+        task: SuspendLazy<Unit>
+    ): SuspendLazy<*> = task
 }

@@ -46,16 +46,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.parseEnvVars
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +82,7 @@ fun ContainerCreateScreen() {
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
+    var isLoading by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -245,20 +249,27 @@ fun ContainerCreateScreen() {
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
                         )
-                        if (autoStart) {
-                            containersViewModel.runContainer(
-                                imageId = imageId,
-                                name = containerName.ifBlank { null },
-                                config = config
-                            )
-                        } else {
-                            containersViewModel.createContainer(
-                                imageId = imageId,
-                                name = containerName.ifBlank { null },
-                                config = config
-                            )
+                        containersViewModel.viewModelScope.launch {
+                            isLoading = false
+                            try {
+                                if (autoStart) {
+                                    containersViewModel.runContainer(
+                                        imageId = imageId,
+                                        name = containerName.ifBlank { null },
+                                        config = config
+                                    )
+                                } else {
+                                    containersViewModel.createContainer(
+                                        imageId = imageId,
+                                        name = containerName.ifBlank { null },
+                                        config = config
+                                    )
+                                }
+                            } finally {
+                                isLoading = false
+                            }
+                            onNavigateBack()
                         }
-                        onNavigateBack()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -280,5 +291,8 @@ fun ContainerCreateScreen() {
                 }
             }
         }
+    }
+    if (isLoading) {
+        LoadingDialog()
     }
 }

@@ -2,9 +2,9 @@ package com.github.andock.ui.screens.containers
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.daemon.images.model.ContainerConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,47 +42,22 @@ class ContainersViewModel @Inject constructor(
     }
 
     // Create a container
-    fun createContainer(
+    suspend fun createContainer(
         imageId: String,
         name: String?,
         config: ContainerConfig = ContainerConfig()
     ) {
-        viewModelScope.launch {
-            containerManager.createContainer(imageId, name, config)
-//                .onSuccess { container ->
-//                    container.getInfo().onSuccess { entity ->
-//                        _message.value = "Container created: ${entity.name}"
-//                    }
-//                }
-//                .onFailure { e ->
-//                    _error.value = "Create failed: ${e.message}"
-//                }
-        }
+        containerManager.createContainer(imageId, name, config)
     }
 
     // Run container (create and start)
-    fun runContainer(
+    suspend fun runContainer(
         imageId: String,
         name: String?,
         config: ContainerConfig = ContainerConfig()
     ) {
-        viewModelScope.launch {
-            containerManager.createContainer(imageId, name, config).map {
-                it.start()
-            }
-//                .onSuccess { container ->
-//                    try {
-//                        container.start()
-//                        container.getInfo().onSuccess { entity ->
-//                            _message.value = "Container running: ${entity.name}"
-//                        }
-//                    } catch (e: Exception) {
-//                        _error.value = "Run failed: ${e.message}"
-//                    }
-//                }
-//                .onFailure { e ->
-//                    _error.value = "Create failed: ${e.message}"
-//                }
+        containerManager.createContainer(imageId, name, config).map {
+            it.start()
         }
     }
 }
