@@ -32,7 +32,8 @@ class RemoteProcessBuilder @Inject constructor(
         .processNameSuffix("process_builder_service")
         .debuggable(appContext.isDebuggable)
         .version(
-            @Suppress("DEPRECATION") appContext.packageInfo.versionCode
+            @Suppress("DEPRECATION")
+            appContext.packageInfo.versionCode
         )
 
     private val connected = MutableStateFlow<IRemoteProcessBuilderService?>(null)
