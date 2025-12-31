@@ -16,6 +16,6 @@ object QrcodeModule {
     @IntoMap
     @ClassKey(QrcodeScannerRoute::class)
     fun screen() = Screen {
-        QrcodeScannerScreen(it)
+        QrcodeScannerScreen()
     }
 }

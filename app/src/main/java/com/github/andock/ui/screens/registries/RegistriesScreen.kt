@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
@@ -53,18 +54,19 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistriesScreen(
-    backStackEntry: NavBackStackEntry,
-) {
+fun RegistriesScreen() {
     val navController = LocalNavController.current
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val registries by viewModel.sortedList.collectAsState()
     val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
-    val scannedData = backStackEntry.savedStateHandle[ScannedData]
-    LaunchedEffect(scannedData) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    if (lifecycleOwner is NavBackStackEntry) {
+        val scannedData = lifecycleOwner.savedStateHandle[ScannedData]
+        LaunchedEffect(scannedData) {
 
+        }
     }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(

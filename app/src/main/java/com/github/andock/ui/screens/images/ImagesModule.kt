@@ -33,7 +33,7 @@ object ImagesModule {
     @IntoMap
     @ClassKey(ImagesRoute::class)
     fun screen() = Screen {
-        ImagesScreen(it)
+        ImagesScreen()
     }
 
     @Provides

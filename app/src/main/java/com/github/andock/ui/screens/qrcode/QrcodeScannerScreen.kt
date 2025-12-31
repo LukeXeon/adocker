@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavBackStackEntry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.andock.R
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
@@ -61,11 +61,10 @@ val ScannedData by savedStateHandleKey<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QrcodeScannerScreen(
-    backStackEntry: NavBackStackEntry,
-) {
+fun QrcodeScannerScreen() {
     val navController = LocalNavController.current
-    val isActive = backStackEntry.lifecycle.currentStateFlow
+    val isActive = LocalLifecycleOwner.current.lifecycle
+        .currentStateFlow
         .collectAsState().value == Lifecycle.State.RESUMED
     val context = LocalContext.current
     val (hasCameraPermission, setHasCameraPermission) = remember {
