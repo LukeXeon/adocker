@@ -1,7 +1,12 @@
 package com.github.andock.daemon.os
 
+import android.app.Application
 import android.os.Build
+import com.github.andock.daemon.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -13,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class ProcessLimitCompat @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
+    private val application: Application,
 ) {
     /**
      * Disable phantom process killer
@@ -26,13 +32,12 @@ class ProcessLimitCompat @Inject constructor(
             val command = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 -> {
                     // Android 12L+ (API 32+)
-                    "settings put global settings_enable_monitor_phantom_procs false"
+                    application.getString(R.string.unrestrict_command_32)
                 }
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     // Android 12 (API 31)
-                    "device_config set_sync_disabled_for_tests persistent && " +
-                            "device_config put activity_manager max_phantom_processes 2147483647"
+                    application.getString(R.string.unrestrict_command_31)
                 }
 
                 else -> {
@@ -61,16 +66,16 @@ class ProcessLimitCompat @Inject constructor(
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 -> {
                     val result = executeCommand(
-                        "settings get global settings_enable_monitor_phantom_procs"
+                        application.getString(R.string.test_limit_command_32)
                     )
                     result == "false" || result == "null"
                 }
 
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                     val result = executeCommand(
-                        "dumpsys activity settings | grep max_phantom_processes"
+                        application.getString(R.string.test_limit_command_31)
                     )
-                    result.contains("2147483647")
+                    result.contains(application.getString(R.string.max_process_value))
                 }
 
                 else -> {
@@ -88,9 +93,7 @@ class ProcessLimitCompat @Inject constructor(
             if (!remoteProcessBuilder.hasPermission) {
                 return@runCatching null
             }
-            val result = executeCommand(
-                "dumpsys activity settings | grep max_phantom_processes"
-            )
+            val result = executeCommand(application.getString(R.string.get_max_command))
             // Parse output: "max_phantom_processes=32"
             result.substringAfter("=", "").trim().toIntOrNull()
         }.getOrNull() ?: 32
@@ -111,15 +114,17 @@ class ProcessLimitCompat @Inject constructor(
             Timber.e(e, "Failed to create process")
             throw RuntimeException("Failed to execute command: ${e.message}", e)
         }
-
-        val output = process.stdout.bufferedReader().use { reader ->
-            reader.readText()
+        val (exitCode, outputs) = coroutineScope {
+            val jobs = arrayOf(process.stdout, process.stderr).map { out ->
+                async {
+                    out.bufferedReader().use { reader ->
+                        reader.readText()
+                    }
+                }
+            }
+            process.job.await() to jobs.awaitAll()
         }
-
-        val error = process.stderr.bufferedReader().use { reader ->
-            reader.readText()
-        }
-        val exitCode = process.job.await()
+        val (output, error) = outputs
         if (exitCode != 0) {
             Timber.e("Command failed with exit code %d: %s", exitCode, error)
             throw RuntimeException("Command execution failed (exit=$exitCode): $error")
