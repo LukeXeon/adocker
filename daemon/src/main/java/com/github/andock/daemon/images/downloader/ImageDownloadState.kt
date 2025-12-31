@@ -9,9 +9,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 sealed interface ImageDownloadState {
-
     val ref: ImageReference
-
     class Downloading(
         override val ref: ImageReference
     ) : ImageDownloadState {
