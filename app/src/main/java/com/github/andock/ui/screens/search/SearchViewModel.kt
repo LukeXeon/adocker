@@ -79,7 +79,11 @@ class SearchViewModel @Inject constructor(
     ) { query, isOfficialOnly ->
         SearchParameters(
             query = query,
-            isOfficial = isOfficialOnly
+            isOfficial = if (isOfficialOnly) {
+                true
+            } else {
+                null
+            }
         )
     }
 
