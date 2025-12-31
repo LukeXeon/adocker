@@ -23,9 +23,8 @@ object SearchModule {
         titleResId = R.string.nav_discover,
         selectedIcon = Icons.Filled.Explore,
         unselectedIcon = Icons.Outlined.Explore,
-        priority = 1
     ) {
-        SearchRoute()
+        SearchRoute
     }
 
     @Provides

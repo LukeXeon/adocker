@@ -9,6 +9,5 @@ data class MainBottomTab(
     val titleResId: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-    val priority: Int,
     val route: @Composable () -> Any
 )

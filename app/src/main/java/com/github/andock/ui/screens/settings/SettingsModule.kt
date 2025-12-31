@@ -23,9 +23,8 @@ object SettingsModule {
         titleResId = R.string.nav_settings,
         selectedIcon = Icons.Filled.Settings,
         unselectedIcon = Icons.Outlined.Settings,
-        priority = 4
     ) {
-        SettingsRoute()
+        SettingsRoute
     }
 
     @Provides

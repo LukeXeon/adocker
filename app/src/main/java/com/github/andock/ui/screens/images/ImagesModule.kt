@@ -23,9 +23,8 @@ object ImagesModule {
         titleResId = R.string.nav_images,
         selectedIcon = Icons.Filled.Layers,
         unselectedIcon = Icons.Outlined.Layers,
-        priority = 3,
     ) {
-        ImagesRoute()
+        ImagesRoute
     }
 
     @Provides

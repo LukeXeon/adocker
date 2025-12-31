@@ -23,9 +23,8 @@ object HomeModule {
         titleResId = R.string.nav_home,
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home,
-        priority = 0
     ) {
-        HomeRoute()
+        HomeRoute
     }
 
     @Provides

@@ -23,9 +23,8 @@ object ContainersModule {
         titleResId = R.string.nav_containers,
         selectedIcon = Icons.Filled.ViewInAr,
         unselectedIcon = Icons.Outlined.ViewInAr,
-        priority = 2
     ) {
-        ContainersRoute()
+        ContainersRoute
     }
 
     @Provides
