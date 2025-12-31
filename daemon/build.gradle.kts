@@ -108,6 +108,9 @@ dependencies {
     // ACRA
     implementation(libs.acra.mail)
 
+    // Leakcanary
+    debugImplementation(libs.leakcanary.android)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)

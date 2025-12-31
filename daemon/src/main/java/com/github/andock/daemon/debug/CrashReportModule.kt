@@ -1,4 +1,4 @@
-package com.github.andock.daemon.reporter
+package com.github.andock.daemon.debug
 
 import android.app.Application
 import com.github.andock.daemon.utils.SuspendLazy
@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ReporterModule {
+object CrashReportModule {
     @Provides
     @Singleton
     @Named("reporter")
