@@ -26,7 +26,7 @@ fun SettingsClearDataDialog(
                 tint = MaterialTheme.colorScheme.error
             )
         },
-        title = { Text(stringResource(R.string.settings_clear_data)) },
+        title = { Text(stringResource(R.string.settings_manage_data)) },
         text = { Text(stringResource(R.string.settings_clear_data_confirm)) },
         confirmButton = {
             TextButton(

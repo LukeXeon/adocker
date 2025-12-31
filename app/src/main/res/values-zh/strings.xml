@@ -135,8 +135,8 @@
     <string name="settings_architecture">架构</string>
     <string name="settings_storage">存储</string>
     <string name="settings_storage_usage">使用空间</string>
-    <string name="settings_clear_data">清除所有数据</string>
-    <string name="settings_clear_data_subtitle">清除所有镜像、容器和缓存数据</string>
+    <string name="settings_manage_data">管理数据</string>
+    <string name="settings_mange_data_subtitle">管理所有镜像、容器和缓存数据</string>
     <string name="settings_clear_data_confirm">这将删除所有镜像、容器和缓存数据。此操作无法撤销。</string>
     <string name="settings_clear_data_success">所有数据已清除</string>
     <string name="settings_about">关于</string>

@@ -26,6 +26,7 @@ fun ContainerStateChip(state: ContainerState) {
     Text(
         state::class.simpleName ?: "",
         style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.surface,
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))

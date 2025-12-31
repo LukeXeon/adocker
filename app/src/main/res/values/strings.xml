@@ -135,8 +135,8 @@
     <string name="settings_architecture">Architecture</string>
     <string name="settings_storage">Storage</string>
     <string name="settings_storage_usage">Storage Usage</string>
-    <string name="settings_clear_data">Clear All Data</string>
-    <string name="settings_clear_data_subtitle">Remove all images, containers and cache</string>
+    <string name="settings_manage_data">Manage Data</string>
+    <string name="settings_mange_data_subtitle">Manage all images, containers and cache</string>
     <string name="settings_clear_data_confirm">This will delete all images, containers, and cached data. This action cannot be undone.</string>
     <string name="settings_clear_data_success">All data cleared</string>
     <string name="settings_about">About</string>
