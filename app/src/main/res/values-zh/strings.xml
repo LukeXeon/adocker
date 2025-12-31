@@ -204,7 +204,7 @@
     <string name="phantom_step1_title">安装 Shizuku</string>
     <string name="phantom_step1_desc">从 GitHub releases 下载并安装 Shizuku</string>
     <string name="phantom_step2_title">启动 Shizuku</string>
-    <string name="phantom_step2_desc">将设备连接到电脑并运行：\nadb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+    <string name="phantom_step2_desc">根据Shizuku内的说明执行</string>
     <string name="phantom_step3_title">授予权限</string>
     <string name="phantom_step3_desc">返回此应用并点击"授予权限"</string>
     <string name="phantom_step4_title">禁用限制</string>

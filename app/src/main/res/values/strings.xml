@@ -204,7 +204,7 @@
     <string name="phantom_step1_title">Install Shizuku</string>
     <string name="phantom_step1_desc">Download and install Shizuku from GitHub releases</string>
     <string name="phantom_step2_title">Start Shizuku</string>
-    <string name="phantom_step2_desc">Connect your device to PC and run:\nadb shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh</string>
+    <string name="phantom_step2_desc">Follow the instructions within Shizuku.</string>
     <string name="phantom_step3_title">Grant Permission</string>
     <string name="phantom_step3_desc">Return to this app and tap \'Grant Permission\'</string>
     <string name="phantom_step4_title">Disable Restrictions</string>
