@@ -20,7 +20,6 @@ import java.util.Date
 import java.util.Locale
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
-import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
 fun formatDate(timestamp: Long): String {
@@ -82,7 +81,6 @@ fun debounceClick(debounceTime: Long = 500, onClick: () -> Unit): () -> Unit {
 
 typealias SavedStateHandleKey<T> = Pair<String, T>
 
-@OptIn(ExperimentalUuidApi::class)
 fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateHandleKey<T>> {
     return object : ReadOnlyProperty<Any?, SavedStateHandleKey<T>> {
         @Volatile
