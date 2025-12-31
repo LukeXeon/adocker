@@ -250,7 +250,7 @@ fun ContainerCreateScreen() {
                             hostname = hostname.ifBlank { "localhost" },
                         )
                         containersViewModel.viewModelScope.launch {
-                            isLoading = false
+                            isLoading = true
                             try {
                                 if (autoStart) {
                                     containersViewModel.runContainer(
