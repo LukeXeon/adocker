@@ -47,13 +47,7 @@ class SearchRepository @Inject constructor(
             ),
             initialKey = URLBuilder("https://hub.docker.com/v2/search/repositories/")
                 .also {
-                    it.parameters.append("query", parameters.query)
-                    it.parameters.append("page_size", parameters.pageSize.toString())
-                    it.parameters.append("page", parameters.page.toString())
-                    if (parameters.isOfficialOnly) {
-                        it.parameters.append("is_official", true.toString())
-                    }
-                    it.parameters.append("type", parameters.type)
+                    it.parameters.appendAll(parameters.toParameters())
                 }
                 .build(),
             pagingSourceFactory = factory

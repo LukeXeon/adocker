@@ -1,7 +1,8 @@
-package com.github.andock.daemon.database
+package com.github.andock.daemon.app
 
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 
@@ -13,6 +14,11 @@ import kotlinx.serialization.json.Json
  */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-interface DatabaseEntryPoint {
-    fun json(): Json
+interface AppGlobals {
+
+    val json: Json
+
+    companion object : AppGlobals by EntryPointAccessors.fromApplication(
+        AppContext.application
+    )
 }

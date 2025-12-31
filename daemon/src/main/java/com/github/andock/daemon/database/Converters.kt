@@ -1,21 +1,17 @@
 package com.github.andock.daemon.database
 
 import androidx.room.TypeConverter
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.AppGlobals
+import com.github.andock.daemon.database.model.RegistryType
 import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.images.model.ImageConfig
-import com.github.andock.daemon.database.model.RegistryType
-import dagger.hilt.android.EntryPointAccessors
 
 class Converters {
     /**
      * Get Json instance from Hilt dependency graph
      * Using EntryPoint pattern since Room TypeConverters cannot use constructor injection
      */
-    private val json = EntryPointAccessors.fromApplication(
-        AppContext.application,
-        DatabaseEntryPoint::class.java
-    ).json()
+    private val json = AppGlobals.json
 
     @TypeConverter
     fun fromStringList(value: List<String>): String {
