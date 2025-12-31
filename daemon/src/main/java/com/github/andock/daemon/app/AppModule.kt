@@ -97,11 +97,11 @@ object AppModule {
         reporter.getValue()
         withContext(Dispatchers.IO) {
             appContext.logDir.deleteRecursively()
-            appContext.logDir.mkdirs()
             // Create directories on initialization
             listOf(
                 appContext.containersDir,
                 appContext.layersDir,
+                appContext.logDir,
             ).forEach { dir ->
                 if (!dir.exists()) {
                     dir.mkdirs()
