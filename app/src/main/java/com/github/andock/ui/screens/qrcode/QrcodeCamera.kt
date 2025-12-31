@@ -42,7 +42,7 @@ fun QrcodeCamera(
             camera.cameraControl.enableTorch(flashEnabled).runCatching {
                 await()
             }.onFailure {
-                Timber.e(it)
+                Timber.d(it)
             }
         }
     }
