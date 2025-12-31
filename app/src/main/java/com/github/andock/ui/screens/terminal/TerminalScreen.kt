@@ -4,9 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Composable
-fun TerminalScreen(
-    containerId: String
-) {
+fun TerminalScreen() {
     val viewModel = hiltViewModel<TerminalViewModel>()
 
 }

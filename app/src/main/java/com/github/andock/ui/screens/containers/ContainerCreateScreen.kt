@@ -45,6 +45,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.ui.screens.images.ImagesViewModel
@@ -56,9 +59,12 @@ import com.github.andock.ui.utils.parseEnvVars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainerCreateScreen(
-    imageId: String,
-) {
+fun ContainerCreateScreen() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val route = remember {
+        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ContainerCreateRoute>()
+    } ?: return
+    val imageId = route.imageId
     val navController = LocalNavController.current
     val imagesViewModel = hiltViewModel<ImagesViewModel>()
     val containersViewModel = hiltViewModel<ContainersViewModel>()

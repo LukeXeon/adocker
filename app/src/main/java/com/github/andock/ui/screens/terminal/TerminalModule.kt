@@ -1,6 +1,5 @@
 package com.github.andock.ui.screens.terminal
 
-import androidx.navigation.toRoute
 import com.github.andock.ui.screens.Screen
 import dagger.Module
 import dagger.Provides
@@ -16,6 +15,6 @@ object TerminalModule {
     @IntoMap
     @ClassKey(TerminalRoute::class)
     fun screen() = Screen {
-        TerminalScreen(it.toRoute<TerminalRoute>().containerId)
+        TerminalScreen()
     }
 }

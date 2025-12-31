@@ -30,6 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
@@ -43,10 +46,13 @@ import com.github.andock.ui.utils.formatDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerDetailScreen(
-    containerId: String,
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val route = remember {
+        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ContainerDetailRoute>()
+    } ?: return
     val viewModel = hiltViewModel<ContainersViewModel>()
-    val container = viewModel.containers.collectAsState().value[containerId] ?: return
+    val container = viewModel.containers.collectAsState().value[route.containerId] ?: return
     val metadata = container.metadata.collectAsState().value ?: return
     // Observe container state in real-time
     val containerState by container.state.collectAsState()

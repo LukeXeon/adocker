@@ -27,12 +27,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.screens.containers.ContainerCreateRoute
+import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
 import com.github.andock.ui.utils.formatSize
 import com.github.andock.ui.utils.withAtLeast
@@ -40,22 +46,28 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageDetailScreen(
-    imageId: String,
-    onNavigateBack: () -> Unit = {},
-    onNavigateToCreate: (String) -> Unit = {}
-) {
+fun ImageDetailScreen() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val route = remember {
+        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ImageDetailRoute>()
+    } ?: return
+    val navController = LocalNavController.current
     val viewModel = hiltViewModel<ImagesViewModel>()
-    val image = viewModel.getImageById(imageId).collectAsState(null).value
+    val image = viewModel.getImageById(route.imageId).collectAsState(null).value
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
+    val onNavigateBack = debounceClick {
+        navController.popBackStack()
+    }
     if (image != null) {
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(R.string.nav_image_detail)) },
                     navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
+                        IconButton(
+                            onClick = onNavigateBack
+                        ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.common_back)
@@ -64,7 +76,9 @@ fun ImageDetailScreen(
                     },
                     actions = {
                         // Run container button
-                        IconButton(onClick = { onNavigateToCreate(image.id) }) {
+                        IconButton(onClick = debounceClick {
+                            navController.navigate(ContainerCreateRoute(image.id))
+                        }) {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 contentDescription = stringResource(R.string.images_run)

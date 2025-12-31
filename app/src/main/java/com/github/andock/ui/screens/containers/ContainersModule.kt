@@ -3,7 +3,6 @@ package com.github.andock.ui.screens.containers
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
@@ -40,17 +39,13 @@ object ContainersModule {
     @IntoMap
     @ClassKey(ContainerDetailRoute::class)
     fun detailScreen() = Screen {
-        ContainerDetailScreen(
-            containerId = it.toRoute<ContainerDetailRoute>().containerId,
-        )
+        ContainerDetailScreen()
     }
 
     @Provides
     @IntoMap
     @ClassKey(ContainerCreateRoute::class)
     fun createScreen() = Screen {
-        ContainerCreateScreen(
-            imageId = it.toRoute<ContainerCreateRoute>().imageId
-        )
+        ContainerCreateScreen()
     }
 }

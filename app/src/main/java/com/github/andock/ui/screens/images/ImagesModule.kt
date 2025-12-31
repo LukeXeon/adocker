@@ -3,7 +3,6 @@ package com.github.andock.ui.screens.images
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.outlined.Layers
-import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
@@ -40,6 +39,6 @@ object ImagesModule {
     @IntoMap
     @ClassKey(ImageDetailRoute::class)
     fun detailScreen() = Screen {
-        ImageDetailScreen(it.toRoute<ImageDetailRoute>().imageId)
+        ImageDetailScreen()
     }
 }
