@@ -5,7 +5,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
@@ -14,7 +17,6 @@ class JobProcess @AssistedInject constructor(
     @Assisted
     private val process: Process,
     scope: CoroutineScope,
-    awaiter: ProcessAwaiter,
     locator: ProcessLocator
 ) {
 
@@ -24,7 +26,11 @@ class JobProcess @AssistedInject constructor(
 
     val job = scope.async {
         try {
-            awaiter.await(process)
+            withContext(Dispatchers.IO) {
+                runInterruptible {
+                    process.waitFor()
+                }
+            }
         } catch (e: CancellationException) {
             process.destroy()
             process.waitFor()

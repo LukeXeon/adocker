@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -29,7 +28,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -176,7 +174,9 @@ fun ProcessLimited() {
                 item {
                     Card {
                         Column(
-                            modifier = Modifier.padding(Spacing.Medium),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spacing.Medium),
                             verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
                             Text(
@@ -207,7 +207,9 @@ fun ProcessLimited() {
                     val errorMessage = stringResource(R.string.message_error)
                     Card {
                         Column(
-                            modifier = Modifier.padding(Spacing.Medium),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spacing.Medium),
                             verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
                             Text(
@@ -266,6 +268,7 @@ fun ProcessLimited() {
                             verticalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
                         ) {
                             Row(
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -283,24 +286,6 @@ fun ProcessLimited() {
                                 text = stringResource(R.string.phantom_restrictions_disabled_message),
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            OutlinedButton(
-                                onClick = {
-
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = !isProcessing
-                            ) {
-                                if (isProcessing) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(IconSize.Small),
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Icon(Icons.Default.Restore, contentDescription = null)
-                                }
-                                Spacer(Modifier.width(Spacing.Small))
-                                Text(stringResource(R.string.phantom_restore_default))
-                            }
                         }
                     }
                 }

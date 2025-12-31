@@ -19,7 +19,7 @@ class RemoteProcessBuilderService : IRemoteProcessBuilderService.Stub() {
                 + Dispatchers.IO
                 + CoroutineExceptionHandler { _, e ->
             if (e !is CancellationException) {
-                Timber.e(e)
+                Timber.d(e)
             }
         }
     )
