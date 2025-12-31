@@ -37,9 +37,12 @@ object EngineModule {
     fun initializer(
         version: PRootVersion,
         @Named("logging")
-        task: SuspendLazy<Unit>
+        logging: SuspendLazy<Unit>,
+        @Named("reporter")
+        reporter: SuspendLazy<Unit>
     ) = suspendLazy {
-        task.getValue()
+        logging.getValue()
+        reporter.getValue()
         withTimeoutOrNull(200) {
             Timber.i(version.value.filterNotNull().first())
         }

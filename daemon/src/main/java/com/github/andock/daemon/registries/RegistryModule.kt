@@ -21,9 +21,12 @@ object RegistryModule {
     fun initializer(
         registryManager: RegistryManager,
         @Named("logging")
-        task: SuspendLazy<Unit>
+        logging: SuspendLazy<Unit>,
+        @Named("reporter")
+        reporter: SuspendLazy<Unit>
     ) = suspendLazy {
-        task.getValue()
+        logging.getValue()
+        reporter.getValue()
         registryManager.checkAll()
     }
 

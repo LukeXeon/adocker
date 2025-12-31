@@ -40,6 +40,7 @@ android {
 
     buildFeatures {
         aidl = true
+        buildConfig = true
     }
 
     kotlin {
@@ -103,6 +104,9 @@ dependencies {
 
     // Flow Redux
     implementation(libs.flowredux)
+
+    // ACRA
+    implementation(libs.acra.mail)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

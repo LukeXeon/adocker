@@ -89,9 +89,12 @@ object AppModule {
     fun initializer(
         appContext: AppContext,
         @Named("logging")
-        task: SuspendLazy<Unit>
+        logging: SuspendLazy<Unit>,
+        @Named("reporter")
+        reporter: SuspendLazy<Unit>
     ) = suspendLazy {
-        task.getValue()
+        logging.getValue()
+        reporter.getValue()
         withContext(Dispatchers.IO) {
             appContext.logDir.deleteRecursively()
             appContext.logDir.mkdirs()

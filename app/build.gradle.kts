@@ -49,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -136,7 +137,6 @@ dependencies {
     // Timber Logging
     implementation(libs.timber)
 
-
     // Shizuku
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
@@ -153,6 +153,7 @@ dependencies {
     // Guava
     implementation(libs.kotlinx.coroutines.guava)
 
+    // Daemon
     implementation(project(":daemon"))
 
     // Testing

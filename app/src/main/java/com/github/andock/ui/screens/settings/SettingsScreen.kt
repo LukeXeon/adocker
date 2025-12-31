@@ -3,6 +3,7 @@ package com.github.andock.ui.screens.settings
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -140,10 +141,10 @@ fun SettingsScreen() {
                     onClick = {
                         launcher.launch(
                             Intent(
-                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                 Uri.fromParts(
                                     "package",
-                                    context.applicationInfo.packageName,
+                                    context.packageName,
                                     null
                                 )
                             )

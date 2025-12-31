@@ -4,7 +4,8 @@ import android.os.Handler
 import android.os.Looper
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.measureTimeMillis
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -14,10 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AppInitializer @Inject constructor(
     private val tasks: Map<String, @JvmSuppressWildcards SuspendLazy<*>>,
-    private val scope: CoroutineScope,
 ) {
     private val called = AtomicBoolean(false)
 
@@ -38,7 +39,7 @@ class AppInitializer @Inject constructor(
         if (called.compareAndSet(false, true)) {
             val jumpOutException = JumpOutException()
             val mainHandler = Handler(mainLooper)
-            scope.launch(mainHandler.asCoroutineDispatcher().immediate) {
+            GlobalScope.launch(mainHandler.asCoroutineDispatcher().immediate) {
                 val ms = measureTimeMillis {
                     tasks.map { (key, task) ->
                         async {

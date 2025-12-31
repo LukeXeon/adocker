@@ -49,9 +49,12 @@ object ServerModule {
     fun initializer(
         servers: Set<@JvmSuppressWildcards Http4kServer>,
         @Named("logging")
-        task: SuspendLazy<Unit>
+        logging: SuspendLazy<Unit>,
+        @Named("reporter")
+        reporter: SuspendLazy<Unit>
     ) = suspendLazy {
-        task.getValue()
+        logging.getValue()
+        reporter.getValue()
         servers.forEach {
             it.start()
         }
