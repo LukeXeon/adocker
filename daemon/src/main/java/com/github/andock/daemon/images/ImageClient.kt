@@ -16,6 +16,7 @@ import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.daemon.registries.RegistryModule
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
@@ -43,6 +44,11 @@ class ImageClient @Inject constructor(
     private val factory: ImageTagPagingSource.Factory,
     private val json: Json,
 ) {
+
+    companion object {
+        private const val DOWNLOAD_TIMEOUT = 300000L
+    }
+
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
     private val serviceRegex = Regex("service=\"([^\"]+)\"")
 
@@ -274,6 +280,9 @@ class ImageClient @Inject constructor(
             client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/sha256:${layer.id}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+                timeout {
+                    requestTimeoutMillis = DOWNLOAD_TIMEOUT
                 }
             }.execute { response ->
                 Timber.d("Layer download response status: ${response.status}")

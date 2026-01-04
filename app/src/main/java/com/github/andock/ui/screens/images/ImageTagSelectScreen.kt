@@ -151,14 +151,18 @@ fun ImageTagSelectScreen() {
                         verticalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         items(tags.itemCount, { index -> tags[index] ?: "" }) {
-                            val name = tags[it]
-                            if (!name.isNullOrEmpty()) {
+                            val tagName = tags[it]
+                            if (!tagName.isNullOrEmpty()) {
                                 Card(
                                     enabled = isActive,
                                     modifier = Modifier.fillMaxWidth(),
                                     onClick = {
                                         setProgressDialog(
-                                            viewModel.pullImage(ImageReference.parse("$repository:$it"))
+                                            viewModel.pullImage(
+                                                ImageReference.parse(
+                                                    "$repository:$tagName"
+                                                )
+                                            )
                                         )
                                     },
                                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -173,7 +177,7 @@ fun ImageTagSelectScreen() {
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Text(
-                                            text = name,
+                                            text = tagName,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold
                                         )

@@ -35,7 +35,7 @@ import javax.inject.Singleton
 object AppModule {
     // Timeouts (milliseconds)
     private const val NETWORK_TIMEOUT = 30000L
-    private const val DOWNLOAD_TIMEOUT = 300000L
+    private const val SOCKET_TIMEOUT = 300000L
 
     @Provides
     @Singleton
@@ -75,7 +75,7 @@ object AppModule {
             install(HttpTimeout) {
                 requestTimeoutMillis = NETWORK_TIMEOUT
                 connectTimeoutMillis = NETWORK_TIMEOUT
-                socketTimeoutMillis = DOWNLOAD_TIMEOUT
+                socketTimeoutMillis = SOCKET_TIMEOUT
             }
             defaultRequest {
                 header(
