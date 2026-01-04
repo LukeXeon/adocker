@@ -19,87 +19,100 @@ suspend fun extractTarGz(
     zipFile: File,
     destDir: File
 ): Result<Unit> = withContext(Dispatchers.IO) {
-    if (!destDir.exists()) {
-        destDir.mkdirs()
-    }
-    GzipCompressorInputStream(zipFile.inputStream().buffered()).use { gzipIn ->
-        extractTar(TarArchiveInputStream(gzipIn), destDir)
-    }
-}
-
-/**
- * Common
- * Extract a plain tar file
- */
-private fun extractTar(
-    inputStream: TarArchiveInputStream,
-    destDir: File
-): Result<Unit> = runCatching {
-    inputStream.use { tarIn ->
-        var entry: TarArchiveEntry? = tarIn.nextEntry
-        while (entry != null) {
-            val outputFile = File(destDir, entry.name)
-
-            if (!outputFile.canonicalPath.startsWith(destDir.canonicalPath)) {
-                throw SecurityException("Path traversal detected: ${entry.name}")
-            }
-
-            when {
-                entry.isDirectory -> {
-                    outputFile.mkdirs()
+    runCatching {
+        if (!destDir.exists()) {
+            destDir.mkdirs()
+        }
+        val links = ArrayList<Array<String>>()
+        TarArchiveInputStream(
+            GzipCompressorInputStream(
+                zipFile.inputStream().buffered()
+            )
+        ).use { tarIn ->
+            var entry: TarArchiveEntry? = tarIn.nextEntry
+            while (entry != null) {
+                val outputFile = File(destDir, entry.name)
+                if (!outputFile.canonicalPath.startsWith(destDir.canonicalPath)) {
+                    throw SecurityException("Path traversal detected: ${entry.name}")
                 }
+                when {
+                    entry.isDirectory -> {
+                        outputFile.mkdirs()
+                        Timber.d("Create directory: ${outputFile.absolutePath}")
+                    }
 
-                entry.isSymbolicLink -> {
+                    entry.isSymbolicLink -> {
+                        links.add(arrayOf("s", entry.linkName, entry.name))
+                    }
+
+                    entry.isLink -> {
+                        links.add(arrayOf("h", entry.linkName, entry.name))
+                    }
+
+                    entry.isFile -> {
+                        outputFile.parentFile?.mkdirs()
+                        FileOutputStream(outputFile).use { fos ->
+                            tarIn.copyTo(fos)
+                        }
+                        outputFile.chmod(entry.mode)
+                        Timber.d("Copy file: ${outputFile.absolutePath}, mode: ${entry.mode}")
+                    }
+                }
+                entry = tarIn.nextEntry
+            }
+        }
+        for ((type, old, new) in links) {
+            when (type) {
+                "s" -> {
                     // Create symbolic link using Android Os API
-                    outputFile.parentFile?.mkdirs()
-                    val linkTarget = entry.linkName
+                    val newFile = File(destDir, new)
+                    val oldFile = File(destDir, old)
+                    newFile.mkdirs()
                     try {
                         // Remove existing file/link if present
-                        if (outputFile.exists()) {
-                            outputFile.delete()
+                        if (newFile.exists()) {
+                            newFile.delete()
                         }
-                        Os.symlink(linkTarget, outputFile.absolutePath)
-                        Timber.d("Created symlink: ${outputFile.absolutePath} -> $linkTarget")
+                        Os.symlink(oldFile.absolutePath, newFile.absolutePath)
+                        Timber.d("Created symlink: ${newFile.absolutePath} -> ${oldFile.absolutePath}")
                     } catch (e: ErrnoException) {
-                        Timber.w(e, "Failed to create symlink: ${outputFile.absolutePath} -> $linkTarget")
+                        Timber.w(
+                            e,
+                            "Failed to create symlink: ${newFile.absolutePath} -> ${oldFile.absolutePath}"
+                        )
                         throw e
                     }
                 }
 
-                entry.isLink -> {
-                    // Create hard link using Android Os API
-                    // Fallback to symlink if hard link creation fails (SELinux restriction)
-                    outputFile.parentFile?.mkdirs()
-                    val linkTarget = File(destDir, entry.linkName)
+                "h" -> {
+                    val newFile = File(destDir, new)
+                    val oldFile = File(destDir, old)
+                    newFile.mkdirs()
                     try {
                         // Remove existing file/link if present
-                        if (outputFile.exists()) {
-                            outputFile.delete()
+                        if (newFile.exists()) {
+                            newFile.delete()
                         }
-                        Os.link(linkTarget.absolutePath, outputFile.absolutePath)
-                        Timber.d("Created hard link: ${outputFile.absolutePath} -> ${linkTarget.absolutePath}")
+                        Os.link(oldFile.absolutePath, newFile.absolutePath)
+                        Timber.d("Created hardlink: ${newFile.absolutePath} -> ${oldFile.absolutePath}")
                     } catch (e: ErrnoException) {
-                        // Hard link failed (likely SELinux restriction), fallback to symlink
-                        Timber.w(e, "Hard link failed, falling back to symlink: ${outputFile.absolutePath} -> ${linkTarget.absolutePath}")
+                        Timber.w(
+                            e,
+                            "Hard link failed, falling back to symlink: ${newFile.absolutePath} -> ${oldFile.absolutePath}"
+                        )
                         try {
-                            Os.symlink(linkTarget.absolutePath, outputFile.absolutePath)
-                            Timber.d("Created symlink as fallback: ${outputFile.absolutePath} -> ${linkTarget.absolutePath}")
-                        } catch (e2: ErrnoException) {
-                            Timber.e(e2, "Failed to create symlink fallback: ${outputFile.absolutePath} -> ${linkTarget.absolutePath}")
-                            throw e2
+                            Os.symlink(oldFile.absolutePath, newFile.absolutePath)
+                            Timber.d("Created symlink as fallback: ${newFile.absolutePath} -> ${oldFile.absolutePath}")
+                        } catch (e: ErrnoException) {
+                            Timber.e(
+                                e,
+                                "Failed to create symlink fallback: ${newFile.absolutePath} -> ${oldFile.absolutePath}"
+                            )
+                            throw e
                         }
                     }
-                }
-
-                else -> {
-                    outputFile.parentFile?.mkdirs()
-                    FileOutputStream(outputFile).use { fos ->
-                        tarIn.copyTo(fos)
-                    }
-                    outputFile.chmod(entry.mode)
                 }
             }
-            entry = tarIn.nextEntry
         }
     }
 }

@@ -9,7 +9,7 @@ object AppArchitecture {
             "armeabi-v7a" -> "arm"
             "x86_64" -> "amd64"
             "x86" -> "386"
-            else -> throw AssertionError("Unsupported ABI")
+            else -> ""
         }
     }
 
