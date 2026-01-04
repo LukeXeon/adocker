@@ -70,7 +70,7 @@ class RemoteProcess(
 
     override fun toString(): String {
         try {
-            return session.toStringInternal()
+            return session.string()
         } catch (e: RemoteException) {
             throw RuntimeException(e)
         }

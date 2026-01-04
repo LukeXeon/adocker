@@ -82,7 +82,7 @@ class RemoteProcessSession(
         return process.isAlive
     }
 
-    override fun toStringInternal(): String {
+    override fun string(): String {
         return process.toString()
     }
 }
