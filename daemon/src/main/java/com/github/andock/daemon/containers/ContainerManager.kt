@@ -127,8 +127,8 @@ class ContainerManager @Inject constructor(
             if (layerFile.exists()) {
                 Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
                 extractTarGz(
-                    layerFile.absolutePath,
-                    rootfsDir.absolutePath
+                    layerFile,
+                    rootfsDir
                 ).fold(
                     {
                         Timber.d("Layer ${digest.take(16)} extracted successfully")

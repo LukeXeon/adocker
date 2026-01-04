@@ -106,13 +106,13 @@ class PRootEngine @Inject constructor(
     ): Result<Process> = runCatching {
         val command = buildCommand(container, rootfsDir, command)
         val env = buildEnvironment(container)
-        Timber.Forest.d("=== RUN IN CONTAINER ===")
-        Timber.Forest.d("Command to execute: $command")
-        Timber.Forest.d("PRoot command size: ${command.size}")
+        Timber.d("=== RUN IN CONTAINER ===")
+        Timber.d("Command to execute: $command")
+        Timber.d("PRoot command size: ${command.size}")
         command.forEachIndexed { index, arg ->
-            Timber.Forest.d("  [$index] = '$arg'")
+            Timber.d("  [$index] = '$arg'")
         }
-        Timber.Forest.d("========================")
+        Timber.d("========================")
         Process(
             command = command,
             workingDir = rootfsDir,
@@ -154,6 +154,7 @@ class PRootEngine @Inject constructor(
             } else {
                 cmd.addAll(config.cmd)
             }
+            cmd.addAll(config.cmd)
 
             return cmd.ifEmpty { listOf("/bin/sh") }
         }
