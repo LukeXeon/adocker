@@ -1,5 +1,8 @@
 package com.github.andock.daemon.images
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
@@ -9,7 +12,6 @@ import com.github.andock.daemon.images.model.AuthTokenResponse
 import com.github.andock.daemon.images.model.ImageConfigResponse
 import com.github.andock.daemon.images.model.ImageManifestV2
 import com.github.andock.daemon.images.model.ManifestListResponse
-import com.github.andock.daemon.images.model.TagsListResponse
 import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.daemon.registries.RegistryModule
 import io.ktor.client.HttpClient
@@ -24,6 +26,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.utils.io.readAvailable
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
@@ -37,6 +40,7 @@ class ImageClient @Inject constructor(
     private val registryDao: RegistryDao,
     private val registryManager: RegistryManager,
     private val authTokenDao: AuthTokenDao,
+    private val factory: ImageTagPagingSource.Factory,
     private val json: Json,
 ) {
     private val realmRegex = Regex("realm=\"([^\"]+)\"")
@@ -52,7 +56,7 @@ class ImageClient @Inject constructor(
      * 4. Request anonymous token from auth service
      * 5. Use token for subsequent requests
      */
-    private suspend fun authenticate(
+    suspend fun authenticate(
         repository: String,
         registryUrl: String
     ): Result<String> = runCatching {
@@ -147,7 +151,7 @@ class ImageClient @Inject constructor(
     /**
      * Get manifest by digest
      */
-    private suspend fun getManifestByDigest(
+    suspend fun getManifestByDigest(
         imageRef: ImageReference,
         digest: String
     ): Result<ImageManifestV2> = runCatching {
@@ -298,17 +302,15 @@ class ImageClient @Inject constructor(
         }
     }
 
-    /**
-     * Get tags for a repository
-     */
-    suspend fun getTags(repository: String): Result<Set<String>> =
-        runCatching {
-            val registry = RegistryModule.DEFAULT_REGISTRY
-            val authToken = authenticate(repository, registry).getOrThrow()
-            client.get("$registry/v2/${repository}/tags/list") {
-                if (authToken.isNotEmpty()) {
-                    header(HttpHeaders.Authorization, "Bearer $authToken")
-                }
-            }.body<TagsListResponse>().tags.toSet()
-        }
+    fun tags(repository: String): Flow<PagingData<String>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = ImageTagPagingSource.N,
+                enablePlaceholders = false,
+                initialLoadSize = ImageTagPagingSource.N,
+            ),
+            initialKey = repository to null,
+            pagingSourceFactory = factory
+        ).flow
+    }
 }
