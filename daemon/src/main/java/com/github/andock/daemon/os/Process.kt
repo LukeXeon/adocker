@@ -2,7 +2,6 @@ package com.github.andock.daemon.os
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -64,9 +63,7 @@ val Process.pid: Int
     }
 
 suspend fun Process.await(): Int {
-    return withContext(Dispatchers.IO) {
-        runInterruptible {
-            waitFor()
-        }
+    return runInterruptible(Dispatchers.IO) {
+        waitFor()
     }
 }
