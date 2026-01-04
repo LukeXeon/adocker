@@ -43,11 +43,11 @@ class ImageTagPagingSource @AssistedInject constructor(
                         if (!last.isNullOrEmpty()) {
                             parameter("last", last)
                         }
-                        parameter("n", N.toString())
-                    }.body<TagsListResponse>().tags.distinct()
+                        parameter("n", N)
+                    }.body<TagsListResponse>().tags
                 }.fold(
                     {
-                        LoadResult.Page(it, null, registry to it.lastOrNull())
+                        LoadResult.Page(it, null, repository to it.lastOrNull())
                     },
                     {
                         LoadResult.Error(it)
