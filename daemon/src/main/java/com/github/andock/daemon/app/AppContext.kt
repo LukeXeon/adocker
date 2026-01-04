@@ -3,7 +3,6 @@ package com.github.andock.daemon.app
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import android.os.Build
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,34 +40,13 @@ class AppContext @Inject constructor(
 
 
     companion object {
+        private const val DOCKER_SOCK = "docker.sock"
 
-        // Docker Registry defaults
-        const val DEFAULT_REGISTRY = "https://registry-1.docker.io"
+        private const val DIR_CONTAINERS = "containers"
 
-        const val DEFAULT_ARCHITECTURE = "arm64"
-        const val DEFAULT_OS = "linux"
+        private const val DIR_LAYERS = "layers"
 
-        // Timeouts (milliseconds)
-        const val NETWORK_TIMEOUT = 30000L
-        const val DOWNLOAD_TIMEOUT = 300000L
-
-        // Directories (relative to app's files directory)
-        const val DIR_CONTAINERS = "containers"
-        const val DIR_LAYERS = "layers"
-        const val LOG_DIR = "log"
-        const val DOCKER_SOCK = "docker.sock"
-        const val STDOUT = "stdout"
-        const val STDERR = "stderr"
-
-        // OS and architecture
-
-        val ARCHITECTURE = when (Build.SUPPORTED_ABIS.firstOrNull()) {
-            "arm64-v8a" -> "arm64"
-            "armeabi-v7a" -> "arm"
-            "x86_64" -> "amd64"
-            "x86" -> "386"
-            else -> DEFAULT_ARCHITECTURE
-        }
+        private const val LOG_DIR = "log"
 
         val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
             @SuppressLint("DiscouragedPrivateApi", "PrivateApi")

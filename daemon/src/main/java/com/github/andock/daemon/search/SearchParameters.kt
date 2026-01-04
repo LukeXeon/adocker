@@ -1,5 +1,6 @@
 package com.github.andock.daemon.search
 
+import com.github.andock.daemon.app.AppArchitecture
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -20,8 +21,15 @@ data class SearchParameters(
     val pageSize: Int,
     @SerialName("type")
     val type: String,
+    @SerialName("architecture")
+    val architecture: List<String>,
 ) {
     constructor(query: String, isOfficial: Boolean?) : this(
-        query, isOfficial, 1, 25, "image"
+        query,
+        isOfficial,
+        1,
+        25,
+        "image",
+        listOf(AppArchitecture.DEFAULT_32_BIT, AppArchitecture.DEFAULT_64_BIT)
     )
 }

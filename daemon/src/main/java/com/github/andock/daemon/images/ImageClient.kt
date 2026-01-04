@@ -1,6 +1,6 @@
 package com.github.andock.daemon.images
 
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
@@ -12,7 +12,6 @@ import com.github.andock.daemon.images.model.ManifestListResponse
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
@@ -130,7 +129,7 @@ class ImageClient @Inject constructor(
             originalRegistry == "registry-1.docker.io"
                     || originalRegistry.contains("docker.io") -> {
                 registryManager.bestServer.value?.metadata?.value?.url
-                    ?: AppContext.DEFAULT_REGISTRY
+                    ?: RegistryManager.DEFAULT_REGISTRY
             }
             // Other registries - use as-is
             originalRegistry.startsWith("http") -> {
@@ -208,10 +207,10 @@ class ImageClient @Inject constructor(
                 // It's a manifest list, find the right architecture
                 val manifestList = json.decodeFromString<ManifestListResponse>(bodyText)
                 val platformManifest = manifestList.manifests?.find { manifest ->
-                    manifest.platform?.architecture == AppContext.ARCHITECTURE &&
-                            manifest.platform.os == AppContext.DEFAULT_OS
+                    manifest.platform?.architecture == AppArchitecture.DEFAULT &&
+                            manifest.platform.os == AppArchitecture.OS
                 } ?: manifestList.manifests?.firstOrNull()
-                ?: throw NoSuchElementException("No suitable manifest found for ${AppContext.DEFAULT_OS}:${AppContext.ARCHITECTURE}")
+                ?: throw NoSuchElementException("No suitable manifest found for ${AppArchitecture.OS}:${AppArchitecture.DEFAULT}")
 
                 // Get the specific manifest
                 getManifestByDigest(
@@ -247,8 +246,8 @@ class ImageClient @Inject constructor(
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
         val body = json.decodeFromString<ImageConfigResponse>(response.bodyAsText())
-        if (body.architecture != AppContext.ARCHITECTURE || body.os != AppContext.DEFAULT_OS) {
-            throw NoSuchElementException("No config found for ${AppContext.DEFAULT_OS}:${AppContext.ARCHITECTURE}")
+        if (body.architecture != AppArchitecture.DEFAULT || body.os != AppArchitecture.OS) {
+            throw NoSuchElementException("No config found for ${AppArchitecture.OS}:${AppArchitecture.DEFAULT}")
         }
         return@runCatching body
     }
@@ -269,9 +268,6 @@ class ImageClient @Inject constructor(
             client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/sha256:${layer.id}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
-                }
-                timeout {
-                    requestTimeoutMillis = AppContext.DOWNLOAD_TIMEOUT
                 }
             }.execute { response ->
                 Timber.d("Layer download response status: ${response.status}")

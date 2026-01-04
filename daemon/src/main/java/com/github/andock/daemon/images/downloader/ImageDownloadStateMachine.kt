@@ -5,6 +5,7 @@ import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
+import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
@@ -50,7 +51,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 // Docker Hub - use best available mirror
                 originalRegistry == "registry-1.docker.io"
                         || originalRegistry.contains("docker.io") -> {
-                    AppContext.DEFAULT_REGISTRY
+                    RegistryManager.DEFAULT_REGISTRY
                 }
                 // Other registries - use as-is
                 originalRegistry.startsWith("http") -> {
@@ -202,8 +203,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 registry = getRegistryUrl(imageRef.registry),
                 repository = imageRef.repository,
                 tag = imageRef.tag,
-                architecture = configResponse.architecture ?: AppContext.ARCHITECTURE,
-                os = configResponse.os ?: AppContext.DEFAULT_OS,
+                architecture = configResponse.architecture ?: AppArchitecture.DEFAULT,
+                os = configResponse.os ?: AppArchitecture.OS,
                 size = manifest.layers.sumOf { it.size },
                 layerIds = manifest.layers.map { it.digest },
                 created = System.currentTimeMillis(),

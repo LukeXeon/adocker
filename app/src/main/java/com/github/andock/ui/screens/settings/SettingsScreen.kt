@@ -42,7 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.andock.R
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.LocalNavController
@@ -121,7 +121,7 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Default.Memory,
                     title = stringResource(R.string.settings_architecture),
-                    subtitle = AppContext.ARCHITECTURE
+                    subtitle = AppArchitecture.DEFAULT
                 )
             }
 

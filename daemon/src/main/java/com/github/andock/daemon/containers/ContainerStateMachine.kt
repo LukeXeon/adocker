@@ -34,6 +34,11 @@ class ContainerStateMachine @AssistedInject constructor(
     private val containerManager: ContainerManager,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
+    companion object {
+        private const val STDOUT = "stdout"
+        private const val STDERR = "stderr"
+    }
+
     init {
         initializeWith(reuseLastEmittedStateOnLaunch = false) { initialState }
         spec {
@@ -120,8 +125,8 @@ class ContainerStateMachine @AssistedInject constructor(
                         val stdin = mainProcess.outputStream.bufferedWriter()
                         val logDir = File(appContext.logDir, containerId)
                         logDir.mkdirs()
-                        val stdout = File(logDir, AppContext.STDOUT)
-                        val stderr = File(logDir, AppContext.STDERR)
+                        val stdout = File(logDir, STDOUT)
+                        val stderr = File(logDir, STDERR)
                         scope.launch {
                             containerDao.setContainerLastRun(
                                 containerId,

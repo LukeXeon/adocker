@@ -7,8 +7,9 @@ import com.github.andock.daemon.search.model.SearchResult
 import io.ktor.http.URLBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -54,10 +55,22 @@ class SearchRepository @Inject constructor(
             initialKey = URLBuilder("https://hub.docker.com/v2/search/repositories/")
                 .also {
                     it.parameters.apply {
-                        jsonObject.asSequence().filter { entry ->
-                            entry.value !is JsonNull
-                        }.forEach { (k, v) ->
-                            append(k, v.toString())
+                        jsonObject.asSequence().forEach { (k, v) ->
+                            when (v) {
+                                is JsonPrimitive -> {
+                                    append(k, v.toString())
+                                }
+
+                                is JsonArray -> {
+                                    appendAll(
+                                        k,
+                                        v.asSequence().map { it.toString() }.asIterable()
+                                    )
+                                }
+
+                                else -> Unit
+                            }
+
                         }
                     }
                 }
