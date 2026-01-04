@@ -40,15 +40,23 @@ class ImageTagPagingSource @AssistedInject constructor(
                     }.body<TagsListResponse>().tags
                 }.fold(
                     {
-                        LoadResult.Page(
-                            data = it,
-                            prevKey = null,
-                            nextKey = ImageTagParameters(
-                                registry = registry,
-                                repository = repository,
-                                last = it.lastOrNull()
+                        if (it.isEmpty()) {
+                            LoadResult.Page(
+                                data = emptyList(),
+                                prevKey = null,
+                                nextKey = null
                             )
-                        )
+                        } else {
+                            LoadResult.Page(
+                                data = it,
+                                prevKey = null,
+                                nextKey = ImageTagParameters(
+                                    registry = registry,
+                                    repository = repository,
+                                    last = it.lastOrNull()
+                                )
+                            )
+                        }
                     },
                     {
                         LoadResult.Error(it)
