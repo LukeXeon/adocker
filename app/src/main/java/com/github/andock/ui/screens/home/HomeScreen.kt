@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
+import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
@@ -72,7 +73,7 @@ fun HomeScreen() {
     val stoppedContainers by viewModel.stoppedContainers.collectAsState(0)
     val isShowWarning by viewModel.isShowWarning.collectAsState()
     val prootVersion by viewModel.prootVersion.collectAsState()
-    val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
+    val (showPullDialog, setPullDialog) = remember { mutableStateOf<Boolean?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
 
     Scaffold(
@@ -291,14 +292,18 @@ fun HomeScreen() {
         }
     }
     // Pull Image Dialog
-    if (showPullDialog) {
+    if (showPullDialog != null) {
         ImagePullDialog(
             onPullImage = {
-                setProgressDialog(viewModel.pullImage(it))
-                setPullDialog(false)
+                setProgressDialog(
+                    viewModel.pullImage(
+                        ImageReference.parse(it)
+                    )
+                )
+                setPullDialog(null)
             },
             onDismissRequest = {
-                setPullDialog(false)
+                setPullDialog(null)
             }
         )
     }

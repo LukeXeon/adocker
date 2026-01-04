@@ -46,7 +46,7 @@ fun AddMirrorScreen() {
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
-    val viewModel = hiltViewModel<AddMirrorViewModel>()
+    val viewModel = hiltViewModel<RegistriesViewModel>()
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("https://") }
     var token by remember { mutableStateOf("") }

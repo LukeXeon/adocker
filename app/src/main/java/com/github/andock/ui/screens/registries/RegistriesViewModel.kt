@@ -19,6 +19,15 @@ class RegistriesViewModel @Inject constructor(
         registryManager.registries.value[id]?.remove()
     }
 
+    suspend fun addCustomMirror(
+        name: String,
+        url: String,
+        token: String? = null,
+        priority: Int = 50
+    ) {
+        registryManager.addCustomMirror(name, url, token, priority)
+    }
+
     fun checkAll() {
         viewModelScope.launch {
             registryManager.checkAll()

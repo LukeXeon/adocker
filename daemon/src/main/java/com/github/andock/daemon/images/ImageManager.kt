@@ -32,8 +32,8 @@ class ImageManager @Inject constructor(
 
     fun getImageById(id: String) = imageDao.getImageFlowById(id)
 
-    fun pullImage(imageName: String): ImageDownloader {
-        return downloaderFactory.create(ImageReference.parse(imageName))
+    fun pullImage(imageName: ImageReference): ImageDownloader {
+        return downloaderFactory.create(imageName)
     }
 
     suspend fun deleteImage(id: String) {

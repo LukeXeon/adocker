@@ -6,7 +6,7 @@ import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.images.ImageManager
-import com.github.andock.daemon.images.downloader.ImageDownloader
+import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.os.ProcessLimitCompat
 import com.github.andock.ui.utils.withAtLeast
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,10 +43,7 @@ class HomeViewModel @Inject constructor(
     val prootVersion
         get() = prootEngine.version
 
-    fun pullImage(imageName: String): ImageDownloader {
-        return imageManager.pullImage(imageName)
-    }
-
+    fun pullImage(imageName: ImageReference) = imageManager.pullImage(imageName)
 
     fun dismissWarning() {
         _isShowWarning.value = false

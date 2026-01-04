@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProcessLimited() {
     val snackbarHostState = LocalSnackbarHostState.current
-    val viewModel = hiltViewModel<ProcessLimitedViewModel>()
+    val viewModel = hiltViewModel<ProcessLimitViewModel>()
     val stats by viewModel.stats.collectAsState()
     val (isProcessing, setProcessing) = remember { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(

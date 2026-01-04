@@ -44,6 +44,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
+import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.containers.ContainerCreateRoute
@@ -64,7 +65,7 @@ fun ImagesScreen() {
     val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
-    val (showPullDialog, setPullDialog) = remember { mutableStateOf(false) }
+    val (showPullDialog, setPullDialog) = remember { mutableStateOf<Boolean?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -204,14 +205,18 @@ fun ImagesScreen() {
         )
     }
     // Pull Image Dialog
-    if (showPullDialog) {
+    if (showPullDialog != null) {
         ImagePullDialog(
             onPullImage = {
-                setProgressDialog(viewModel.pullImage(it))
-                setPullDialog(false)
+                setProgressDialog(
+                    viewModel.pullImage(
+                        ImageReference.parse(it)
+                    )
+                )
+                setPullDialog(null)
             },
             onDismissRequest = {
-                setPullDialog(false)
+                setPullDialog(null)
             }
         )
     }

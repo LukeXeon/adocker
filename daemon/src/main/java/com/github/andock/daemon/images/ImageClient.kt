@@ -9,6 +9,7 @@ import com.github.andock.daemon.images.model.AuthTokenResponse
 import com.github.andock.daemon.images.model.ImageConfigResponse
 import com.github.andock.daemon.images.model.ImageManifestV2
 import com.github.andock.daemon.images.model.ManifestListResponse
+import com.github.andock.daemon.images.model.TagsListResponse
 import com.github.andock.daemon.registries.RegistryManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -295,4 +296,18 @@ class ImageClient @Inject constructor(
             Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
         }
     }
+
+    /**
+     * Get tags for a repository
+     */
+    suspend fun getTags(registry: String, repository: String): Result<Set<String>> =
+        runCatching {
+            val registry = getBestServerUrl(registry)
+            val authToken = authenticate(repository, registry).getOrThrow()
+            client.get("$registry/v2/${repository}/tags/list") {
+                if (authToken.isNotEmpty()) {
+                    header(HttpHeaders.Authorization, "Bearer $authToken")
+                }
+            }.body<TagsListResponse>().tags.toSet()
+        }
 }

@@ -50,8 +50,10 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
 import com.github.andock.daemon.images.downloader.ImageDownloader
+import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.ui.components.PaginationErrorItem
 import com.github.andock.ui.screens.images.ImageDownloadDialog
+import com.github.andock.ui.screens.images.ImageTagSelectDialog
 import com.github.andock.ui.theme.Spacing
 
 /**
@@ -73,6 +75,7 @@ fun SearchScreen() {
     val searchHistory by viewModel.history.collectAsState()
     val searchResults = viewModel.results.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
+    val (showSelectTagDialog, setSelectTagDialog) = remember { mutableStateOf<String?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
     val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
@@ -237,7 +240,7 @@ fun SearchScreen() {
                                     result = result,
                                     onPull = {
                                         result.repoName?.let { name ->
-                                            setProgressDialog(viewModel.pullImage(name))
+                                            setSelectTagDialog(name)
                                         }
                                     },
                                 )
@@ -270,6 +273,18 @@ fun SearchScreen() {
                 }
             }
         }
+    }
+    if (showSelectTagDialog != null) {
+        ImageTagSelectDialog(
+            registry = RegistryManager.DEFAULT_REGISTRY,
+            repository = showSelectTagDialog,
+            onSelected = {
+                setProgressDialog(viewModel.pullImage(it))
+            },
+            onDismissRequest = {
+                setSelectTagDialog(null)
+            }
+        )
     }
     if (showProgressDialog != null) {
         ImageDownloadDialog(

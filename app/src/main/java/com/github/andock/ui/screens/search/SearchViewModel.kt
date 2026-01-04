@@ -3,8 +3,11 @@ package com.github.andock.ui.screens.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import com.github.andock.daemon.images.ImageClient
 import com.github.andock.daemon.images.ImageManager
+import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
+import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.daemon.search.SearchHistory
 import com.github.andock.daemon.search.SearchParameters
 import com.github.andock.daemon.search.SearchRepository
@@ -67,7 +70,8 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
     private val searchHistory: SearchHistory,
-    private val imageManager: ImageManager
+    private val imageManager: ImageManager,
+    private val imageClient: ImageClient,
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
@@ -151,6 +155,5 @@ class SearchViewModel @Inject constructor(
      *
      * @param imageName Full repository name (e.g., "alpine", "nginx")
      */
-    fun pullImage(imageName: String) = imageManager.pullImage(imageName)
-
+    fun pullImage(imageName: ImageReference) = imageManager.pullImage(imageName)
 }
