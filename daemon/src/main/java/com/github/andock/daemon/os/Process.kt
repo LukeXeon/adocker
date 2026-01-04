@@ -40,11 +40,13 @@ val Process.pid: Int
                         isAccessible = true
                     }
                 }.getOrNull()
-                if (field == null) {
-                    pidField[0] = Unit
+                if (field != null) {
+                    pidField[0] = field
                     return@synchronized field
+                } else {
+                    pidField[0] = Unit
+                    return@synchronized null
                 }
-                return@synchronized null
             }
         }
         var pid = field?.runCatching {
