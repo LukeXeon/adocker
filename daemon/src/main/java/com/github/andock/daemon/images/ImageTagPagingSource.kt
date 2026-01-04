@@ -3,7 +3,6 @@ package com.github.andock.daemon.images
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andock.daemon.images.model.TagsListResponse
-import com.github.andock.daemon.registries.RegistryModule
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.client.HttpClient
@@ -19,20 +18,15 @@ import javax.inject.Singleton
 class ImageTagPagingSource @AssistedInject constructor(
     private val client: HttpClient,
     private val imageClient: ImageClient,
-) : PagingSource<Pair<String, String?>, String>() {
-
-    companion object {
-        const val N = 100
-    }
+) : PagingSource<ImageTagParameters, String>() {
 
     override fun getRefreshKey(
-        state: PagingState<Pair<String, String?>, String>
-    ): Pair<String, String?>? = null
+        state: PagingState<ImageTagParameters, String>
+    ): ImageTagParameters? = null
 
-    override suspend fun load(params: LoadParams<Pair<String, String?>>): LoadResult<Pair<String, String?>, String> {
+    override suspend fun load(params: LoadParams<ImageTagParameters>): LoadResult<ImageTagParameters, String> {
         val key = params.key ?: return LoadResult.Page(emptyList(), null, null)
-        val (repository, last) = key
-        val registry = RegistryModule.DEFAULT_REGISTRY
+        val (registry, repository, last) = key
         return withContext(Dispatchers.IO) {
             imageClient.authenticate(repository, registry)
                 .mapCatching { authToken ->
@@ -43,11 +37,18 @@ class ImageTagPagingSource @AssistedInject constructor(
                         if (!last.isNullOrEmpty()) {
                             parameter("last", last)
                         }
-                        parameter("n", N)
                     }.body<TagsListResponse>().tags
                 }.fold(
                     {
-                        LoadResult.Page(it, null, repository to it.lastOrNull())
+                        LoadResult.Page(
+                            data = it,
+                            prevKey = null,
+                            nextKey = ImageTagParameters(
+                                registry = registry,
+                                repository = repository,
+                                last = it.lastOrNull()
+                            )
+                        )
                     },
                     {
                         LoadResult.Error(it)

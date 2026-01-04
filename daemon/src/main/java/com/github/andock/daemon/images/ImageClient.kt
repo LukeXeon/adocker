@@ -314,11 +314,17 @@ class ImageClient @Inject constructor(
     fun tags(repository: String): Flow<PagingData<String>> {
         return Pager(
             config = PagingConfig(
-                pageSize = ImageTagPagingSource.N,
+                pageSize = 1000,
                 enablePlaceholders = false,
-                initialLoadSize = ImageTagPagingSource.N,
+                initialLoadSize = 1000,
             ),
-            initialKey = repository to null,
+            initialKey = ImageTagParameters(
+                registry = getBestServerUrl(
+                    RegistryModule.DEFAULT_REGISTRY
+                ),
+                repository = repository,
+                last = null
+            ),
             pagingSourceFactory = factory
         ).flow
     }
