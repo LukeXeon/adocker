@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.lang.reflect.Field
 
 
 /**
@@ -30,7 +29,7 @@ private val pidField = arrayOfNulls<Any?>(1)
 
 val Process.pid: Int
     get() {
-        val field = synchronized<Field?>(pidField) {
+        val field = synchronized(pidField) {
             var field = pidField[0]
             if (field is Unit) {
                 return@synchronized null
