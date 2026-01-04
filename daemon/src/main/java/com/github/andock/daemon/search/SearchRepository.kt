@@ -64,7 +64,7 @@ class SearchRepository @Inject constructor(
                                 is JsonArray -> {
                                     appendAll(
                                         k,
-                                        v.asSequence().map { it.toString() }.asIterable()
+                                        v.asSequence().map { v -> v.toString() }.asIterable()
                                     )
                                 }
 
