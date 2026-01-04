@@ -23,7 +23,6 @@ suspend fun extractTarGz(
         if (!destDir.exists()) {
             destDir.mkdirs()
         }
-        val links = ArrayList<Array<String>>()
         TarArchiveInputStream(
             GzipCompressorInputStream(
                 zipFile.inputStream().buffered()
@@ -41,12 +40,27 @@ suspend fun extractTarGz(
                         Timber.d("Create directory: ${outputFile.absolutePath}")
                     }
 
-                    entry.isSymbolicLink -> {
-                        links.add(arrayOf(entry.linkName, entry.name))
-                    }
-
-                    entry.isLink -> {
-                        links.add(arrayOf(entry.linkName, entry.name))
+                    entry.isSymbolicLink || entry.isLink -> {
+                        // Create symbolic link using Android Os API
+                        val newFile = File(destDir, entry.name)
+                        newFile.mkdirs()
+                        try {
+                            val newPath = newFile.toPath()
+                            // Remove existing file/link if present
+                            if (!Files.isSymbolicLink(newPath)
+                                || Files.readSymbolicLink(newPath).toString() != entry.linkName
+                            ) {
+                                Files.deleteIfExists(newFile.toPath())
+                                Files.createSymbolicLink(newPath, Path(entry.linkName))
+                                Timber.d("Created symlink: ${newFile.absolutePath} -> ${entry.linkName}")
+                            }
+                        } catch (e: Exception) {
+                            Timber.w(
+                                e,
+                                "Failed to create symlink: ${newFile.absolutePath} -> ${entry.linkName}"
+                            )
+                            throw e
+                        }
                     }
 
                     entry.isFile -> {
@@ -59,29 +73,6 @@ suspend fun extractTarGz(
                     }
                 }
                 entry = tarIn.nextEntry
-            }
-        }
-        for ((old, new) in links) {
-            // Create symbolic link using Android Os API
-            val newFile = File(destDir, new)
-            newFile.mkdirs()
-            try {
-                val newPath = newFile.toPath()
-                // Remove existing file/link if present
-                if (Files.isSymbolicLink(newPath)
-                    && Files.readSymbolicLink(newPath).toString() == old
-                ) {
-                    continue
-                }
-                Files.deleteIfExists(newFile.toPath())
-                Files.createSymbolicLink(newPath, Path(old))
-                Timber.d("Created symlink: ${newFile.absolutePath} -> $old")
-            } catch (e: Exception) {
-                Timber.w(
-                    e,
-                    "Failed to create symlink: ${newFile.absolutePath} -> $old"
-                )
-                throw e
             }
         }
     }
