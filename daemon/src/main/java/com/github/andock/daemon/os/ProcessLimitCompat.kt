@@ -115,14 +115,14 @@ class ProcessLimitCompat @Inject constructor(
             throw RuntimeException("Failed to execute command: ${e.message}", e)
         }
         val (exitCode, outputs) = supervisorScope {
-            val jobs = arrayOf(process.stdout, process.stderr).map { out ->
+            val jobs = arrayOf(process.inputStream, process.errorStream).map { out ->
                 async {
                     out.bufferedReader().use { reader ->
                         reader.readText()
                     }
                 }
             }
-            process.job.await() to jobs.awaitAll()
+            process.await() to jobs.awaitAll()
         }
         val (output, error) = outputs
         if (exitCode != 0) {

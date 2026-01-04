@@ -1,8 +1,8 @@
 package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.os.Process
+import com.github.andock.daemon.os.await
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -20,7 +20,6 @@ import javax.inject.Singleton
 class PRootVersion @Inject constructor(
     private val appContext: AppContext,
     private val prootEnv: PRootEnvironment,
-    private val factory: JobProcess.Factory,
     scope: CoroutineScope
 ) {
     val value by lazy {
@@ -54,19 +53,17 @@ class PRootVersion @Inject constructor(
                     Timber.d("  Native lib: ${file.name} (${file.length()} bytes)")
                 }
                 val env = prootEnv.values
-                val process = factory.create(
-                    Process(
-                        command = listOf(prootBinary.absolutePath, "--version"),
-                        environment = env,
-                        redirectErrorStream = false
-                    )
+                val process = Process(
+                    command = listOf(prootBinary.absolutePath, "--version"),
+                    environment = env,
+                    redirectErrorStream = false
                 )
                 try {
                     Timber.d("Running proot --version with env: $env")
                     val (code, outputs) = supervisorScope {
                         val jobs = sequenceOf(
-                            process.stdout,
-                            process.stderr
+                            process.inputStream,
+                            process.errorStream
                         ).map { stream ->
                             async(Dispatchers.IO) {
                                 stream.bufferedReader().useLines { lines ->
@@ -76,7 +73,7 @@ class PRootVersion @Inject constructor(
                                 }
                             }
                         }.toList()
-                        process.job.await() to jobs.awaitAll()
+                        process.await() to jobs.awaitAll()
                     }
                     val (stdout, stderr) = outputs
                     val available = code == 0 || stdout.contains("proot", ignoreCase = true)
@@ -92,7 +89,7 @@ class PRootVersion @Inject constructor(
                         "Failed to get PRoot version，PRoot availability check failed with exception"
                     )
                 } finally {
-                    process.job.cancel()
+                    process.destroy()
                 }
             }
         }

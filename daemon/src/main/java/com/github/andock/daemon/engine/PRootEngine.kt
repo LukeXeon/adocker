@@ -2,7 +2,6 @@ package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.images.model.ContainerConfig
-import com.github.andock.daemon.os.JobProcess
 import com.github.andock.daemon.os.Process
 import timber.log.Timber
 import java.io.File
@@ -29,7 +28,6 @@ class PRootEngine @Inject constructor(
     private val appContext: AppContext,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
-    private val factory: JobProcess.Factory,
     private val prootVersion: PRootVersion,
     private val prootEnv: PRootEnvironment,
 ) {
@@ -129,19 +127,16 @@ class PRootEngine @Inject constructor(
         containerId: String,
         command: List<String>? = null,
         config: ContainerConfig = ContainerConfig(),
-    ): Result<JobProcess> {
+    ): Result<Process> {
         val rootfsDir = File(appContext.containersDir, containerId)
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }
-        val process = startProcess(
+        return startProcess(
             config,
             rootfsDir,
             command
         )
-        return process.map {
-            factory.create(it)
-        }
     }
 
 

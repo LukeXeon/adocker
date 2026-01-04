@@ -8,15 +8,16 @@ import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.engine.PRootEngine
+import com.github.andock.daemon.os.await
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.supervisorScope
 import kotlinx.io.IOException
 import timber.log.Timber
 import java.io.File
@@ -55,7 +56,7 @@ class ContainerStateMachine @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    snapshot.mainProcess.job.join()
+                    snapshot.mainProcess.await()
                     toStoping()
                 }
                 untilIdentityChanges({ it.childProcesses }) {
@@ -116,7 +117,7 @@ class ContainerStateMachine @AssistedInject constructor(
                 val process = prootEngine.startProcess(containerId, config = config)
                 process.fold(
                     { mainProcess ->
-                        val stdin = mainProcess.stdin.bufferedWriter()
+                        val stdin = mainProcess.outputStream.bufferedWriter()
                         val logDir = File(appContext.logDir, containerId)
                         logDir.mkdirs()
                         val stdout = File(logDir, AppContext.STDOUT)
@@ -128,8 +129,8 @@ class ContainerStateMachine @AssistedInject constructor(
                             )
                         }
                         arrayOf(
-                            mainProcess.stdout to stdout,
-                            mainProcess.stderr to stderr
+                            mainProcess.inputStream to stdout,
+                            mainProcess.errorStream to stderr
                         ).forEach { (input, output) ->
                             scope.launch(Dispatchers.IO) {
                                 try {
@@ -164,8 +165,10 @@ class ContainerStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Stopping>.stopContainer(): ChangedState<ContainerState> {
         snapshot.processes.onEach {
-            it.cancel()
-        }.joinAll()
+            it.destroy()
+        }.forEach {
+            it.await()
+        }
         return override {
             ContainerState.Exited(id)
         }
@@ -185,9 +188,13 @@ class ContainerStateMachine @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<ContainerState.Running>.anyExit(): ChangedState<ContainerState> {
-        select {
-            snapshot.childProcesses.forEach { process ->
-                process.job.onJoin {}
+        supervisorScope<Unit> {
+            select {
+                snapshot.childProcesses.forEach { process ->
+                    launch {
+                        process.await()
+                    }.onJoin
+                }
             }
         }
         return mutate {
@@ -195,7 +202,7 @@ class ContainerStateMachine @AssistedInject constructor(
                 childProcesses = buildList(childProcesses.size) {
                     addAll(
                         childProcesses.asSequence()
-                            .filter { process -> process.job.isActive }
+                            .filter { process -> process.isAlive }
                     )
                 }
             )
@@ -207,8 +214,8 @@ class ContainerStateMachine @AssistedInject constructor(
             ContainerState.Stopping(
                 id,
                 buildList(childProcesses.size + 1) {
-                    add(mainProcess.job)
-                    addAll(childProcesses.asSequence().map { it.job })
+                    add(mainProcess)
+                    addAll(childProcesses)
                 }
             )
         }

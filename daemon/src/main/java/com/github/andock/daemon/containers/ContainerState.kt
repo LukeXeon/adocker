@@ -1,7 +1,5 @@
 package com.github.andock.daemon.containers
 
-import com.github.andock.daemon.os.JobProcess
-import kotlinx.coroutines.Job
 import java.io.BufferedWriter
 import java.io.File
 
@@ -19,16 +17,16 @@ sealed interface ContainerState {
 
     data class Running(
         override val id: String,
-        val mainProcess: JobProcess,
+        val mainProcess: Process,
         val stdin: BufferedWriter,
         val stdout: File,
         val stderr: File,
-        val childProcesses: List<JobProcess> = emptyList(),
+        val childProcesses: List<Process> = emptyList(),
     ) : ContainerState
 
     data class Stopping(
         override val id: String,
-        val processes: List<Job>,
+        val processes: List<Process>,
     ) : ContainerState
 
     data class Removing(
