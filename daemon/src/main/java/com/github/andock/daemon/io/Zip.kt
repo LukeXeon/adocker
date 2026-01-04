@@ -41,7 +41,6 @@ suspend fun extractTarGz(
                     }
 
                     entry.isSymbolicLink || entry.isLink -> {
-                        // Create symbolic link using Android Os API
                         val newFile = File(destDir, entry.name)
                         newFile.parentFile?.mkdirs()
                         try {
