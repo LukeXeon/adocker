@@ -1,6 +1,5 @@
 package com.github.andock.daemon.io
 
-import android.system.Os
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -9,6 +8,8 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.file.Files
+import kotlin.io.path.Path
 
 
 /**
@@ -65,11 +66,15 @@ suspend fun extractTarGz(
             val newFile = File(destDir, new)
             newFile.mkdirs()
             try {
+                val newPath = newFile.toPath()
                 // Remove existing file/link if present
-                if (newFile.exists()) {
-                    newFile.delete()
+                if (Files.isSymbolicLink(newPath)
+                    && Files.readSymbolicLink(newPath).toString() == old
+                ) {
+                    continue
                 }
-                Os.symlink(old, newFile.absolutePath)
+                Files.deleteIfExists(newFile.toPath())
+                Files.createSymbolicLink(newPath, Path(old))
                 Timber.d("Created symlink: ${newFile.absolutePath} -> $old")
             } catch (e: Exception) {
                 Timber.w(
