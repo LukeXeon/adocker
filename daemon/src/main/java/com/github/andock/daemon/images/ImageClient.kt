@@ -319,9 +319,7 @@ class ImageClient @Inject constructor(
                 initialLoadSize = 1000,
             ),
             initialKey = ImageTagParameters(
-                registry = getBestServerUrl(
-                    RegistryModule.DEFAULT_REGISTRY
-                ),
+                registry = RegistryModule.DEFAULT_REGISTRY,
                 repository = repository,
                 last = null
             ),
