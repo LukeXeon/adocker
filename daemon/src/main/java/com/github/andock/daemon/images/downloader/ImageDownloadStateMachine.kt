@@ -20,6 +20,7 @@ import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.io.sha256
 import com.github.andock.daemon.registries.RegistryManager
+import com.github.andock.daemon.registries.RegistryModule
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -51,7 +52,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 // Docker Hub - use best available mirror
                 originalRegistry == "registry-1.docker.io"
                         || originalRegistry.contains("docker.io") -> {
-                    RegistryManager.DEFAULT_REGISTRY
+                    RegistryModule.DEFAULT_REGISTRY
                 }
                 // Other registries - use as-is
                 originalRegistry.startsWith("http") -> {

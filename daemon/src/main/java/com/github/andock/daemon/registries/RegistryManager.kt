@@ -26,30 +26,9 @@ import kotlin.time.Duration
 class RegistryManager @Inject constructor(
     private val registryDao: RegistryDao,
     private val factory: Registry.Factory,
+    private val builtinServers: List<RegistryEntity>,
     scope: CoroutineScope
 ) {
-    companion object {
-        const val DEFAULT_REGISTRY = "https://registry-1.docker.io"
-        // Builtin servers for Docker Hub
-        private val BUILTIN_SERVERS = listOf(
-            RegistryEntity(
-                id = "c0d1e2f3-4567-49ab-cdef-0123456789ab",
-                name = "Docker Hub",
-                url = DEFAULT_REGISTRY,
-                priority = 100,
-                tags = listOf("Official"),
-                type = RegistryType.Official,
-            ),
-            RegistryEntity(
-                id = "3f8e7d6c-5b4a-4876-80fe-dcba98765432",
-                name = "DaoCloud",
-                url = "https://docker.m.daocloud.io",
-                priority = 100,
-                tags = listOf("China"),
-                type = RegistryType.BuiltinMirror,
-            ),
-        )
-    }
 
     private val _registries = MutableStateFlow<Map<String, Registry>>(emptyMap())
 
@@ -138,7 +117,7 @@ class RegistryManager @Inject constructor(
 
     init {
         scope.launch {
-            registryDao.insertRegistries(BUILTIN_SERVERS)
+            registryDao.insertRegistries(builtinServers)
             _registries.value = registryDao.getAllRegistryIds().map { id ->
                 factory.create(id)
             }.associateBy { it.id }

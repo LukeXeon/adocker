@@ -11,6 +11,7 @@ import com.github.andock.daemon.images.model.ImageManifestV2
 import com.github.andock.daemon.images.model.ManifestListResponse
 import com.github.andock.daemon.images.model.TagsListResponse
 import com.github.andock.daemon.registries.RegistryManager
+import com.github.andock.daemon.registries.RegistryModule
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -130,7 +131,7 @@ class ImageClient @Inject constructor(
             originalRegistry == "registry-1.docker.io"
                     || originalRegistry.contains("docker.io") -> {
                 registryManager.bestServer.value?.metadata?.value?.url
-                    ?: RegistryManager.DEFAULT_REGISTRY
+                    ?: RegistryModule.DEFAULT_REGISTRY
             }
             // Other registries - use as-is
             originalRegistry.startsWith("http") -> {
@@ -302,7 +303,7 @@ class ImageClient @Inject constructor(
      */
     suspend fun getTags(repository: String): Result<Set<String>> =
         runCatching {
-            val registry = RegistryManager.DEFAULT_REGISTRY
+            val registry = RegistryModule.DEFAULT_REGISTRY
             val authToken = authenticate(repository, registry).getOrThrow()
             client.get("$registry/v2/${repository}/tags/list") {
                 if (authToken.isNotEmpty()) {
