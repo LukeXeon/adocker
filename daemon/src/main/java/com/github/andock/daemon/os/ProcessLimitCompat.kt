@@ -26,10 +26,15 @@ class ProcessLimitCompat @Inject constructor(
      */
     suspend fun unrestrict(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
-            if (!remoteProcessBuilder.hasPermission) {
-                throw SecurityException("Shizuku permission not granted")
-            }
             val command = when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> {
+                    return@runCatching
+                }
+
+                !remoteProcessBuilder.hasPermission -> {
+                    throw SecurityException("Shizuku permission not granted")
+                }
+
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2 -> {
                     // Android 12L+ (API 32+)
                     application.getString(R.string.unrestrict_command_32)
@@ -46,12 +51,15 @@ class ProcessLimitCompat @Inject constructor(
             }
             executeCommand(command)
             Timber.i("Phantom process killer disabled successfully")
-        }.fold({
-            true
-        }, { error ->
-            Timber.e(error, "Failed to disable phantom process killer")
-            false
-        })
+        }.fold(
+            {
+                true
+            },
+            { error ->
+                Timber.e(error, "Failed to disable phantom process killer")
+                false
+            }
+        )
     }
 
     /**
@@ -60,6 +68,10 @@ class ProcessLimitCompat @Inject constructor(
     suspend fun isUnrestricted(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> {
+                    true
+                }
+
                 !remoteProcessBuilder.hasPermission -> {
                     false
                 }
@@ -75,7 +87,11 @@ class ProcessLimitCompat @Inject constructor(
                     val result = executeCommand(
                         application.getString(R.string.test_limit_command_31)
                     )
-                    result.contains(application.getString(R.string.max_process_value))
+                    result.contains(
+                        application.resources.getInteger(
+                            R.integer.max_process_value
+                        ).toString()
+                    )
                 }
 
                 else -> {
@@ -90,12 +106,21 @@ class ProcessLimitCompat @Inject constructor(
      */
     suspend fun getMaxCount(): Int = withContext(Dispatchers.IO) {
         runCatching {
-            if (!remoteProcessBuilder.hasPermission) {
-                return@runCatching null
+            when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> {
+                    application.resources.getInteger(R.integer.max_process_value)
+                }
+
+                !remoteProcessBuilder.hasPermission -> {
+                    null
+                }
+
+                else -> {
+                    val result = executeCommand(application.getString(R.string.get_max_command))
+                    // Parse output: "max_phantom_processes=32"
+                    result.substringAfter("=", "").trim().toIntOrNull()
+                }
             }
-            val result = executeCommand(application.getString(R.string.get_max_command))
-            // Parse output: "max_phantom_processes=32"
-            result.substringAfter("=", "").trim().toIntOrNull()
         }.getOrNull() ?: 32
     }
 

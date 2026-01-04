@@ -30,5 +30,5 @@
     <string name="test_limit_command_32">settings get global settings_enable_monitor_phantom_procs</string>
     <string name="test_limit_command_31">dumpsys activity settings | grep max_phantom_processes</string>
     <string name="get_max_command">@string/test_limit_command_31</string>
-    <string name="max_process_value">2147483647</string>
+    <integer name="max_process_value">2147483647</integer>
 </resources>
