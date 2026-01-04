@@ -146,16 +146,8 @@ class PRootEngine @Inject constructor(
          */
         private fun buildExecCommand(config: ContainerConfig): List<String> {
             val cmd = mutableListOf<String>()
-            // Entrypoint
-            config.entrypoint?.let { cmd.addAll(it) }
-            // Command
-            if (cmd.isEmpty()) {
-                cmd.addAll(config.cmd)
-            } else {
-                cmd.addAll(config.cmd)
-            }
+            cmd.addAll(config.entrypoint ?: emptyList())
             cmd.addAll(config.cmd)
-
             return cmd.ifEmpty { listOf("/bin/sh") }
         }
 
