@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -63,26 +64,38 @@ private fun extractTar(
 
             when {
                 entry.isDirectory -> {
+                    Timber.d("Creating directory: ${outputFile.canonicalPath}")
                     outputFile.mkdirs()
                 }
 
                 entry.isSymbolicLink -> {
-                    val linkTarget = entry.linkName
+                    val linkTarget = File(destDir, entry.linkName)
                     outputFile.parentFile?.mkdirs()
-                    createSymlink(outputFile, linkTarget)
+                    createSymlink(
+                        outputFile,
+                        linkTarget
+                    )
                 }
 
                 entry.isLink -> {
                     // Handle hard links using Os.link
                     val linkTarget = File(destDir, entry.linkName)
                     outputFile.parentFile?.mkdirs()
-                    createHardLink(outputFile, linkTarget)
+                    createHardLink(
+                        outputFile,
+                        linkTarget
+                    )
                 }
 
                 else -> {
+                    Timber.d("Extracting file: ${outputFile.canonicalPath}")
                     outputFile.parentFile?.mkdirs()
-                    FileOutputStream(outputFile).use { fos ->
-                        tarIn.copyTo(fos)
+                    try {
+                        FileOutputStream(outputFile).use { fos ->
+                            tarIn.copyTo(fos)
+                        }
+                    } catch (e: Exception) {
+                        throw e
                     }
                     outputFile.chmod(entry.mode)
                 }

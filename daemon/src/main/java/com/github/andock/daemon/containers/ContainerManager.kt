@@ -1,10 +1,10 @@
 package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.model.ContainerEntity
+import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.io.extractTarGz
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -134,6 +134,10 @@ class ContainerManager @Inject constructor(
                         Timber.d("Layer ${digest.take(16)} extracted successfully")
                     },
                     {
+                        Timber.e(it)
+                        rootfsDir.runCatching {
+                            deleteRecursively()
+                        }
                         return Result.failure(
                             it
                         )

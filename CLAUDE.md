@@ -140,15 +140,22 @@ container.exec(listOf("/bin/sh", "-c", "ls"))  // Returns Result<ContainerProces
 **Benefits:** 70% storage savings, faster pulls, simpler management
 **Trade-off:** Slower container creation (extraction), but happens only once
 
-#### Symlink Handling
+#### Symlink and Hard Link Handling
 
-Docker images rely heavily on symlinks. Standard Java `Files` API doesn't preserve them.
+Docker images rely heavily on symlinks and hard links. Standard Java `Files` API doesn't preserve them.
 
-**Solution:** Use Android `Os` API in `io/File.kt`:
+**Symlink Solution:** Use Android `Os` API in `io/File.kt`:
 - `Os.lstat()` + `OsConstants.S_ISLNK()` - detect symlinks
 - `Os.readlink()` - read link target
 - `Os.symlink()` - create symlink
 - `Os.chmod()` - preserve permissions
+
+**Hard Link Limitation (CRITICAL):**
+- **Android SELinux blocks hard link creation since Android 6.0 (Marshmallow)**
+- Even in app's own data directory, `link()` returns `EACCES` (Access Denied)
+- This is a security policy to prevent privilege escalation attacks
+- **Solution:** Automatic fallback to file copying when hard link fails
+- Trade-off: Uses more disk space, but ensures compatibility
 
 All handled by `extractTarGz()` during container creation.
 

@@ -7,6 +7,7 @@ import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.daemon.images.model.ContainerConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
