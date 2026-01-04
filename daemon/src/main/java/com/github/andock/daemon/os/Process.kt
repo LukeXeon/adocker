@@ -62,7 +62,7 @@ val Process.pid: Int
         return 0
     }
 
-suspend fun Process.await(): Int {
+suspend inline fun Process.await(): Int {
     return runInterruptible(Dispatchers.IO) {
         waitFor()
     }
