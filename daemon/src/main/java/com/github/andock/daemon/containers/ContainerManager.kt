@@ -118,8 +118,7 @@ class ContainerManager @Inject constructor(
         }
         val containerId = UUID.randomUUID().toString()
         // Create container directory structure
-        val containerDir = File(appContext.containersDir, containerId)
-        val rootfsDir = File(containerDir, AppContext.ROOTFS_DIR)
+        val rootfsDir = File(appContext.containersDir, containerId)
         rootfsDir.mkdirs()
         // Extract layers directly to rootfs
         for (digest in image.layerIds) {

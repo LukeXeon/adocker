@@ -512,7 +512,7 @@ UnixHttp4kServer(
 │   │       └── stderr            # Container stderr
 │   └── docker.sock               # Docker API Unix Socket
 └── databases/
-    └── adocker.db                # Room database
+    └── andock.db                # Room database
 ```
 
 ## 🙏 Acknowledgments

@@ -40,7 +40,6 @@ class AppContext @Inject constructor(
         }
 
 
-
     companion object {
 
         // Docker Registry defaults
@@ -56,11 +55,8 @@ class AppContext @Inject constructor(
         // Directories (relative to app's files directory)
         const val DIR_CONTAINERS = "containers"
         const val DIR_LAYERS = "layers"
-        const val ROOTFS_DIR = "rootfs"
         const val LOG_DIR = "log"
-
         const val DOCKER_SOCK = "docker.sock"
-
         const val STDOUT = "stdout"
         const val STDERR = "stderr"
 

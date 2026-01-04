@@ -130,8 +130,7 @@ class PRootEngine @Inject constructor(
         command: List<String>? = null,
         config: ContainerConfig = ContainerConfig(),
     ): Result<JobProcess> {
-        val containerDir = File(appContext.containersDir, containerId)
-        val rootfsDir = File(containerDir, AppContext.Companion.ROOTFS_DIR)
+        val rootfsDir = File(appContext.containersDir, containerId)
         if (!rootfsDir.exists()) {
             return Result.failure(IllegalStateException("Container rootfs not found"))
         }

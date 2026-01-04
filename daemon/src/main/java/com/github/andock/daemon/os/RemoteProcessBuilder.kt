@@ -29,7 +29,7 @@ class RemoteProcessBuilder @Inject constructor(
             RemoteProcessBuilderService::class.java.name
         )
     ).daemon(false)
-        .processNameSuffix("process_builder_service")
+        .processNameSuffix("privilege")
         .debuggable(appContext.isDebuggable)
         .version(
             @Suppress("DEPRECATION")
