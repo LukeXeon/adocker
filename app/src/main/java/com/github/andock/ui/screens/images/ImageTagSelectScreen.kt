@@ -43,6 +43,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
+import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
@@ -191,7 +192,9 @@ fun ImageTagSelectScreen() {
             downloader = showProgressDialog,
             onDismissRequest = {
                 setProgressDialog(null)
-                onNavigateBack()
+                if (showProgressDialog.state.value is ImageDownloadState.Done) {
+                    onNavigateBack()
+                }
             }
         )
     }
