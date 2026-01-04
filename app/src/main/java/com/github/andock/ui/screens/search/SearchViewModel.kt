@@ -3,11 +3,6 @@ package com.github.andock.ui.screens.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import com.github.andock.daemon.images.ImageClient
-import com.github.andock.daemon.images.ImageManager
-import com.github.andock.daemon.images.ImageReference
-import com.github.andock.daemon.images.downloader.ImageDownloader
-import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.daemon.search.SearchHistory
 import com.github.andock.daemon.search.SearchParameters
 import com.github.andock.daemon.search.SearchRepository
@@ -69,9 +64,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
-    private val searchHistory: SearchHistory,
-    private val imageManager: ImageManager,
-    private val imageClient: ImageClient,
+    private val searchHistory: SearchHistory
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
@@ -146,14 +139,4 @@ class SearchViewModel @Inject constructor(
             searchHistory.remove(query)
         }
     }
-
-    /**
-     * Pull an image from Docker Hub.
-     *
-     * Creates an [ImageDownloader] instance and tracks its progress.
-     * If the image is already being downloaded, this is a no-op.
-     *
-     * @param imageName Full repository name (e.g., "alpine", "nginx")
-     */
-    fun pullImage(imageName: ImageReference) = imageManager.pullImage(imageName)
 }

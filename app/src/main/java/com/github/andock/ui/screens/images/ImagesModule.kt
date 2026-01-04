@@ -40,4 +40,11 @@ object ImagesModule {
     fun detailScreen() = Screen {
         ImageDetailScreen()
     }
+
+    @Provides
+    @IntoMap
+    @ClassKey(ImageTagSelectRoute::class)
+    fun selectScreen() = Screen {
+        ImageTagSelectScreen()
+    }
 }

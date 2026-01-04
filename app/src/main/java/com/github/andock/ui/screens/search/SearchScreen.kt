@@ -49,11 +49,9 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
-import com.github.andock.daemon.images.downloader.ImageDownloader
-import com.github.andock.daemon.registries.RegistryManager
 import com.github.andock.ui.components.PaginationErrorItem
-import com.github.andock.ui.screens.images.ImageDownloadDialog
-import com.github.andock.ui.screens.images.ImageTagSelectDialog
+import com.github.andock.ui.screens.images.ImageTagSelectRoute
+import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 
 /**
@@ -70,13 +68,12 @@ import com.github.andock.ui.theme.Spacing
 @Composable
 fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
+    val navController = LocalNavController.current
     val searchQuery by viewModel.query.collectAsState()
     val isOfficialOnly by viewModel.isOfficialOnly.collectAsState()
     val searchHistory by viewModel.history.collectAsState()
     val searchResults = viewModel.results.collectAsLazyPagingItems()
     val focusManager = LocalFocusManager.current
-    val (showSelectTagDialog, setSelectTagDialog) = remember { mutableStateOf<String?>(null) }
-    val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (showFilters, setShowFilters) = remember { mutableStateOf(false) }
     val (showHistory, setShowHistory) = remember { mutableStateOf(false) }
 
@@ -240,7 +237,9 @@ fun SearchScreen() {
                                     result = result,
                                     onPull = {
                                         result.repoName?.let { name ->
-                                            setSelectTagDialog(name)
+                                            navController.navigate(
+                                                ImageTagSelectRoute(name)
+                                            )
                                         }
                                     },
                                 )
@@ -273,25 +272,5 @@ fun SearchScreen() {
                 }
             }
         }
-    }
-    if (showSelectTagDialog != null) {
-        ImageTagSelectDialog(
-            registry = RegistryManager.DEFAULT_REGISTRY,
-            repository = showSelectTagDialog,
-            onSelected = {
-                setProgressDialog(viewModel.pullImage(it))
-            },
-            onDismissRequest = {
-                setSelectTagDialog(null)
-            }
-        )
-    }
-    if (showProgressDialog != null) {
-        ImageDownloadDialog(
-            downloader = showProgressDialog,
-            onDismissRequest = {
-                setProgressDialog(null)
-            }
-        )
     }
 }

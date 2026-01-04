@@ -75,6 +75,8 @@
     <string name="images_search_no_results_desc">尝试使用不同的关键词</string>
     <string name="images_repository">仓库</string>
     <string name="images_tag">标签</string>
+    <string name="images_tag_empty">暂无可用标签</string>
+    <string name="images_tag_empty_subtitle">该仓库没有标签或无法获取标签信息</string>
     <string name="images_id">镜像 ID</string>
     <string name="images_digest">摘要</string>
     <string name="images_architecture">架构</string>

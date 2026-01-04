@@ -1,8 +1,11 @@
 package com.github.andock.daemon.images
 
+import kotlinx.serialization.Serializable
+
 /**
  * Docker image reference
  */
+@Serializable
 data class ImageReference(
     val registry: String = "docker.io",
     val repository: String,

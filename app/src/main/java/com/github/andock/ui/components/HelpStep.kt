@@ -26,9 +26,9 @@ fun HelpStep(
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
             shape = MaterialTheme.shapes.small,
-            modifier = Modifier.Companion.size(IconSize.Medium)
+            modifier = Modifier.size(IconSize.Medium)
         ) {
-            Box(contentAlignment = Alignment.Companion.Center) {
+            Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = number,
                     style = MaterialTheme.typography.labelSmall,

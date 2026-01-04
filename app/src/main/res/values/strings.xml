@@ -75,6 +75,8 @@
     <string name="images_search_no_results_desc">Try different keywords</string>
     <string name="images_repository">Repository</string>
     <string name="images_tag">Tag</string>
+    <string name="images_tag_empty">No tags available</string>
+    <string name="images_tag_empty_subtitle">This repository has no tags or they could not be retrieved</string>
     <string name="images_id">Image ID</string>
     <string name="images_digest">Digest</string>
     <string name="images_architecture">Architecture</string>

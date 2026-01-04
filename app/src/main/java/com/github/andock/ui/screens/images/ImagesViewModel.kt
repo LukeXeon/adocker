@@ -21,9 +21,8 @@ class ImagesViewModel @Inject constructor(
     fun pullImage(imageName: ImageReference) = imageManager.pullImage(imageName)
 
     suspend fun getTags(
-        registry: String,
         repository: String
-    ) = imageClient.getTags(registry, repository)
+    ) = imageClient.getTags( repository)
 
     suspend fun deleteImage(id: String) {
         imageManager.deleteImage(id)

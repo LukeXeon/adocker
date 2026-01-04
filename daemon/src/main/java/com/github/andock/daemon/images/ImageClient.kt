@@ -300,9 +300,9 @@ class ImageClient @Inject constructor(
     /**
      * Get tags for a repository
      */
-    suspend fun getTags(registry: String, repository: String): Result<Set<String>> =
+    suspend fun getTags(repository: String): Result<Set<String>> =
         runCatching {
-            val registry = getBestServerUrl(registry)
+            val registry = RegistryManager.DEFAULT_REGISTRY
             val authToken = authenticate(repository, registry).getOrThrow()
             client.get("$registry/v2/${repository}/tags/list") {
                 if (authToken.isNotEmpty()) {

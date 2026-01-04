@@ -48,22 +48,6 @@ class RegistryManager @Inject constructor(
                 tags = listOf("China"),
                 type = RegistryType.BuiltinMirror,
             ),
-            RegistryEntity(
-                id = "789abcde-1234-4678-90ab-cdef12345678",
-                name = "Xuanyuan",
-                url = "https://docker.xuanyuan.me",
-                priority = 90,
-                tags = listOf("China"),
-                type = RegistryType.BuiltinMirror,
-            ),
-            RegistryEntity(
-                id = "87654321-abcd-4f12-3456-7890abcdef12",
-                name = "Huawei Cloud",
-                url = "https://mirrors.huaweicloud.com",
-                priority = 80,
-                tags = listOf("China"),
-                type = RegistryType.BuiltinMirror,
-            )
         )
     }
 
