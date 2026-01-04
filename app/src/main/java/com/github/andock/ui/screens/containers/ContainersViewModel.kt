@@ -7,7 +7,6 @@ import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.daemon.images.model.ContainerConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,10 +21,8 @@ class ContainersViewModel @Inject constructor(
     fun stateList(predicate: (ContainerState) -> Boolean) = containerManager.stateList(predicate)
 
     // Delete a container
-    fun deleteContainer(containerId: String) {
-        viewModelScope.launch {
-            containers.value[containerId]?.remove()
-        }
+    suspend fun deleteContainer(containerId: String) {
+        containers.value[containerId]?.remove()
     }
 
     // Stop a container

@@ -39,13 +39,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.containers.Container
+import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.terminal.TerminalRoute
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +59,7 @@ fun ContainersScreen() {
     val navController = LocalNavController.current
     val viewModel = hiltViewModel<ContainersViewModel>()
     val containers by viewModel.sortedList.collectAsState()
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val statesCount by remember(containers) {
         combine(containers.map { it.state }) { states ->
             ContainerFilterType.entries.asSequence().map {
@@ -214,12 +221,20 @@ fun ContainersScreen() {
         ContainerDeleteDialog(
             showDeleteDialog,
             onDelete = {
-                viewModel.deleteContainer(it.id)
-                setDeleteDialog(null)
+                viewModel.viewModelScope.launch {
+                    setLoading(true)
+                    setDeleteDialog(null)
+                    viewModel.deleteContainer(it.id)
+                    showDeleteDialog.state.filterIsInstance<ContainerState.Removed>().first()
+                    setLoading(false)
+                }
             },
             onDismissRequest = {
                 setDeleteDialog(null)
             }
         )
+    }
+    if (isLoading) {
+        LoadingDialog()
     }
 }

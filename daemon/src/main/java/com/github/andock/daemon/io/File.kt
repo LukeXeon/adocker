@@ -1,8 +1,6 @@
 package com.github.andock.daemon.io
 
 import android.system.Os
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -19,76 +17,6 @@ fun File.chmod(mode: Int) {
         Os.chmod(absolutePath, mode)
     } catch (e: Exception) {
         Timber.w(e, "Failed to set permissions for ${name}: mode=$mode")
-    }
-}
-
-/**
- * Create a symbolic link using Android's Os.symlink API (API 21+)
- */
-fun createSymlink(newPath: File, existingPath: File) {
-    try {
-        Timber.d("Creating symlink: ${newPath.absolutePath} -> $existingPath")
-
-        // Delete existing file/link if it exists
-        if (newPath.exists()) {
-            newPath.delete()
-            Timber.d("Deleted existing file before creating symlink")
-        }
-
-        // Use Android's Os.symlink (available since API 21)
-        Os.symlink(existingPath.absolutePath, newPath.absolutePath)
-        Timber.d("✓ Symlink created successfully: ${newPath.name} -> $existingPath")
-    } catch (e: Exception) {
-        Timber.e(e, "✗ Failed to create symlink ${newPath.name} -> $existingPath")
-        // Don't throw - let extraction continue
-    }
-}
-
-/**
- * Create a hard link using Android's Os.link API (API 21+)
- *
- * NOTE: Hard links are blocked by SELinux policy on Android M+ (Android 6.0+)
- * This function will automatically fallback to file copying when hard link fails.
- *
- * SELinux restriction: Android's security policy denies hard link creation even within
- * app's own data directory to prevent privilege escalation attacks.
- * See: https://seandroid-list.tycho.nsa.narkive.com/r5ZNxgkh/selinux-hardlink-brain-damage-in-android-m
- */
-fun createHardLink(newPath: File, existingPath: File) {
-    try {
-        Timber.d("Creating hard link: ${newPath.absolutePath} -> ${existingPath.absolutePath}")
-
-        // Delete existing file if it exists
-        if (newPath.exists()) {
-            newPath.delete()
-            Timber.d("Deleted existing file before creating hard link")
-        }
-
-        if (!existingPath.exists()) {
-            Timber.w("Hard link target doesn't exist: ${existingPath.absolutePath}, will skip")
-            return
-        }
-
-        // Try to create hard link (will fail on Android M+ due to SELinux)
-        Os.link(existingPath.absolutePath, newPath.absolutePath)
-        Timber.d("✓ Hard link created successfully: ${newPath.name} -> ${existingPath.name}")
-    } catch (e: Exception) {
-        // SELinux denies hard link creation on Android M+ - fallback to copy
-        Timber.w(
-            e,
-            "Hard link denied by SELinux (expected on Android 6+), falling back to createSymlink: ${newPath.name}",
-        )
-        createSymlink(newPath, existingPath)
-    }
-}
-
-/**
- * Copy directory recursively
- */
-suspend fun copyDirectory(src: File, dest: File): Result<Unit> = withContext(Dispatchers.IO) {
-    runCatching {
-        src.copyRecursively(dest, overwrite = true)
-        Unit
     }
 }
 

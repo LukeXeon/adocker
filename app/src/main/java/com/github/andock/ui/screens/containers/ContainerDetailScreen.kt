@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.github.andock.R
@@ -38,10 +39,14 @@ import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
+import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.terminal.TerminalRoute
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +57,7 @@ fun ContainerDetailScreen(
         (lifecycleOwner as? NavBackStackEntry)?.toRoute<ContainerDetailRoute>()
     } ?: return
     val viewModel = hiltViewModel<ContainersViewModel>()
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val container = viewModel.containers.collectAsState().value[route.containerId] ?: return
     val metadata = container.metadata.collectAsState().value ?: return
     // Observe container state in real-time
@@ -205,12 +211,20 @@ fun ContainerDetailScreen(
         ContainerDeleteDialog(
             showDeleteDialog,
             onDelete = {
-                viewModel.deleteContainer(it.id)
-                setDeleteDialog(null)
+                viewModel.viewModelScope.launch {
+                    setLoading(true)
+                    setDeleteDialog(null)
+                    viewModel.deleteContainer(it.id)
+                    showDeleteDialog.state.filterIsInstance<ContainerState.Removed>().first()
+                    setLoading(false)
+                }
             },
             onDismissRequest = {
                 setDeleteDialog(null)
             }
         )
+    }
+    if (isLoading) {
+        LoadingDialog()
     }
 }

@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
-import java.io.FileInputStream
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -127,9 +126,10 @@ class ContainerManager @Inject constructor(
             )
             if (layerFile.exists()) {
                 Timber.d("Extracting layer ${digest.take(16)} to container rootfs")
-                FileInputStream(layerFile).use { fis ->
-                    extractTarGz(fis, rootfsDir)
-                }.fold(
+                extractTarGz(
+                    layerFile.absolutePath,
+                    rootfsDir.absolutePath
+                ).fold(
                     {
                         Timber.d("Layer ${digest.take(16)} extracted successfully")
                     },

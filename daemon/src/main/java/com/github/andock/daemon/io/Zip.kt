@@ -6,105 +6,86 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import timber.log.Timber
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
+import java.io.BufferedInputStream
+import java.io.FileInputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 
 
 /**
  * Extract a tar.gz file to destination directory
  */
 suspend fun extractTarGz(
-    inputStream: InputStream,
-    destDir: File,
-    onProgress: ((Long) -> Unit)? = null
+    tarGzPath: String,
+    outputDir: String
 ): Result<Unit> = withContext(Dispatchers.IO) {
-    if (!destDir.exists()) {
-        destDir.mkdirs()
-    }
-    GzipCompressorInputStream(inputStream.buffered()).use { gzipIn ->
-        extractTar(TarArchiveInputStream(gzipIn), destDir, onProgress)
-    }
-}
+    runCatching {
+        val outputDirPath = Paths.get(outputDir)
+            .toAbsolutePath()
+            .normalize()
+        Files.createDirectories(outputDirPath)
+        FileInputStream(tarGzPath).use { fis ->
+            BufferedInputStream(fis).use { bis ->
+                GzipCompressorInputStream(bis).use { gzis ->
+                    TarArchiveInputStream(gzis).use { tais ->
+                        var entry: TarArchiveEntry? = tais.nextEntry
+                        while (entry != null) {
+                            val entryPath = outputDirPath.resolve(entry.name).normalize()
+                            when {
+                                entry.isDirectory -> {
+                                    Files.createDirectories(entryPath)
+                                    Timber.i("Create Directories: $entryPath")
+                                }
 
-/**
- * Extract a plain tar file
- */
-suspend fun extractTar(
-    inputStream: InputStream,
-    destDir: File,
-    onProgress: ((Long) -> Unit)? = null
-): Result<Unit> = withContext(Dispatchers.IO) {
-    extractTar(
-        TarArchiveInputStream(
-            inputStream.buffered()
-        ), destDir,
-        onProgress
-    )
-}
+                                entry.isFile -> {
+                                    Files.createDirectories(entryPath.parent)
+                                    Files.newOutputStream(entryPath).use { os ->
+                                        tais.copyTo(os)
+                                    }
+                                    entryPath.toFile().chmod(entry.mode)
 
-/**
- * Common
- * Extract a plain tar file
- */
-private fun extractTar(
-    inputStream: TarArchiveInputStream,
-    destDir: File,
-    onProgress: ((Long) -> Unit)? = null
-): Result<Unit> = runCatching {
-    var bytesExtracted = 0L
-    inputStream.use { tarIn ->
-        var entry: TarArchiveEntry? = tarIn.nextEntry
-        while (entry != null) {
-            val outputFile = File(destDir, entry.name)
+                                    Timber.i("Copy file: $entryPath mode: ${entry.mode}")
+                                }
 
-            if (!outputFile.canonicalPath.startsWith(destDir.canonicalPath)) {
-                throw SecurityException("Path traversal detected: ${entry.name}")
-            }
+                                entry.isSymbolicLink -> {
+                                    // 本身就是软链接，直接创建
+                                    val linkTarget = Paths.get(entry.linkName).normalize()
+                                    Files.createDirectories(entryPath.parent)
+                                    Files.createSymbolicLink(entryPath, linkTarget)
+                                    Timber.i("Created symbolic link: $entryPath -> $linkTarget")
+                                }
 
-            when {
-                entry.isDirectory -> {
-                    Timber.d("Creating directory: ${outputFile.canonicalPath}")
-                    outputFile.mkdirs()
-                }
+                                entry.isLink -> {
+                                    val linkName = entry.linkName
+                                    val linkTarget = outputDirPath.resolve(linkName).normalize()
+                                    Files.createDirectories(entryPath.parent)
+                                    try {
+                                        // 尝试创建硬链接
+                                        Files.createLink(entryPath, linkTarget)
+                                        Timber.i("Created hard link: $entryPath -> $linkTarget")
+                                    } catch (e: UnsupportedOperationException) {
+                                        // 硬链接不支持，尝试软链接
+                                        Files.createSymbolicLink(entryPath, linkTarget)
+                                        Timber.e(
+                                            e,
+                                            "Created symbolic link (fallback): $entryPath -> $linkTarget"
+                                        )
+                                    } catch (e: SecurityException) {
+                                        // 权限不足，尝试软链接
+                                        Files.createSymbolicLink(entryPath, linkTarget)
+                                        Timber.e(
+                                            e,
+                                            "Created symbolic link (fallback): $entryPath -> $linkTarget"
+                                        )
+                                    }
+                                }
+                            }
 
-                entry.isSymbolicLink -> {
-                    val linkTarget = File(destDir, entry.linkName)
-                    outputFile.parentFile?.mkdirs()
-                    createSymlink(
-                        outputFile,
-                        linkTarget
-                    )
-                }
-
-                entry.isLink -> {
-                    // Handle hard links using Os.link
-                    val linkTarget = File(destDir, entry.linkName)
-                    outputFile.parentFile?.mkdirs()
-                    createHardLink(
-                        outputFile,
-                        linkTarget
-                    )
-                }
-
-                else -> {
-                    Timber.d("Extracting file: ${outputFile.canonicalPath}")
-                    outputFile.parentFile?.mkdirs()
-                    try {
-                        FileOutputStream(outputFile).use { fos ->
-                            tarIn.copyTo(fos)
+                            entry = tais.nextEntry
                         }
-                    } catch (e: Exception) {
-                        throw e
                     }
-                    outputFile.chmod(entry.mode)
                 }
             }
-
-            bytesExtracted += entry.size
-            onProgress?.invoke(bytesExtracted)
-
-            entry = tarIn.nextEntry
         }
     }
 }
