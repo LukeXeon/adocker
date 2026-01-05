@@ -50,11 +50,7 @@ class ImageTagPagingSource @AssistedInject constructor(
                             LoadResult.Page(
                                 data = it,
                                 prevKey = null,
-                                nextKey = ImageTagParameters(
-                                    registry = registry,
-                                    repository = repository,
-                                    last = it.lastOrNull()
-                                )
+                                nextKey = key.copy(last = it.lastOrNull())
                             )
                         }
                     },
