@@ -36,14 +36,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.registries.RegistriesRoute
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +57,7 @@ fun SettingsScreen() {
     val storageUsage by viewModel.storageUsage.collectAsState()
     val prootVersion by viewModel.prootVersion.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
@@ -153,10 +157,17 @@ fun SettingsScreen() {
             // About section
             item {
                 SettingsSection(title = stringResource(R.string.settings_about)) {
-                    SettingsItem(
+                    SettingsClickableItem(
                         icon = Icons.Default.Info,
                         title = stringResource(R.string.settings_version),
-                        subtitle = viewModel.packageInfo.versionName ?: ""
+                        subtitle = viewModel.packageInfo.versionName ?: "",
+                        onClick = {
+                            viewModel.viewModelScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    viewModel.packageInfo.versionName ?: ""
+                                )
+                            }
+                        }
                     )
 
                     SettingsItem(

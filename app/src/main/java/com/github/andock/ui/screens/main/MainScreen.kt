@@ -55,7 +55,9 @@ fun MainScreen() {
         }
     }
     CompositionLocalProvider(LocalNavController provides navController) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
             NavHost(
                 navController = navController,
                 startDestination = HomeRoute::class,
