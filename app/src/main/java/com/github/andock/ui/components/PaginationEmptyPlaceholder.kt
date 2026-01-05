@@ -25,7 +25,7 @@ data class PaginationEmptyPlaceholder(
     val subtitle: String,
 ) {
     @Composable
-    fun render() {
+    fun Content() {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center

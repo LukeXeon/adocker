@@ -39,7 +39,7 @@ fun <T : Any> PaginationColumn(
 
             items.itemCount == 0 -> {
                 // No results
-                empty.render()
+                empty.Content()
             }
 
             else -> {
