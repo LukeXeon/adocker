@@ -60,11 +60,7 @@ class PRootEngine @Inject constructor(
         container.binds.forEach { bind ->
             cmd.add("-b")
             val hostPath = mapping.getOrElse(bind.hostPath) { bind.hostPath }
-            val bindStr = if (bind.readOnly) {
-                "${hostPath}:${bind.containerPath}:ro"
-            } else {
-                "${hostPath}:${bind.containerPath}"
-            }
+            val bindStr = "${hostPath}:${bind.containerPath}"
             cmd.add(bindStr)
         }
 
@@ -177,7 +173,7 @@ class PRootEngine @Inject constructor(
             listOf("/system", "/vendor").forEach { path ->
                 if (File(path).exists()) {
                     cmd.add("-b")
-                    cmd.add("$path:$path:ro")
+                    cmd.add("$path:$path")
                 }
             }
             // Bind /etc/resolv.conf for DNS
