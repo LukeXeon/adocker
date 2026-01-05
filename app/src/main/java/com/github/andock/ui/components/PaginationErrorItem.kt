@@ -26,7 +26,7 @@ fun PaginationErrorItem(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Failed to load more results",
+                text = "Failed to load more items",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error
             )
