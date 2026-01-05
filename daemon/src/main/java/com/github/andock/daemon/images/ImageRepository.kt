@@ -46,6 +46,7 @@ class ImageRepository @AssistedInject constructor(
 ) {
     companion object {
         private const val DOWNLOAD_TIMEOUT = 300000L
+        private const val N = 100
         private val realmRegex = Regex("realm=\"([^\"]+)\"")
         private val serviceRegex = Regex("service=\"([^\"]+)\"")
     }
@@ -284,13 +285,14 @@ class ImageRepository @AssistedInject constructor(
     fun tags(repository: String): Flow<PagingData<String>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 1000,
+                pageSize = N,
                 enablePlaceholders = false,
-                initialLoadSize = 1000,
+                initialLoadSize = N,
             ),
             initialKey = ImageTagParameters(
                 registry = registryUrl,
                 repository = repository,
+                pageSize = N,
                 last = null
             ),
             pagingSourceFactory = factory

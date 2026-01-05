@@ -1,6 +1,5 @@
 package com.github.andock.daemon.images
 
-import androidx.collection.LruCache
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andock.daemon.database.dao.AuthTokenDao
@@ -19,7 +18,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Singleton
 
 class ImageTagPagingSource @AssistedInject constructor(
-    private val repositories: LruCache<String, ImageRepository>,
+    private val repositories: ImageRepositories,
     private val client: HttpClient,
     private val authTokenDao: AuthTokenDao,
 ) : PagingSource<ImageTagParameters, String>() {
@@ -30,8 +29,8 @@ class ImageTagPagingSource @AssistedInject constructor(
 
     override suspend fun load(params: LoadParams<ImageTagParameters>): LoadResult<ImageTagParameters, String> {
         val key = params.key ?: return LoadResult.Page(emptyList(), null, null)
-        val (registryUrl, repository, last) = key
-        val imageRepository = repositories[registryUrl]!!
+        val (registryUrl, repository, pageSize, last) = key
+        val imageRepository = repositories[registryUrl]
         return withContext(Dispatchers.IO) {
             imageRepository.authenticate(repository)
                 .mapCatching { authToken ->
@@ -42,6 +41,7 @@ class ImageTagPagingSource @AssistedInject constructor(
                         if (!last.isNullOrEmpty()) {
                             parameter("last", last)
                         }
+                        parameter("n", pageSize.toString())
                     }
                     if (response.status == HttpStatusCode.Unauthorized) {
                         authTokenDao.deleteToken(authToken)
@@ -59,7 +59,7 @@ class ImageTagPagingSource @AssistedInject constructor(
                             LoadResult.Page(
                                 data = it,
                                 prevKey = null,
-                                nextKey = key.copy(last = it.lastOrNull())
+                                nextKey = key.copy(last = if (it.size == pageSize) it.lastOrNull() else null)
                             )
                         }
                     },
