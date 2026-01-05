@@ -16,8 +16,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Singleton
 
 class ImageTagPagingSource @AssistedInject constructor(
+    private val factory: ImageRepository.Factory,
     private val client: HttpClient,
-    private val imageClient: ImageClient,
 ) : PagingSource<ImageTagParameters, String>() {
 
     override fun getRefreshKey(
@@ -26,11 +26,12 @@ class ImageTagPagingSource @AssistedInject constructor(
 
     override suspend fun load(params: LoadParams<ImageTagParameters>): LoadResult<ImageTagParameters, String> {
         val key = params.key ?: return LoadResult.Page(emptyList(), null, null)
-        val (registry, repository, last) = key
+        val (registryUrl, repository, last) = key
+        val imageRepository = factory.create(registryUrl)
         return withContext(Dispatchers.IO) {
-            imageClient.authenticate(repository, registry)
+            imageRepository.authenticate(repository)
                 .mapCatching { authToken ->
-                    client.get("$registry/v2/${repository}/tags/list") {
+                    client.get("$registryUrl/v2/${repository}/tags/list") {
                         if (authToken.isNotEmpty()) {
                             header(HttpHeaders.Authorization, "Bearer $authToken")
                         }

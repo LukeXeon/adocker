@@ -168,4 +168,28 @@ class RegistryManager @Inject constructor(
             it - id
         }
     }
+
+    /**
+     * Get registry URL for pulling images
+     * For Docker Hub, automatically selects best mirror
+     * For other registries, returns the original URL
+     */
+    fun getBestServerUrl(originalRegistry: String): String {
+        return when {
+            // Docker Hub - use best available mirror
+            originalRegistry == "registry-1.docker.io"
+                    || originalRegistry.contains("docker.io") -> {
+                bestServer.value?.metadata?.value?.url
+                    ?: RegistryModule.DEFAULT_REGISTRY
+            }
+            // Other registries - use as-is
+            originalRegistry.startsWith("http") -> {
+                originalRegistry
+            }
+
+            else -> {
+                "https://$originalRegistry"
+            }
+        }
+    }
 }

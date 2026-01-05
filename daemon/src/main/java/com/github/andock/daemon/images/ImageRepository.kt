@@ -12,8 +12,9 @@ import com.github.andock.daemon.images.model.AuthTokenResponse
 import com.github.andock.daemon.images.model.ImageConfigResponse
 import com.github.andock.daemon.images.model.ImageManifestV2
 import com.github.andock.daemon.images.model.ManifestListResponse
-import com.github.andock.daemon.registries.RegistryManager
-import com.github.andock.daemon.registries.RegistryModule
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -32,25 +33,22 @@ import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
-import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class ImageClient @Inject constructor(
+class ImageRepository @AssistedInject constructor(
+    @Assisted
+    private val registryUrl: String,
     private val client: HttpClient,
     private val registryDao: RegistryDao,
-    private val registryManager: RegistryManager,
     private val authTokenDao: AuthTokenDao,
-    private val factory: ImageTagPagingSource.Factory,
     private val json: Json,
+    private val factory: ImageTagPagingSource.Factory,
 ) {
-
     companion object {
         private const val DOWNLOAD_TIMEOUT = 300000L
+        private val realmRegex = Regex("realm=\"([^\"]+)\"")
+        private val serviceRegex = Regex("service=\"([^\"]+)\"")
     }
-
-    private val realmRegex = Regex("realm=\"([^\"]+)\"")
-    private val serviceRegex = Regex("service=\"([^\"]+)\"")
 
     /**
      * Get authentication token for Docker Hub or mirror
@@ -62,10 +60,7 @@ class ImageClient @Inject constructor(
      * 4. Request anonymous token from auth service
      * 5. Use token for subsequent requests
      */
-    suspend fun authenticate(
-        repository: String,
-        registryUrl: String
-    ): Result<String> = runCatching {
+    suspend fun authenticate(repository: String): Result<String> = runCatching {
         Timber.d("Authenticating for repository: $repository, registry: $registryUrl")
         try {
             // Check if this specific registry URL has a Bearer Token configured
@@ -131,42 +126,14 @@ class ImageClient @Inject constructor(
     }
 
     /**
-     * Get registry URL for pulling images
-     * For Docker Hub, automatically selects best mirror
-     * For other registries, returns the original URL
-     */
-    private fun getBestServerUrl(originalRegistry: String): String {
-        return when {
-            // Docker Hub - use best available mirror
-            originalRegistry == "registry-1.docker.io"
-                    || originalRegistry.contains("docker.io") -> {
-                registryManager.bestServer.value?.metadata?.value?.url
-                    ?: RegistryModule.DEFAULT_REGISTRY
-            }
-            // Other registries - use as-is
-            originalRegistry.startsWith("http") -> {
-                originalRegistry
-            }
-
-            else -> {
-                "https://$originalRegistry"
-            }
-        }
-    }
-
-    /**
      * Get manifest by digest
      */
     suspend fun getManifestByDigest(
-        imageRef: ImageReference,
+        repository: String,
         digest: String
     ): Result<ImageManifestV2> = runCatching {
-        val registryUrl = getBestServerUrl(imageRef.registry)
-        val authToken = authenticate(
-            imageRef.repository,
-            registryUrl
-        ).getOrThrow()
-        val response = client.get("$registryUrl/v2/${imageRef.repository}/manifests/$digest") {
+        val authToken = authenticate(repository).getOrThrow()
+        val response = client.get("$registryUrl/v2/${repository}/manifests/$digest") {
             if (authToken.isNotEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
@@ -187,16 +154,13 @@ class ImageClient @Inject constructor(
      * Get manifest for an image (handles both manifest list and image manifest)
      */
     suspend fun getManifest(
-        imageRef: ImageReference
+        repository: String,
+        tag: String
     ): Result<ImageManifestV2> = runCatching {
-        val registryUrl = getBestServerUrl(imageRef.registry)
-        val authToken = authenticate(
-            imageRef.repository,
-            registryUrl
-        ).getOrThrow()
+        val authToken = authenticate(repository).getOrThrow()
         // First try to get the manifest list
         val response = client.get(
-            "$registryUrl/v2/${imageRef.repository}/manifests/${imageRef.tag}"
+            "$registryUrl/v2/${repository}/manifests/${tag}"
         ) {
             // Only add Authorization header if we have a token
             if (authToken.isNotEmpty()) {
@@ -231,7 +195,7 @@ class ImageClient @Inject constructor(
 
                 // Get the specific manifest
                 getManifestByDigest(
-                    imageRef,
+                    repository,
                     platformManifest.digest
                 ).getOrThrow()
             }
@@ -247,15 +211,11 @@ class ImageClient @Inject constructor(
      * Get image configuration
      */
     suspend fun getImageConfig(
-        imageRef: ImageReference,
+        repository: String,
         configDigest: String
     ): Result<ImageConfigResponse> = runCatching {
-        val registryUrl = getBestServerUrl(imageRef.registry)
-        val authToken = authenticate(
-            imageRef.repository,
-            registryUrl
-        ).getOrThrow()
-        val response = client.get("$registryUrl/v2/${imageRef.repository}/blobs/$configDigest") {
+        val authToken = authenticate(repository).getOrThrow()
+        val response = client.get("$registryUrl/v2/${repository}/blobs/$configDigest") {
             if (authToken.isNotEmpty()) {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
@@ -273,16 +233,15 @@ class ImageClient @Inject constructor(
      * Download a layer blob
      */
     suspend fun downloadLayer(
-        imageRef: ImageReference,
+        repository: String,
         layer: LayerEntity,
         destFile: File,
         onProgress: suspend (DownloadProgress) -> Unit = { }
     ): Result<Unit> {
         return runCatching {
-            val registryUrl = getBestServerUrl(imageRef.registry)
-            val authToken = authenticate(imageRef.repository, registryUrl).getOrThrow()
+            val authToken = authenticate(repository).getOrThrow()
             Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
-            client.prepareGet("$registryUrl/v2/${imageRef.repository}/blobs/sha256:${layer.id}") {
+            client.prepareGet("$registryUrl/v2/${repository}/blobs/sha256:${layer.id}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
@@ -327,11 +286,18 @@ class ImageClient @Inject constructor(
                 initialLoadSize = 1000,
             ),
             initialKey = ImageTagParameters(
-                registry = RegistryModule.DEFAULT_REGISTRY,
+                registry = registryUrl,
                 repository = repository,
                 last = null
             ),
             pagingSourceFactory = factory
         ).flow
+    }
+
+
+    @Singleton
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted registryUrl: String): ImageRepository
     }
 }

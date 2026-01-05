@@ -15,12 +15,11 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
 import com.github.andock.daemon.images.DownloadProgress
-import com.github.andock.daemon.images.ImageClient
 import com.github.andock.daemon.images.ImageReference
+import com.github.andock.daemon.images.ImageRepository
 import com.github.andock.daemon.images.model.ImageConfig
 import com.github.andock.daemon.io.sha256
 import com.github.andock.daemon.registries.RegistryManager
-import com.github.andock.daemon.registries.RegistryModule
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -37,7 +36,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class ImageDownloadStateMachine @AssistedInject constructor(
     @Assisted
     imageRef: ImageReference,
-    private val client: ImageClient,
+    factory: ImageRepository.Factory,
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
     private val layerReferenceDao: LayerReferenceDao,
@@ -45,26 +44,9 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val appContext: AppContext,
     private val registryManager: RegistryManager,
 ) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
-
-    companion object {
-        private fun getRegistryUrl(originalRegistry: String): String {
-            return when {
-                // Docker Hub - use best available mirror
-                originalRegistry == "registry-1.docker.io"
-                        || originalRegistry.contains("docker.io") -> {
-                    RegistryModule.DEFAULT_REGISTRY
-                }
-                // Other registries - use as-is
-                originalRegistry.startsWith("http") -> {
-                    originalRegistry
-                }
-
-                else -> {
-                    "https://$originalRegistry"
-                }
-            }
-        }
-    }
+    private val imageRepository = factory.create(
+        registryManager.getBestServerUrl(imageRef.registry)
+    )
 
     init {
         initializeWith {
@@ -123,7 +105,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
         try {
             val imageRef = snapshot.ref
             val manifest = downloadStep("manifest", 1) {
-                client.getManifest(imageRef).getOrThrow()
+                imageRepository.getManifest(imageRef.repository, imageRef.tag).getOrThrow()
             }
             val configDigest = manifest.config.digest
             val imageId = configDigest.removePrefix("sha256:")
@@ -134,8 +116,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 }
             }
             val configResponse = downloadStep("config", 1) {
-                client.getImageConfig(
-                    imageRef,
+                imageRepository.getImageConfig(
+                    imageRef.repository,
                     configDigest
                 ).getOrThrow()
             }
@@ -160,8 +142,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                             ) {
                                 return@downloadStep
                             }
-                            client.downloadLayer(
-                                imageRef,
+                            imageRepository.downloadLayer(
+                                imageRef.repository,
                                 layer,
                                 destFile
                             ) { progress ->
@@ -201,7 +183,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             // Save image to database
             imageEntity = ImageEntity(
                 id = imageId,
-                registry = getRegistryUrl(imageRef.registry),
+                registry = imageRef.registry,
                 repository = imageRef.repository,
                 tag = imageRef.tag,
                 architecture = configResponse.architecture ?: AppArchitecture.DEFAULT,
@@ -235,6 +217,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     @Singleton
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted imageRef: ImageReference): ImageDownloadStateMachine
+        fun create(
+            @Assisted imageRef: ImageReference,
+        ): ImageDownloadStateMachine
     }
 }
