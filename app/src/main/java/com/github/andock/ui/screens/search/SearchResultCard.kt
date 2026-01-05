@@ -10,12 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,6 +37,7 @@ fun SearchResultCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onPull,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -101,16 +100,6 @@ fun SearchResultCard(
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
-            }
-
-            IconButton(
-                onClick = onPull,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CloudDownload,
-                    contentDescription = stringResource(R.string.action_pull),
-                    tint = MaterialTheme.colorScheme.primary
-                )
             }
         }
     }
