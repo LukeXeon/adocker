@@ -34,7 +34,7 @@ fun formatFileSize(bytes: Long): String {
 
 /**
  * 计算大文件的SHA256（GB级，流式读取，避免内存溢出）
- * @return SHA256十六进制字符串，文件不存在/读取失败返回null
+ * @return SHA256十六进制字符串
  */
 fun File.sha256(): String {
     val digest = MessageDigest.getInstance("SHA-256")
