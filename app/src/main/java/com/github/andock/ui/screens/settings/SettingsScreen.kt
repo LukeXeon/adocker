@@ -91,7 +91,7 @@ fun SettingsScreen() {
                     title = stringResource(R.string.settings_registry_mirror),
                     subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
                     onClick = debounceClick {
-                        navController.navigate(RegistriesRoute())
+                        navController.navigate(RegistriesRoute)
                     }
                 )
             }
