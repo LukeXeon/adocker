@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -21,12 +20,11 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.uuid.ExperimentalUuidApi
 
-@Composable
 fun formatDate(timestamp: Long): String {
-    val sdf = remember(LocalConfiguration.current) {
-        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    }
-    return sdf.format(Date(timestamp))
+    return SimpleDateFormat(
+        "yyyy-MM-dd HH:mm:ss",
+        Locale.getDefault()
+    ).format(Date(timestamp))
 }
 
 fun formatSize(bytes: Long): String {
@@ -50,15 +48,6 @@ suspend inline fun <T> withAtLeast(
         job.join()
         value
     }
-}
-
-fun parseEnvVars(input: String): Map<String, String> {
-    return input.lines()
-        .filter { it.isNotBlank() && it.contains("=") }
-        .associate { line ->
-            val parts = line.split("=", limit = 2)
-            parts[0].trim() to parts.getOrElse(1) { "" }.trim()
-        }
 }
 
 
