@@ -15,4 +15,7 @@ interface AuthTokenDao {
 
     @Query("DELETE FROM auth_tokens WHERE expiry < (strftime('%s', 'now') * 1000)")
     suspend fun deleteExpiredTokens()
+
+    @Query("DELETE FROM auth_tokens WHERE token = :token")
+    suspend fun deleteToken(token: String)
 }

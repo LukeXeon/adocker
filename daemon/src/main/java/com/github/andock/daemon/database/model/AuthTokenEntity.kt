@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     "auth_tokens",
-    indices = [Index("url")]
+    indices = [Index("url"), Index("token")]
 )
 data class AuthTokenEntity(
     @PrimaryKey

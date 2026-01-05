@@ -177,6 +177,9 @@ class ImageClient @Inject constructor(
                 ).joinToString(", ")
             )
         }
+        if (response.status == HttpStatusCode.Unauthorized) {
+            authTokenDao.deleteToken(authToken)
+        }
         response.body()
     }
 
@@ -192,7 +195,7 @@ class ImageClient @Inject constructor(
             registryUrl
         ).getOrThrow()
         // First try to get the manifest list
-        val manifestListResponse = client.get(
+        val response = client.get(
             "$registryUrl/v2/${imageRef.repository}/manifests/${imageRef.tag}"
         ) {
             // Only add Authorization header if we have a token
@@ -209,9 +212,11 @@ class ImageClient @Inject constructor(
                 ).joinToString(", ")
             )
         }
-
-        val contentType = manifestListResponse.contentType()?.toString() ?: ""
-        val bodyText = manifestListResponse.bodyAsText()
+        if (response.status == HttpStatusCode.Unauthorized) {
+            authTokenDao.deleteToken(authToken)
+        }
+        val contentType = response.contentType()?.toString() ?: ""
+        val bodyText = response.bodyAsText()
         Timber.d("Manifest response - ContentType: $contentType")
         Timber.d("Manifest response - Body: ${bodyText.take(500)}")
         when {
@@ -285,6 +290,9 @@ class ImageClient @Inject constructor(
                     requestTimeoutMillis = DOWNLOAD_TIMEOUT
                 }
             }.execute { response ->
+                if (response.status == HttpStatusCode.Unauthorized) {
+                    authTokenDao.deleteToken(authToken)
+                }
                 Timber.d("Layer download response status: ${response.status}")
                 val contentLength = response.contentLength() ?: layer.size
                 var downloaded = 0L
