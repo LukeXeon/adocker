@@ -32,8 +32,8 @@ class ImageManager @Inject constructor(
 
     fun getImageById(id: String) = imageDao.getImageFlowById(id)
 
-    fun pullImage(imageName: ImageReference): ImageDownloader {
-        return downloaderFactory.create(imageName)
+    fun pullImage(imageRef: ImageReference): ImageDownloader {
+        return downloaderFactory.create(imageRef)
     }
 
     internal suspend fun deleteUnreferencedLayers() {

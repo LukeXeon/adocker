@@ -70,9 +70,17 @@ fun ImagesScreen() {
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     if (lifecycleOwner is NavBackStackEntry) {
-        val scannedData = lifecycleOwner.savedStateHandle[ScannedData].collectAsState()
-        LaunchedEffect(scannedData) {
-
+        val scannedDataFlow = lifecycleOwner.savedStateHandle[ScannedData]
+        val scannedData = scannedDataFlow.collectAsState().value
+        if (!scannedData.isNullOrEmpty()) {
+            LaunchedEffect(scannedData) {
+                scannedDataFlow.value = null
+                setProgressDialog(
+                    viewModel.pullImage(
+                        ImageReference.parse(scannedData)
+                    )
+                )
+            }
         }
     }
     Scaffold(

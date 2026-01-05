@@ -20,7 +20,6 @@ import java.util.Locale
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @Composable
 fun formatDate(timestamp: Long): String {
@@ -94,7 +93,7 @@ fun <T> savedStateHandleKey(initialValue: T): ReadOnlyProperty<Any?, SavedStateH
                 synchronized(this) {
                     var v2 = value
                     if (v2 == null) {
-                        v2 = "${property.name}@${Uuid.random()}" to initialValue
+                        v2 = property.name to initialValue
                         value = v2
                     }
                     return v2

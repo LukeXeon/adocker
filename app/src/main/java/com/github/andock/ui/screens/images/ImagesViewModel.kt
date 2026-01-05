@@ -21,7 +21,7 @@ class ImagesViewModel @Inject constructor(
 
     fun getImageById(id: String) = imageManager.getImageById(id)
 
-    fun pullImage(imageName: ImageReference) = imageManager.pullImage(imageName)
+    fun pullImage(imageRef: ImageReference) = imageManager.pullImage(imageRef)
 
     fun tags(repository: String) = imageRepository.tags(repository)
 

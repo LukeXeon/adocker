@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.registries.RegistryManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class RegistriesViewModel @Inject constructor(
-    private val registryManager: RegistryManager
+    private val registryManager: RegistryManager,
+    private val json: Json,
 ) : ViewModel() {
     val sortedList = registryManager.sortedList
 
@@ -17,6 +20,24 @@ class RegistriesViewModel @Inject constructor(
 
     suspend fun deleteCustomMirror(id: String) {
         registryManager.registries.value[id]?.remove()
+    }
+
+    suspend fun addScannedCode(
+        scannedData: String,
+    ): Boolean {
+        json.runCatching {
+            decodeFromString<MirrorQrcode>(scannedData)
+        }.fold(
+            { code ->
+                val (name, url, token, priority) = code
+                registryManager.addCustomMirror(name, url, token, priority)
+                return true
+            },
+            {
+                Timber.e(it)
+                return false
+            }
+        )
     }
 
     suspend fun addCustomMirror(
