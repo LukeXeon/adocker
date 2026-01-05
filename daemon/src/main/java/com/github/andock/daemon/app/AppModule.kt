@@ -24,7 +24,6 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Named
@@ -98,20 +97,7 @@ object AppModule {
     ) = suspendLazy {
         logging.getValue()
         reporter.getValue()
-        withContext(Dispatchers.IO) {
-            appContext.logDir.deleteRecursively()
-            // Create directories on initialization
-            listOf(
-                appContext.containersDir,
-                appContext.layersDir,
-                appContext.logDir,
-            ).forEach { dir ->
-                if (!dir.exists()) {
-                    dir.mkdirs()
-                }
-            }
-            Timber.d("AppConfig initialized: baseDir=${appContext.baseDir.absolutePath}")
-        }
+        appContext.initializeDirs()
     }
 
     @Provides

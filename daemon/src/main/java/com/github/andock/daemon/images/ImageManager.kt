@@ -36,17 +36,21 @@ class ImageManager @Inject constructor(
         return downloaderFactory.create(imageName)
     }
 
+    internal suspend fun deleteUnreferencedLayers() {
+        withContext(Dispatchers.IO) {
+            val layers = layerDao.deleteUnreferencedLayers()
+            layers.asSequence().map {
+                File(appContext.layersDir, "${it}.tar.gz")
+            }.forEach {
+                it.delete()
+            }
+        }
+    }
+
     suspend fun deleteImage(id: String) {
         database.withTransaction {
             imageDao.deleteImageById(id)
-            val layers = layerDao.deleteUnreferencedLayers()
-            withContext(Dispatchers.IO) {
-                layers.asSequence().map {
-                    File(appContext.layersDir, "${it}.tar.gz")
-                }.forEach {
-                    it.delete()
-                }
-            }
+            deleteUnreferencedLayers()
         }
     }
 }

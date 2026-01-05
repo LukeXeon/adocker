@@ -8,9 +8,7 @@ import com.github.andock.daemon.database.Converters
 
 @Entity(
     tableName = "registries",
-    indices = [
-        Index("id"),
-    ]
+    indices = [Index("id")]
 )
 @TypeConverters(Converters::class)
 data class RegistryEntity(

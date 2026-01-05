@@ -5,13 +5,16 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.github.andock.daemon.images.model.ContainerConfig
 import com.github.andock.daemon.database.Converters
+import com.github.andock.daemon.images.model.ContainerConfig
 import java.util.UUID
 
 @Entity(
     tableName = "containers",
-    indices = [Index("id")],
+    indices = [
+        Index("id"),
+        Index("imageId")
+    ],
     foreignKeys = [
         // 给imageId加外键：关联image表的id
         ForeignKey(
