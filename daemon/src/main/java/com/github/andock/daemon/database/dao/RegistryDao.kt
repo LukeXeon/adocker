@@ -15,6 +15,9 @@ interface RegistryDao {
     @Query("SELECT * FROM registries WHERE id = :id")
     suspend fun getRegistryById(id: String): RegistryEntity?
 
+    @Query("SELECT COUNT(*) FROM registries")
+    fun getRegistryCountFlow(): Flow<Int>
+
     @Query("SELECT * FROM registries WHERE id = :id")
     fun getRegistryFlowById(id: String): Flow<RegistryEntity?>
 

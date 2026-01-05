@@ -24,7 +24,7 @@ class ImageManager @Inject constructor(
     private val downloaderFactory: ImageDownloader.Factory,
     scope: CoroutineScope,
 ) {
-    val images = imageDao.getAllImages().stateIn(
+    val images = imageDao.getAllImagesFlow().stateIn(
         scope,
         SharingStarted.Eagerly,
         emptyList()

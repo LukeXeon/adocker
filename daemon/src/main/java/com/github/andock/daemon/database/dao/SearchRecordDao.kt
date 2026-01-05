@@ -13,26 +13,26 @@ interface SearchRecordDao {
      * Get all search records ordered by most recent first.
      */
     @Query("SELECT `query` FROM search_records ORDER BY updateAt DESC LIMIT 20")
-    fun getSearchRecords(): Flow<List<String>>
+    fun getAllRecordsFlow(): Flow<List<String>>
 
     /**
      * Insert or update a search record.
      * If the query already exists, it will update the timestamp.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSearchRecord(record: SearchRecordEntity)
+    suspend fun insertRecord(record: SearchRecordEntity)
 
     /**
      * Delete a specific search record by query.
      */
     @Query("DELETE FROM search_records WHERE `query` = :query")
-    suspend fun deleteSearchRecord(query: String)
+    suspend fun deleteRecord(query: String)
 
     /**
      * Clear all search records.
      */
     @Query("DELETE FROM search_records")
-    suspend fun clearAllSearchRecords()
+    suspend fun clearAllRecords()
 
     /**
      * Delete old search records, keeping only the most recent 20.

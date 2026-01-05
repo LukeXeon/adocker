@@ -46,7 +46,7 @@ class SearchHistory @Inject constructor(
      * with the most recent search query at index 0.
      * Limited to the most recent 20 items.
      */
-    val records = searchRecordDao.getSearchRecords()
+    val records = searchRecordDao.getAllRecordsFlow()
 
     /**
      * Add a search query to history.
@@ -65,7 +65,7 @@ class SearchHistory @Inject constructor(
             updateAt = System.currentTimeMillis()
         )
         // Insert or replace (updates timestamp if already exists)
-        searchRecordDao.insertSearchRecord(record)
+        searchRecordDao.insertRecord(record)
 
         // Trim old records to keep only the most recent MAX_HISTORY_SIZE
         searchRecordDao.trimOldRecords()
@@ -77,7 +77,7 @@ class SearchHistory @Inject constructor(
      * Removes all stored search queries from the database.
      */
     suspend fun clear() {
-        searchRecordDao.clearAllSearchRecords()
+        searchRecordDao.clearAllRecords()
     }
 
     /**
@@ -88,6 +88,6 @@ class SearchHistory @Inject constructor(
      * @param query The query to remove
      */
     suspend fun remove(query: String) {
-        searchRecordDao.deleteSearchRecord(query)
+        searchRecordDao.deleteRecord(query)
     }
 }

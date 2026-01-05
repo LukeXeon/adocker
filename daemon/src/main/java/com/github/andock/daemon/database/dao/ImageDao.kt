@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ImageDao {
     @Query("SELECT * FROM images ORDER BY created DESC")
-    fun getAllImages(): Flow<List<ImageEntity>>
+    fun getAllImagesFlow(): Flow<List<ImageEntity>>
 
     @Query("SELECT * FROM images WHERE id = :id")
     suspend fun getImageById(id: String): ImageEntity?
