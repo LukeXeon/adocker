@@ -5,6 +5,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,6 +19,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -27,7 +29,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.andock.ui.components.LocalBottomSpacerHeight
 import com.github.andock.ui.screens.home.HomeRoute
 import com.github.andock.ui.utils.debounceClick
 
@@ -102,12 +103,12 @@ fun MainScreen() {
         }
     ) { paddingValues ->
         CompositionLocalProvider(
-            LocalNavController provides navController,
-            LocalBottomSpacerHeight provides paddingValues.calculateBottomPadding()
+            LocalNavController provides navController
         ) {
             NavHost(
                 navController = navController,
-                startDestination = HomeRoute::class
+                startDestination = HomeRoute::class,
+                modifier = Modifier.padding(paddingValues)
             ) {
                 screens.forEach { (route, screen) ->
                     composable(

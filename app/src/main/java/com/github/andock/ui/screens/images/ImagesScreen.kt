@@ -46,7 +46,6 @@ import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
-import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.containers.ContainerCreateRoute
 import com.github.andock.ui.screens.main.LocalNavController
@@ -189,7 +188,6 @@ fun ImagesScreen() {
                     }
                 }
             }
-            BottomSpacer()
         }
     }
     // Delete confirmation dialog

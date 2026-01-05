@@ -6,8 +6,10 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -40,7 +42,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.github.andock.R
 import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.io.formatFileSize
-import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.registries.RegistriesRoute
@@ -174,7 +175,7 @@ fun SettingsScreen() {
 
             // 呼吸空间
             item {
-                BottomSpacer(Spacing.Medium)
+                Spacer(Modifier.height(Spacing.Medium))
             }
         }
     }
