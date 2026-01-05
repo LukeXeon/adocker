@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.registries.RegistryManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
@@ -26,7 +28,9 @@ class RegistriesViewModel @Inject constructor(
         scannedData: String,
     ): Boolean {
         json.runCatching {
-            decodeFromString<MirrorQrcode>(scannedData)
+            withContext(Dispatchers.IO) {
+                decodeFromString<MirrorQrcode>(scannedData)
+            }
         }.fold(
             { code ->
                 val (name, url, token, priority) = code

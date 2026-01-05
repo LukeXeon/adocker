@@ -68,7 +68,7 @@ fun RegistriesScreen() {
         if (!scannedData.isNullOrEmpty()) {
             val message = stringResource(R.string.message_error)
             LaunchedEffect(scannedData) {
-                if (viewModel.addScannedCode(scannedData)) {
+                if (!viewModel.addScannedCode(scannedData)) {
                     snackbarHostState.showSnackbar(message)
                 }
             }
