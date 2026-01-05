@@ -1,25 +1,19 @@
 package com.github.andock.ui.screens.images
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,21 +26,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
-import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
+import com.github.andock.ui.components.PaginationColumn
+import com.github.andock.ui.components.PaginationEmptyPlaceholder
 import com.github.andock.ui.screens.main.LocalNavController
-import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
@@ -88,107 +81,49 @@ fun ImageTagSelectScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when {
-                tags.loadState.refresh is LoadState.Loading && tags.itemCount == 0 -> {
-                    // Initial loading
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                tags.loadState.refresh is LoadState.Error && tags.itemCount == 0 -> {
-                    // Error state
-                    // TODO
-                }
-
-                tags.itemCount == 0 -> {
-                    // No results
+            PaginationColumn(
+                tags,
+                PaginationEmptyPlaceholder(
+                    Icons.Default.Tag,
+                    stringResource(R.string.images_tag_empty),
+                    stringResource(R.string.images_tag_empty_subtitle)
+                ),
+                { it }
+            ) { tagName ->
+                Card(
+                    enabled = isActive,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        setProgressDialog(
+                            viewModel.pullImage(
+                                ImageReference.parse(
+                                    "$repository:$tagName"
+                                )
+                            )
+                        )
+                    },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = Spacing.ExtraLarge),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .heightIn(
+                                LocalMinimumInteractiveComponentSize.current
+                            )
+                            .padding(
+                                horizontal = Spacing.Medium,
+                                vertical = Spacing.Small
+                            ),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(Spacing.Medium)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Tag,
-                                contentDescription = null,
-                                modifier = Modifier.size(IconSize.Huge),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.Large))
-                            Text(
-                                text = stringResource(R.string.images_tag_empty),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(Spacing.Small))
-                            Text(
-                                text = stringResource(R.string.images_tag_empty_subtitle),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = Spacing.Medium,
-                            end = Spacing.Medium,
-                            bottom = Spacing.Medium
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.Small)
-                    ) {
-                        items(tags.itemCount, { index -> tags[index] ?: "" }) {
-                            val tagName = tags[it]
-                            if (!tagName.isNullOrEmpty()) {
-                                Card(
-                                    enabled = isActive,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = {
-                                        setProgressDialog(
-                                            viewModel.pullImage(
-                                                ImageReference.parse(
-                                                    "$repository:$tagName"
-                                                )
-                                            )
-                                        )
-                                    },
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(
-                                                horizontal = Spacing.Medium,
-                                                vertical = Spacing.Small
-                                            ),
-                                        contentAlignment = Alignment.CenterStart
-                                    ) {
-                                        Text(
-                                            text = tagName,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        Text(
+                            text = tagName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
-
         }
     }
     if (showProgressDialog != null) {

@@ -1,9 +1,7 @@
 package com.github.andock.ui.screens.search
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,7 +19,6 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,11 +41,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.github.andock.R
-import com.github.andock.ui.components.PaginationErrorItem
+import com.github.andock.ui.components.PaginationColumn
+import com.github.andock.ui.components.PaginationEmptyPlaceholder
 import com.github.andock.ui.screens.images.ImageTagSelectRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -187,88 +182,27 @@ fun SearchScreen() {
             }
 
             // Content
-            when {
-                searchQuery.isBlank() -> {
-                    // Initial/empty state - check this first to avoid showing loading on empty query
-                    SearchInitialState()
-                }
-
-                searchResults.loadState.refresh is LoadState.Loading && searchResults.itemCount == 0 -> {
-                    // Initial loading
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                searchResults.loadState.refresh is LoadState.Error && searchResults.itemCount == 0 -> {
-                    // Error state
-                    SearchErrorState(
-                        error = (searchResults.loadState.refresh as LoadState.Error).error,
-                        onRetry = { searchResults.retry() }
+            if (searchQuery.isBlank()) {
+                SearchInitialState()
+            } else {
+                PaginationColumn(
+                    searchResults,
+                    PaginationEmptyPlaceholder(
+                        Icons.Default.Search,
+                        stringResource(R.string.images_search_no_results),
+                        stringResource(R.string.images_search_no_results_desc)
+                    ),
+                    { it.repoName ?: "" }) { result ->
+                    SearchResultCard(
+                        result = result,
+                        onPull = {
+                            result.repoName?.let { name ->
+                                navController.navigate(
+                                    ImageTagSelectRoute(name)
+                                )
+                            }
+                        },
                     )
-                }
-
-                searchResults.itemCount == 0 && searchQuery.isNotBlank() -> {
-                    // No results
-                    SearchNoResultsState()
-                }
-
-                else -> {
-                    // Results list
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = Spacing.Medium,
-                            end = Spacing.Medium,
-                            bottom = Spacing.Medium
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.Small)
-                    ) {
-                        items(
-                            count = searchResults.itemCount,
-                            key = searchResults.itemKey { it.repoName ?: "" }
-                        ) { index ->
-                            val result = searchResults[index]
-                            if (result != null) {
-                                SearchResultCard(
-                                    result = result,
-                                    onPull = {
-                                        result.repoName?.let { name ->
-                                            navController.navigate(
-                                                ImageTagSelectRoute(name)
-                                            )
-                                        }
-                                    },
-                                )
-                            }
-                        }
-
-                        // Loading indicator for pagination
-                        if (searchResults.loadState.append is LoadState.Loading) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(Spacing.Medium),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                        }
-
-                        // Error indicator for pagination
-                        if (searchResults.loadState.append is LoadState.Error) {
-                            item {
-                                PaginationErrorItem(
-                                    onRetry = { searchResults.retry() }
-                                )
-                            }
-                        }
-                    }
                 }
             }
         }

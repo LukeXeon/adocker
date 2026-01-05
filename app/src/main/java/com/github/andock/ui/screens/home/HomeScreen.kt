@@ -232,7 +232,7 @@ fun HomeScreen() {
                         description = stringResource(R.string.home_mirror_settings_desc),
                         icon = Icons.Default.Public,
                         onClick = debounceClick {
-                            navController.navigate(RegistriesRoute())
+                            navController.navigate(RegistriesRoute)
                         },
                         modifier = Modifier.weight(1f)
                     )
