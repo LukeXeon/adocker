@@ -17,6 +17,7 @@ import com.github.andock.ui.theme.Spacing
 fun <T : Any> PaginationColumn(
     items: LazyPagingItems<T>,
     empty: PaginationEmptyPlaceholder,
+    error: PaginationErrorPlaceholder,
     key: ((item: @JvmSuppressWildcards T) -> Any),
     itemContent: @Composable LazyItemScope.(item: T) -> Unit,
 ) {
@@ -31,7 +32,7 @@ fun <T : Any> PaginationColumn(
 
             items.loadState.refresh is LoadState.Error && items.itemCount == 0 -> {
                 // Error state
-                PaginationErrorPlaceholder(
+                error.Content(
                     error = (items.loadState.refresh as LoadState.Error).error,
                     onRetry = { items.retry() }
                 )

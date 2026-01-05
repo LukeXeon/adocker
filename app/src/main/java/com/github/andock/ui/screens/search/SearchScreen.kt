@@ -46,6 +46,7 @@ import com.github.andock.R
 import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationEmptyPlaceholder
+import com.github.andock.ui.components.PaginationErrorPlaceholder
 import com.github.andock.ui.screens.images.ImageTagSelectRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -193,6 +194,7 @@ fun SearchScreen() {
                         stringResource(R.string.images_search_no_results),
                         stringResource(R.string.images_search_no_results_desc)
                     ),
+                    PaginationErrorPlaceholder("Search Failed"),
                     { it.repoName ?: "" }) { result ->
                     SearchResultCard(
                         result = result,

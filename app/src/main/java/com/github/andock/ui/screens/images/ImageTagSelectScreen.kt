@@ -41,6 +41,7 @@ import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationEmptyPlaceholder
+import com.github.andock.ui.components.PaginationErrorPlaceholder
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -91,6 +92,7 @@ fun ImageTagSelectScreen() {
                     stringResource(R.string.images_tag_empty),
                     stringResource(R.string.images_tag_empty_subtitle)
                 ),
+                PaginationErrorPlaceholder("Load Failed"),
                 { it }
             ) { tagName ->
                 Card(
