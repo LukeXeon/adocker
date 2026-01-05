@@ -220,6 +220,9 @@ class ImageRepository @AssistedInject constructor(
                 header(HttpHeaders.Authorization, "Bearer $authToken")
             }
         }
+        if (response.status == HttpStatusCode.Unauthorized) {
+            authTokenDao.deleteToken(authToken)
+        }
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
         val body = json.decodeFromString<ImageConfigResponse>(response.bodyAsText())
