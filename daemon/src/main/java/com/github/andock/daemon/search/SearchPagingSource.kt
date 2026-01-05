@@ -13,8 +13,6 @@ import io.ktor.http.Url
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.util.Collections
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Singleton
 
 /**
@@ -29,28 +27,37 @@ import javax.inject.Singleton
  */
 class SearchPagingSource @AssistedInject constructor(
     private val client: HttpClient
-) : PagingSource<Url, SearchResult>() {
-    private val names = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
+) : PagingSource<SearchKey, SearchResult>() {
 
-    override suspend fun load(params: LoadParams<Url>): LoadResult<Url, SearchResult> {
-        val url = params.key ?: return LoadResult.Page(
+    override suspend fun load(params: LoadParams<SearchKey>): LoadResult<SearchKey, SearchResult> {
+        val key = params.key ?: return LoadResult.Page(
             emptyList(),
             null,
             null
         )
         return withContext(Dispatchers.IO) {
             runCatching {
-                client.get(url).body<SearchResponse>()
+                client.get(key.url).body<SearchResponse>()
             }.mapCatching { response ->
+                val names = HashSet<String>(
+                    key.names.size + response.results.size
+                )
+                names.addAll(key.names)
                 LoadResult.Page(
                     data = response.results.filter { it.repoName != null && names.add(it.repoName) },
                     prevKey = if (!response.previous.isNullOrBlank()) {
-                        Url(response.previous)
+                        SearchKey(
+                            Url(response.previous),
+                            names,
+                        )
                     } else {
                         null
                     },
                     nextKey = if (!response.next.isNullOrBlank()) {
-                        Url(response.next)
+                        SearchKey(
+                            Url(response.next),
+                            names
+                        )
                     } else {
                         null
                     }
@@ -67,7 +74,7 @@ class SearchPagingSource @AssistedInject constructor(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Url, SearchResult>): Url? {
+    override fun getRefreshKey(state: PagingState<SearchKey, SearchResult>): SearchKey? {
         return null
     }
 

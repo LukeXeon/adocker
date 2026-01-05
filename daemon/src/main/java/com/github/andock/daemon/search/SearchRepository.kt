@@ -52,29 +52,32 @@ class SearchRepository @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = parameters.pageSize,
             ),
-            initialKey = URLBuilder("https://hub.docker.com/v2/search/repositories/")
-                .also {
-                    it.parameters.apply {
-                        jsonObject.asSequence().forEach { (k, v) ->
-                            when (v) {
-                                is JsonPrimitive -> {
-                                    append(k, v.toString())
+            initialKey = SearchKey(
+                URLBuilder("https://hub.docker.com/v2/search/repositories/")
+                    .also {
+                        it.parameters.apply {
+                            jsonObject.asSequence().forEach { (k, v) ->
+                                when (v) {
+                                    is JsonPrimitive -> {
+                                        append(k, v.toString())
+                                    }
+
+                                    is JsonArray -> {
+                                        appendAll(
+                                            k,
+                                            v.asSequence().map { v -> v.toString() }.asIterable()
+                                        )
+                                    }
+
+                                    else -> Unit
                                 }
 
-                                is JsonArray -> {
-                                    appendAll(
-                                        k,
-                                        v.asSequence().map { v -> v.toString() }.asIterable()
-                                    )
-                                }
-
-                                else -> Unit
                             }
-
                         }
                     }
-                }
-                .build(),
+                    .build(),
+                emptySet(),
+            ),
             pagingSourceFactory = factory
         ).flow
     }
