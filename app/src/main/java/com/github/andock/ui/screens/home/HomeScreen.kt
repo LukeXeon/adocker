@@ -52,6 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
+import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
@@ -288,6 +289,10 @@ fun HomeScreen() {
                         )
                     }
                 }
+            }
+
+            item {
+                BottomSpacer()
             }
         }
     }

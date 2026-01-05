@@ -6,15 +6,11 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Cloud
@@ -44,6 +40,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.github.andock.R
 import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.io.formatFileSize
+import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.registries.RegistriesRoute
@@ -76,100 +73,109 @@ fun SettingsScreen() {
                 title = { Text(stringResource(R.string.settings_title)) }
             )
         },
-    ) { padding ->
-        Column(
+    ) { paddingValues ->
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
         ) {
             // Network section
-            SettingsSection(title = stringResource(R.string.settings_network)) {
-                SettingsClickableItem(
-                    icon = Icons.Default.Cloud,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    title = stringResource(R.string.settings_registry_mirror),
-                    subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
-                    onClick = debounceClick {
-                        navController.navigate(RegistriesRoute)
-                    }
-                )
+            item {
+                SettingsSection(title = stringResource(R.string.settings_network)) {
+                    SettingsClickableItem(
+                        icon = Icons.Default.Cloud,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        title = stringResource(R.string.settings_registry_mirror),
+                        subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
+                        onClick = debounceClick {
+                            navController.navigate(RegistriesRoute)
+                        }
+                    )
+                }
             }
 
             // System section
-            SettingsSection(title = stringResource(R.string.settings_system)) {
-                SettingsClickableItem(
-                    icon = Icons.Default.Block,
-                    iconTint = MaterialTheme.colorScheme.error,
-                    title = stringResource(R.string.settings_phantom_process),
-                    subtitle = stringResource(R.string.settings_phantom_process_subtitle),
-                    onClick = debounceClick {
-                        navController.navigate(ProcessLimitRoute)
-                    },
-                    isWarning = true
-                )
-                SettingsItem(
-                    icon = Icons.Default.PhoneAndroid,
-                    title = stringResource(R.string.settings_platform),
-                    subtitle = stringResource(
-                        R.string.settings_platform_value,
-                        Build.VERSION.RELEASE,
-                        Build.VERSION.SDK_INT
+            item {
+                SettingsSection(title = stringResource(R.string.settings_system)) {
+                    SettingsClickableItem(
+                        icon = Icons.Default.Block,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        title = stringResource(R.string.settings_phantom_process),
+                        subtitle = stringResource(R.string.settings_phantom_process_subtitle),
+                        onClick = debounceClick {
+                            navController.navigate(ProcessLimitRoute)
+                        },
+                        isWarning = true
                     )
-                )
+                    SettingsItem(
+                        icon = Icons.Default.PhoneAndroid,
+                        title = stringResource(R.string.settings_platform),
+                        subtitle = stringResource(
+                            R.string.settings_platform_value,
+                            Build.VERSION.RELEASE,
+                            Build.VERSION.SDK_INT
+                        )
+                    )
 
-                SettingsItem(
-                    icon = Icons.Default.Memory,
-                    title = stringResource(R.string.settings_architecture),
-                    subtitle = AppArchitecture.DEFAULT
-                )
+                    SettingsItem(
+                        icon = Icons.Default.Memory,
+                        title = stringResource(R.string.settings_architecture),
+                        subtitle = AppArchitecture.DEFAULT
+                    )
+                }
             }
 
             // Storage section
-            SettingsSection(title = stringResource(R.string.settings_storage)) {
-                SettingsItem(
-                    icon = Icons.Default.Storage,
-                    title = stringResource(R.string.settings_storage_usage),
-                    subtitle = storageUsage?.let { formatFileSize(it) }
-                        ?: stringResource(R.string.status_loading)
-                )
+            item {
+                SettingsSection(title = stringResource(R.string.settings_storage)) {
+                    SettingsItem(
+                        icon = Icons.Default.Storage,
+                        title = stringResource(R.string.settings_storage_usage),
+                        subtitle = storageUsage?.let { formatFileSize(it) }
+                            ?: stringResource(R.string.status_loading)
+                    )
 
-                SettingsClickableItem(
-                    icon = Icons.Default.Settings,
-                    title = stringResource(R.string.settings_manage_data),
-                    subtitle = stringResource(R.string.settings_mange_data_subtitle),
-                    onClick = {
-                        launcher.launch(
-                            Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.fromParts(
-                                    "package",
-                                    context.packageName,
-                                    null
+                    SettingsClickableItem(
+                        icon = Icons.Default.Settings,
+                        title = stringResource(R.string.settings_manage_data),
+                        subtitle = stringResource(R.string.settings_mange_data_subtitle),
+                        onClick = {
+                            launcher.launch(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts(
+                                        "package",
+                                        context.packageName,
+                                        null
+                                    )
                                 )
                             )
-                        )
-                    }
-                )
+                        }
+                    )
+                }
             }
 
             // About section
-            SettingsSection(title = stringResource(R.string.settings_about)) {
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(R.string.settings_version),
-                    subtitle = viewModel.packageInfo.versionName ?: ""
-                )
+            item {
+                SettingsSection(title = stringResource(R.string.settings_about)) {
+                    SettingsItem(
+                        icon = Icons.Default.Info,
+                        title = stringResource(R.string.settings_version),
+                        subtitle = viewModel.packageInfo.versionName ?: ""
+                    )
 
-                SettingsItem(
-                    icon = Icons.Default.Terminal,
-                    title = stringResource(R.string.settings_engine),
-                    subtitle = prootVersion ?: stringResource(R.string.terminal_unavailable)
-                )
+                    SettingsItem(
+                        icon = Icons.Default.Terminal,
+                        title = stringResource(R.string.settings_engine),
+                        subtitle = prootVersion ?: stringResource(R.string.terminal_unavailable)
+                    )
+                }
             }
 
             // 呼吸空间
-            Spacer(modifier = Modifier.height(Spacing.Medium))
+            item {
+                BottomSpacer(Spacing.Medium)
+            }
         }
     }
 }

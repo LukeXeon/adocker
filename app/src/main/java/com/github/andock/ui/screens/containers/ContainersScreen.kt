@@ -43,6 +43,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.terminal.TerminalRoute
@@ -215,6 +216,8 @@ fun ContainersScreen() {
                     }
                 }
             }
+
+            BottomSpacer()
         }
     }
     if (showDeleteDialog != null) {

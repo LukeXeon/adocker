@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
+import com.github.andock.ui.components.BottomSpacer
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationEmptyPlaceholder
 import com.github.andock.ui.screens.images.ImageTagSelectRoute
@@ -205,6 +206,7 @@ fun SearchScreen() {
                     )
                 }
             }
+            BottomSpacer()
         }
     }
 }
