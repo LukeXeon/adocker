@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -32,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import androidx.paging.cachedIn
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
@@ -58,7 +60,8 @@ fun ImageTagSelectScreen() {
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
-    val tags = remember { viewModel.tags(repository) }.collectAsLazyPagingItems()
+    val scope = rememberCoroutineScope()
+    val tags = remember { viewModel.tags(repository).cachedIn(scope) }.collectAsLazyPagingItems()
     Scaffold(
         topBar = {
             TopAppBar(
