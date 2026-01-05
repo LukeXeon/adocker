@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,8 +47,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.andock.R
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
@@ -63,9 +59,6 @@ val ScannedData by savedStateHandleKey<String?>(null)
 @Composable
 fun QrcodeScannerScreen() {
     val navController = LocalNavController.current
-    val isActive = LocalLifecycleOwner.current.lifecycle
-        .currentStateFlow
-        .collectAsState().value == Lifecycle.State.RESUMED
     val context = LocalContext.current
     val (hasCameraPermission, setHasCameraPermission) = remember {
         mutableStateOf(
@@ -128,184 +121,176 @@ fun QrcodeScannerScreen() {
             )
         },
     ) { padding ->
-        if (isActive) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                if (hasCameraPermission) {
-                    // Camera preview
-                    QrcodeCamera(
-                        flashEnabled = flashEnabled,
-                        onBarcodeDetected = { barcode ->
-                            val data = barcode.rawValue
-                            if (data != null && scannedData != data) {
-                                setScannedData(data)
-                            }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (hasCameraPermission) {
+                // Camera preview
+                QrcodeCamera(
+                    flashEnabled = flashEnabled,
+                    onBarcodeDetected = { barcode ->
+                        val data = barcode.rawValue
+                        if (data != null && scannedData != data) {
+                            setScannedData(data)
                         }
+                    }
+                )
+
+
+                // Overlay with scan frame
+                val primaryColor = MaterialTheme.colorScheme.primary
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val canvasWidth = size.width
+                    val canvasHeight = size.height
+
+                    val scanFrameSize = minOf(canvasWidth, canvasHeight) * 0.7f
+                    val left = (canvasWidth - scanFrameSize) / 2
+                    val top = (canvasHeight - scanFrameSize) / 2
+
+                    // Draw dark overlay outside scan frame
+                    drawRect(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        size = size
                     )
 
+                    // Clear scan frame area
+                    drawRoundRect(
+                        color = Color.Transparent,
+                        topLeft = Offset(left, top),
+                        size = Size(scanFrameSize, scanFrameSize),
+                        cornerRadius = CornerRadius(16.dp.toPx()),
+                        blendMode = BlendMode.Clear
+                    )
 
-                    // Overlay with scan frame
-                    val primaryColor = MaterialTheme.colorScheme.primary
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val canvasWidth = size.width
-                        val canvasHeight = size.height
+                    // Draw scan frame border
+                    drawRoundRect(
+                        color = Color.White,
+                        topLeft = Offset(left, top),
+                        size = Size(scanFrameSize, scanFrameSize),
+                        cornerRadius = CornerRadius(16.dp.toPx()),
+                        style = Stroke(width = 4.dp.toPx())
+                    )
 
-                        val scanFrameSize = minOf(canvasWidth, canvasHeight) * 0.7f
-                        val left = (canvasWidth - scanFrameSize) / 2
-                        val top = (canvasHeight - scanFrameSize) / 2
+                    // Draw corner indicators
+                    val cornerSize = 40.dp.toPx()
+                    val cornerThickness = 6.dp.toPx()
 
-                        // Draw dark overlay outside scan frame
-                        drawRect(
-                            color = Color.Black.copy(alpha = 0.5f),
-                            size = size
-                        )
+                    // Top-left corner
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left, top + 16.dp.toPx()),
+                        end = Offset(left, top),
+                        strokeWidth = cornerThickness
+                    )
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left, top),
+                        end = Offset(left + cornerSize, top),
+                        strokeWidth = cornerThickness
+                    )
 
-                        // Clear scan frame area
-                        drawRoundRect(
-                            color = Color.Transparent,
-                            topLeft = Offset(left, top),
-                            size = Size(scanFrameSize, scanFrameSize),
-                            cornerRadius = CornerRadius(16.dp.toPx()),
-                            blendMode = BlendMode.Clear
-                        )
+                    // Top-right corner
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left + scanFrameSize - cornerSize, top),
+                        end = Offset(left + scanFrameSize, top),
+                        strokeWidth = cornerThickness
+                    )
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left + scanFrameSize, top),
+                        end = Offset(left + scanFrameSize, top + cornerSize),
+                        strokeWidth = cornerThickness
+                    )
 
-                        // Draw scan frame border
-                        drawRoundRect(
-                            color = Color.White,
-                            topLeft = Offset(left, top),
-                            size = Size(scanFrameSize, scanFrameSize),
-                            cornerRadius = CornerRadius(16.dp.toPx()),
-                            style = Stroke(width = 4.dp.toPx())
-                        )
+                    // Bottom-left corner
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left, top + scanFrameSize - cornerSize),
+                        end = Offset(left, top + scanFrameSize),
+                        strokeWidth = cornerThickness
+                    )
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left, top + scanFrameSize),
+                        end = Offset(left + cornerSize, top + scanFrameSize),
+                        strokeWidth = cornerThickness
+                    )
 
-                        // Draw corner indicators
-                        val cornerSize = 40.dp.toPx()
-                        val cornerThickness = 6.dp.toPx()
+                    // Bottom-right corner
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left + scanFrameSize - cornerSize, top + scanFrameSize),
+                        end = Offset(left + scanFrameSize, top + scanFrameSize),
+                        strokeWidth = cornerThickness
+                    )
+                    drawLine(
+                        color = primaryColor,
+                        start = Offset(left + scanFrameSize, top + scanFrameSize - cornerSize),
+                        end = Offset(left + scanFrameSize, top + scanFrameSize),
+                        strokeWidth = cornerThickness
+                    )
+                }
 
-                        // Top-left corner
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left, top + 16.dp.toPx()),
-                            end = Offset(left, top),
-                            strokeWidth = cornerThickness
+                // Instruction text
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
                         )
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left, top),
-                            end = Offset(left + cornerSize, top),
-                            strokeWidth = cornerThickness
-                        )
-
-                        // Top-right corner
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left + scanFrameSize - cornerSize, top),
-                            end = Offset(left + scanFrameSize, top),
-                            strokeWidth = cornerThickness
-                        )
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left + scanFrameSize, top),
-                            end = Offset(left + scanFrameSize, top + cornerSize),
-                            strokeWidth = cornerThickness
-                        )
-
-                        // Bottom-left corner
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left, top + scanFrameSize - cornerSize),
-                            end = Offset(left, top + scanFrameSize),
-                            strokeWidth = cornerThickness
-                        )
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left, top + scanFrameSize),
-                            end = Offset(left + cornerSize, top + scanFrameSize),
-                            strokeWidth = cornerThickness
-                        )
-
-                        // Bottom-right corner
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left + scanFrameSize - cornerSize, top + scanFrameSize),
-                            end = Offset(left + scanFrameSize, top + scanFrameSize),
-                            strokeWidth = cornerThickness
-                        )
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(left + scanFrameSize, top + scanFrameSize - cornerSize),
-                            end = Offset(left + scanFrameSize, top + scanFrameSize),
-                            strokeWidth = cornerThickness
-                        )
-                    }
-
-                    // Instruction text
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 48.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.qr_hint),
-                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    // Permission denied UI
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            Icons.Default.FlashOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = stringResource(R.string.qr_permission_title),
-                            style = MaterialTheme.typography.titleLarge,
+                            text = stringResource(R.string.qr_hint),
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.qr_permission_message),
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
-                        ) {
-                            Text(stringResource(R.string.qr_permission_grant))
-                        }
+                    }
+                }
+            } else {
+                // Permission denied UI
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.FlashOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.qr_permission_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.qr_permission_message),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+                    ) {
+                        Text(stringResource(R.string.qr_permission_grant))
                     }
                 }
             }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-            )
         }
     }
     if (scannedData != null) {
