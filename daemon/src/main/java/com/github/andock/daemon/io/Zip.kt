@@ -46,9 +46,11 @@ suspend fun extractTarGz(
                         try {
                             val newPath = newFile.toPath()
                             // Remove existing file/link if present
-                            if (!Files.isSymbolicLink(newPath)
-                                || Files.readSymbolicLink(newPath).toString() != entry.linkName
+                            if (Files.isSymbolicLink(newPath) && Files.readSymbolicLink(newPath)
+                                    .toString() == entry.linkName
                             ) {
+                                Timber.d("Reused symlink: ${newFile.absolutePath} -> ${entry.linkName}")
+                            } else {
                                 Files.deleteIfExists(newFile.toPath())
                                 Files.createSymbolicLink(newPath, Path(entry.linkName))
                                 Timber.d("Created symlink: ${newFile.absolutePath} -> ${entry.linkName}")
