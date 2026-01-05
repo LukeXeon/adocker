@@ -21,4 +21,5 @@ object Spacing {
     val ListItemSpacing = 12.dp
     val SectionSpacing = 24.dp
     val ContentSpacing = 16.dp
+    val BottomSpacing = 80.dp
 }

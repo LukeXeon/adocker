@@ -7,10 +7,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -25,7 +23,6 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -66,9 +63,6 @@ fun SettingsScreen() {
         }
     }
     Scaffold(
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
-            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-        ),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) }
@@ -175,7 +169,7 @@ fun SettingsScreen() {
 
             // 呼吸空间
             item {
-                Spacer(Modifier.height(Spacing.Medium))
+                Spacer(Modifier.height(Spacing.BottomSpacing))
             }
         }
     }
