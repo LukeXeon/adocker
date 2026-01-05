@@ -300,7 +300,7 @@ class ImageRepository @AssistedInject constructor(
 
     @Singleton
     @AssistedFactory
-    interface Factory {
-        fun create(@Assisted registryUrl: String): ImageRepository
+    interface Factory : (String) -> ImageRepository {
+        override fun invoke(@Assisted registryUrl: String): ImageRepository
     }
 }

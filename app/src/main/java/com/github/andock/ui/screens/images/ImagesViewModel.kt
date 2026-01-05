@@ -1,5 +1,6 @@
 package com.github.andock.ui.screens.images
 
+import androidx.collection.LruCache
 import androidx.lifecycle.ViewModel
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.ImageReference
@@ -11,13 +12,13 @@ import javax.inject.Inject
 @HiltViewModel
 class ImagesViewModel @Inject constructor(
     private val imageManager: ImageManager,
-    factory: ImageRepository.Factory,
+    private val repositories: LruCache<String, ImageRepository>,
 ) : ViewModel() {
 
     val images
         get() = imageManager.images
-
-    private val imageRepository = factory.create(RegistryModule.DEFAULT_REGISTRY)
+    private val imageRepository
+        get() = repositories[RegistryModule.DEFAULT_REGISTRY]!!
 
     fun getImageById(id: String) = imageManager.getImageById(id)
 

@@ -1,5 +1,7 @@
 package com.github.andock.daemon.images
 
+import androidx.collection.LruCache
+import androidx.collection.lruCache
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
@@ -33,4 +35,10 @@ object ImagesModule {
     fun initializerToMap(
         @Named("images") task: SuspendLazy<Unit>
     ): SuspendLazy<*> = task
+
+    @Provides
+    @Singleton
+    fun imageRepositories(factory: ImageRepository.Factory): LruCache<String, ImageRepository> {
+        return lruCache(6, create = factory)
+    }
 }

@@ -1,5 +1,6 @@
 package com.github.andock.daemon.images
 
+import androidx.collection.LruCache
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andock.daemon.images.model.TagsListResponse
@@ -16,7 +17,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Singleton
 
 class ImageTagPagingSource @AssistedInject constructor(
-    private val factory: ImageRepository.Factory,
+    private val repositories: LruCache<String, ImageRepository>,
     private val client: HttpClient,
 ) : PagingSource<ImageTagParameters, String>() {
 
@@ -27,7 +28,7 @@ class ImageTagPagingSource @AssistedInject constructor(
     override suspend fun load(params: LoadParams<ImageTagParameters>): LoadResult<ImageTagParameters, String> {
         val key = params.key ?: return LoadResult.Page(emptyList(), null, null)
         val (registryUrl, repository, last) = key
-        val imageRepository = factory.create(registryUrl)
+        val imageRepository = repositories[registryUrl]!!
         return withContext(Dispatchers.IO) {
             imageRepository.authenticate(repository)
                 .mapCatching { authToken ->

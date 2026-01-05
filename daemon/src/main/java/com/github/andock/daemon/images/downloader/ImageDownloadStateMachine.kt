@@ -1,5 +1,6 @@
 package com.github.andock.daemon.images.downloader
 
+import androidx.collection.LruCache
 import androidx.room.withTransaction
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
@@ -36,7 +37,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class ImageDownloadStateMachine @AssistedInject constructor(
     @Assisted
     imageRef: ImageReference,
-    factory: ImageRepository.Factory,
+    repositories: LruCache<String, ImageRepository>,
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
     private val layerReferenceDao: LayerReferenceDao,
@@ -44,9 +45,9 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val appContext: AppContext,
     private val registryManager: RegistryManager,
 ) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
-    private val imageRepository = factory.create(
+    private val imageRepository = repositories[
         registryManager.getBestServerUrl(imageRef.registry)
-    )
+    ]!!
 
     init {
         initializeWith {
