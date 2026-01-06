@@ -1,5 +1,6 @@
 package com.github.andock.ui.screens.containers
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,11 +64,15 @@ fun ContainerLogScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            InfoCard(
-                imageVector = Icons.Filled.ViewInAr,
-                title = name,
-                subtitle = containerId.take(12)
-            )
+            Box(
+                modifier = Modifier.padding(Spacing.Medium)
+            ) {
+                InfoCard(
+                    imageVector = Icons.Filled.ViewInAr,
+                    title = name,
+                    subtitle = containerId.take(12)
+                )
+            }
             PaginationColumn(
                 items = logLines,
                 itemKey = { it.id },
