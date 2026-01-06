@@ -43,6 +43,7 @@ import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationEmptyPlaceholder
 import com.github.andock.ui.components.PaginationErrorPlaceholder
+import com.github.andock.ui.components.PaginationInitialPlaceholder
 import com.github.andock.ui.screens.images.ImageTagSelectRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -181,26 +182,41 @@ fun SearchScreen() {
                 SearchInitialState()
             } else {
                 PaginationColumn(
-                    searchResults,
-                    PaginationEmptyPlaceholder(
-                        Icons.Default.Search,
-                        stringResource(R.string.images_search_no_results),
-                        stringResource(R.string.images_search_no_results_desc)
-                    ),
-                    PaginationErrorPlaceholder("Search Failed"),
-                    { it.repoName ?: "" }) { result ->
-                    SearchResultCard(
-                        result = result,
-                        onPull = {
-                            result.repoName?.let { name ->
-                                navController.navigate(
-                                    ImageTagSelectRoute(name)
-                                )
-                            }
-                        },
-                    )
-                }
+                    items = searchResults,
+                    itemKey = { it.repoName ?: "" },
+                    itemContent = { result ->
+                        SearchResultCard(
+                            result = result,
+                            onPull = {
+                                result.repoName?.let { name ->
+                                    navController.navigate(
+                                        ImageTagSelectRoute(name)
+                                    )
+                                }
+                            },
+                        )
+                    },
+                    initialContent = {
+                        PaginationInitialPlaceholder()
+                    },
+                    emptyContent = {
+                        PaginationEmptyPlaceholder(
+                            Icons.Default.Search,
+                            stringResource(R.string.images_search_no_results),
+                            stringResource(R.string.images_search_no_results_desc)
+                        )
+                    },
+                    errorContent = {
+                        PaginationErrorPlaceholder(
+                            it,
+                            "Search Failed",
+                        ) {
+                            searchResults.retry()
+                        }
+                    }
+                )
             }
         }
     }
 }
+

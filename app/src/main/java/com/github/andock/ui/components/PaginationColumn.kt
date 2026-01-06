@@ -18,10 +18,11 @@ import com.github.andock.ui.theme.Spacing
 @Composable
 fun <T : Any> PaginationColumn(
     items: LazyPagingItems<T>,
-    empty: PaginationEmptyPlaceholder,
-    error: PaginationErrorPlaceholder,
-    key: ((item: @JvmSuppressWildcards T) -> Any),
     itemContent: @Composable LazyItemScope.(item: T) -> Unit,
+    itemKey: ((item: @JvmSuppressWildcards T) -> Any)? = null,
+    initialContent: (@Composable () -> Unit)? = null,
+    emptyContent: (@Composable () -> Unit)? = null,
+    errorContent: (@Composable (error: Throwable) -> Unit)? = null,
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -29,20 +30,17 @@ fun <T : Any> PaginationColumn(
         when {
             items.loadState.refresh is LoadState.Loading && items.itemCount == 0 -> {
                 // Initial loading
-                PaginationInitialPlaceholder()
+                initialContent?.invoke()
             }
 
             items.loadState.refresh is LoadState.Error && items.itemCount == 0 -> {
                 // Error state
-                error.Content(
-                    error = (items.loadState.refresh as LoadState.Error).error,
-                    onRetry = { items.retry() }
-                )
+                errorContent?.invoke((items.loadState.refresh as LoadState.Error).error)
             }
 
             items.itemCount == 0 -> {
                 // No results
-                empty.Content()
+                emptyContent?.invoke()
             }
 
             else -> {
@@ -57,7 +55,7 @@ fun <T : Any> PaginationColumn(
                 ) {
                     items(
                         count = items.itemCount,
-                        key = items.itemKey(key)
+                        key = items.itemKey(itemKey)
                     ) { index ->
                         val item = items[index]
                         if (item != null) {

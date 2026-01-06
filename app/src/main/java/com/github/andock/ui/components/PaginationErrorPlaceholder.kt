@@ -16,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -24,50 +23,46 @@ import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 
 
-@Stable
-data class PaginationErrorPlaceholder(
-    val title: String
+@Composable
+fun PaginationErrorPlaceholder(
+    error: Throwable,
+    title: String,
+    onRetry: () -> Unit
 ) {
-    @Composable
-    fun Content(
-        error: Throwable,
-        onRetry: () -> Unit
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = Spacing.BottomSpacing),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = Spacing.BottomSpacing),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(Spacing.Large)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(Spacing.Large)
-            ) {
-                Icon(
-                    Icons.Default.Error,
-                    contentDescription = null,
-                    modifier = Modifier.size(IconSize.Huge),
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(Spacing.Medium))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(Spacing.Small))
-                Text(
-                    text = error.message ?: "Unknown error",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(Spacing.Large))
-                FilledTonalButton(onClick = onRetry) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(Spacing.Small))
-                    Text("Retry")
-                }
+            Icon(
+                Icons.Default.Error,
+                contentDescription = null,
+                modifier = Modifier.size(IconSize.Huge),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(Spacing.Small))
+            Text(
+                text = error.message ?: "Unknown error",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(Spacing.Large))
+            FilledTonalButton(onClick = onRetry) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(Spacing.Small))
+                Text("Retry")
             }
         }
     }
