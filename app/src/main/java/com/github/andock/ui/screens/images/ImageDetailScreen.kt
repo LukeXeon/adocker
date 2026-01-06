@@ -48,147 +48,145 @@ import kotlinx.coroutines.launch
 fun ImageDetailScreen() {
     val viewModel = hiltViewModel<ImageDetailViewModel>()
     val navController = LocalNavController.current
-    val image = viewModel.image.collectAsState().value
+    val image = viewModel.image.collectAsState().value ?: return
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
-    if (image != null) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.nav_image_detail)) },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onNavigateBack
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.common_back)
-                            )
-                        }
-                    },
-                    actions = {
-                        // Run container button
-                        IconButton(onClick = debounceClick {
-                            navController.navigate(ContainerCreateRoute(image.id))
-                        }) {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = stringResource(R.string.images_run)
-                            )
-                        }
-                        // Delete button
-                        IconButton(onClick = { setDeleteDialog(image) }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.images_delete)
-                            )
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.nav_image_detail)) },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onNavigateBack
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
                     }
-                )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Basic Information Card
-                DetailCard(title = stringResource(R.string.common_basic_info)) {
-                    DetailRow(
-                        label = stringResource(R.string.common_name),
-                        value = image.fullName
-                    )
-                    DetailRow(
-                        label = stringResource(R.string.images_repository),
-                        value = image.repository
-                    )
-                    DetailRow(label = stringResource(R.string.images_tag), value = image.tag)
-                    DetailRow(label = stringResource(R.string.images_id), value = image.id)
-                    DetailRow(
-                        label = stringResource(R.string.images_digest),
-                        value = image.id.take(12)
-                    )
-                }
-
-                // System Information Card
-                DetailCard(title = stringResource(R.string.common_system_info)) {
-                    DetailRow(
-                        label = stringResource(R.string.images_architecture),
-                        value = image.architecture
-                    )
-                    DetailRow(label = stringResource(R.string.images_os), value = image.os)
-                    DetailRow(
-                        label = stringResource(R.string.images_size),
-                        value = formatSize(image.size)
-                    )
-                    DetailRow(
-                        label = stringResource(R.string.images_created),
-                        value = formatDate(image.created)
-                    )
-                }
-
-                // Layers Card
-                DetailCard(title = stringResource(R.string.images_layers)) {
-                    Text(
-                        text = stringResource(R.string.images_layer_count, image.layerIds.size),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    image.layerIds.forEachIndexed { index, layerId ->
-                        Text(
-                            text = "${index + 1}. ${layerId.take(12)}...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                actions = {
+                    // Run container button
+                    IconButton(onClick = debounceClick {
+                        navController.navigate(ContainerCreateRoute(image.id))
+                    }) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = stringResource(R.string.images_run)
+                        )
+                    }
+                    // Delete button
+                    IconButton(onClick = { setDeleteDialog(image) }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.images_delete)
                         )
                     }
                 }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Basic Information Card
+            DetailCard(title = stringResource(R.string.common_basic_info)) {
+                DetailRow(
+                    label = stringResource(R.string.common_name),
+                    value = image.fullName
+                )
+                DetailRow(
+                    label = stringResource(R.string.images_repository),
+                    value = image.repository
+                )
+                DetailRow(label = stringResource(R.string.images_tag), value = image.tag)
+                DetailRow(label = stringResource(R.string.images_id), value = image.id)
+                DetailRow(
+                    label = stringResource(R.string.images_digest),
+                    value = image.id.take(12)
+                )
+            }
 
-                // Configuration Card (if available)
-                image.config?.let { config ->
-                    DetailCard(title = stringResource(R.string.common_config)) {
-                        config.env?.let { env ->
-                            if (env.isNotEmpty()) {
+            // System Information Card
+            DetailCard(title = stringResource(R.string.common_system_info)) {
+                DetailRow(
+                    label = stringResource(R.string.images_architecture),
+                    value = image.architecture
+                )
+                DetailRow(label = stringResource(R.string.images_os), value = image.os)
+                DetailRow(
+                    label = stringResource(R.string.images_size),
+                    value = formatSize(image.size)
+                )
+                DetailRow(
+                    label = stringResource(R.string.images_created),
+                    value = formatDate(image.created)
+                )
+            }
+
+            // Layers Card
+            DetailCard(title = stringResource(R.string.images_layers)) {
+                Text(
+                    text = stringResource(R.string.images_layer_count, image.layerIds.size),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                image.layerIds.forEachIndexed { index, layerId ->
+                    Text(
+                        text = "${index + 1}. ${layerId.take(12)}...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Configuration Card (if available)
+            image.config?.let { config ->
+                DetailCard(title = stringResource(R.string.common_config)) {
+                    config.env?.let { env ->
+                        if (env.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.container_env_vars),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            env.forEach { envVar ->
                                 Text(
-                                    text = stringResource(R.string.container_env_vars),
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                env.forEach { envVar ->
-                                    Text(
-                                        text = envVar,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                        }
-                        config.cmd?.let { cmd ->
-                            if (cmd.isNotEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.container_command),
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text(
-                                    text = cmd.joinToString(" "),
+                                    text = envVar,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
-                        config.workingDir?.let { workingDir ->
-                            if (workingDir.isNotEmpty()) {
-                                DetailRow(
-                                    label = stringResource(R.string.container_working_dir),
-                                    value = workingDir
-                                )
-                            }
+                    }
+                    config.cmd?.let { cmd ->
+                        if (cmd.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.container_command),
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Text(
+                                text = cmd.joinToString(" "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    config.workingDir?.let { workingDir ->
+                        if (workingDir.isNotEmpty()) {
+                            DetailRow(
+                                label = stringResource(R.string.container_working_dir),
+                                value = workingDir
+                            )
                         }
                     }
                 }
