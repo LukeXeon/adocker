@@ -3,6 +3,6 @@ package com.github.andock.ui.screens.images
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ImageTagSelectRoute(
+data class ImageTagsRoute(
     val repository: String
 )

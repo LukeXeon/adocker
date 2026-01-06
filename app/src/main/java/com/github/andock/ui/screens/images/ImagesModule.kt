@@ -43,8 +43,8 @@ object ImagesModule {
 
     @Provides
     @IntoMap
-    @ClassKey(ImageTagSelectRoute::class)
+    @ClassKey(ImageTagsRoute::class)
     fun selectScreen() = Screen {
-        ImageTagSelectScreen()
+        ImageTagsScreen()
     }
 }

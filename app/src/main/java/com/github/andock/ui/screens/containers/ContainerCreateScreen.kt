@@ -45,14 +45,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -62,16 +58,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerCreateScreen() {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val route = remember {
-        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ContainerCreateRoute>()
-    } ?: return
-    val imageId = route.imageId
+    val viewModel = hiltViewModel<ContainerCreateViewModel>()
+    val imageId = viewModel.imageId
     val navController = LocalNavController.current
-    val imagesViewModel = hiltViewModel<ImagesViewModel>()
-    val containersViewModel = hiltViewModel<ContainersViewModel>()
-    val images by imagesViewModel.images.collectAsState()
-    val image = remember(images, imageId) { images.find { it.id == imageId } }
+    val image = viewModel.image.collectAsState().value
     var containerName by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
     var workingDir by remember { mutableStateOf("/") }
@@ -255,17 +245,17 @@ fun ContainerCreateScreen() {
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
                         )
-                        containersViewModel.viewModelScope.launch {
+                        viewModel.viewModelScope.launch {
                             isLoading = true
                             try {
                                 if (autoStart) {
-                                    containersViewModel.runContainer(
+                                    viewModel.runContainer(
                                         imageId = imageId,
                                         name = containerName.ifBlank { null },
                                         config = config
                                     )
                                 } else {
-                                    containersViewModel.createContainer(
+                                    viewModel.createContainer(
                                         imageId = imageId,
                                         name = containerName.ifBlank { null },
                                         config = config

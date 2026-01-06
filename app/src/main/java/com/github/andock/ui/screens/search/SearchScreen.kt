@@ -42,7 +42,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
-import com.github.andock.ui.screens.images.ImageTagSelectRoute
+import com.github.andock.ui.screens.images.ImageTagsRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 
@@ -188,7 +188,7 @@ fun SearchScreen() {
                             onPull = {
                                 result.repoName?.let { name ->
                                     navController.navigate(
-                                        ImageTagSelectRoute(name)
+                                        ImageTagsRoute(name)
                                     )
                                 }
                             },

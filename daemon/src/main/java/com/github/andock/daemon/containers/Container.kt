@@ -1,5 +1,7 @@
 package com.github.andock.daemon.containers
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.utils.execute
 import com.github.andock.daemon.utils.inState
@@ -24,6 +26,7 @@ class Container @AssistedInject constructor(
     stateMachineFactory: ContainerStateMachine.Factory,
     parent: CoroutineScope,
     containerDao: ContainerDao,
+    private val logSourceFactory: ContainerLogPagingSource.Factory
 ) {
     init {
         require(initialState is ContainerState.Created || initialState is ContainerState.Exited)
@@ -79,6 +82,15 @@ class Container @AssistedInject constructor(
         }
     }
 
+    fun logLines() = Pager(
+        config = PagingConfig(
+            pageSize = 100,
+            enablePlaceholders = false,
+            initialLoadSize = 100,
+        ),
+        initialKey = ContainerLogKey(containerId = id, 1, 100),
+        pagingSourceFactory = logSourceFactory
+    ).flow
 
     suspend fun start() {
         stateMachine.dispatch(ContainerOperation.Start)

@@ -27,10 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
@@ -47,13 +44,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageDetailScreen() {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val route = remember {
-        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ImageDetailRoute>()
-    } ?: return
+    val viewModel = hiltViewModel<ImageDetailViewModel>()
     val navController = LocalNavController.current
-    val viewModel = hiltViewModel<ImagesViewModel>()
-    val image = viewModel.getImageById(route.imageId).collectAsState(null).value
+    val image = viewModel.image.collectAsState().value
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val onNavigateBack = debounceClick {

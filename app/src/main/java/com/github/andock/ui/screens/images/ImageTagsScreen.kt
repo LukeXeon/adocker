@@ -26,17 +26,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
-import androidx.paging.cachedIn
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
@@ -51,20 +46,15 @@ import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageTagSelectScreen() {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val repository = remember {
-        (lifecycleOwner as? NavBackStackEntry)?.toRoute<ImageTagSelectRoute>()
-    }?.repository ?: return
-
-    val viewModel = hiltViewModel<ImagesViewModel>()
+fun ImageTagsScreen() {
+    val viewModel = hiltViewModel<ImageTagsViewModel>()
+    val repository = viewModel.repository
     val navController = LocalNavController.current
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
-    val scope = rememberCoroutineScope()
-    val tags = remember { viewModel.tags(repository).cachedIn(scope) }.collectAsLazyPagingItems()
+    val tags = viewModel.tags.collectAsLazyPagingItems()
     Scaffold(
         topBar = {
             TopAppBar(
