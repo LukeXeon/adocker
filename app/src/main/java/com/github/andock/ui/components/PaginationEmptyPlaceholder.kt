@@ -27,7 +27,9 @@ data class PaginationEmptyPlaceholder(
     @Composable
     fun Content() {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = Spacing.BottomSpacing),
             contentAlignment = Alignment.Center
         ) {
             Column(

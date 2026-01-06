@@ -34,7 +34,9 @@ data class PaginationErrorPlaceholder(
         onRetry: () -> Unit
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = Spacing.BottomSpacing),
             contentAlignment = Alignment.Center
         ) {
             Column(
