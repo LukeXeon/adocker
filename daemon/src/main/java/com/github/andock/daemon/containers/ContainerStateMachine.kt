@@ -120,7 +120,6 @@ class ContainerStateMachine @AssistedInject constructor(
                     { mainProcess ->
                         val stdin = mainProcess.outputStream.bufferedWriter()
                         scope.launch {
-                            logLineDao.clearLogById(id)
                             containerDao.setContainerLastRun(
                                 id = containerId,
                                 timestamp = System.currentTimeMillis()
