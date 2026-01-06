@@ -14,6 +14,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.kotlinpoet.ksp)
     implementation(libs.symbol.processing.api)
     compileOnly(libs.auto.service.annotations)
     kapt(libs.auto.service)

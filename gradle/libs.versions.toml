@@ -11,6 +11,7 @@ appcompat = "1.7.1"
 kotlinxCoroutinesGuava = "1.10.2"
 leakcanaryAndroid = "3.0-alpha-8"
 material = "1.13.0"
+kotlinpoet-ksp = "2.2.0"
 
 # Compose
 composeBom = "2025.12.01"
@@ -161,6 +162,8 @@ http4k-core = { group = "org.http4k", name = "http4k-core", version.ref = "http4
 androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
 androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 
+# kotlinpoet
+kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet-ksp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
