@@ -111,7 +111,9 @@ fun ContainersScreen() {
                                     modifier = Modifier.size(IconSize.Small)
                                 )
                             }
-                        } else null
+                        } else {
+                            null
+                        }
                     )
                 }
             }
