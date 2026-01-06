@@ -57,8 +57,6 @@ class AppContext @Inject constructor(
 
         private const val DIR_LAYERS = "layers"
 
-        private const val LOG_DIR = "log"
-
         val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
             @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
             Class.forName("android.app.ActivityThread")
