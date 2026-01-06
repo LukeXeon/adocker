@@ -1,12 +1,11 @@
 package com.github.andock.daemon.app
 
-import android.os.Handler
 import android.os.Looper
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.measureTimeMillis
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -14,6 +13,7 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.EmptyCoroutineContext
 
 @OptIn(DelicateCoroutinesApi::class)
 @Singleton
@@ -38,8 +38,7 @@ class AppInitializer @Inject constructor(
         require(mainLooper.isCurrentThread) { "must be main thread" }
         if (called.compareAndSet(false, true)) {
             val jumpOutException = JumpOutException()
-            val mainHandler = Handler(mainLooper)
-            GlobalScope.launch(mainHandler.asCoroutineDispatcher().immediate) {
+            GlobalScope.launch(Dispatchers.Main.immediate) {
                 tasks.map { (key, task) ->
                     async {
                         key to task.getValue()
@@ -47,7 +46,10 @@ class AppInitializer @Inject constructor(
                 }.awaitAll().forEach { (key, task) ->
                     Timber.d("task ${key}: ${task.second}ms")
                 }
-                mainHandler.postAtFrontOfQueue(jumpOutException)
+                Dispatchers.Main.immediate.dispatch(
+                    EmptyCoroutineContext,
+                    jumpOutException
+                )
             }
             val ms = measureTimeMillis {
                 try {
