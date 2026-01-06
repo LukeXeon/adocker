@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.github.andock.daemon.database.Converters
-import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.daemon.images.models.ContainerConfig
 import java.util.UUID
 
 @Entity(

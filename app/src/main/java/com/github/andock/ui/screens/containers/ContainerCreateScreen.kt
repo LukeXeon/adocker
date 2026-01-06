@@ -50,7 +50,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.github.andock.R
-import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.images.ImagesViewModel
 import com.github.andock.ui.screens.main.LocalNavController

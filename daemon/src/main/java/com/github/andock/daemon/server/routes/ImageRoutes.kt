@@ -1,34 +1,19 @@
 package com.github.andock.daemon.server.routes
 
-import com.github.andock.daemon.images.ImageManager
-import com.github.andock.daemon.server.model.ImageConfigData
-import com.github.andock.daemon.server.model.ImageDeleteResponse
-import com.github.andock.daemon.server.model.ImageInspectResponse
-import com.github.andock.daemon.server.model.ImageSummary
-import com.github.andock.daemon.server.model.RootFS
+import com.github.andock.daemon.server.handlers.ImageHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import org.http4k.core.Method.DELETE
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
-import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.NOT_IMPLEMENTED
-import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
-import org.http4k.routing.path
 import org.http4k.routing.routes
-import java.time.Instant
-import javax.inject.Inject
 
 /**
  * Docker Image API routes.
@@ -38,115 +23,9 @@ import javax.inject.Inject
 @InstallIn(SingletonComponent::class)
 object ImageRoutes {
 
-    class Handler @Inject constructor(
-        private val imageManager: ImageManager
-    ) {
-        fun listImages(request: Request): Response = runBlocking {
-            val images = imageManager.images.first()
-
-            val summaries = images.map { image ->
-                ImageSummary(
-                    id = image.id,
-                    parentId = "",
-                    repoTags = listOf("${image.repository}:${image.tag}"),
-                    repoDigests = listOf(image.id),
-                    created = image.created / 1000,
-                    size = image.size,
-                    virtualSize = image.size,
-                    sharedSize = 0,
-                    labels = null,
-                    containers = 0
-                )
-            }
-
-            return@runBlocking Response(OK)
-                .header("Content-Type", "application/json")
-                .body(Json.encodeToString(summaries))
-        }
-
-        fun inspectImage(request: Request): Response = runBlocking {
-            val name = request.path("name") ?: return@runBlocking Response(BAD_REQUEST)
-                .body("""{"message":"Image name required"}""")
-
-            // Try to find image by ID or by repository:tag
-            val images = imageManager.images.first()
-            val image = images.find { it.id == name }
-                ?: images.find { "${it.repository}:${it.tag}" == name }
-                ?: return@runBlocking Response(NOT_FOUND)
-                    .body("""{"message":"No such image: $name"}""")
-
-            val config = image.config
-            val imageConfig = if (config != null) {
-                ImageConfigData(
-                    hostname = "",
-                    domainname = "",
-                    user = config.user ?: "",
-                    env = config.env ?: emptyList(),
-                    cmd = config.cmd ?: emptyList(),
-                    workingDir = config.workingDir ?: "",
-                    entrypoint = config.entrypoint,
-                    labels = null
-                )
-            } else null
-
-            val inspectResponse = ImageInspectResponse(
-                id = image.id,
-                repoTags = listOf("${image.repository}:${image.tag}"),
-                repoDigests = listOf(image.id),
-                parent = "",
-                comment = "",
-                created = Instant.ofEpochMilli(image.created).toString(),
-                container = "",
-                dockerVersion = "",
-                author = "",
-                config = imageConfig,
-                architecture = image.architecture,
-                os = image.os,
-                size = image.size,
-                virtualSize = image.size,
-                rootFS = RootFS(
-                    type = "layers",
-                    layers = image.layerIds
-                )
-            )
-
-            return@runBlocking Response(OK)
-                .header("Content-Type", "application/json")
-                .body(Json.encodeToString(inspectResponse))
-        }
-
-        fun deleteImage(request: Request): Response = runBlocking {
-            val name = request.path("name") ?: return@runBlocking Response(BAD_REQUEST)
-                .body("""{"message":"Image name required"}""")
-
-            // Try to find image by ID or by repository:tag
-            val images = imageManager.images.first()
-            val image = images.find { it.id == name }
-                ?: images.find { "${it.repository}:${it.tag}" == name }
-                ?: return@runBlocking Response(NOT_FOUND)
-                    .body("""{"message":"No such image: $name"}""")
-
-            try {
-                imageManager.deleteImage(image.id)
-
-                val responses = listOf(
-                    ImageDeleteResponse(untagged = "${image.repository}:${image.tag}"),
-                    ImageDeleteResponse(deleted = image.id)
-                )
-
-                return@runBlocking Response(OK)
-                    .header("Content-Type", "application/json")
-                    .body(Json.encodeToString(responses))
-            } catch (e: Exception) {
-                Response(BAD_REQUEST)
-                    .body("""{"message":"${e.message}"}""")
-            }
-        }
-    }
-
     @IntoSet
     @Provides
-    fun routes(handler: Handler): RoutingHttpHandler = routes(
+    fun routes(handler: ImageHandler): RoutingHttpHandler = routes(
         // List images
         "/images/json" bind GET to { request ->
             handler.listImages(request)

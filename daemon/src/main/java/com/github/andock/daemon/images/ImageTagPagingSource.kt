@@ -3,7 +3,7 @@ package com.github.andock.daemon.images
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andock.daemon.database.dao.AuthTokenDao
-import com.github.andock.daemon.images.model.TagsListResponse
+import com.github.andock.daemon.images.models.TagsListResponse
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.client.HttpClient

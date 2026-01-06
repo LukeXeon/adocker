@@ -1,7 +1,7 @@
 package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.daemon.os.Process
 import timber.log.Timber
 import java.io.File

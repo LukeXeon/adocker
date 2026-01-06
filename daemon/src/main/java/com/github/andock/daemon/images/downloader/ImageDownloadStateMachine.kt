@@ -17,7 +17,7 @@ import com.github.andock.daemon.database.model.LayerReferenceEntity
 import com.github.andock.daemon.images.DownloadProgress
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.ImageRepositories
-import com.github.andock.daemon.images.model.ImageConfig
+import com.github.andock.daemon.images.models.ImageConfig
 import com.github.andock.daemon.io.sha256
 import com.github.andock.daemon.registries.RegistryManager
 import dagger.assisted.Assisted

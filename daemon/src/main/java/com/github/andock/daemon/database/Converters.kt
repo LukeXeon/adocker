@@ -3,8 +3,8 @@ package com.github.andock.daemon.database
 import androidx.room.TypeConverter
 import com.github.andock.daemon.app.AppGlobals
 import com.github.andock.daemon.database.model.RegistryType
-import com.github.andock.daemon.images.model.ContainerConfig
-import com.github.andock.daemon.images.model.ImageConfig
+import com.github.andock.daemon.images.models.ContainerConfig
+import com.github.andock.daemon.images.models.ImageConfig
 
 class Converters {
     /**

@@ -8,10 +8,10 @@ import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.database.model.LayerEntity
-import com.github.andock.daemon.images.model.AuthTokenResponse
-import com.github.andock.daemon.images.model.ImageConfigResponse
-import com.github.andock.daemon.images.model.ImageManifestV2
-import com.github.andock.daemon.images.model.ManifestListResponse
+import com.github.andock.daemon.images.models.AuthTokenResponse
+import com.github.andock.daemon.images.models.ImageConfigResponse
+import com.github.andock.daemon.images.models.ImageManifestV2
+import com.github.andock.daemon.images.models.ManifestListResponse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
