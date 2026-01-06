@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import com.github.andock.ui.utils.debounceClick
 
 @Composable
 fun HomeQuickActionCard(
@@ -29,7 +30,7 @@ fun HomeQuickActionCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        onClick = onClick,
+        onClick = debounceClick(onClick = onClick),
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer

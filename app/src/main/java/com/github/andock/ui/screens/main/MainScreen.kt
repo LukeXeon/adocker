@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -54,63 +56,72 @@ fun MainScreen() {
             currentDestination?.hierarchy?.any { it.hasRoute(route) } == true
         }
     }
-    CompositionLocalProvider(LocalNavController provides navController) {
-        Box(
-            modifier = Modifier.fillMaxSize()
+    MainTheme {
+        CompositionLocalProvider(
+            LocalNavController provides navController
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = HomeRoute::class,
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
             ) {
-                screens.forEach { (route, screen) ->
-                    composable(
-                        route = route,
-                        deepLinks = screen.deepLinks,
-                        content = screen.content
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-            ) {
-                SnackbarHost(LocalSnackbarHostState.current)
-                AnimatedVisibility(
-                    visible = showBottomBar,
-                    enter = slideInVertically(initialOffsetY = { it }),
-                    exit = slideOutVertically(targetOffsetY = { it })
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    NavigationBar {
-                        bottomTabs.forEach { (route, screen) ->
-                            val selected = remember(currentDestination, screen) {
-                                currentDestination?.hierarchy
-                                    ?.any { it.hasRoute(route) } == true
-                            }
-                            val route = screen.route()
-                            NavigationBarItem(
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) {
-                                            screen.selectedIcon
-                                        } else {
-                                            screen.unselectedIcon
-                                        },
-                                        contentDescription = stringResource(screen.titleResId)
-                                    )
-                                },
-                                label = { Text(stringResource(screen.titleResId)) },
-                                selected = selected,
-                                onClick = debounceClick {
-                                    navController.navigate(route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
+                    NavHost(
+                        navController = navController,
+                        startDestination = HomeRoute::class,
+                    ) {
+                        screens.forEach { (route, screen) ->
+                            composable(
+                                route = route,
+                                deepLinks = screen.deepLinks,
+                                content = screen.content
                             )
+                        }
+                    }
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                    ) {
+                        SnackbarHost(LocalSnackbarHostState.current)
+                        AnimatedVisibility(
+                            visible = showBottomBar,
+                            enter = slideInVertically(initialOffsetY = { it }),
+                            exit = slideOutVertically(targetOffsetY = { it })
+                        ) {
+                            NavigationBar {
+                                bottomTabs.forEach { (route, screen) ->
+                                    val selected = remember(currentDestination, screen) {
+                                        currentDestination?.hierarchy
+                                            ?.any { it.hasRoute(route) } == true
+                                    }
+                                    val route = screen.route()
+                                    NavigationBarItem(
+                                        icon = {
+                                            Icon(
+                                                imageVector = if (selected) {
+                                                    screen.selectedIcon
+                                                } else {
+                                                    screen.unselectedIcon
+                                                },
+                                                contentDescription = stringResource(screen.titleResId)
+                                            )
+                                        },
+                                        label = { Text(stringResource(screen.titleResId)) },
+                                        selected = selected,
+                                        onClick = debounceClick {
+                                            navController.navigate(route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
