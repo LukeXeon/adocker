@@ -18,9 +18,8 @@ sealed interface ContainerState {
     data class Running(
         override val id: String,
         val mainProcess: Process,
-        val stdin: BufferedWriter,
-        val stdout: File,
-        val stderr: File,
+        val input: BufferedWriter,
+        val output: File,
         val childProcesses: List<Process> = emptyList(),
     ) : ContainerState
 

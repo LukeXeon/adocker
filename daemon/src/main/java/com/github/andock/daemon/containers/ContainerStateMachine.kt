@@ -13,13 +13,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
-import kotlinx.io.IOException
-import timber.log.Timber
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
 import java.io.File
 import javax.inject.Singleton
 
@@ -35,8 +36,7 @@ class ContainerStateMachine @AssistedInject constructor(
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     companion object {
-        private const val STDOUT = "stdout"
-        private const val STDERR = "stderr"
+        private const val LOG_FILE = "log.txt"
     }
 
     init {
@@ -125,36 +125,44 @@ class ContainerStateMachine @AssistedInject constructor(
                         val stdin = mainProcess.outputStream.bufferedWriter()
                         val logDir = File(appContext.logDir, containerId)
                         logDir.mkdirs()
-                        val stdout = File(logDir, STDOUT)
-                        val stderr = File(logDir, STDERR)
+                        val logFile = File(logDir, LOG_FILE)
                         scope.launch {
                             containerDao.setContainerLastRun(
-                                containerId,
-                                System.currentTimeMillis()
+                                id = containerId,
+                                timestamp = System.currentTimeMillis()
                             )
-                        }
-                        arrayOf(
-                            mainProcess.inputStream to stdout,
-                            mainProcess.errorStream to stderr
-                        ).forEach { (input, output) ->
-                            scope.launch(Dispatchers.IO) {
-                                try {
-                                    input.use { read ->
-                                        output.outputStream().use { write ->
-                                            read.copyTo(write)
+                            logFile.outputStream().bufferedWriter().use { writer ->
+                                val mutex = Mutex()
+                                arrayOf(
+                                    mainProcess.inputStream to false,
+                                    mainProcess.errorStream to true
+                                ).map { (input, error) ->
+                                    launch {
+                                        input.bufferedReader().useLines { lines ->
+                                            lines.map {
+                                                // single line
+                                                Json.encodeToString(
+                                                    ContainerLogLine(
+                                                        timestamp = System.currentTimeMillis(),
+                                                        error = error,
+                                                        message = it,
+                                                    )
+                                                )
+                                            }.forEach { line ->
+                                                mutex.withLock {
+                                                    writer.appendLine(line)
+                                                }
+                                            }
                                         }
                                     }
-                                } catch (e: IOException) {
-                                    Timber.d(e)
-                                }
+                                }.joinAll()
                             }
                         }
                         ContainerState.Running(
                             containerId,
                             mainProcess,
                             stdin,
-                            stdout,
-                            stderr
+                            logFile,
                         )
                     },
                     { exception ->
