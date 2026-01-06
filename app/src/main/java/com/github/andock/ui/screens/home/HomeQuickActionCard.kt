@@ -72,6 +72,8 @@ fun HomeQuickActionCard(
                 )
                 Text(
                     text = description,
+                    maxLines = 2,
+                    minLines = 2,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                 )

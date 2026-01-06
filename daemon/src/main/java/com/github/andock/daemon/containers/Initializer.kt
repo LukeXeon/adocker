@@ -3,22 +3,12 @@ package com.github.andock.daemon.containers
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.app.AppTask
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.database.dao.LogLineDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-
-@AppTask("clearContainerLog")
-suspend fun clearContainerLog(
-    logLineDao: LogLineDao,
-) {
-    withContext(Dispatchers.IO) {
-        logLineDao.clearAll()
-    }
-}
 
 @AppTask("clearContainers")
 suspend fun clearContainers(

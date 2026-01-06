@@ -70,7 +70,7 @@ fun ContainerLogScreen() {
                 InfoCard(
                     imageVector = Icons.Filled.ViewInAr,
                     title = name,
-                    subtitle = containerId.take(12)
+                    subtitle = containerId
                 )
             }
             PaginationColumn(

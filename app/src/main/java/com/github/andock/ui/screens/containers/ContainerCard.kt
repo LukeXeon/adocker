@@ -296,7 +296,7 @@ fun ContainerCard(
                         }
                         OutlinedButton(
                             onClick = onStart,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(Spacing.Medium)
                         ) {
                             Icon(
