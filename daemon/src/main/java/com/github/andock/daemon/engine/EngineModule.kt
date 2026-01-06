@@ -1,25 +1,15 @@
 package com.github.andock.daemon.engine
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.utils.SuspendLazy
-import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import dagger.multibindings.StringKey
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
-import timber.log.Timber
 import javax.inject.Named
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object EngineModule {
-
     @Provides
     @Named("redirect")
     fun redirect(appContext: AppContext): Map<String, String> {
@@ -30,29 +20,4 @@ object EngineModule {
 
     /** Standard Docker socket path on Linux */
     private const val DOCKER_SOCK_PATH = "/var/run/docker.sock"
-
-    @Provides
-    @Singleton
-    @Named("engine")
-    fun initializer(
-        version: PRootVersion,
-        @Named("logging")
-        logging: SuspendLazy<Unit>,
-        @Named("reporter")
-        reporter: SuspendLazy<Unit>
-    ) = suspendLazy {
-        logging.getValue()
-        reporter.getValue()
-        withTimeoutOrNull(200) {
-            Timber.i(version.value.filterNotNull().first())
-        }
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey("engine")
-    fun initializerToMap(
-        @Named("engine")
-        task: SuspendLazy<Unit>
-    ): SuspendLazy<*> = task
 }

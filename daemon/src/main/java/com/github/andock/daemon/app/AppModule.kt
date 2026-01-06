@@ -1,14 +1,10 @@
 package com.github.andock.daemon.app
 
 import android.app.Application
-import com.github.andock.daemon.utils.SuspendLazy
-import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
-import dagger.multibindings.StringKey
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -26,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -84,26 +79,4 @@ object AppModule {
             }
         }
     }
-
-    @Provides
-    @Singleton
-    @Named("app")
-    fun initializer(
-        appContext: AppContext,
-        @Named("logging")
-        logging: SuspendLazy<Unit>,
-        @Named("reporter")
-        reporter: SuspendLazy<Unit>
-    ) = suspendLazy {
-        logging.getValue()
-        reporter.getValue()
-        appContext.initializeDirs()
-    }
-
-    @Provides
-    @IntoMap
-    @StringKey("app")
-    fun initializerToMap(
-        @Named("app") task: SuspendLazy<Unit>
-    ): SuspendLazy<*> = task
 }

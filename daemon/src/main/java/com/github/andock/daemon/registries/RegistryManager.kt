@@ -29,6 +29,9 @@ class RegistryManager @Inject constructor(
     private val builtinServers: List<RegistryEntity>,
     scope: CoroutineScope
 ) {
+    companion object {
+        const val DEFAULT_REGISTRY = "https://registry-1.docker.io"
+    }
 
     private val _registries = MutableStateFlow<Map<String, Registry>>(emptyMap())
 
