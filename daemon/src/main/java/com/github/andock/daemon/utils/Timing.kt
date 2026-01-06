@@ -14,3 +14,13 @@ inline fun measureTimeMillis(block: () -> Unit): Long {
     block()
     return SystemClock.uptimeMillis() - start
 }
+
+
+@OptIn(ExperimentalContracts::class)
+inline fun <T> measureTimeMillisWithResult(block: () -> T): Pair<T, Long> {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    val start = SystemClock.uptimeMillis()
+    return block() to SystemClock.uptimeMillis() - start
+}

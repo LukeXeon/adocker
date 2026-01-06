@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AppInitializer @Inject constructor(
-    private val tasks: Map<String, @JvmSuppressWildcards SuspendLazy<*>>,
+    private val tasks: Map<String, @JvmSuppressWildcards SuspendLazy<Pair<*, Long>>>,
 ) {
     private val called = AtomicBoolean(false)
 
@@ -43,12 +43,10 @@ class AppInitializer @Inject constructor(
                 val ms = measureTimeMillis {
                     tasks.map { (key, task) ->
                         async {
-                            key to measureTimeMillis {
-                                task.getValue()
-                            }
+                            key to task.getValue()
                         }
-                    }.awaitAll().forEach { (key, ms) ->
-                        Timber.d("task ${key}: ${ms}ms")
+                    }.awaitAll().forEach { (key, task) ->
+                        Timber.d("task ${key}: ${task.second}ms")
                     }
                 }
                 Timber.d("task all: ${ms}ms")
