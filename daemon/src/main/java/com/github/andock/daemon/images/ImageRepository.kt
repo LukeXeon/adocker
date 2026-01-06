@@ -289,7 +289,7 @@ class ImageRepository @AssistedInject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = N,
             ),
-            initialKey = ImageTagParameters(
+            initialKey = ImageTagKey(
                 registry = registryUrl,
                 repository = repository,
                 pageSize = N,

@@ -21,13 +21,13 @@ class ImageTagPagingSource @AssistedInject constructor(
     private val repositories: ImageRepositories,
     private val client: HttpClient,
     private val authTokenDao: AuthTokenDao,
-) : PagingSource<ImageTagParameters, String>() {
+) : PagingSource<ImageTagKey, String>() {
 
     override fun getRefreshKey(
-        state: PagingState<ImageTagParameters, String>
-    ): ImageTagParameters? = null
+        state: PagingState<ImageTagKey, String>
+    ): ImageTagKey? = null
 
-    override suspend fun load(params: LoadParams<ImageTagParameters>): LoadResult<ImageTagParameters, String> {
+    override suspend fun load(params: LoadParams<ImageTagKey>): LoadResult<ImageTagKey, String> {
         val key = params.key ?: return LoadResult.Page(emptyList(), null, null)
         val (registryUrl, repository, pageSize, last) = key
         val imageRepository = repositories[registryUrl]
