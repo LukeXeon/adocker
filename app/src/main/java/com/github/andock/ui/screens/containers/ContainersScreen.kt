@@ -121,7 +121,9 @@ fun ContainersScreen() {
                 containers.isEmpty() -> {
                     // Empty state
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = Spacing.BottomSpacing),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -153,7 +155,9 @@ fun ContainersScreen() {
                 filteredContainers.isEmpty() -> {
                     // No results for filter
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = Spacing.BottomSpacing),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(

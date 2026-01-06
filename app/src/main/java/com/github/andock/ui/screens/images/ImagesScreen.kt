@@ -113,7 +113,9 @@ fun ImagesScreen() {
             if (images.isEmpty()) {
                 // Empty state
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = Spacing.BottomSpacing),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(

@@ -24,7 +24,9 @@ import com.github.andock.ui.theme.Spacing
 @Composable
 fun SearchInitialState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = Spacing.BottomSpacing),
         contentAlignment = Alignment.Center
     ) {
         Column(
