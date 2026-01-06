@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.images.models.ContainerConfig
+import com.github.andock.ui.components.InfoCard
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
@@ -120,36 +119,11 @@ fun ContainerCreateScreen() {
                 verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 // Image info card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(Spacing.Medium),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.ListItemSpacing)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Layers,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Column {
-                            Text(
-                                text = image.repository.removePrefix("library/"),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = image.tag,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
+                InfoCard(
+                    imageVector = Icons.Default.Layers,
+                    title = image.repository.removePrefix("library/"),
+                    subtitle = image.tag
+                )
                 // Container name
                 OutlinedTextField(
                     value = containerName,

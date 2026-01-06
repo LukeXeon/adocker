@@ -8,9 +8,11 @@ import androidx.paging.cachedIn
 import com.github.andock.daemon.containers.ContainerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -20,6 +22,10 @@ class ContainerLogViewModel @Inject constructor(
     containerManager: ContainerManager,
 ) : ViewModel() {
     val containerId = savedStateHandle.toRoute<ContainerLogRoute>().containerId
+
+    val container = containerManager.containers.map {
+        it[containerId]
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val logLines = containerManager.containers.map {
         it[containerId]

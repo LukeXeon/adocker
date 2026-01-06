@@ -16,12 +16,10 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
 
@@ -59,13 +57,7 @@ class ContainerStateMachine @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    try {
-                        snapshot.mainProcess.await()
-                    } finally {
-                        withContext(NonCancellable) {
-                            logLineDao.clearLogById(containerId = snapshot.id)
-                        }
-                    }
+                    snapshot.mainProcess.await()
                     toStoping()
                 }
                 untilIdentityChanges({ it.childProcesses }) {
@@ -128,6 +120,7 @@ class ContainerStateMachine @AssistedInject constructor(
                     { mainProcess ->
                         val stdin = mainProcess.outputStream.bufferedWriter()
                         scope.launch {
+                            logLineDao.clearLogById(id)
                             containerDao.setContainerLastRun(
                                 id = containerId,
                                 timestamp = System.currentTimeMillis()

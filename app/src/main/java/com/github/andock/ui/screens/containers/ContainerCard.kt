@@ -277,18 +277,36 @@ fun ContainerCard(
                         }
                     }
                 } else {
-                    FilledTonalButton(
-                        onClick = onStart,
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(Spacing.Medium)
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            modifier = Modifier.size(IconSize.Small)
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.Small))
-                        Text(stringResource(R.string.action_start))
+                        FilledTonalButton(
+                            onClick = onLog,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(Spacing.Medium)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Textsms,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.Small)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.Small))
+                            Text(stringResource(R.string.log_title))
+                        }
+                        OutlinedButton(
+                            onClick = onStart,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(Spacing.Medium)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.Small)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.Small))
+                            Text(stringResource(R.string.action_start))
+                        }
                     }
                 }
 
