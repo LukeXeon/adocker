@@ -159,8 +159,11 @@ class RouteProcessor(
     ) {
         val moduleName = "${routeData.functionName}Module"
 
+        // Generate in function's package + .generated
+        val generatedPackageName = "${routeData.packageName}.generated"
+
         val fileSpec = FileSpec.builder(
-            packageName = "com.github.andock.ui.screens.generated",
+            packageName = generatedPackageName,
             fileName = moduleName
         ).apply {
             // Add import for the composable function
