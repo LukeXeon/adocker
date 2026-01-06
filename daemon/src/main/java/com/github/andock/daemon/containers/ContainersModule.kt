@@ -2,6 +2,7 @@ package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
+import com.github.andock.daemon.database.dao.LogLineDao
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.suspendLazy
 import dagger.Module
@@ -30,19 +31,27 @@ object ContainersModule {
         app: SuspendLazy<Unit>,
         appContext: AppContext,
         containerDao: ContainerDao,
+        logLineDao: LogLineDao,
     ) = suspendLazy {
         app.getValue()
         withContext(Dispatchers.IO) {
-            val containers = containerDao.getAllContainerIds().map {
-                File(appContext.containersDir, it)
-            }.toSet()
-            appContext.containersDir.listFiles {
-                !containers.contains(it)
-            }.let { it ?: emptyArray() }.map { file ->
+            listOf(
                 launch {
-                    file.deleteRecursively()
+                    logLineDao.clearAll()
+                },
+                launch {
+                    val containers = containerDao.getAllContainerIds().map {
+                        File(appContext.containersDir, it)
+                    }.toSet()
+                    appContext.containersDir.listFiles {
+                        !containers.contains(it)
+                    }.let { it ?: emptyArray() }.map { file ->
+                        launch {
+                            file.deleteRecursively()
+                        }
+                    }.joinAll()
                 }
-            }.joinAll()
+            ).joinAll()
         }
     }
 

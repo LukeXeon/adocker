@@ -3,8 +3,6 @@ package com.github.andock.daemon.app
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -40,19 +38,16 @@ class AppContext @Inject constructor(
             return applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         }
 
-    internal suspend fun initializeDirs() {
-        withContext(Dispatchers.IO) {
-            // Create directories on initialization
-            listOf(
-                containersDir,
-                layersDir,
-            ).forEach { dir ->
-                if (!dir.exists()) {
-                    dir.mkdirs()
-                }
+    internal fun initializeDirs() {
+        listOf(
+            containersDir,
+            layersDir,
+        ).forEach { dir ->
+            if (!dir.exists()) {
+                dir.mkdirs()
             }
-            Timber.d("AppContext initialized: baseDir=${baseDir.absolutePath}")
         }
+        Timber.d("AppContext initialized: baseDir=${baseDir.absolutePath}")
     }
 
     companion object {
