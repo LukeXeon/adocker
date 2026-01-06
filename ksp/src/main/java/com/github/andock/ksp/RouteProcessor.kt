@@ -8,8 +8,10 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -69,7 +71,22 @@ class RouteProcessor(
             isValid = false
         }
 
-        // Check 2: Warn if function has parameters
+        // Check 2: Must be top-level function or inside an object
+        val parent = function.parentDeclaration
+        val isTopLevel = parent == null || parent !is KSClassDeclaration
+        val isInObject = parent is KSClassDeclaration &&
+                         parent.classKind == ClassKind.OBJECT
+
+        if (!isTopLevel && !isInObject) {
+            logger.error(
+                "@Route annotation can only be used on top-level functions or functions inside an object. " +
+                        "Function ${function.simpleName.asString()} is inside ${parent.simpleName.asString()} which is not an object.",
+                symbol = function
+            )
+            isValid = false
+        }
+
+        // Check 3: Warn if function has parameters
         if (function.parameters.isNotEmpty()) {
             logger.warn(
                 "@Route function ${function.simpleName.asString()} has parameters. " +
