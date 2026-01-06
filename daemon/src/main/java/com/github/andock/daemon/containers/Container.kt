@@ -88,7 +88,11 @@ class Container @AssistedInject constructor(
             enablePlaceholders = false,
             initialLoadSize = 100,
         ),
-        initialKey = ContainerLogKey(containerId = id, 1, 100),
+        initialKey = ContainerLogKey(
+            containerId = id,
+            currentPage = 1,
+            pageSize = 100
+        ),
         pagingSourceFactory = logSourceFactory
     ).flow
 
