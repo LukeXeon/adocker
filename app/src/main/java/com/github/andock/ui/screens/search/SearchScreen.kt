@@ -41,9 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
-import com.github.andock.ui.components.PaginationEmptyPlaceholder
-import com.github.andock.ui.components.PaginationErrorPlaceholder
-import com.github.andock.ui.components.PaginationInitialPlaceholder
+import com.github.andock.ui.components.PaginationPlaceholder
 import com.github.andock.ui.screens.images.ImageTagSelectRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -197,17 +195,17 @@ fun SearchScreen() {
                         )
                     },
                     initialContent = {
-                        PaginationInitialPlaceholder()
+                        PaginationPlaceholder.Initial()
                     },
                     emptyContent = {
-                        PaginationEmptyPlaceholder(
+                        PaginationPlaceholder.Empty(
                             Icons.Default.Search,
                             stringResource(R.string.images_search_no_results),
                             stringResource(R.string.images_search_no_results_desc)
                         )
                     },
                     errorContent = {
-                        PaginationErrorPlaceholder(
+                        PaginationPlaceholder.Error(
                             it,
                             "Search Failed",
                         ) {

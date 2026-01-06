@@ -43,9 +43,7 @@ import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloadState
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.PaginationColumn
-import com.github.andock.ui.components.PaginationEmptyPlaceholder
-import com.github.andock.ui.components.PaginationErrorPlaceholder
-import com.github.andock.ui.components.PaginationInitialPlaceholder
+import com.github.andock.ui.components.PaginationPlaceholder
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -162,17 +160,17 @@ fun ImageTagSelectScreen() {
                     }
                 },
                 initialContent = {
-                    PaginationInitialPlaceholder()
+                    PaginationPlaceholder.Initial()
                 },
                 emptyContent = {
-                    PaginationEmptyPlaceholder(
+                    PaginationPlaceholder.Empty(
                         Icons.Default.Tag,
                         stringResource(R.string.images_tag_empty),
                         stringResource(R.string.images_tag_empty_subtitle)
                     )
                 },
                 errorContent = {
-                    PaginationErrorPlaceholder(it, "Load Failed") {
+                    PaginationPlaceholder.Error(it, "Load Failed") {
                         tags.retry()
                     }
                 }
