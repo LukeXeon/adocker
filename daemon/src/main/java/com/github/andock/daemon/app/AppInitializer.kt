@@ -33,30 +33,30 @@ class AppInitializer @Inject constructor(
         }
     }
 
-    fun onCreate() {
+    fun install() {
         val mainLooper = Looper.getMainLooper()
         require(mainLooper.isCurrentThread) { "must be main thread" }
         if (called.compareAndSet(false, true)) {
             val jumpOutException = JumpOutException()
             val mainHandler = Handler(mainLooper)
             GlobalScope.launch(mainHandler.asCoroutineDispatcher().immediate) {
-                val ms = measureTimeMillis {
-                    tasks.map { (key, task) ->
-                        async {
-                            key to task.getValue()
-                        }
-                    }.awaitAll().forEach { (key, task) ->
-                        Timber.d("task ${key}: ${task.second}ms")
+                tasks.map { (key, task) ->
+                    async {
+                        key to task.getValue()
                     }
+                }.awaitAll().forEach { (key, task) ->
+                    Timber.d("task ${key}: ${task.second}ms")
                 }
-                Timber.d("task all: ${ms}ms")
                 mainHandler.postAtFrontOfQueue(jumpOutException)
             }
-            try {
-                Looper.loop()
-            } catch (e: JumpOutException) {
-                Timber.d(e)
+            val ms = measureTimeMillis {
+                try {
+                    Looper.loop()
+                } catch (e: JumpOutException) {
+                    Timber.d(e)
+                }
             }
+            Timber.d("task all: ${ms}ms")
         }
     }
 }
