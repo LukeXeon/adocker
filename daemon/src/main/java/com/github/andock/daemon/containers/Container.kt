@@ -28,6 +28,10 @@ class Container @AssistedInject constructor(
     containerDao: ContainerDao,
     private val logSourceFactory: ContainerLogPagingSource.Factory
 ) {
+    companion object {
+        const val N = 1000L
+    }
+
     init {
         require(initialState is ContainerState.Created || initialState is ContainerState.Exited)
     }
@@ -84,14 +88,14 @@ class Container @AssistedInject constructor(
 
     fun logLines() = Pager(
         config = PagingConfig(
-            pageSize = 100,
+            pageSize = N.toInt(),
             enablePlaceholders = false,
-            initialLoadSize = 100,
+            initialLoadSize = N.toInt(),
         ),
         initialKey = ContainerLogKey(
             containerId = id,
             currentPage = 1,
-            pageSize = 100
+            pageSize = N
         ),
         pagingSourceFactory = logSourceFactory
     ).flow
