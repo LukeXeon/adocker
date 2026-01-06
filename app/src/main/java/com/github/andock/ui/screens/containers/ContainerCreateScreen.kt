@@ -55,6 +55,15 @@ import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
+private fun parseEnvVars(input: String): Map<String, String> {
+    return input.lines()
+        .filter { it.isNotBlank() && it.contains("=") }
+        .associate { line ->
+            val parts = line.split("=", limit = 2)
+            parts[0].trim() to parts.getOrElse(1) { "" }.trim()
+        }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerCreateScreen() {
@@ -72,14 +81,7 @@ fun ContainerCreateScreen() {
         navController.popBackStack()
     }
     var isLoading by remember { mutableStateOf(false) }
-    fun parseEnvVars(input: String): Map<String, String> {
-        return input.lines()
-            .filter { it.isNotBlank() && it.contains("=") }
-            .associate { line ->
-                val parts = line.split("=", limit = 2)
-                parts[0].trim() to parts.getOrElse(1) { "" }.trim()
-            }
-    }
+
     Scaffold(
         topBar = {
             TopAppBar(
