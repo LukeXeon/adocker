@@ -40,6 +40,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.registries.Registry
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
@@ -50,6 +51,7 @@ import com.github.andock.ui.utils.get
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(RegistriesRoute::class)
 @Composable
 fun RegistriesScreen() {
     val navController = LocalNavController.current

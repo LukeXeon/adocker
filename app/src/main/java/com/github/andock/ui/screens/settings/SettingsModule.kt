@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import com.github.andock.R
-import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
@@ -25,12 +24,5 @@ object SettingsModule {
         unselectedIcon = Icons.Outlined.Settings,
     ) {
         SettingsRoute
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(SettingsRoute::class)
-    fun screen() = Screen {
-        SettingsScreen()
     }
 }

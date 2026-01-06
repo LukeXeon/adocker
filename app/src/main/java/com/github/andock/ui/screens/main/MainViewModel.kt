@@ -2,7 +2,7 @@ package com.github.andock.ui.screens.main
 
 import androidx.collection.ObjectIntMap
 import androidx.lifecycle.ViewModel
-import com.github.andock.ui.screens.Screen
+import com.github.andock.ui.route.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.reflect.KClass

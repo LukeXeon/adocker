@@ -34,12 +34,14 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(ContainerLogRoute::class)
 @Composable
 fun ContainerLogScreen() {
     val viewModel = hiltViewModel<ContainerLogViewModel>()

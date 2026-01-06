@@ -50,6 +50,7 @@ import com.github.andock.R
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoRow
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
 import com.github.andock.ui.screens.limits.ProcessLimitWarningDialog
@@ -59,6 +60,7 @@ import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
+@Route(HomeRoute::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {

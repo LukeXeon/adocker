@@ -1,6 +1,7 @@
 package com.github.andock.ui.screens.containers
 
 import androidx.compose.foundation.layout.Arrangement
+import com.github.andock.ui.route.Route
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+@Route(ContainersRoute::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainersScreen() {

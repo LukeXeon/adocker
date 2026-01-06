@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.get
@@ -56,6 +57,7 @@ import com.github.andock.ui.utils.savedStateHandleKey
 val ScannedData by savedStateHandleKey<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(QrcodeScannerRoute::class)
 @Composable
 fun QrcodeScannerScreen() {
     val navController = LocalNavController.current

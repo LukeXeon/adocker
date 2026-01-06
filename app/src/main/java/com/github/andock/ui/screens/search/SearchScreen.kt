@@ -42,6 +42,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.images.ImageTagsRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -57,6 +58,7 @@ import com.github.andock.ui.theme.Spacing
  * - Image pull progress tracking
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(SearchRoute::class)
 @Composable
 fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()

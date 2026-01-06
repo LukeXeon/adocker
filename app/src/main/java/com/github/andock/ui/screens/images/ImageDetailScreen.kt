@@ -33,6 +33,7 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.containers.ContainerCreateRoute
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
@@ -42,6 +43,7 @@ import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(ImageDetailRoute::class)
 @Composable
 fun ImageDetailScreen() {
     val viewModel = hiltViewModel<ImageDetailViewModel>()

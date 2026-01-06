@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material.icons.outlined.ViewInAr
 import com.github.andock.R
-import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
@@ -27,38 +26,4 @@ object ContainersModule {
         ContainersRoute
     }
 
-    @Provides
-    @IntoMap
-    @ClassKey(ContainersRoute::class)
-    fun screen() = Screen {
-        ContainersScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ContainerDetailRoute::class)
-    fun detailScreen() = Screen {
-        ContainerDetailScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ContainerCreateRoute::class)
-    fun createScreen() = Screen {
-        ContainerCreateScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ContainerLogRoute::class)
-    fun logScreen() = Screen {
-        ContainerLogScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ContainerExecRoute::class)
-    fun execScreen() = Screen {
-        ContainerExecScreen()
-    }
 }

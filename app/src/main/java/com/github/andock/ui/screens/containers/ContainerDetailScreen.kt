@@ -37,6 +37,7 @@ import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(ContainerDetailRoute::class)
 @Composable
 fun ContainerDetailScreen() {
     val viewModel = hiltViewModel<ContainerDetailViewModel>()

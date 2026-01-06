@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.outlined.Explore
 import com.github.andock.R
-import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
@@ -25,12 +24,5 @@ object SearchModule {
         unselectedIcon = Icons.Outlined.Explore,
     ) {
         SearchRoute
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(SearchRoute::class)
-    fun screen() = Screen {
-        SearchScreen()
     }
 }

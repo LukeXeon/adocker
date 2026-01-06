@@ -49,6 +49,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -65,6 +66,7 @@ private fun parseEnvVars(input: String): Map<String, String> {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Route(ContainerCreateRoute::class)
 @Composable
 fun ContainerCreateScreen() {
     val viewModel = hiltViewModel<ContainerCreateViewModel>()

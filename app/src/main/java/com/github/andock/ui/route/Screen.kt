@@ -1,4 +1,4 @@
-package com.github.andock.ui.screens
+package com.github.andock.ui.route
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable

@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.Home
 import com.github.andock.R
-import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
@@ -25,12 +24,5 @@ object HomeModule {
         unselectedIcon = Icons.Outlined.Home,
     ) {
         HomeRoute
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(HomeRoute::class)
-    fun screen() = Screen {
-        HomeScreen()
     }
 }

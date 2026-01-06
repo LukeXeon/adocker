@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.outlined.Layers
 import com.github.andock.R
-import com.github.andock.ui.screens.Screen
 import com.github.andock.ui.screens.main.MainBottomTab
 import dagger.Module
 import dagger.Provides
@@ -27,24 +26,4 @@ object ImagesModule {
         ImagesRoute
     }
 
-    @Provides
-    @IntoMap
-    @ClassKey(ImagesRoute::class)
-    fun screen() = Screen {
-        ImagesScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ImageDetailRoute::class)
-    fun detailScreen() = Screen {
-        ImageDetailScreen()
-    }
-
-    @Provides
-    @IntoMap
-    @ClassKey(ImageTagsRoute::class)
-    fun selectScreen() = Screen {
-        ImageTagsScreen()
-    }
 }

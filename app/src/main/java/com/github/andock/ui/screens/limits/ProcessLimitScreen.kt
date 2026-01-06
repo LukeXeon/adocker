@@ -2,6 +2,7 @@ package com.github.andock.ui.screens.limits
 
 import android.os.Build
 import androidx.compose.foundation.layout.Column
+import com.github.andock.ui.route.Route
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
+@Route(ProcessLimitRoute::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessLimitScreen() {
