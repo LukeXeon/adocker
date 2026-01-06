@@ -66,9 +66,6 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
-    kotlinOptions {
-        freeCompilerArgs = listOf("-XXLanguage:+WhenGuards")
-    }
 }
 
 dependencies {
@@ -155,6 +152,9 @@ dependencies {
 
     // Daemon
     implementation(project(":daemon"))
+
+    // Ksp
+    ksp(project(":ksp"))
 
     // Testing
     testImplementation(libs.junit)

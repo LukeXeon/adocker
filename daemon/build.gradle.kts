@@ -114,6 +114,9 @@ dependencies {
     // Guava
     implementation(libs.kotlinx.coroutines.guava)
 
+    // Ksp
+    ksp(project(":ksp"))
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)
