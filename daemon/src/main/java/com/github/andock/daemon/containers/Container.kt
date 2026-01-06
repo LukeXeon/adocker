@@ -29,7 +29,7 @@ class Container @AssistedInject constructor(
     private val logSourceFactory: ContainerLogPagingSource.Factory
 ) {
     companion object {
-        const val N = 1000L
+        const val N = 1000
     }
 
     init {
@@ -88,9 +88,9 @@ class Container @AssistedInject constructor(
 
     fun logLines() = Pager(
         config = PagingConfig(
-            pageSize = N.toInt(),
+            pageSize = N,
             enablePlaceholders = false,
-            initialLoadSize = N.toInt(),
+            initialLoadSize = N,
         ),
         initialKey = ContainerLogKey(
             containerId = id,

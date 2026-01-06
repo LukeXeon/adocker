@@ -15,7 +15,7 @@ interface LogLineDao {
     suspend fun clearLogById(containerId: String)
 
     @Query("SELECT id, timestamp, isError, message FROM log_lines WHERE containerId = :containerId ORDER BY timestamp ASC LIMIT :pageSize OFFSET :offset")
-    suspend fun getLogLines(containerId: String, offset: Long, pageSize: Long): List<LogLineDTO>
+    suspend fun getLogLines(containerId: String, offset: Int, pageSize: Int): List<LogLineDTO>
 
     @Query("SELECT COUNT(*) FROM log_lines WHERE containerId = :containerId")
     suspend fun getTotalCount(containerId: String): Int
