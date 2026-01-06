@@ -1,8 +1,8 @@
-package com.github.andock.ui.screens.terminal
+package com.github.andock.ui.screens.containers
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TerminalRoute(
+data class ContainerExecRoute(
     val containerId: String
 )

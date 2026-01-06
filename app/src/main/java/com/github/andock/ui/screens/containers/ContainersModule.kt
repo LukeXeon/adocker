@@ -54,4 +54,11 @@ object ContainersModule {
     fun logScreen() = Screen {
         ContainerLogScreen()
     }
+
+    @Provides
+    @IntoMap
+    @ClassKey(ContainerExecRoute::class)
+    fun execScreen() = Screen {
+        ContainerExecScreen()
+    }
 }

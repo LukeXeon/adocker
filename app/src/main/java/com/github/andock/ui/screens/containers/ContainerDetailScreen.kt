@@ -38,7 +38,6 @@ import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavController
-import com.github.andock.ui.screens.terminal.TerminalRoute
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
 import kotlinx.coroutines.flow.filterIsInstance
@@ -75,7 +74,7 @@ fun ContainerDetailScreen() {
                     // Terminal button (only for running containers)
                     if (containerState is ContainerState.Running) {
                         IconButton(onClick = {
-                            navController.navigate(TerminalRoute(container.id))
+                            navController.navigate(ContainerExecRoute(container.id))
                         }) {
                             Icon(
                                 Icons.Default.Terminal,

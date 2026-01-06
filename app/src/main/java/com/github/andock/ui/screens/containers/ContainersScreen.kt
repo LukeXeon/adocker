@@ -42,7 +42,6 @@ import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavController
-import com.github.andock.ui.screens.terminal.TerminalRoute
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.flow.combine
@@ -200,7 +199,7 @@ fun ContainersScreen() {
                                 onDelete = { setDeleteDialog(container) },
                                 onTerminal = {
                                     navController.navigate(
-                                        TerminalRoute(container.id)
+                                        ContainerExecRoute(container.id)
                                     )
                                 },
                                 onClick = {
