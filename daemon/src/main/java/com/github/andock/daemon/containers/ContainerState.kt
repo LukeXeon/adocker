@@ -1,7 +1,6 @@
 package com.github.andock.daemon.containers
 
 import java.io.BufferedWriter
-import java.io.File
 
 sealed interface ContainerState {
 
@@ -19,7 +18,6 @@ sealed interface ContainerState {
         override val id: String,
         val mainProcess: Process,
         val input: BufferedWriter,
-        val output: File,
         val childProcesses: List<Process> = emptyList(),
     ) : ContainerState
 

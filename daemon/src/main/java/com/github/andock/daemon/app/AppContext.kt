@@ -24,7 +24,6 @@ class AppContext @Inject constructor(
     val containersDir = File(baseDir, DIR_CONTAINERS)
     val layersDir = File(baseDir, DIR_LAYERS)
     val tmpDir = requireNotNull(context.cacheDir)
-    val logDir = File(tmpDir, LOG_DIR)
     val nativeLibDir = File(requireNotNull(context.applicationInfo.nativeLibraryDir))
 
     val socketFile = File(tmpDir, DOCKER_SOCK)
@@ -43,12 +42,10 @@ class AppContext @Inject constructor(
 
     internal suspend fun initializeDirs() {
         withContext(Dispatchers.IO) {
-            logDir.deleteRecursively()
             // Create directories on initialization
             listOf(
                 containersDir,
                 layersDir,
-                logDir,
             ).forEach { dir ->
                 if (!dir.exists()) {
                     dir.mkdirs()

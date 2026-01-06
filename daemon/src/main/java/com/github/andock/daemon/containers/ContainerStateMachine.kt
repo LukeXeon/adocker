@@ -7,6 +7,8 @@ import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
+import com.github.andock.daemon.database.dao.LogLineDao
+import com.github.andock.daemon.database.model.LogLineEntity
 import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.os.await
 import dagger.assisted.Assisted
@@ -14,13 +16,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Singleton
 
@@ -33,11 +34,8 @@ class ContainerStateMachine @AssistedInject constructor(
     private val prootEngine: PRootEngine,
     private val scope: CoroutineScope,
     private val containerManager: ContainerManager,
+    private val logLineDao: LogLineDao,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
-
-    companion object {
-        private const val LOG_FILE = "log.txt"
-    }
 
     init {
         initializeWith(reuseLastEmittedStateOnLaunch = false) { initialState }
@@ -61,7 +59,13 @@ class ContainerStateMachine @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    snapshot.mainProcess.await()
+                    try {
+                        snapshot.mainProcess.await()
+                    } finally {
+                        withContext(NonCancellable) {
+                            logLineDao.clearLogById(containerId = snapshot.id)
+                        }
+                    }
                     toStoping()
                 }
                 untilIdentityChanges({ it.childProcesses }) {
@@ -123,46 +127,36 @@ class ContainerStateMachine @AssistedInject constructor(
                 process.fold(
                     { mainProcess ->
                         val stdin = mainProcess.outputStream.bufferedWriter()
-                        val logDir = File(appContext.logDir, containerId)
-                        logDir.mkdirs()
-                        val logFile = File(logDir, LOG_FILE)
                         scope.launch {
                             containerDao.setContainerLastRun(
                                 id = containerId,
                                 timestamp = System.currentTimeMillis()
                             )
-                            logFile.outputStream().bufferedWriter().use { writer ->
-                                val mutex = Mutex()
-                                arrayOf(
-                                    mainProcess.inputStream to false,
-                                    mainProcess.errorStream to true
-                                ).map { (input, error) ->
-                                    launch {
-                                        input.bufferedReader().useLines { lines ->
-                                            lines.map {
-                                                // single line
-                                                Json.encodeToString(
-                                                    ContainerLogLine(
-                                                        timestamp = System.currentTimeMillis(),
-                                                        error = error,
-                                                        message = it,
-                                                    )
+                            arrayOf(
+                                mainProcess.inputStream to false,
+                                mainProcess.errorStream to true
+                            ).map { (input, isError) ->
+                                launch {
+                                    input.bufferedReader().useLines { lines ->
+                                        lines.forEach { line ->
+                                            logLineDao.append(
+                                                LogLineEntity(
+                                                    id = 0,
+                                                    containerId = id,
+                                                    timestamp = System.currentTimeMillis(),
+                                                    isError = isError,
+                                                    message = line
                                                 )
-                                            }.forEach { line ->
-                                                mutex.withLock {
-                                                    writer.appendLine(line)
-                                                }
-                                            }
+                                            )
                                         }
                                     }
-                                }.joinAll()
-                            }
+                                }
+                            }.joinAll()
                         }
                         ContainerState.Running(
                             containerId,
                             mainProcess,
-                            stdin,
-                            logFile,
+                            stdin
                         )
                     },
                     { exception ->

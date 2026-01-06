@@ -8,6 +8,7 @@ import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.dao.LayerReferenceDao
+import com.github.andock.daemon.database.dao.LogLineDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.SearchRecordDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
@@ -15,6 +16,7 @@ import com.github.andock.daemon.database.model.ContainerEntity
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
+import com.github.andock.daemon.database.model.LogLineEntity
 import com.github.andock.daemon.database.model.RegistryEntity
 import com.github.andock.daemon.database.model.SearchRecordEntity
 
@@ -26,7 +28,8 @@ import com.github.andock.daemon.database.model.SearchRecordEntity
         LayerReferenceEntity::class,
         RegistryEntity::class,
         AuthTokenEntity::class,
-        SearchRecordEntity::class
+        SearchRecordEntity::class,
+        LogLineEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -42,4 +45,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun layerReferenceDao(): LayerReferenceDao
     abstract fun searchRecordDao(): SearchRecordDao
+    abstract fun logLineDao(): LogLineDao
 }

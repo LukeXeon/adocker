@@ -2,13 +2,6 @@ package com.github.andock.daemon.database
 
 import android.content.Context
 import androidx.room.Room
-import com.github.andock.daemon.database.dao.AuthTokenDao
-import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.database.dao.ImageDao
-import com.github.andock.daemon.database.dao.LayerDao
-import com.github.andock.daemon.database.dao.LayerReferenceDao
-import com.github.andock.daemon.database.dao.RegistryDao
-import com.github.andock.daemon.database.dao.SearchRecordDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,54 +14,42 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun appDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "shared_database"
-        ).build()
-    }
+    fun appDatabase(@ApplicationContext context: Context) = Room.databaseBuilder(
+        context.applicationContext,
+        AppDatabase::class.java,
+        "shared_database"
+    ).build()
 
 
     @Provides
     @Singleton
-    fun imageDao(database: AppDatabase): ImageDao {
-        return database.imageDao()
-    }
+    fun imageDao(database: AppDatabase) = database.imageDao()
 
     @Provides
     @Singleton
-    fun containerDao(database: AppDatabase): ContainerDao {
-        return database.containerDao()
-    }
+    fun containerDao(database: AppDatabase) = database.containerDao()
 
     @Provides
     @Singleton
-    fun mirrorDao(database: AppDatabase): RegistryDao {
-        return database.registryDao()
-    }
+    fun mirrorDao(database: AppDatabase) = database.registryDao()
 
     @Provides
     @Singleton
-    fun layerDao(database: AppDatabase): LayerDao {
-        return database.layerDao()
-    }
+    fun layerDao(database: AppDatabase) = database.layerDao()
 
     @Provides
     @Singleton
-    fun authTokenDao(database: AppDatabase): AuthTokenDao {
-        return database.authTokenDao()
-    }
+    fun authTokenDao(database: AppDatabase) = database.authTokenDao()
 
     @Provides
     @Singleton
-    fun layerReferenceDao(database: AppDatabase): LayerReferenceDao {
-        return database.layerReferenceDao()
-    }
+    fun layerReferenceDao(database: AppDatabase) = database.layerReferenceDao()
 
     @Provides
     @Singleton
-    fun searchRecordDao(database: AppDatabase): SearchRecordDao {
-        return database.searchRecordDao()
-    }
+    fun searchRecordDao(database: AppDatabase) = database.searchRecordDao()
+
+    @Provides
+    @Singleton
+    fun logLineDao(database: AppDatabase) = database.logLineDao()
 }
