@@ -26,7 +26,7 @@ class HttpProcessor(
          * Parses an HTTP/1.1 request from the input stream.
          * Returns null if the connection was closed or the request is invalid.
          */
-        private fun parseRequest(inputStream: InputStream): Request? {
+        private fun readRequest(inputStream: InputStream): Request? {
             val reader = inputStream.bufferedReader()
             // Read request line
             val requestLine = reader.readLine() ?: return null
@@ -127,7 +127,7 @@ class HttpProcessor(
             try {
                 // For simplicity, handle one request per connection
                 // Keep-alive can be added later if needed
-                val request = parseRequest(conn.inputStream)
+                val request = readRequest(conn.inputStream)
 
                 if (request != null) {
                     Timber.d("Received request: ${request.method} ${request.uri}")
