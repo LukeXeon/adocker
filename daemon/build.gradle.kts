@@ -111,6 +111,9 @@ dependencies {
     // Leakcanary
     debugImplementation(libs.leakcanary.android)
 
+    // Guava
+    implementation(libs.kotlinx.coroutines.guava)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)

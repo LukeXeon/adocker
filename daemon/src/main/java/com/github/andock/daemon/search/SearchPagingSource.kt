@@ -4,6 +4,8 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andock.daemon.search.model.SearchResponse
 import com.github.andock.daemon.search.model.SearchResult
+import com.google.common.hash.BloomFilter
+import com.google.common.hash.Funnels
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import io.ktor.client.HttpClient
@@ -29,6 +31,7 @@ class SearchPagingSource @AssistedInject constructor(
     private val client: HttpClient
 ) : PagingSource<SearchKey, SearchResult>() {
 
+    @Suppress("UnstableApiUsage")
     override suspend fun load(params: LoadParams<SearchKey>): LoadResult<SearchKey, SearchResult> {
         val key = params.key ?: return LoadResult.Page(
             emptyList(),
@@ -39,12 +42,15 @@ class SearchPagingSource @AssistedInject constructor(
             runCatching {
                 client.get(key.url).body<SearchResponse>()
             }.mapCatching { response ->
-                val names = HashSet<String>(
-                    key.names.size + response.results.size
+                val names = key.names?.copy() ?: BloomFilter.create(
+                    Funnels.stringFunnel(Charsets.UTF_8), // 数据类型转换器（支持 String、Int 等）
+                    100000,
+                    0.01
                 )
-                names.addAll(key.names)
                 LoadResult.Page(
-                    data = response.results.filter { it.repoName != null && names.add(it.repoName) },
+                    data = response.results.filter {
+                        it.repoName != null && names.put(it.repoName)
+                    },
                     prevKey = if (!response.previous.isNullOrBlank()) {
                         SearchKey(
                             Url(response.previous),

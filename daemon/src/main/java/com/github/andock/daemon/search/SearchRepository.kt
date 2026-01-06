@@ -76,7 +76,7 @@ class SearchRepository @Inject constructor(
                         }
                     }
                     .build(),
-                emptySet(),
+                null,
             ),
             pagingSourceFactory = factory
         ).flow
