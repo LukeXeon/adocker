@@ -204,6 +204,11 @@ fun ContainersScreen() {
                                         ContainerExecRoute(container.id)
                                     )
                                 },
+                                onLog = {
+                                    navController.navigate(
+                                        ContainerLogRoute(container.id)
+                                    )
+                                },
                                 onClick = {
                                     navController.navigate(
                                         ContainerDetailRoute(container.id)

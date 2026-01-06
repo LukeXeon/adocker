@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -67,6 +68,7 @@ fun ContainerCard(
     onStop: () -> Unit,
     onDelete: () -> Unit,
     onTerminal: () -> Unit,
+    onLog: () -> Unit,
     onClick: () -> Unit,
 ) {
     val metadata = container.metadata.collectAsState().value ?: return
@@ -246,6 +248,19 @@ fun ContainerCard(
                             )
                             Spacer(modifier = Modifier.width(Spacing.Small))
                             Text(stringResource(R.string.action_terminal))
+                        }
+                        FilledTonalButton(
+                            onClick = onLog,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(Spacing.Medium)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Textsms,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.Small)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.Small))
+                            Text(stringResource(R.string.log_title))
                         }
                         OutlinedButton(
                             onClick = onStop,

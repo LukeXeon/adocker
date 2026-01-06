@@ -131,9 +131,9 @@ fun ContainerLogScreen() {
             }
             PaginationColumn(
                 items = logLines,
-                itemKey = { it },
+                itemKey = { it.id },
                 itemContent = {
-
+                    Text(it.message)
                 },
                 initialContent = {
                     PaginationPlaceholder.Initial()
