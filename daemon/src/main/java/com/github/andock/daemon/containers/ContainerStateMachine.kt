@@ -108,7 +108,7 @@ class ContainerStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Starting>.startContainer(): ChangedState<ContainerState> {
         val containerId = snapshot.id
-        val config = containerDao.getContainerById(snapshot.id)?.config
+        val config = containerDao.getContainerConfigById(snapshot.id)
         return if (config == null) {
             override {
                 ContainerState.Removed(containerId)
@@ -223,7 +223,7 @@ class ContainerStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Running>.execCommand(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
         val containerId = snapshot.id
-        val config = containerDao.getContainerById(snapshot.id)?.config
+        val config = containerDao.getContainerConfigById(snapshot.id)
         return if (config == null) {
             exec.process.completeExceptionally(
                 IllegalStateException("Container not found: $containerId")

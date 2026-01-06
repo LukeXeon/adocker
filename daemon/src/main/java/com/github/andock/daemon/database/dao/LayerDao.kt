@@ -6,11 +6,12 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.github.andock.daemon.database.model.LayerEntity
+import com.github.andock.daemon.database.model.LayerReferenceEntity
 
 @Dao
 interface LayerDao {
-    @Query("SELECT * FROM layers WHERE id = :id")
-    suspend fun getLayerById(id: String): LayerEntity?
+    @Query("SELECT size FROM layers WHERE id = :id")
+    suspend fun getLayerSizeById(id: String): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLayer(layer: LayerEntity)
@@ -42,4 +43,7 @@ interface LayerDao {
         // 3. 返回被删除的ID列表
         return toDeleteIds
     }
+
+    @Insert
+    suspend fun insertLayerReferences(references: List<LayerReferenceEntity>)
 }

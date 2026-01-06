@@ -30,7 +30,7 @@ class ContainerName @Inject constructor(
     suspend fun generateName(): String {
         do {
             val name = randomContainerName()
-            if (containerDao.getContainerByName(name) == null) {
+            if (containerDao.hasContainerByName(name)) {
                 return name
             } else {
                 currentCoroutineContext().ensureActive()

@@ -10,7 +10,6 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
-import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
@@ -39,7 +38,6 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     repositories: ImageRepositories,
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
-    private val layerReferenceDao: LayerReferenceDao,
     private val database: AppDatabase,
     private val appContext: AppContext,
     private val registryManager: RegistryManager,
@@ -131,13 +129,13 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                         )
                         val id = layer.id
                         downloadStep(id, layer.size) {
-                            val layerEntity = layerDao.getLayerById(id)
+                            val layerSize = layerDao.getLayerSizeById(id)
                             val destFile = File(
                                 appContext.layersDir,
                                 "${id}.tar.gz"
                             )
-                            if (layerEntity != null
-                                && layerEntity.size == destFile.length()
+                            if (layerSize != null
+                                && layerSize == destFile.length()
                                 && destFile.sha256() == id
                             ) {
                                 return@downloadStep
@@ -201,7 +199,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             }
             database.withTransaction {
                 imageDao.insertImage(imageEntity)
-                layerReferenceDao.insertLayerReferences(references)
+                layerDao.insertLayerReferences(references)
             }
             return override {
                 ImageDownloadState.Done(ref)

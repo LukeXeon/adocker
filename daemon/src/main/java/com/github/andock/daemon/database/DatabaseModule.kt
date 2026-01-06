@@ -43,10 +43,6 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun layerReferenceDao(database: AppDatabase) = database.layerReferenceDao()
-
-    @Provides
-    @Singleton
     fun searchRecordDao(database: AppDatabase) = database.searchRecordDao()
 
     @Provides

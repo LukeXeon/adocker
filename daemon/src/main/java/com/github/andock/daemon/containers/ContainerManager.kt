@@ -107,7 +107,7 @@ class ContainerManager @Inject constructor(
         val containerName = if (name == null) {
             containerName.generateName()
         } else {
-            if (containerDao.getContainerByName(name) != null) {
+            if (containerDao.hasContainerByName(name)) {
                 return Result.failure(
                     IllegalArgumentException("Container with name '${name}' already exists")
                 )

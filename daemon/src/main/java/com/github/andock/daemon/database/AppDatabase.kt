@@ -7,7 +7,6 @@ import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
-import com.github.andock.daemon.database.dao.LayerReferenceDao
 import com.github.andock.daemon.database.dao.LogLineDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.SearchRecordDao
@@ -43,7 +42,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun authTokenDao(): AuthTokenDao
 
-    abstract fun layerReferenceDao(): LayerReferenceDao
     abstract fun searchRecordDao(): SearchRecordDao
     abstract fun logLineDao(): LogLineDao
 }

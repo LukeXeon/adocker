@@ -20,6 +20,4 @@ interface LogLineDao {
     @Query("SELECT COUNT(*) FROM log_lines WHERE containerId = :containerId")
     suspend fun getTotalCount(containerId: String): Int
 
-    @Query("DELETE FROM log_lines")
-    suspend fun clearAll()
 }
