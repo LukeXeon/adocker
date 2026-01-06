@@ -41,9 +41,9 @@ class SystemHandler @Inject constructor(
             kernelVersion = System.getProperty("os.version") ?: "unknown",
             buildTime = "unknown"
         )
-        return Response.Companion(Status.Companion.OK)
+        return Response.Companion(Status.OK)
             .header("Content-Type", "application/json")
-            .body(Json.Default.encodeToString(version))
+            .body(Json.encodeToString(version))
     }
 
     fun getInfo(): Response = runBlocking {
@@ -135,13 +135,13 @@ class SystemHandler @Inject constructor(
             securityOptions = listOf("name=proot"),
             warnings = null
         )
-        return@runBlocking Response.Companion(Status.Companion.OK)
+        return@runBlocking Response.Companion(Status.OK)
             .header("Content-Type", "application/json")
-            .body(Json.Default.encodeToString(info))
+            .body(Json.encodeToString(info))
     }
 
     fun ping(): Response {
-        return Response.Companion(Status.Companion.OK)
+        return Response.Companion(Status.OK)
             .header("Api-Version", "1.45")
             .header("Docker-Experimental", "false")
             .body("OK")
@@ -203,8 +203,8 @@ class SystemHandler @Inject constructor(
             volumes = emptyList()
         )
 
-        return@runBlocking Response.Companion(Status.Companion.OK)
+        return@runBlocking Response.Companion(Status.OK)
             .header("Content-Type", "application/json")
-            .body(Json.Default.encodeToString(diskUsage))
+            .body(Json.encodeToString(diskUsage))
     }
 }
