@@ -52,8 +52,8 @@ fun MainScreen() {
     val currentDestination = navBackStackEntry?.destination
     // Check if we should show bottom navigation
     val showBottomBar = remember(currentDestination) {
-        bottomTabs.any { (route, _) ->
-            currentDestination?.hierarchy?.any { it.hasRoute(route) } == true
+        bottomTabs.any { tab ->
+            currentDestination?.hierarchy?.any { it.hasRoute(tab.type) } == true
         }
     }
     MainTheme {
@@ -91,24 +91,24 @@ fun MainScreen() {
                             exit = slideOutVertically(targetOffsetY = { it })
                         ) {
                             NavigationBar {
-                                bottomTabs.forEach { (route, screen) ->
-                                    val selected = remember(currentDestination, screen) {
+                                bottomTabs.forEach { tab ->
+                                    val selected = remember(currentDestination, tab) {
                                         currentDestination?.hierarchy
-                                            ?.any { it.hasRoute(route) } == true
+                                            ?.any { it.hasRoute(tab.type) } == true
                                     }
-                                    val route = screen.route()
+                                    val route = tab.route()
                                     NavigationBarItem(
                                         icon = {
                                             Icon(
                                                 imageVector = if (selected) {
-                                                    screen.selectedIcon
+                                                    tab.selectedIcon
                                                 } else {
-                                                    screen.unselectedIcon
+                                                    tab.unselectedIcon
                                                 },
-                                                contentDescription = stringResource(screen.titleResId)
+                                                contentDescription = stringResource(tab.titleResId)
                                             )
                                         },
-                                        label = { Text(stringResource(screen.titleResId)) },
+                                        label = { Text(stringResource(tab.titleResId)) },
                                         selected = selected,
                                         onClick = debounceClick {
                                             navController.navigate(route) {
