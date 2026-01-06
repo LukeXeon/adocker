@@ -1,19 +1,43 @@
 package com.github.andock.daemon.server.routes
 
+import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.containers.ContainerManager
+import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.daemon.images.model.ContainerConfig
+import com.github.andock.daemon.server.model.ContainerConfigInfo
+import com.github.andock.daemon.server.model.ContainerCreateRequest
+import com.github.andock.daemon.server.model.ContainerCreateResponse
+import com.github.andock.daemon.server.model.ContainerInspectResponse
+import com.github.andock.daemon.server.model.ContainerStateInfo
+import com.github.andock.daemon.server.model.ContainerSummary
+import com.github.andock.daemon.server.model.HostConfig
+import com.github.andock.daemon.server.model.NetworkSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import org.http4k.core.Method.DELETE
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.HEAD
 import org.http4k.core.Method.POST
+import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.CONFLICT
+import org.http4k.core.Status.Companion.CREATED
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.NOT_IMPLEMENTED
+import org.http4k.core.Status.Companion.NO_CONTENT
+import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
+import org.http4k.routing.path
 import org.http4k.routing.routes
+import java.time.Instant
+import javax.inject.Inject
 
 /**
  * Docker Container API routes.
@@ -22,178 +46,366 @@ import org.http4k.routing.routes
 @Module
 @InstallIn(SingletonComponent::class)
 object ContainerRoutes {
+
+    class Handler @Inject constructor(
+        private val containerManager: ContainerManager,
+        private val appContext: AppContext
+    ) {
+        fun listContainers(request: Request): Response = runBlocking {
+            val all = request.query("all")?.toBoolean() ?: false
+            val containers = containerManager.containers.value.values.toList()
+
+            val filteredContainers = if (all) containers else {
+                containers.filter { it.state.value is ContainerState.Running }
+            }
+
+            val summaries = filteredContainers.mapNotNull { container ->
+                val metadata = container.metadata.value ?: return@mapNotNull null
+                val state = container.state.value
+
+                val (stateStr, status, running) = when (state) {
+                    is ContainerState.Created -> Triple("created", "Created", false)
+                    is ContainerState.Running -> Triple("running", "Up", true)
+                    is ContainerState.Exited -> Triple("exited", "Exited", false)
+                    is ContainerState.Dead -> Triple("dead", "Dead", false)
+                    else -> Triple("unknown", "Unknown", false)
+                }
+
+                val cmd = metadata.config.cmd.joinToString(" ")
+
+                ContainerSummary(
+                    id = container.id,
+                    names = listOf("/" + metadata.name),
+                    image = metadata.imageName,
+                    imageID = metadata.imageId,
+                    command = cmd,
+                    created = metadata.createdAt / 1000,
+                    state = stateStr,
+                    status = status
+                )
+            }
+
+            return@runBlocking Response(OK)
+                .header("Content-Type", "application/json")
+                .body(Json.encodeToString(summaries))
+        }
+
+        fun createContainer(request: Request): Response = runBlocking {
+            val name = request.query("name")
+            val body = request.bodyString()
+
+            if (body.isEmpty()) {
+                return@runBlocking Response(BAD_REQUEST)
+                    .body("""{"message":"Config cannot be empty"}""")
+            }
+
+            val createRequest = try {
+                Json.decodeFromString<ContainerCreateRequest>(body)
+            } catch (e: Exception) {
+                return@runBlocking Response(BAD_REQUEST)
+                    .body("""{"message":"Invalid JSON: ${e.message}"}""")
+            }
+
+            // Parse image name
+            val imageParts = createRequest.image.split(":")
+            val imageTag = if (imageParts.size > 1) imageParts[1] else "latest"
+            val imageRepo = imageParts[0]
+
+            // Find image by repository and tag
+            val images = com.github.andock.daemon.images.ImageManager::class.java
+                .getDeclaredField("imageDao")
+                .apply { isAccessible = true }
+                .get(containerManager)
+
+            // For now, we'll use a simplified approach
+            // You'll need to inject ImageDao or ImageManager to get the actual image
+
+            // Convert request to ContainerConfig
+            val config = ContainerConfig(
+                cmd = createRequest.cmd ?: listOf("/bin/sh"),
+                entrypoint = createRequest.entrypoint,
+                env = createRequest.env?.associate {
+                    val parts = it.split("=", limit = 2)
+                    if (parts.size == 2) parts[0] to parts[1] else parts[0] to ""
+                } ?: emptyMap(),
+                workingDir = createRequest.workingDir ?: "/",
+                user = createRequest.user ?: "root",
+                hostname = createRequest.hostname ?: "localhost"
+            )
+
+            // For this implementation, we need to find the image by name
+            // This is a simplified version - you should inject ImageDao properly
+            try {
+                val result = containerManager.createContainer(
+                    imageId = createRequest.image, // This should be imageId, not name
+                    name = name,
+                    config = config
+                )
+
+                result.fold(
+                    onSuccess = { container ->
+                        Response(CREATED)
+                            .header("Content-Type", "application/json")
+                            .body(Json.encodeToString(
+                                ContainerCreateResponse(
+                                    id = container.id,
+                                    warnings = null
+                                )
+                            ))
+                    },
+                    onFailure = { error ->
+                        when {
+                            error.message?.contains("already exists") == true ->
+                                Response(CONFLICT).body("""{"message":"${error.message}"}""")
+                            error.message?.contains("not found") == true ->
+                                Response(NOT_FOUND).body("""{"message":"${error.message}"}""")
+                            else ->
+                                Response(BAD_REQUEST).body("""{"message":"${error.message}"}""")
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                Response(BAD_REQUEST)
+                    .body("""{"message":"${e.message}"}""")
+            }
+        }
+
+        fun inspectContainer(request: Request): Response = runBlocking {
+            val id = request.path("id") ?: return@runBlocking Response(BAD_REQUEST)
+                .body("""{"message":"Container ID required"}""")
+
+            val container = containerManager.containers.value[id]
+                ?: return@runBlocking Response(NOT_FOUND)
+                    .body("""{"message":"No such container: $id"}""")
+
+            val metadata = container.metadata.value
+                ?: return@runBlocking Response(NOT_FOUND)
+                    .body("""{"message":"Container metadata not found"}""")
+
+            val state = container.state.value
+
+            val (stateStr, running, pid) = when (state) {
+                is ContainerState.Running -> Triple("running", true, 0)
+                is ContainerState.Exited -> Triple("exited", false, 0)
+                is ContainerState.Created -> Triple("created", false, 0)
+                is ContainerState.Dead -> Triple("dead", false, 0)
+                else -> Triple("unknown", false, 0)
+            }
+
+            val inspectResponse = ContainerInspectResponse(
+                id = container.id,
+                created = Instant.ofEpochMilli(metadata.createdAt).toString(),
+                path = metadata.config.cmd.firstOrNull() ?: "",
+                args = metadata.config.cmd.drop(1),
+                state = ContainerStateInfo(
+                    status = stateStr,
+                    running = running,
+                    paused = false,
+                    restarting = false,
+                    dead = state is ContainerState.Dead,
+                    pid = pid,
+                    exitCode = 0,
+                    error = if (state is ContainerState.Dead) state.throwable.message ?: "" else "",
+                    startedAt = Instant.ofEpochMilli(metadata.lastRunAt ?: 0).toString(),
+                    finishedAt = "0001-01-01T00:00:00Z"
+                ),
+                image = metadata.imageId,
+                name = "/" + metadata.name,
+                config = ContainerConfigInfo(
+                    hostname = metadata.config.hostname,
+                    user = metadata.config.user,
+                    env = metadata.config.env.map { "${it.key}=${it.value}" },
+                    cmd = metadata.config.cmd,
+                    image = metadata.imageName,
+                    workingDir = metadata.config.workingDir,
+                    entrypoint = metadata.config.entrypoint
+                ),
+                hostConfig = HostConfig(),
+                networkSettings = NetworkSettings()
+            )
+
+            return@runBlocking Response(OK)
+                .header("Content-Type", "application/json")
+                .body(Json.encodeToString(inspectResponse))
+        }
+
+        fun startContainer(request: Request): Response = runBlocking {
+            val id = request.path("id") ?: return@runBlocking Response(BAD_REQUEST)
+                .body("""{"message":"Container ID required"}""")
+
+            val container = containerManager.containers.value[id]
+                ?: return@runBlocking Response(NOT_FOUND)
+                    .body("""{"message":"No such container: $id"}""")
+
+            try {
+                container.start()
+                Response(NO_CONTENT)
+            } catch (e: Exception) {
+                Response(BAD_REQUEST)
+                    .body("""{"message":"${e.message}"}""")
+            }
+        }
+
+        fun stopContainer(request: Request): Response = runBlocking {
+            val id = request.path("id") ?: return@runBlocking Response(BAD_REQUEST)
+                .body("""{"message":"Container ID required"}""")
+
+            val container = containerManager.containers.value[id]
+                ?: return@runBlocking Response(NOT_FOUND)
+                    .body("""{"message":"No such container: $id"}""")
+
+            try {
+                container.stop()
+                Response(NO_CONTENT)
+            } catch (e: Exception) {
+                Response(BAD_REQUEST)
+                    .body("""{"message":"${e.message}"}""")
+            }
+        }
+
+        fun removeContainer(request: Request): Response = runBlocking {
+            val id = request.path("id") ?: return@runBlocking Response(BAD_REQUEST)
+                .body("""{"message":"Container ID required"}""")
+
+            val container = containerManager.containers.value[id]
+                ?: return@runBlocking Response(NOT_FOUND)
+                    .body("""{"message":"No such container: $id"}""")
+
+            try {
+                container.remove()
+                Response(NO_CONTENT)
+            } catch (e: Exception) {
+                Response(BAD_REQUEST)
+                    .body("""{"message":"${e.message}"}""")
+            }
+        }
+    }
+
     @IntoSet
     @Provides
-    fun routes(): RoutingHttpHandler = routes(
+    fun routes(handler: Handler): RoutingHttpHandler = routes(
         // List containers
-        "/containers/json" bind GET to {
-            // GET /containers/json
-            // Query params: all, limit, size, filters
-            Response(NOT_IMPLEMENTED)
+        "/containers/json" bind GET to { request ->
+            handler.listContainers(request)
         },
 
         // Create a container
-        "/containers/create" bind POST to {
-            // POST /containers/create
-            // Query params: name, platform
-            // Body: Container config
-            Response(NOT_IMPLEMENTED)
+        "/containers/create" bind POST to { request ->
+            handler.createContainer(request)
         },
 
         // Inspect a container
-        "/containers/{id}/json" bind GET to {
-            // GET /containers/{id}/json
-            // Query params: size
-            Response(NOT_IMPLEMENTED)
+        "/containers/{id}/json" bind GET to { request ->
+            handler.inspectContainer(request)
         },
 
         // List processes running inside a container
         "/containers/{id}/top" bind GET to {
-            // GET /containers/{id}/top
-            // Query params: ps_args
             Response(NOT_IMPLEMENTED)
         },
 
         // Get container logs
         "/containers/{id}/logs" bind GET to {
-            // GET /containers/{id}/logs
-            // Query params: follow, stdout, stderr, since, until, timestamps, tail
             Response(NOT_IMPLEMENTED)
         },
 
         // Get changes on a container's filesystem
         "/containers/{id}/changes" bind GET to {
-            // GET /containers/{id}/changes
             Response(NOT_IMPLEMENTED)
         },
 
         // Export a container
         "/containers/{id}/export" bind GET to {
-            // GET /containers/{id}/export
             Response(NOT_IMPLEMENTED)
         },
 
         // Get container stats based on resource usage
         "/containers/{id}/stats" bind GET to {
-            // GET /containers/{id}/stats
-            // Query params: stream, one-shot
             Response(NOT_IMPLEMENTED)
         },
 
         // Resize a container TTY
         "/containers/{id}/resize" bind POST to {
-            // POST /containers/{id}/resize
-            // Query params: h, w
             Response(NOT_IMPLEMENTED)
         },
 
         // Start a container
-        "/containers/{id}/start" bind POST to {
-            // POST /containers/{id}/start
-            // Query params: detachKeys
-            Response(NOT_IMPLEMENTED)
+        "/containers/{id}/start" bind POST to { request ->
+            handler.startContainer(request)
         },
 
         // Stop a container
-        "/containers/{id}/stop" bind POST to {
-            // POST /containers/{id}/stop
-            // Query params: signal, t
-            Response(NOT_IMPLEMENTED)
+        "/containers/{id}/stop" bind POST to { request ->
+            handler.stopContainer(request)
         },
 
         // Restart a container
         "/containers/{id}/restart" bind POST to {
-            // POST /containers/{id}/restart
-            // Query params: signal, t
             Response(NOT_IMPLEMENTED)
         },
 
         // Kill a container
         "/containers/{id}/kill" bind POST to {
-            // POST /containers/{id}/kill
-            // Query params: signal
             Response(NOT_IMPLEMENTED)
         },
 
         // Update a container
         "/containers/{id}/update" bind POST to {
-            // POST /containers/{id}/update
-            // Body: Update config (resources)
             Response(NOT_IMPLEMENTED)
         },
 
         // Rename a container
         "/containers/{id}/rename" bind POST to {
-            // POST /containers/{id}/rename
-            // Query params: name
             Response(NOT_IMPLEMENTED)
         },
 
         // Pause a container
         "/containers/{id}/pause" bind POST to {
-            // POST /containers/{id}/pause
             Response(NOT_IMPLEMENTED)
         },
 
         // Unpause a container
         "/containers/{id}/unpause" bind POST to {
-            // POST /containers/{id}/unpause
             Response(NOT_IMPLEMENTED)
         },
 
         // Attach to a container
         "/containers/{id}/attach" bind POST to {
-            // POST /containers/{id}/attach
-            // Query params: detachKeys, logs, stream, stdin, stdout, stderr
             Response(NOT_IMPLEMENTED)
         },
 
         // Attach to a container via websocket
         "/containers/{id}/attach/ws" bind GET to {
-            // GET /containers/{id}/attach/ws
-            // Query params: detachKeys, logs, stream, stdin, stdout, stderr
             Response(NOT_IMPLEMENTED)
         },
 
         // Wait for a container
         "/containers/{id}/wait" bind POST to {
-            // POST /containers/{id}/wait
-            // Query params: condition
             Response(NOT_IMPLEMENTED)
         },
 
         // Remove a container
-        "/containers/{id}" bind DELETE to {
-            // DELETE /containers/{id}
-            // Query params: v, force, link
-            Response(NOT_IMPLEMENTED)
+        "/containers/{id}" bind DELETE to { request ->
+            handler.removeContainer(request)
         },
 
         // Get information about files in a container
         "/containers/{id}/archive" bind HEAD to {
-            // HEAD /containers/{id}/archive
-            // Query params: path
             Response(NOT_IMPLEMENTED)
         },
 
         // Get an archive of a filesystem resource in a container
         "/containers/{id}/archive" bind GET to {
-            // GET /containers/{id}/archive
-            // Query params: path
             Response(NOT_IMPLEMENTED)
         },
 
         // Extract an archive of files or folders to a directory in a container
         "/containers/{id}/archive" bind org.http4k.core.Method.PUT to {
-            // PUT /containers/{id}/archive
-            // Query params: path, noOverwriteDirNonDir, copyUIDGID
             Response(NOT_IMPLEMENTED)
         },
 
         // Delete stopped containers
         "/containers/prune" bind POST to {
-            // POST /containers/prune
-            // Query params: filters
             Response(NOT_IMPLEMENTED)
         }
     )
