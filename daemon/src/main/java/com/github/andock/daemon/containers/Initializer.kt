@@ -11,30 +11,31 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 
-@AppTask("containers")
-suspend fun containers(
-    @AppTask("app")
-    appContext: AppContext,
-    containerDao: ContainerDao,
+@AppTask("clearContainerLog")
+suspend fun clearContainerLog(
     logLineDao: LogLineDao,
 ) {
     withContext(Dispatchers.IO) {
-        listOf(
+        logLineDao.clearAll()
+    }
+}
+
+@AppTask("clearContainers")
+suspend fun clearContainers(
+    @AppTask("app")
+    appContext: AppContext,
+    containerDao: ContainerDao
+) {
+    withContext(Dispatchers.IO) {
+        val containers = containerDao.getAllContainerIds().map {
+            File(appContext.containersDir, it)
+        }.toSet()
+        appContext.containersDir.listFiles {
+            !containers.contains(it)
+        }.let { it ?: emptyArray() }.map { file ->
             launch {
-                logLineDao.clearAll()
-            },
-            launch {
-                val containers = containerDao.getAllContainerIds().map {
-                    File(appContext.containersDir, it)
-                }.toSet()
-                appContext.containersDir.listFiles {
-                    !containers.contains(it)
-                }.let { it ?: emptyArray() }.map { file ->
-                    launch {
-                        file.deleteRecursively()
-                    }
-                }.joinAll()
+                file.deleteRecursively()
             }
-        ).joinAll()
+        }.joinAll()
     }
 }

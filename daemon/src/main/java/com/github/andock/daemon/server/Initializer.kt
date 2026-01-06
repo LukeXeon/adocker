@@ -4,8 +4,8 @@ import com.github.andock.daemon.app.AppTask
 import org.http4k.server.Http4kServer
 
 
-@AppTask("server")
-fun server(
+@AppTask("startServers")
+fun startServers(
     servers: Set<@JvmSuppressWildcards Http4kServer>,
     @Suppress("unused")
     @AppTask("logging")

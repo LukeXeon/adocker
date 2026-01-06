@@ -4,8 +4,8 @@ import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.app.AppTask
 
 
-@AppTask("images")
-suspend fun images(
+@AppTask("deleteUnreferencedLayers")
+suspend fun deleteUnreferencedLayers(
     @Suppress("unused")
     @AppTask("app")
     appContext: AppContext,

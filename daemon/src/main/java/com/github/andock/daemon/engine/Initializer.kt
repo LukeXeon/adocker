@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
-@AppTask("engine")
-suspend fun engine(
+@AppTask("loadEngineVersion")
+suspend fun loadEngineVersion(
     version: PRootVersion,
     @Suppress("unused")
     @AppTask("logging")
