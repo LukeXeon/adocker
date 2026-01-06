@@ -288,4 +288,6 @@
     <string name="message_loading">Loading...</string>
     <string name="message_no_data">No data</string>
     <string name="adb_shell_command" translatable="false">adb shell settings put global settings_enable_monitor_phantom_procs false</string>
+
+    <string name="log_title">Log</string>
 </resources>
