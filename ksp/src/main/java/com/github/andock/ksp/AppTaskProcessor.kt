@@ -354,16 +354,20 @@ class AppTaskProcessor(
                 buildCodeBlock {
                     add("return %M<%T> {\n", suspendLazyMember, pairClassName.parameterizedBy(taskData.returnType, ClassName("kotlin", "Long")))
                     indent()
+
+                    // Generate local variables for @AppTask parameters before measureTimeMillisWithResult
+                    taskData.parameters.forEach { param ->
+                        if (param.hasAppTask) {
+                            addStatement("val %N = %N.getValue().first", param.name, param.name)
+                        }
+                    }
+
                     add("%M {\n", measureTimeMillisWithResultMember)
                     indent()
                     add("%N(\n", taskData.functionName)
                     indent()
                     taskData.parameters.forEachIndexed { index, param ->
-                        if (param.hasAppTask) {
-                            addStatement("%N.getValue().first%L", param.name, if (index < taskData.parameters.size - 1) "," else "")
-                        } else {
-                            addStatement("%N%L", param.name, if (index < taskData.parameters.size - 1) "," else "")
-                        }
+                        addStatement("%N%L", param.name, if (index < taskData.parameters.size - 1) "," else "")
                     }
                     unindent()
                     add(")\n")
