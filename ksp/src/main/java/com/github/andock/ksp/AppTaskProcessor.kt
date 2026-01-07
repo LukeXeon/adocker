@@ -339,14 +339,6 @@ class AppTaskProcessor(
             MemberName("com.github.andock.daemon.utils", "measureTimeMillisWithResult")
         val pairClassName = ClassName("kotlin", "Pair")
 
-        // Add @JvmSuppressWildcards to the return type
-        val returnTypeWithAnnotation = taskData.returnType.copy(
-            annotations = listOf(
-                AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards"))
-                    .build()
-            ) + taskData.returnType.annotations
-        )
-
         return FunSpec.builder("initializer")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))
@@ -358,7 +350,7 @@ class AppTaskProcessor(
             .returns(
                 suspendLazyClassName.parameterizedBy(
                     pairClassName.parameterizedBy(
-                        returnTypeWithAnnotation,
+                        taskData.returnType,
                         ClassName("kotlin", "Long")
                     )
                 )
@@ -442,14 +434,6 @@ class AppTaskProcessor(
         val suspendLazyClassName = ClassName("com.github.andock.daemon.utils", "SuspendLazy")
         val pairClassName = ClassName("kotlin", "Pair")
 
-        // Add @JvmSuppressWildcards to the parameter type
-        val returnTypeWithAnnotation = taskData.returnType.copy(
-            annotations = listOf(
-                AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards"))
-                    .build()
-            ) + taskData.returnType.annotations
-        )
-
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
@@ -464,7 +448,7 @@ class AppTaskProcessor(
                     "task",
                     suspendLazyClassName.parameterizedBy(
                         pairClassName.parameterizedBy(
-                            returnTypeWithAnnotation,
+                            taskData.returnType,
                             ClassName("kotlin", "Long")
                         )
                     )
