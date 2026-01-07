@@ -1,7 +1,6 @@
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrains.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.kapt)
 }
 java {
@@ -17,7 +16,6 @@ kotlin {
 dependencies {
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.symbol.processing.api)
-    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.auto.service.annotations)
     kapt(libs.auto.service)
 }

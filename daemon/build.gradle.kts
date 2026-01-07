@@ -87,6 +87,8 @@ dependencies {
     // Logging - SLF4J API only (provider implemented in code)
     implementation(libs.slf4j.api)
     compileOnly(libs.auto.service.annotations)
+    compileOnly(libs.auto.value.annotations)
+    kapt(libs.auto.value)
     kapt(libs.auto.service)
 
     // Timber Logging

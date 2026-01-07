@@ -47,6 +47,7 @@ splashscreen = "1.2.0"
 # Logging
 slf4j = "2.0.17"
 autoService = "1.1.1"
+autoVaule = "1.11.1"
 
 # ML Kit Barcode Scanning
 mlkitBarcodeScanning = "17.3.0"
@@ -137,6 +138,8 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 auto-service-annotations = { group = "com.google.auto.service", name = "auto-service-annotations", version.ref = "autoService" }
 auto-service = { group = "com.google.auto.service", name = "auto-service", version.ref = "autoService" }
+auto-value-annotations = { group = "com.google.auto.value", name = "auto-value-annotations", version.ref = "autoVaule" }
+auto-value = { group = "com.google.auto.value", name = "auto-value", version.ref = "autoVaule" }
 
 # ML Kit Barcode Scanning
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcodeScanning" }

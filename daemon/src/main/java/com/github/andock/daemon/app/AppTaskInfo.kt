@@ -1,9 +1,11 @@
 package com.github.andock.daemon.app
 
-import kotlinx.serialization.Serializable
+import dagger.MapKey
 
-@Serializable
-data class AppTaskInfo(
+@MapKey(unwrapValue = false)
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class AppTaskInfo(
     val name: String,
     val trigger: String
 )

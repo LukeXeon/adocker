@@ -29,7 +29,6 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
-import kotlinx.serialization.json.Json
 
 class AppTaskProcessor(
     private val codeGenerator: CodeGenerator,
@@ -90,24 +89,32 @@ class AppTaskProcessor(
             it.shortName.asString() == "AppTask"
         } ?: return null
 
-        // Extract task arguments
-        val arguments = appTaskAnnotation.arguments.asSequence().mapNotNull {
-            val name = it.name
-            val value = it.value
-            if (name != null && value != null) {
-                if (value is String) {
-                    return@mapNotNull name.asString() to value
-                }
-            }
-            return@mapNotNull null
-        }.toMap()
-        if (!arguments.containsKey("name")) {
+        // Extract task name
+        val taskNameArg = appTaskAnnotation.arguments
+            .firstOrNull { it.name?.asString() == "name" }
+
+        if (taskNameArg == null) {
             logger.error(
                 "@AppTask annotation must specify a 'name' parameter",
                 symbol = function
             )
             return null
         }
+
+        val taskName = taskNameArg.value as? String
+        if (taskName == null) {
+            logger.error(
+                "@AppTask annotation 'name' parameter must be a valid string",
+                symbol = function
+            )
+            return null
+        }
+
+        val triggerKey = function.annotations.firstOrNull {
+            it.shortName.asString() == "Trigger"
+        }?.arguments?.firstOrNull {
+            it.name?.asString() == "value"
+        }?.value as? String ?: ""
 
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
@@ -126,7 +133,8 @@ class AppTaskProcessor(
         return TaskData(
             functionName = function.simpleName.asString(),
             packageName = function.packageName.asString(),
-            arguments = arguments,
+            taskName = taskName,
+            triggerKey = triggerKey,
             returnType = returnType,
             parameters = parameters
         )
@@ -415,8 +423,9 @@ class AppTaskProcessor(
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("dagger.multibindings", "StringKey"))
-                    .addMember("%S", Json.encodeToString(taskData.arguments))
+                AnnotationSpec.builder(ClassName("com.github.andock.daemon.app", "AppTaskInfo"))
+                    .addMember("%S", taskData.taskName)
+                    .addMember("%S", taskData.triggerKey)
                     .build()
             )
             .addParameter(
@@ -454,13 +463,11 @@ class AppTaskProcessor(
     private data class TaskData(
         val functionName: String,
         val packageName: String,
-        val arguments: Map<String, String>,
+        val taskName: String,
+        val triggerKey: String,
         val returnType: TypeName,
         val parameters: List<ParameterData>
-    ) {
-        val taskName: String
-            get() = arguments.getValue("name")
-    }
+    )
 
     /**
      * Data class to hold parameter information

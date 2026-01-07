@@ -9,7 +9,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,16 +17,14 @@ import kotlin.coroutines.EmptyCoroutineContext
 @OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AppInitializer @Inject constructor(
-    rawTasks: Map<String, @JvmSuppressWildcards SuspendLazy<Pair<*, Long>>>,
-    json: Json,
+    rawTasks: Map<AppTaskInfo, @JvmSuppressWildcards SuspendLazy<Pair<*, Long>>>,
 ) {
     private val tasks: Map<String, Map<String, suspend () -> Long>>
 
     init {
         val map = mutableMapOf<String, MutableMap<String, suspend () -> Long>>()
         rawTasks.forEach { (key, value) ->
-            val info = json.decodeFromString<AppTaskInfo>(key)
-            map.getOrPut(info.trigger) { mutableMapOf() }[info.name] = {
+            map.getOrPut(key.trigger) { mutableMapOf() }[key.name] = {
                 value.getValue().second
             }
         }

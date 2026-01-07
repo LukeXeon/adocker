@@ -4,5 +4,4 @@ package com.github.andock.daemon.app
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 annotation class AppTask(
     val name: String,
-    val trigger: String = ""
 )
