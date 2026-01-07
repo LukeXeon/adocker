@@ -92,34 +92,31 @@ fun MainScreen() {
                         ) {
                             NavigationBar {
                                 bottomTabs.forEach { tab ->
-                                    val selected = remember(currentDestination, tab) {
-                                        currentDestination?.hierarchy
-                                            ?.any { it.hasRoute(tab.type) } == true
-                                    }
-                                    val route = tab.route()
-                                    NavigationBarItem(
-                                        icon = {
-                                            Icon(
-                                                imageVector = if (selected) {
-                                                    tab.selectedIcon
-                                                } else {
-                                                    tab.unselectedIcon
-                                                },
-                                                contentDescription = stringResource(tab.titleResId)
-                                            )
-                                        },
-                                        label = { Text(stringResource(tab.titleResId)) },
-                                        selected = selected,
-                                        onClick = debounceClick {
-                                            navController.navigate(route) {
-                                                popUpTo(navController.graph.startDestinationId) {
-                                                    saveState = true
+                                    tab.Item { selected, route ->
+                                        NavigationBarItem(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = if (selected) {
+                                                        tab.selectedIcon
+                                                    } else {
+                                                        tab.unselectedIcon
+                                                    },
+                                                    contentDescription = stringResource(tab.titleResId)
+                                                )
+                                            },
+                                            label = { Text(stringResource(tab.titleResId)) },
+                                            selected = selected,
+                                            onClick = debounceClick {
+                                                navController.navigate(route) {
+                                                    popUpTo(navController.graph.startDestinationId) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
                                                 }
-                                                launchSingleTop = true
-                                                restoreState = true
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
