@@ -23,3 +23,4 @@ rootProject.name = "andock"
 include(":app")
 include(":daemon")
 include(":ksp")
+include(":stub")

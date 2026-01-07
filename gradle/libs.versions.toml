@@ -1,6 +1,7 @@
 [versions]
 acraMail = "5.13.1"
 agp = "8.13.2"
+annotation = "1.9.1"
 flowredux = "2.0.0"
 kotlin = "2.3.0"
 coreKtx = "1.17.0"
@@ -68,6 +69,7 @@ paging = "3.3.6"
 
 [libraries]
 acra-mail = { module = "ch.acra:acra-mail", version.ref = "acraMail" }
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 flowredux = { module = "com.freeletics.flowredux2:flowredux", version.ref = "flowredux" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

@@ -1,6 +1,6 @@
 package com.github.andock.daemon.app
 
-import android.annotation.SuppressLint
+import android.app.ActivityThread
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import timber.log.Timber
@@ -58,13 +58,7 @@ class AppContext @Inject constructor(
         private const val DIR_LAYERS = "layers"
 
         val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
-            @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
-            Class.forName("android.app.ActivityThread")
-                .getDeclaredMethod(
-                    "currentApplication"
-                ).apply {
-                    isAccessible = true
-                }.invoke(null) as Application
+            ActivityThread.currentApplication()
         }
     }
 }

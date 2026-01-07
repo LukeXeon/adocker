@@ -116,6 +116,9 @@ dependencies {
     // Ksp
     ksp(project(":ksp"))
 
+    // Stub
+    compileOnly(project(":stub"))
+
     // Leakcanary
     debugImplementation(libs.leakcanary.android)
 

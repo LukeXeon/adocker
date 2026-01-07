@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/daemon" />
             <option value="$PROJECT_DIR$/ksp" />
+            <option value="$PROJECT_DIR$/stub" />
           </set>
         </option>
       </GradleProjectSettings>
