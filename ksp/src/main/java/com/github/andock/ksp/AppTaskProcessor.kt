@@ -29,6 +29,7 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
+import kotlinx.serialization.json.Json
 
 class AppTaskProcessor(
     private val codeGenerator: CodeGenerator,
@@ -89,22 +90,20 @@ class AppTaskProcessor(
             it.shortName.asString() == "AppTask"
         } ?: return null
 
-        // Extract task name
-        val taskNameArg = appTaskAnnotation.arguments
-            .firstOrNull { it.name?.asString() == "name" }
-
-        if (taskNameArg == null) {
+        // Extract task arguments
+        val arguments = appTaskAnnotation.arguments.asSequence().mapNotNull {
+            val name = it.name
+            val value = it.value
+            if (name != null && value != null) {
+                if (value is String) {
+                    return@mapNotNull name.asString() to value
+                }
+            }
+            return@mapNotNull null
+        }.toMap()
+        if (!arguments.containsKey("name")) {
             logger.error(
                 "@AppTask annotation must specify a 'name' parameter",
-                symbol = function
-            )
-            return null
-        }
-
-        val taskName = taskNameArg.value as? String
-        if (taskName == null) {
-            logger.error(
-                "@AppTask annotation 'name' parameter must be a valid string",
                 symbol = function
             )
             return null
@@ -127,7 +126,7 @@ class AppTaskProcessor(
         return TaskData(
             functionName = function.simpleName.asString(),
             packageName = function.packageName.asString(),
-            taskName = taskName,
+            arguments = arguments,
             returnType = returnType,
             parameters = parameters
         )
@@ -160,35 +159,36 @@ class AppTaskProcessor(
         val baseType = resolvedType.toTypeName()
 
         // Try to preserve type argument annotations for parameterized types
-        val paramType = if (baseType is ParameterizedTypeName && resolvedType.arguments.isNotEmpty()) {
-            // Reconstruct the parameterized type with type argument annotations
-            val typeArgs = resolvedType.arguments.mapIndexed { index, typeArg ->
-                val argType = typeArg.type?.resolve()
-                if (argType != null) {
-                    val argTypeName = argType.toTypeName()
-                    // Check for annotations on the type argument
-                    val argAnnotations = typeArg.type?.annotations
-                        ?.map { convertToAnnotationSpec(it) }
-                        ?.toList() ?: emptyList()
+        val paramType =
+            if (baseType is ParameterizedTypeName && resolvedType.arguments.isNotEmpty()) {
+                // Reconstruct the parameterized type with type argument annotations
+                val typeArgs = resolvedType.arguments.mapIndexed { index, typeArg ->
+                    val argType = typeArg.type?.resolve()
+                    if (argType != null) {
+                        val argTypeName = argType.toTypeName()
+                        // Check for annotations on the type argument
+                        val argAnnotations = typeArg.type?.annotations
+                            ?.map { convertToAnnotationSpec(it) }
+                            ?.toList() ?: emptyList()
 
-                    if (argAnnotations.isNotEmpty()) {
-                        argTypeName.copy(annotations = argAnnotations)
+                        if (argAnnotations.isNotEmpty()) {
+                            argTypeName.copy(annotations = argAnnotations)
+                        } else {
+                            argTypeName
+                        }
                     } else {
-                        argTypeName
+                        baseType.typeArguments[index]
                     }
-                } else {
-                    baseType.typeArguments[index]
                 }
-            }
 
-            if (typeArgs.isNotEmpty()) {
-                baseType.rawType.parameterizedBy(typeArgs)
+                if (typeArgs.isNotEmpty()) {
+                    baseType.rawType.parameterizedBy(typeArgs)
+                } else {
+                    baseType
+                }
             } else {
                 baseType
             }
-        } else {
-            baseType
-        }
 
         return ParameterData(
             name = parameter.name?.asString() ?: "",
@@ -312,7 +312,8 @@ class AppTaskProcessor(
     private fun buildInitializerFunction(taskData: TaskData): FunSpec {
         val suspendLazyClassName = ClassName("com.github.andock.daemon.utils", "SuspendLazy")
         val suspendLazyMember = MemberName("com.github.andock.daemon.utils", "suspendLazy")
-        val measureTimeMillisWithResultMember = MemberName("com.github.andock.daemon.utils", "measureTimeMillisWithResult")
+        val measureTimeMillisWithResultMember =
+            MemberName("com.github.andock.daemon.utils", "measureTimeMillisWithResult")
         val pairClassName = ClassName("kotlin", "Pair")
 
         return FunSpec.builder("initializer")
@@ -323,7 +324,14 @@ class AppTaskProcessor(
                     .addMember("%S", taskData.taskName)
                     .build()
             )
-            .returns(suspendLazyClassName.parameterizedBy(pairClassName.parameterizedBy(taskData.returnType, ClassName("kotlin", "Long"))))
+            .returns(
+                suspendLazyClassName.parameterizedBy(
+                    pairClassName.parameterizedBy(
+                        taskData.returnType,
+                        ClassName("kotlin", "Long")
+                    )
+                )
+            )
             .apply {
                 // Add transformed parameters
                 taskData.parameters.forEach { param ->
@@ -331,7 +339,12 @@ class AppTaskProcessor(
                         // Transform to SuspendLazy<Pair<T, Long>> with @Named annotation
                         ParameterSpec.builder(
                             param.name,
-                            suspendLazyClassName.parameterizedBy(pairClassName.parameterizedBy(param.type, ClassName("kotlin", "Long")))
+                            suspendLazyClassName.parameterizedBy(
+                                pairClassName.parameterizedBy(
+                                    param.type,
+                                    ClassName("kotlin", "Long")
+                                )
+                            )
                         )
                             .addAnnotation(
                                 AnnotationSpec.builder(ClassName("javax.inject", "Named"))
@@ -352,7 +365,14 @@ class AppTaskProcessor(
             }
             .addCode(
                 buildCodeBlock {
-                    add("return %M<%T> {\n", suspendLazyMember, pairClassName.parameterizedBy(taskData.returnType, ClassName("kotlin", "Long")))
+                    add(
+                        "return %M<%T> {\n",
+                        suspendLazyMember,
+                        pairClassName.parameterizedBy(
+                            taskData.returnType,
+                            ClassName("kotlin", "Long")
+                        )
+                    )
                     indent()
 
                     // Generate local variables for @AppTask parameters before measureTimeMillisWithResult
@@ -367,7 +387,11 @@ class AppTaskProcessor(
                     add("%N(\n", taskData.functionName)
                     indent()
                     taskData.parameters.forEachIndexed { index, param ->
-                        addStatement("%N%L", param.name, if (index < taskData.parameters.size - 1) "," else "")
+                        addStatement(
+                            "%N%L",
+                            param.name,
+                            if (index < taskData.parameters.size - 1) "," else ""
+                        )
                     }
                     unindent()
                     add(")\n")
@@ -392,13 +416,18 @@ class AppTaskProcessor(
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("dagger.multibindings", "StringKey"))
-                    .addMember("%S", taskData.taskName)
+                    .addMember("%S", Json.encodeToString(taskData.arguments))
                     .build()
             )
             .addParameter(
                 ParameterSpec.builder(
                     "task",
-                    suspendLazyClassName.parameterizedBy(pairClassName.parameterizedBy(taskData.returnType, ClassName("kotlin", "Long")))
+                    suspendLazyClassName.parameterizedBy(
+                        pairClassName.parameterizedBy(
+                            taskData.returnType,
+                            ClassName("kotlin", "Long")
+                        )
+                    )
                 )
                     .addAnnotation(
                         AnnotationSpec.builder(ClassName("javax.inject", "Named"))
@@ -407,7 +436,14 @@ class AppTaskProcessor(
                     )
                     .build()
             )
-            .returns(suspendLazyClassName.parameterizedBy(pairClassName.parameterizedBy(STAR, ClassName("kotlin", "Long"))))
+            .returns(
+                suspendLazyClassName.parameterizedBy(
+                    pairClassName.parameterizedBy(
+                        STAR,
+                        ClassName("kotlin", "Long")
+                    )
+                )
+            )
             .addStatement("return task")
             .build()
     }
@@ -418,10 +454,13 @@ class AppTaskProcessor(
     private data class TaskData(
         val functionName: String,
         val packageName: String,
-        val taskName: String,
+        val arguments: Map<String, String>,
         val returnType: TypeName,
         val parameters: List<ParameterData>
-    )
+    ) {
+        val taskName: String
+            get() = arguments.getValue("name")
+    }
 
     /**
      * Data class to hold parameter information

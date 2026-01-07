@@ -14,6 +14,6 @@ class AndockApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        initializer.install()
+        initializer.trigger()
     }
 }
