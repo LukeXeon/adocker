@@ -34,7 +34,7 @@ class AppInitializer @Inject constructor(
 
     private inner class TaskBatch(
         key: String
-    ) : RuntimeException(key), suspend (CoroutineScope) -> Unit, Runnable {
+    ) : Exception(key), suspend (CoroutineScope) -> Unit, Runnable {
         val key: String
             get() = message!!
 
