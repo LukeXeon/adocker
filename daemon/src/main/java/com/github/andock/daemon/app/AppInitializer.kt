@@ -50,7 +50,7 @@ class AppInitializer @Inject constructor(
         override suspend fun invoke(scope: CoroutineScope) {
             tasks.getValue(key)
                 .map { (key, task) ->
-                    scope.async {
+                    scope.async(Dispatchers.IO) {
                         key to task()
                     }
                 }.awaitAll().forEach { (key, ms) ->
@@ -66,7 +66,7 @@ class AppInitializer @Inject constructor(
     fun trigger(key: String = "") {
         require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
         val batch = TaskBatch(key)
-        GlobalScope.launch(Dispatchers.IO, block = batch)
+        GlobalScope.launch(Dispatchers.Main.immediate, block = batch)
         val ms = measureTimeMillis {
             try {
                 Looper.loop()
