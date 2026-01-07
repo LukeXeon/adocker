@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.os.ProcessLimitCompat
 import com.github.andock.daemon.os.RemoteProcessBuilder
+import com.github.andock.daemon.utils.ShizukuApk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProcessLimitViewModel @Inject constructor(
     private val remoteProcessBuilder: RemoteProcessBuilder,
-    private val processLimitCompat: ProcessLimitCompat
+    private val processLimitCompat: ProcessLimitCompat,
+    private val shizukuApk: ShizukuApk,
 ) : ViewModel() {
     private val _stats = MutableStateFlow(ProcessLimitStats())
     val stats = _stats.asStateFlow()
@@ -53,5 +55,7 @@ class ProcessLimitViewModel @Inject constructor(
             }
         }
     }
+
+    suspend fun getInstallIntent() = shizukuApk.getInstallIntent()
 
 }

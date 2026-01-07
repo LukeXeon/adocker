@@ -2,6 +2,7 @@ package com.github.andock.ui.screens.limits
 
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -54,9 +58,11 @@ import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
 fun ProcessLimited() {
+    val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
     val viewModel = hiltViewModel<ProcessLimitViewModel>()
     val stats by viewModel.stats.collectAsState()
@@ -64,13 +70,13 @@ fun ProcessLimited() {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {}
+    val (showDownloadDialog, setDownloadDialog) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.scheduleRefresh()
         }
     }
-
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
@@ -151,12 +157,7 @@ fun ProcessLimited() {
                             )
                             Button(
                                 onClick = {
-                                    launcher.launch(
-                                        Intent(
-                                            Intent.ACTION_VIEW,
-                                            "https://github.com/RikkaApps/Shizuku/releases".toUri()
-                                        )
-                                    )
+                                    setDownloadDialog(true)
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -380,9 +381,65 @@ fun ProcessLimited() {
                 }
             }
         }
-
         item {
             Spacer(Modifier.height(Spacing.BottomSpacing))
         }
+    }
+    if (showDownloadDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                setDownloadDialog(false)
+            },
+            title = {
+                Text("Install")
+            },
+            text = {
+                Text("download or install now")
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        setDownloadDialog(false)
+                        launcher.launch(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "https://github.com/RikkaApps/Shizuku/releases".toUri()
+                            )
+                        )
+                    }
+                ) {
+                    Text("Download")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (context.packageManager.canRequestPackageInstalls()) {
+                            setDownloadDialog(false)
+                            viewModel.viewModelScope.launch {
+                                viewModel.getInstallIntent().fold(
+                                    {
+                                        launcher.launch(it)
+                                    },
+                                    {
+                                        Timber.e(it)
+                                    }
+                                )
+                            }
+                        } else {
+                            launcher.launch(
+                                Intent(
+                                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
+                                ).apply {
+                                    data = "package:${context.packageName}".toUri()
+                                }
+                            )
+                        }
+                    }
+                ) {
+                    Text("Install Now")
+                }
+            }
+        )
     }
 }
