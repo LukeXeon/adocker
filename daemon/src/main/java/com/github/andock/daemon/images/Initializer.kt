@@ -10,9 +10,6 @@ suspend fun deleteUnreferencedLayers(
     @Suppress("unused")
     @AppTask("app")
     appContext: AppContext,
-    @Suppress("unused")
-    @AppTask("database")
-    database: AppDatabase,
     imageManager: ImageManager
 ) {
     imageManager.deleteUnreferencedLayers()

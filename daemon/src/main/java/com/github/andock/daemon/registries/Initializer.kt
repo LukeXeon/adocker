@@ -13,9 +13,6 @@ suspend fun checkAllRegistries(
     @Suppress("unused")
     @AppTask("reporter")
     reporter: Unit,
-    @Suppress("unused")
-    @AppTask("database")
-    database: AppDatabase,
 ) {
     registryManager.checkAll()
 }

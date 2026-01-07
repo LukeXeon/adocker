@@ -2,7 +2,6 @@ package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.app.AppTask
-import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
@@ -15,9 +14,6 @@ import java.io.File
 suspend fun clearContainers(
     @AppTask("app")
     appContext: AppContext,
-    @Suppress("unused")
-    @AppTask("database")
-    database: AppDatabase,
     containerDao: ContainerDao
 ) {
     withContext(Dispatchers.IO) {
