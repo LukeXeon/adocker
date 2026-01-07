@@ -66,7 +66,7 @@ class AppInitializer @Inject constructor(
     fun trigger(key: String = "") {
         require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
         val batch = TaskBatch(key)
-        GlobalScope.launch(Dispatchers.Main.immediate, block = batch)
+        GlobalScope.launch(Dispatchers.IO, block = batch)
         val ms = measureTimeMillis {
             try {
                 Looper.loop()
