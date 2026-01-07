@@ -17,7 +17,7 @@ class ContainersViewModel @Inject constructor(
 
     val sortedList = containerManager.sortedList
 
-    fun stateList(predicate: (ContainerState) -> Boolean) = containerManager.stateList(predicate)
+    fun filterState(predicate: (ContainerState) -> Boolean) = containerManager.filterState(predicate)
 
     // Delete a container
     suspend fun deleteContainer(containerId: String) {

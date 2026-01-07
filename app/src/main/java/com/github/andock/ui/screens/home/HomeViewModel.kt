@@ -28,11 +28,11 @@ class HomeViewModel @Inject constructor(
 
     val totalContainers = containerManager.containers.map { it.size }
 
-    val runningContainers = containerManager.stateList {
+    val runningContainers = containerManager.filterState {
         it is ContainerState.Running
     }.map { it.size }
 
-    val stoppedContainers = containerManager.stateList {
+    val stoppedContainers = containerManager.filterState {
         it is ContainerState.Stopping
     }.map { it.size }
 

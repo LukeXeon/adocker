@@ -290,4 +290,6 @@
     <string name="adb_shell_command" translatable="false">adb shell settings put global settings_enable_monitor_phantom_procs false</string>
 
     <string name="log_title">Log</string>
+    <string name="log_empty">No logs yet</string>
+    <string name="log_empty_subtitle">Start the container to view its output logs</string>
 </resources>

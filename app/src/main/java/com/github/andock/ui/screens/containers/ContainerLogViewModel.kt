@@ -23,9 +23,10 @@ class ContainerLogViewModel @Inject constructor(
 ) : ViewModel() {
     val containerId = savedStateHandle.toRoute<ContainerLogRoute>().containerId
 
-    val container = containerManager.containers.map {
+    val metadata = containerManager.containers.map {
         it[containerId]
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }.filterNotNull().flatMapLatest { it.metadata }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val logLines = containerManager.containers.map {
         it[containerId]

@@ -44,7 +44,7 @@ class ContainerManager @Inject constructor(
             .toList()
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    fun stateList(predicate: (ContainerState) -> Boolean): Flow<List<Container>> {
+    fun filterState(predicate: (ContainerState) -> Boolean): Flow<List<Container>> {
         return _containers.flatMapLatest { containers ->
             if (containers.isEmpty()) {
                 flowOf(emptyList())

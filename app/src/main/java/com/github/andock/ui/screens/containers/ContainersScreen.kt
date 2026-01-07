@@ -1,7 +1,6 @@
 package com.github.andock.ui.screens.containers
 
 import androidx.compose.foundation.layout.Arrangement
-import com.github.andock.ui.route.Route
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +41,7 @@ import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.LoadingDialog
+import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -67,7 +67,7 @@ fun ContainersScreen() {
     }.collectAsState(emptyMap())
     var filterType by remember { mutableStateOf(ContainerFilterType.All) }
     val filteredContainers by remember(filterType) {
-        viewModel.stateList(filterType.predicate)
+        viewModel.filterState(filterType.predicate)
     }.collectAsState(emptyList())
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
 

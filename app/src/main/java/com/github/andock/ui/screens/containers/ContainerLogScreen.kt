@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,8 +36,7 @@ fun ContainerLogScreen() {
     val viewModel = hiltViewModel<ContainerLogViewModel>()
     val containerId = viewModel.containerId
     val navController = LocalNavController.current
-    val name = viewModel.container.collectAsState()
-        .value?.metadata?.collectAsState()?.value?.name ?: ""
+    val name = viewModel.metadata.collectAsState().value?.name ?: ""
     val logLines = viewModel.logLines.collectAsLazyPagingItems()
     val onNavigateBack = debounceClick {
         navController.popBackStack()
@@ -84,9 +83,9 @@ fun ContainerLogScreen() {
                 },
                 emptyContent = {
                     PaginationPlaceholder.Empty(
-                        Icons.Default.Tag,
-                        stringResource(R.string.images_tag_empty),
-                        stringResource(R.string.images_tag_empty_subtitle)
+                        Icons.Default.Textsms,
+                        stringResource(R.string.log_empty),
+                        stringResource(R.string.log_empty_subtitle)
                     )
                 },
                 errorContent = {

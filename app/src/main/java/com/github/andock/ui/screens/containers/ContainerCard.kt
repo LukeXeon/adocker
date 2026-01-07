@@ -237,19 +237,6 @@ fun ContainerCard(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                     ) {
                         FilledTonalButton(
-                            onClick = onTerminal,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(Spacing.Medium)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Terminal,
-                                contentDescription = null,
-                                modifier = Modifier.size(IconSize.Small)
-                            )
-                            Spacer(modifier = Modifier.width(Spacing.Small))
-                            Text(stringResource(R.string.action_terminal))
-                        }
-                        FilledTonalButton(
                             onClick = onLog,
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(Spacing.Medium)
@@ -261,6 +248,19 @@ fun ContainerCard(
                             )
                             Spacer(modifier = Modifier.width(Spacing.Small))
                             Text(stringResource(R.string.log_title))
+                        }
+                        FilledTonalButton(
+                            onClick = onTerminal,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(Spacing.Medium)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Terminal,
+                                contentDescription = null,
+                                modifier = Modifier.size(IconSize.Small)
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.Small))
+                            Text(stringResource(R.string.action_terminal))
                         }
                         OutlinedButton(
                             onClick = onStop,

@@ -289,4 +289,6 @@
     <string name="message_no_data">暂无数据</string>
 
     <string name="log_title">日志</string>
+    <string name="log_empty">暂无日志</string>
+    <string name="log_empty_subtitle">启动容器以查看其输出日志</string>
 </resources>
