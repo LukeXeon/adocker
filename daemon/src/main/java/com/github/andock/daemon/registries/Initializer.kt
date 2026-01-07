@@ -1,6 +1,7 @@
 package com.github.andock.daemon.registries
 
 import com.github.andock.daemon.app.AppTask
+import com.github.andock.daemon.database.AppDatabase
 
 
 @AppTask("checkAllRegistries")
@@ -11,7 +12,10 @@ suspend fun checkAllRegistries(
     logging: Unit,
     @Suppress("unused")
     @AppTask("reporter")
-    reporter: Unit
+    reporter: Unit,
+    @Suppress("unused")
+    @AppTask("database")
+    database: AppDatabase,
 ) {
     registryManager.checkAll()
 }
