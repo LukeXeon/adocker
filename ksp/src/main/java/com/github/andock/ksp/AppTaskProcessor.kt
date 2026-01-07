@@ -465,7 +465,7 @@ class AppTaskProcessor(
                     ClassName("kotlin", "Long")
                 )
             )
-            .addStatement("return %M<%T>(%T.NONE) { task.get().getValue().second }",
+            .addStatement("return %M<%T>(%T.PUBLICATION) { task.get().getValue().second }",
                 MemberName("com.github.andock.daemon.utils", "suspendLazy"),
                 ClassName("kotlin", "Long"),
                 ClassName("kotlin", "LazyThreadSafetyMode")
