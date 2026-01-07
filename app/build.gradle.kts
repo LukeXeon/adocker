@@ -72,7 +72,6 @@ dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Compose
@@ -118,25 +117,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
-    // Room
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
-
     // SplashScreen
     implementation(libs.androidx.core.splashscreen)
 
-    // Logging - SLF4J API only (provider implemented in code)
-    implementation(libs.slf4j.api)
-    compileOnly(libs.auto.service.annotations)
-    kapt(libs.auto.service)
-
     // Timber Logging
     implementation(libs.timber)
-
-    // Shizuku
-    implementation(libs.shizuku.api)
-    implementation(libs.shizuku.provider)
 
     // ML Kit Barcode Scanning
     implementation(libs.mlkit.barcode.scanning)

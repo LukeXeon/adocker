@@ -74,7 +74,6 @@ dependencies {
 
     // Archive handling
     implementation(libs.commons.compress)
-    implementation(libs.xz)
 
     // Room
     implementation(libs.room.runtime)
@@ -84,7 +83,7 @@ dependencies {
     // Paging 3
     implementation(libs.androidx.paging.runtime)
 
-    // Logging - SLF4J API only (provider implemented in code)
+    // Auto
     implementation(libs.slf4j.api)
     compileOnly(libs.auto.service.annotations)
     compileOnly(libs.auto.value.annotations)
@@ -95,14 +94,11 @@ dependencies {
     implementation(libs.timber)
 
     // Shizuku
-    implementation(libs.shizuku.api)
+    api(libs.shizuku.api)
     implementation(libs.shizuku.provider)
 
     // http4k
     api(libs.http4k.core)
-
-    // Testing
-    testImplementation(libs.junit)
 
     // Flow Redux
     implementation(libs.flowredux)
@@ -110,15 +106,17 @@ dependencies {
     // ACRA
     implementation(libs.acra.mail)
 
-    // Leakcanary
-    debugImplementation(libs.leakcanary.android)
-
     // Guava
     implementation(libs.kotlinx.coroutines.guava)
 
     // Ksp
     ksp(project(":ksp"))
 
+    // Leakcanary
+    debugImplementation(libs.leakcanary.android)
+
+    // Testing
+    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.hilt.android.testing)
