@@ -11,7 +11,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.EmptyCoroutineContext
@@ -22,7 +21,6 @@ class AppInitializer @Inject constructor(
     rawTasks: Map<String, @JvmSuppressWildcards SuspendLazy<Pair<*, Long>>>,
     json: Json,
 ) {
-    private val called = AtomicBoolean(false)
     private val tasks: Map<String, Map<String, suspend () -> Long>>
 
     init {
@@ -35,6 +33,7 @@ class AppInitializer @Inject constructor(
         }
         tasks = map
     }
+
     private class JumpOutException : RuntimeException("Jump out"), Runnable {
         override fun fillInStackTrace(): Throwable {
             stackTrace = emptyArray()
@@ -49,30 +48,28 @@ class AppInitializer @Inject constructor(
     fun trigger(key: String = "") {
         val mainLooper = Looper.getMainLooper()
         require(mainLooper.isCurrentThread) { "must be main thread" }
-        if (called.compareAndSet(false, true)) {
-            val jumpOutException = JumpOutException()
-            GlobalScope.launch(Dispatchers.Main.immediate) {
-                tasks.getValue(key)
-                    .map { (key, task) ->
-                        async {
-                            key to task()
-                        }
-                    }.awaitAll().forEach { (key, ms) ->
-                        Timber.d("task ${key}: ${ms}ms")
+        val jumpOutException = JumpOutException()
+        GlobalScope.launch(Dispatchers.Main.immediate) {
+            tasks.getValue(key)
+                .map { (key, task) ->
+                    async {
+                        key to task()
                     }
-                Dispatchers.Main.immediate.dispatch(
-                    EmptyCoroutineContext,
-                    jumpOutException
-                )
-            }
-            val ms = measureTimeMillis {
-                try {
-                    Looper.loop()
-                } catch (e: JumpOutException) {
-                    Timber.d(e)
+                }.awaitAll().forEach { (key, ms) ->
+                    Timber.d("task ${key}: ${ms}ms")
                 }
-            }
-            Timber.d("task all: ${ms}ms")
+            Dispatchers.Main.immediate.dispatch(
+                EmptyCoroutineContext,
+                jumpOutException
+            )
         }
+        val ms = measureTimeMillis {
+            try {
+                Looper.loop()
+            } catch (e: JumpOutException) {
+                Timber.d(e)
+            }
+        }
+        Timber.d("task all: ${ms}ms")
     }
 }
