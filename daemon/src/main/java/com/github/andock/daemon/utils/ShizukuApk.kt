@@ -14,10 +14,14 @@ import javax.inject.Singleton
 class ShizukuApk @Inject constructor(
     private val application: Application
 ) {
+
+    companion object {
+        private const val APK_NAME = "shizuku.apk"
+    }
+
     private val apkFile = suspendLazy {
-        val apkFile = File(application.cacheDir, "shizuku.apk")
+        val apkFile = File(application.cacheDir, APK_NAME)
         withContext(Dispatchers.IO) {
-            File(application.cacheDir, "shizuku.apk")
             application.resources.openRawResource(R.raw.shizuku).use { input ->
                 apkFile.outputStream().use { output ->
                     input.copyTo(output)
