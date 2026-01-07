@@ -360,15 +360,14 @@ class AppTaskProcessor(
                 taskData.parameters.forEach { param ->
                     val paramSpec = if (param.hasAppTask) {
                         // Transform to SuspendLazy<Pair<T, Long>> with @Named annotation
-                        ParameterSpec.builder(
-                            param.name,
-                            suspendLazyClassName.parameterizedBy(
-                                pairClassName.parameterizedBy(
-                                    param.type,
-                                    ClassName("kotlin", "Long")
-                                )
+                        val typeWithAnnotation = suspendLazyClassName.parameterizedBy(
+                            pairClassName.parameterizedBy(
+                                param.type,
+                                ClassName("kotlin", "Long")
                             )
-                        )
+                        ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards")).build()))
+
+                        ParameterSpec.builder(param.name, typeWithAnnotation)
                             .addAnnotation(
                                 AnnotationSpec.builder(ClassName("javax.inject", "Named"))
                                     .addMember("%S", param.appTaskName ?: "")
@@ -451,7 +450,7 @@ class AppTaskProcessor(
                             taskData.returnType,
                             ClassName("kotlin", "Long")
                         )
-                    )
+                    ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards")).build()))
                 )
                     .addAnnotation(
                         AnnotationSpec.builder(ClassName("javax.inject", "Named"))
