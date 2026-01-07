@@ -35,6 +35,21 @@ class AppTaskProcessor(
     private val logger: KSPLogger
 ) : SymbolProcessor {
 
+    companion object {
+        private const val APP_TASK_ANNOTATION = "com.github.andock.daemon.app.AppTask"
+        private const val TRIGGER_ANNOTATION = "com.github.andock.daemon.app.Trigger"
+    }
+
+    /**
+     * Helper function to check if annotation matches the expected qualified name
+     */
+    private fun KSAnnotation.isAnnotation(qualifiedName: String): Boolean {
+        val annotationType = this.annotationType.resolve()
+        val declaration = annotationType.declaration
+        val actualQualifiedName = declaration.qualifiedName?.asString()
+        return actualQualifiedName == qualifiedName
+    }
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // Find all symbols annotated with @AppTask
         val appTaskAnnotatedSymbols = resolver
@@ -86,7 +101,7 @@ class AppTaskProcessor(
      */
     private fun extractTaskData(function: KSFunctionDeclaration): TaskData? {
         val appTaskAnnotation = function.annotations.firstOrNull {
-            it.shortName.asString() == "AppTask"
+            it.isAnnotation(APP_TASK_ANNOTATION)
         } ?: return null
 
         // Extract task name
@@ -111,7 +126,7 @@ class AppTaskProcessor(
         }
 
         val triggerKey = function.annotations.firstOrNull {
-            it.shortName.asString() == "Trigger"
+            it.isAnnotation(TRIGGER_ANNOTATION)
         }?.arguments?.firstOrNull {
             it.name?.asString() == "value"
         }?.value as? String ?: ""
@@ -146,7 +161,7 @@ class AppTaskProcessor(
     private fun extractParameterData(parameter: KSValueParameter): ParameterData {
         // Check if parameter has @AppTask annotation
         val appTaskAnnotation = parameter.annotations.firstOrNull {
-            it.shortName.asString() == "AppTask"
+            it.isAnnotation(APP_TASK_ANNOTATION)
         }
 
         val hasAppTask = appTaskAnnotation != null
@@ -158,7 +173,7 @@ class AppTaskProcessor(
 
         // Collect other annotations (excluding @AppTask)
         val otherAnnotations = parameter.annotations
-            .filter { it.shortName.asString() != "AppTask" }
+            .filter { !it.isAnnotation(APP_TASK_ANNOTATION) }
             .map { convertToAnnotationSpec(it) }
             .toList()
 
@@ -324,6 +339,14 @@ class AppTaskProcessor(
             MemberName("com.github.andock.daemon.utils", "measureTimeMillisWithResult")
         val pairClassName = ClassName("kotlin", "Pair")
 
+        // Add @JvmSuppressWildcards to the return type
+        val returnTypeWithAnnotation = taskData.returnType.copy(
+            annotations = listOf(
+                AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards"))
+                    .build()
+            ) + taskData.returnType.annotations
+        )
+
         return FunSpec.builder("initializer")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))
@@ -335,7 +358,7 @@ class AppTaskProcessor(
             .returns(
                 suspendLazyClassName.parameterizedBy(
                     pairClassName.parameterizedBy(
-                        taskData.returnType,
+                        returnTypeWithAnnotation,
                         ClassName("kotlin", "Long")
                     )
                 )
@@ -419,6 +442,14 @@ class AppTaskProcessor(
         val suspendLazyClassName = ClassName("com.github.andock.daemon.utils", "SuspendLazy")
         val pairClassName = ClassName("kotlin", "Pair")
 
+        // Add @JvmSuppressWildcards to the parameter type
+        val returnTypeWithAnnotation = taskData.returnType.copy(
+            annotations = listOf(
+                AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards"))
+                    .build()
+            ) + taskData.returnType.annotations
+        )
+
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
@@ -433,7 +464,7 @@ class AppTaskProcessor(
                     "task",
                     suspendLazyClassName.parameterizedBy(
                         pairClassName.parameterizedBy(
-                            taskData.returnType,
+                            returnTypeWithAnnotation,
                             ClassName("kotlin", "Long")
                         )
                     )
