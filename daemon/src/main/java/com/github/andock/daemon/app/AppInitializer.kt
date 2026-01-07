@@ -67,9 +67,11 @@ class AppInitializer @Inject constructor(
             try {
                 Looper.loop()
             } catch (e: JumpOutException) {
-                Timber.d(e)
+                if (e != jumpOutException) {
+                    throw e
+                }
             }
         }
-        Timber.d("task all: ${ms}ms")
+        Timber.d("trigger: $key task all: ${ms}ms")
     }
 }
