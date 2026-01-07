@@ -1,8 +1,12 @@
 package com.github.andock.ui.screens.settings
 
+import android.app.usage.StorageStatsManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Process
+import android.os.UserHandle
+import android.os.storage.StorageManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,13 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.getSystemService
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.app.AppArchitecture
@@ -47,25 +52,46 @@ import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.registries.RegistriesRoute
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Route(SettingsRoute::class)
 @Composable
 fun SettingsScreen() {
     val navController = LocalNavController.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
     val viewModel = hiltViewModel<SettingsViewModel>()
-    val storageUsage by viewModel.storageUsage.collectAsState()
+    var storageUsage by remember { mutableStateOf<Long?>(null) }
     val prootVersion by viewModel.prootVersion.collectAsState()
     val snackbarHostState = LocalSnackbarHostState.current
-    val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
     LaunchedEffect(Unit) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.scheduleRefresh()
+        val storageStatsManager = context.getSystemService<StorageStatsManager>()
+        val storageManager = context.getSystemService<StorageManager>()
+        if (storageStatsManager != null && storageManager != null) {
+            suspend {
+                val storageVolume = storageManager.primaryStorageVolume
+                val uuid = storageVolume.uuid?.let { UUID.fromString(it) }
+                    ?: StorageManager.UUID_DEFAULT
+                withContext(Dispatchers.IO) {
+                    while (isActive) {
+                        val storageStats = storageStatsManager.queryStatsForPackage(
+                            uuid,
+                            context.packageName,
+                            UserHandle.getUserHandleForUid(Process.myUid())
+                        )
+                        storageUsage = storageStats.dataBytes
+                        delay(1000)
+                    }
+                }
+            }
         }
     }
     Scaffold(
@@ -165,7 +191,9 @@ fun SettingsScreen() {
                         subtitle = viewModel.packageInfo.versionName ?: "",
                         onClick = {
                             viewModel.viewModelScope.launch {
-                                snackbarHostState.showSnackbar(viewModel.packageInfo.versionName ?: "")
+                                snackbarHostState.showSnackbar(
+                                    viewModel.packageInfo.versionName ?: ""
+                                )
                             }
                         }
                     )

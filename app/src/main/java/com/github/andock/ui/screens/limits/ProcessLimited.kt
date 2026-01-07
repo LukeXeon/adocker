@@ -35,10 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,11 +52,16 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
+import com.github.andock.daemon.shizuku.hasPermission
+import com.github.andock.daemon.shizuku.isAvailable
+import com.github.andock.daemon.shizuku.requestPermission
 import com.github.andock.ui.components.HelpStep
 import com.github.andock.ui.components.StatusRow
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -65,16 +70,29 @@ fun ProcessLimited() {
     val context = LocalContext.current
     val snackbarHostState = LocalSnackbarHostState.current
     val viewModel = hiltViewModel<ProcessLimitViewModel>()
-    val stats by viewModel.stats.collectAsState()
+    var stats by remember { mutableStateOf(ProcessLimitStats()) }
     val (isProcessing, setProcessing) = remember { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {}
+    val nextStats = remember {
+        suspend {
+            ProcessLimitStats(
+                isAvailable = isAvailable,
+                hasPermission = hasPermission,
+                isUnrestricted = viewModel.isUnrestricted(),
+                currentLimit = viewModel.getMaxCount()
+            )
+        }
+    }
     val (showDownloadDialog, setDownloadDialog) = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.scheduleRefresh()
+            while (isActive) {
+                stats = nextStats()
+                delay(1000)
+            }
         }
     }
     LazyColumn(
@@ -190,7 +208,11 @@ fun ProcessLimited() {
                             )
                             Button(
                                 onClick = {
-                                    viewModel.request()
+                                    viewModel.viewModelScope.launch {
+                                        if (requestPermission()) {
+                                            stats = nextStats()
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -228,6 +250,9 @@ fun ProcessLimited() {
                                     viewModel.viewModelScope.launch {
                                         setProcessing(true)
                                         val success = viewModel.unrestrict()
+                                        if (success) {
+                                            stats = nextStats()
+                                        }
                                         setProcessing(false)
                                         snackbarHostState.showSnackbar(
                                             if (success) {
