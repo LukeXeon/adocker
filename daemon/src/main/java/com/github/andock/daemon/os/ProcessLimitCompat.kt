@@ -40,13 +40,9 @@ class ProcessLimitCompat @Inject constructor(
                     application.getString(R.string.unrestrict_command_32)
                 }
 
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                else -> {
                     // Android 12 (API 31)
                     application.getString(R.string.unrestrict_command_31)
-                }
-
-                else -> {
-                    throw UnsupportedOperationException("Android 12+ required for phantom process management")
                 }
             }
             executeCommand(command)
@@ -83,7 +79,7 @@ class ProcessLimitCompat @Inject constructor(
                     result == "false" || result == "null"
                 }
 
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                else -> {
                     val result = executeCommand(
                         application.getString(R.string.test_limit_command_31)
                     )
@@ -92,10 +88,6 @@ class ProcessLimitCompat @Inject constructor(
                             R.integer.max_process_value
                         ).toString()
                     )
-                }
-
-                else -> {
-                    true // Android 12 以下不需要处理
                 }
             }
         }.getOrDefault(false)
