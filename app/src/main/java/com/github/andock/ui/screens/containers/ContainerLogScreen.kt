@@ -76,7 +76,11 @@ fun ContainerLogScreen() {
                 items = logLines,
                 itemKey = { it.id },
                 itemContent = {
-                    Text(it.message)
+                    ContainerLogLine(
+                        timestamp = it.timestamp,
+                        isError = it.isError,
+                        message = it.message
+                    )
                 },
                 initialContent = {
                     PaginationPlaceholder.Initial()
