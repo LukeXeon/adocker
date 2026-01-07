@@ -95,6 +95,10 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // Fix for Kotlin 2.2.21 compatibility with Hilt
+    // Explicitly add kotlin-metadata-jvm to support newer Kotlin versions
+    ksp(libs.kotlin.metadata.jvm)
+
     // Networking
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
