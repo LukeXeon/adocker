@@ -76,20 +76,18 @@ fun SettingsScreen() {
         val storageStatsManager = context.getSystemService<StorageStatsManager>()
         val storageManager = context.getSystemService<StorageManager>()
         if (storageStatsManager != null && storageManager != null) {
-            suspend {
-                val storageVolume = storageManager.primaryStorageVolume
-                val uuid = storageVolume.uuid?.let { UUID.fromString(it) }
-                    ?: StorageManager.UUID_DEFAULT
-                withContext(Dispatchers.IO) {
-                    while (isActive) {
-                        val storageStats = storageStatsManager.queryStatsForPackage(
-                            uuid,
-                            context.packageName,
-                            UserHandle.getUserHandleForUid(Process.myUid())
-                        )
-                        storageUsage = storageStats.dataBytes
-                        delay(1000)
-                    }
+            val storageVolume = storageManager.primaryStorageVolume
+            val uuid = storageVolume.uuid?.let { UUID.fromString(it) }
+                ?: StorageManager.UUID_DEFAULT
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    val storageStats = storageStatsManager.queryStatsForPackage(
+                        uuid,
+                        context.packageName,
+                        UserHandle.getUserHandleForUid(Process.myUid())
+                    )
+                    storageUsage = storageStats.dataBytes
+                    delay(1000)
                 }
             }
         }
