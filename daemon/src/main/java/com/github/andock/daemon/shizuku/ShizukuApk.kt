@@ -1,9 +1,10 @@
-package com.github.andock.daemon.utils
+package com.github.andock.daemon.shizuku
 
 import android.app.Application
 import android.content.Intent
 import androidx.core.content.FileProvider
 import com.github.andock.daemon.R
+import com.github.andock.daemon.utils.suspendLazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -15,12 +16,8 @@ class ShizukuApk @Inject constructor(
     private val application: Application
 ) {
 
-    companion object {
-        private const val APK_NAME = "shizuku.apk"
-    }
-
     private val apkFile = suspendLazy {
-        val apkFile = File(application.cacheDir, APK_NAME)
+        val apkFile = File(application.cacheDir, "shizuku.apk")
         withContext(Dispatchers.IO) {
             application.resources.openRawResource(R.raw.shizuku).use { input ->
                 apkFile.outputStream().use { output ->

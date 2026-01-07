@@ -189,7 +189,9 @@ fun ProcessLimited() {
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Button(
-                                onClick = { viewModel.requestPermission() },
+                                onClick = {
+                                    viewModel.request()
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.Lock, contentDescription = null)

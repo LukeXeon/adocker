@@ -3,6 +3,7 @@ package com.github.andock.daemon.os
 import android.app.Application
 import android.os.Build
 import com.github.andock.daemon.R
+import com.github.andock.daemon.shizuku.hasPermission
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,7 +32,7 @@ class ProcessLimitCompat @Inject constructor(
                     return@runCatching
                 }
 
-                !remoteProcessBuilder.hasPermission -> {
+                !hasPermission -> {
                     throw SecurityException("Shizuku permission not granted")
                 }
 
@@ -68,7 +69,7 @@ class ProcessLimitCompat @Inject constructor(
                     true
                 }
 
-                !remoteProcessBuilder.hasPermission -> {
+                !hasPermission -> {
                     false
                 }
 
@@ -103,7 +104,7 @@ class ProcessLimitCompat @Inject constructor(
                     application.resources.getInteger(R.integer.max_process_value)
                 }
 
-                !remoteProcessBuilder.hasPermission -> {
+                !hasPermission -> {
                     null
                 }
 

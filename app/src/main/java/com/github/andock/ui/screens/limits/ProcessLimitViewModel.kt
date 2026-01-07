@@ -3,8 +3,10 @@ package com.github.andock.ui.screens.limits
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.daemon.os.ProcessLimitCompat
-import com.github.andock.daemon.os.RemoteProcessBuilder
-import com.github.andock.daemon.utils.ShizukuApk
+import com.github.andock.daemon.shizuku.ShizukuApk
+import com.github.andock.daemon.shizuku.hasPermission
+import com.github.andock.daemon.shizuku.isAvailable
+import com.github.andock.daemon.shizuku.requestPermission
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -16,7 +18,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProcessLimitViewModel @Inject constructor(
-    private val remoteProcessBuilder: RemoteProcessBuilder,
     private val processLimitCompat: ProcessLimitCompat,
     private val shizukuApk: ShizukuApk,
 ) : ViewModel() {
@@ -24,8 +25,8 @@ class ProcessLimitViewModel @Inject constructor(
     val stats = _stats.asStateFlow()
     private suspend fun refresh() {
         _stats.value = ProcessLimitStats(
-            isAvailable = remoteProcessBuilder.isAvailable,
-            hasPermission = remoteProcessBuilder.hasPermission,
+            isAvailable = isAvailable,
+            hasPermission = hasPermission,
             isUnrestricted = processLimitCompat.isUnrestricted(),
             currentLimit = processLimitCompat.getMaxCount()
         )
@@ -48,9 +49,9 @@ class ProcessLimitViewModel @Inject constructor(
         }
     }
 
-    fun requestPermission() {
+    fun request() {
         viewModelScope.launch {
-            if (remoteProcessBuilder.requestPermission()) {
+            if (requestPermission()) {
                 refresh()
             }
         }

@@ -98,7 +98,7 @@ dependencies {
     implementation(libs.timber)
 
     // Shizuku
-    api(libs.shizuku.api)
+    implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
 
     // http4k
