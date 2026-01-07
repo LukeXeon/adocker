@@ -48,9 +48,9 @@ private class SynchronizedSuspendLazyImpl<out T>(
 }
 
 
-private class SafePublicationSuspendLazyImpl<out T>(initializer: () -> T) : SuspendLazy<T> {
+private class SafePublicationSuspendLazyImpl<out T>(initializer: suspend () -> T) : SuspendLazy<T> {
     @Volatile
-    private var initializer: (() -> T)? = initializer
+    private var initializer: (suspend () -> T)? = initializer
 
     @Volatile
     private var value: Any? = UninitializedValue
@@ -100,8 +100,8 @@ private class SafePublicationSuspendLazyImpl<out T>(initializer: () -> T) : Susp
 }
 
 
-private class UnsafeSuspendLazyImpl<out T>(initializer: () -> T) : SuspendLazy<T> {
-    private var initializer: (() -> T)? = initializer
+private class UnsafeSuspendLazyImpl<out T>(initializer: suspend () -> T) : SuspendLazy<T> {
+    private var initializer: (suspend () -> T)? = initializer
     private var value: Any? = UninitializedValue
 
     override suspend fun getValue(): T {
@@ -145,7 +145,7 @@ fun <T> suspendLazy(lock: Mutex?, initializer: suspend () -> T): SuspendLazy<T> 
 fun <T> suspendLazy(initializer: suspend () -> T): SuspendLazy<T> =
     SynchronizedSuspendLazyImpl(initializer)
 
-fun <T> suspendLazy(mode: LazyThreadSafetyMode, initializer: () -> T): SuspendLazy<T> =
+fun <T> suspendLazy(mode: LazyThreadSafetyMode, initializer: suspend () -> T): SuspendLazy<T> =
     when (mode) {
         LazyThreadSafetyMode.SYNCHRONIZED -> SynchronizedSuspendLazyImpl(initializer)
         LazyThreadSafetyMode.PUBLICATION -> SafePublicationSuspendLazyImpl(initializer)

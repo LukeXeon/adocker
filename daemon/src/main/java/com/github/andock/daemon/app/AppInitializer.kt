@@ -18,12 +18,12 @@ import kotlin.coroutines.EmptyCoroutineContext
 @OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AppInitializer @Inject constructor(
-    rawTasks: Map<AppTaskInfo, @JvmSuppressWildcards SuspendLazy<Pair<*, Long>>>,
+    rawTasks: Map<AppTaskInfo, @JvmSuppressWildcards SuspendLazy<Long>>,
 ) {
-    private val tasks: Map<String, Map<String, SuspendLazy<Pair<*, Long>>>>
+    private val tasks: Map<String, Map<String, SuspendLazy<Long>>>
 
     init {
-        val map = mutableMapOf<String, MutableMap<String, SuspendLazy<Pair<*, Long>>>>()
+        val map = mutableMapOf<String, MutableMap<String, SuspendLazy<Long>>>()
         rawTasks.forEach { (key, value) ->
             map.getOrPut(key.trigger) { mutableMapOf() }[key.name] = value
         }
@@ -49,7 +49,7 @@ class AppInitializer @Inject constructor(
             tasks.getValue(key)
                 .map { (key, task) ->
                     scope.async(Dispatchers.IO) {
-                        key to task.getValue().second
+                        key to task.getValue()
                     }
                 }.awaitAll().forEach { (key, ms) ->
                     Timber.d("task ${key}: ${ms}ms")

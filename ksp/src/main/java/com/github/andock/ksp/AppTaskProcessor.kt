@@ -22,7 +22,6 @@ import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.buildCodeBlock
@@ -445,10 +444,12 @@ class AppTaskProcessor(
             .addParameter(
                 ParameterSpec.builder(
                     "task",
-                    suspendLazyClassName.parameterizedBy(
-                        pairClassName.parameterizedBy(
-                            taskData.returnType,
-                            ClassName("kotlin", "Long")
+                    ClassName("dagger", "Lazy").parameterizedBy(
+                        suspendLazyClassName.parameterizedBy(
+                            pairClassName.parameterizedBy(
+                                taskData.returnType,
+                                ClassName("kotlin", "Long")
+                            )
                         )
                     ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards")).build()))
                 )
@@ -461,13 +462,14 @@ class AppTaskProcessor(
             )
             .returns(
                 suspendLazyClassName.parameterizedBy(
-                    pairClassName.parameterizedBy(
-                        STAR,
-                        ClassName("kotlin", "Long")
-                    )
+                    ClassName("kotlin", "Long")
                 )
             )
-            .addStatement("return task")
+            .addStatement("return %M<%T>(%T.NONE) { task.get().getValue().second }",
+                MemberName("com.github.andock.daemon.utils", "suspendLazy"),
+                ClassName("kotlin", "Long"),
+                ClassName("kotlin", "LazyThreadSafetyMode")
+            )
             .build()
     }
 
