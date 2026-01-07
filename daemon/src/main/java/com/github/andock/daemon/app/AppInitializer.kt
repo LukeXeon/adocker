@@ -52,7 +52,7 @@ class AppInitializer @Inject constructor(
                         key to task.getValue().second
                     }
                 }.awaitAll().forEach { (key, ms) ->
-                    Timber.d("task ${key}: ${ms}ms")
+                    Timber.d("task ${key.ifEmpty { "default" }}: ${ms}ms")
                 }
             Dispatchers.Main.immediate.dispatch(
                 EmptyCoroutineContext,
