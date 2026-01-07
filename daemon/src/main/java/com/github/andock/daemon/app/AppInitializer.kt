@@ -3,6 +3,7 @@ package com.github.andock.daemon.app
 import android.os.Looper
 import com.github.andock.daemon.utils.SuspendLazy
 import com.github.andock.daemon.utils.measureTimeMillis
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -31,7 +32,12 @@ class AppInitializer @Inject constructor(
         tasks = map
     }
 
-    private class JumpOutException : RuntimeException("Jump out"), Runnable {
+    private inner class TaskBatch(
+        key: String
+    ) : RuntimeException(key), suspend (CoroutineScope) -> Unit, Runnable {
+        val key: String
+            get() = message!!
+
         override fun fillInStackTrace(): Throwable {
             stackTrace = emptyArray()
             return this
@@ -40,16 +46,11 @@ class AppInitializer @Inject constructor(
         override fun run() {
             throw this
         }
-    }
 
-    fun trigger(key: String = "") {
-        val mainLooper = Looper.getMainLooper()
-        require(mainLooper.isCurrentThread) { "must be main thread" }
-        val jumpOutException = JumpOutException()
-        GlobalScope.launch(Dispatchers.Main.immediate) {
+        override suspend fun invoke(scope: CoroutineScope) {
             tasks.getValue(key)
                 .map { (key, task) ->
-                    async {
+                    scope.async {
                         key to task()
                     }
                 }.awaitAll().forEach { (key, ms) ->
@@ -57,14 +58,20 @@ class AppInitializer @Inject constructor(
                 }
             Dispatchers.Main.immediate.dispatch(
                 EmptyCoroutineContext,
-                jumpOutException
+                this
             )
         }
+    }
+
+    fun trigger(key: String = "") {
+        require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
+        val batch = TaskBatch(key)
+        GlobalScope.launch(Dispatchers.Main.immediate, block = batch)
         val ms = measureTimeMillis {
             try {
                 Looper.loop()
-            } catch (e: JumpOutException) {
-                if (e != jumpOutException) {
+            } catch (e: TaskBatch) {
+                if (e != batch) {
                     throw e
                 }
             }
