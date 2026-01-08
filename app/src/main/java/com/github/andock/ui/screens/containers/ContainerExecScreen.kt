@@ -1,11 +1,13 @@
 package com.github.andock.ui.screens.containers
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -42,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.github.andock.R
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.route.Route
@@ -49,6 +53,18 @@ import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
+
+
+private fun getLineColor(error: Boolean, line: String): Color {
+    return when {
+        line.startsWith("$") -> Color(0xFF4CAF50)
+        line.startsWith(">") -> Color(0xFF2196F3)
+        error || line.startsWith("Error") || line.startsWith("error") -> Color(0xFFF44336)
+        line.contains("warning", ignoreCase = true) -> Color(0xFFFF9800)
+        line.startsWith("Exit code") -> Color(0xFFFF9800)
+        else -> Color(0xFFE0E0E0)
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Route(ContainerExecRoute::class)
@@ -60,6 +76,7 @@ fun ContainerExecScreen() {
     val metadata = container.metadata.collectAsState().value ?: return
     val state = container.state.collectAsState().value
     var inputText by remember { mutableStateOf("") }
+    val logLines = viewModel.logLines.collectAsLazyPagingItems()
     val isRunning = state is ContainerState.Running
     val onNavigateBack = debounceClick {
         navController.popBackStack()
@@ -143,25 +160,29 @@ fun ContainerExecScreen() {
                 .padding(padding)
         ) {
             // Terminal output
-//            LazyColumn(
-//                state = listState,
-//                modifier = Modifier
-//                    .weight(1f)
-//                    .fillMaxWidth()
-//                    .background(Color(0xFF1E1E1E))
-//                    .padding(horizontal = 8.dp),
-//                verticalArrangement = Arrangement.spacedBy(2.dp)
-//            ) {
-//                items(outputLines) { line ->
-//                    Text(
-//                        text = line,
-//                        fontFamily = FontFamily.Monospace,
-//                        fontSize = 12.sp,
-//                        color = getLineColor(line),
-//                        modifier = Modifier.fillMaxWidth()
-//                    )
-//                }
-//            }
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(Color(0xFF1E1E1E))
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                items(
+                    logLines.itemCount,
+                    logLines.itemKey { it.id }) { index ->
+                    val line = logLines[index]
+                    if (line != null) {
+                        Text(
+                            text = line.message,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                            color = getLineColor(line.isError, line.message),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
 
             // Input field
             Surface(
