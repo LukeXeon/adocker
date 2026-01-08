@@ -13,6 +13,5 @@ data class InMemoryLogEntity(
     val id: Long,
     val timestamp: Long,
     val sessionId: String,
-    val isError: Boolean,
     val message: String
 )

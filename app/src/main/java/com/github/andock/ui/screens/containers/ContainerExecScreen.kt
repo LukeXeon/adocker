@@ -55,11 +55,11 @@ import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
 
-private fun getLineColor(error: Boolean, line: String): Color {
+private fun getLineColor(line: String): Color {
     return when {
         line.startsWith("$") -> Color(0xFF4CAF50)
         line.startsWith(">") -> Color(0xFF2196F3)
-        error || line.startsWith("Error") || line.startsWith("error") -> Color(0xFFF44336)
+        line.startsWith("Error") || line.startsWith("error") -> Color(0xFFF44336)
         line.contains("warning", ignoreCase = true) -> Color(0xFFFF9800)
         line.startsWith("Exit code") -> Color(0xFFFF9800)
         else -> Color(0xFFE0E0E0)
@@ -170,14 +170,15 @@ fun ContainerExecScreen() {
             ) {
                 items(
                     logLines.itemCount,
-                    logLines.itemKey { it.id }) { index ->
+                    logLines.itemKey { it.id }
+                ) { index ->
                     val line = logLines[index]
                     if (line != null) {
                         Text(
-                            text = line.message,
+                            text = line.content,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 12.sp,
-                            color = getLineColor(line.isError, line.message),
+                            color = getLineColor(line.content),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

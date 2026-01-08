@@ -5,7 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.github.andock.daemon.database.model.ContainerLogEntity
-import com.github.andock.daemon.database.model.LogLineDTO
+import com.github.andock.daemon.database.model.ContainerLogDTO
 
 @Dao
 interface ContainerLogDao {
@@ -21,7 +21,7 @@ interface ContainerLogDao {
       WHERE containerId = :containerId 
       ORDER BY timestamp ASC
       """)
-    fun getLogLinesPaged(containerId: String): PagingSource<Int, LogLineDTO>
+    fun getLogLinesPaged(containerId: String): PagingSource<Int, ContainerLogDTO>
 
 
 }
