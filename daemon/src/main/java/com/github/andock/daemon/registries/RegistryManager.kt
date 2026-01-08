@@ -120,8 +120,8 @@ class RegistryManager @Inject constructor(
 
     init {
         scope.launch {
-            registryDao.insertRegistries(builtinServers)
-            _registries.value = registryDao.getAllRegistryIds().map { id ->
+            registryDao.insert(builtinServers)
+            _registries.value = registryDao.getAllIds().map { id ->
                 factory.create(id)
             }.associateBy { it.id }
             while (isActive) {
@@ -148,7 +148,7 @@ class RegistryManager @Inject constructor(
             priority = priority,
             type = RegistryType.CustomMirror
         )
-        registryDao.insertRegistry(newMirror)
+        registryDao.insert(newMirror)
         val mirror = factory.create(id)
         _registries.update {
             it + (id to mirror)
@@ -166,7 +166,7 @@ class RegistryManager @Inject constructor(
     }
 
     internal suspend fun removeServer(id: String) {
-        registryDao.deleteRegistryById(id)
+        registryDao.deleteById(id)
         _registries.update {
             it - id
         }

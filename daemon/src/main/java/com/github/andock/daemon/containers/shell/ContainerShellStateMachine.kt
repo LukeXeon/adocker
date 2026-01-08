@@ -10,8 +10,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.UUID
 import javax.inject.Singleton
@@ -31,37 +29,29 @@ class ContainerShellStateMachine @AssistedInject constructor(
             inState<ContainerShellState.Running> {
                 onEnter {
                     val (sessionId, process) = snapshot
-                    val exitCode = coroutineScope {
-                        arrayOf(
-                            process.inputStream,
-                            process.errorStream
-                        ).map { input ->
-                            launch {
-                                try {
-                                    input.bufferedReader().useLines { lines ->
-                                        lines.forEach { line ->
-                                            inMemoryLogStore.append(
-                                                InMemoryLogEntity(
-                                                    id = 0,
-                                                    sessionId = sessionId,
-                                                    timestamp = System.currentTimeMillis(),
-                                                    message = line
-                                                )
-                                            )
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    if (e is CancellationException) {
-                                        throw e
-                                    } else {
-                                        Timber.e(e)
-                                    }
-                                }
+                    val exitCode = try {
+                        process.inputStream.bufferedReader().useLines { lines ->
+                            lines.forEach { line ->
+                                inMemoryLogStore.append(
+                                    InMemoryLogEntity(
+                                        id = 0,
+                                        sessionId = sessionId,
+                                        timestamp = System.currentTimeMillis(),
+                                        message = line
+                                    )
+                                )
                             }
                         }
                         process.await()
+                    } catch (e: Exception) {
+                        if (e is CancellationException) {
+                            throw e
+                        } else {
+                            Timber.e(e)
+                            process.await()
+                        }
                     }
-                    inMemoryLogStore.clearLogById(sessionId = sessionId)
+                    inMemoryLogStore.deleteById(sessionId = sessionId)
                     override {
                         ContainerShellState.Exited(id, exitCode)
                     }

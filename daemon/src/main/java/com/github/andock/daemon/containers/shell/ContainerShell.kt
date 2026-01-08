@@ -53,7 +53,7 @@ class ContainerShell @AssistedInject constructor(
             ),
             initialKey = 1,
             pagingSourceFactory = {
-                inMemoryLogStore.getLogLinesPaged(sessionId = id)
+                inMemoryLogStore.getAllAsPaging(sessionId = id)
             }
         ).flow
 

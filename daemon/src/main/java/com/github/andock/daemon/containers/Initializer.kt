@@ -17,7 +17,7 @@ suspend fun clearContainers(
     containerDao: ContainerDao
 ) {
     withContext(Dispatchers.IO) {
-        val containers = containerDao.getAllContainerIds().map {
+        val containers = containerDao.getAllIds().map {
             File(appContext.containersDir, it)
         }.toSet()
         appContext.containersDir.listFiles {

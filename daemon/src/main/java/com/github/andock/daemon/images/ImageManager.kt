@@ -30,7 +30,7 @@ class ImageManager @Inject constructor(
         emptyList()
     )
 
-    fun getImageById(id: String) = imageDao.getImageFlowById(id)
+    fun getImageById(id: String) = imageDao.findByIdAsFlow(id)
 
     fun pullImage(imageRef: ImageReference): ImageDownloader {
         return downloaderFactory.create(imageRef)
@@ -38,7 +38,7 @@ class ImageManager @Inject constructor(
 
     internal suspend fun deleteUnreferencedLayers() {
         withContext(Dispatchers.IO) {
-            val layers = layerDao.deleteUnreferencedLayers()
+            val layers = layerDao.deleteUnreferenced()
             layers.asSequence().map {
                 File(appContext.layersDir, "${it}.tar.gz")
             }.forEach {

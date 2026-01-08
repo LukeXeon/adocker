@@ -16,7 +16,7 @@ interface ImageDao {
     suspend fun getImageById(id: String): ImageEntity?
 
     @Query("SELECT * FROM images WHERE id = :id")
-    fun getImageFlowById(id: String): Flow<ImageEntity?>
+    fun findByIdAsFlow(id: String): Flow<ImageEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImage(image: ImageEntity)

@@ -50,7 +50,7 @@ class Container @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    val metadata = containerDao.getContainerFlowById(id).stateIn(
+    val metadata = containerDao.findByIdAsFlow(id).stateIn(
         scope,
         SharingStarted.Eagerly,
         null
@@ -65,7 +65,7 @@ class Container @AssistedInject constructor(
             ),
             initialKey = 1,
             pagingSourceFactory = {
-                containerLogDao.getLogLinesPaged(containerId = id)
+                containerLogDao.getAllAsPaging(containerId = id)
             }
         ).flow
 

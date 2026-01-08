@@ -8,14 +8,14 @@ import com.github.andock.daemon.database.model.AuthTokenEntity
 @Dao
 interface AuthTokenDao {
     @Query("SELECT * FROM auth_tokens WHERE url = :url")
-    suspend fun getTokenByUrl(url: String): AuthTokenEntity?
+    suspend fun findByUrl(url: String): AuthTokenEntity?
 
     @Insert
-    suspend fun insertToken(token: AuthTokenEntity)
+    suspend fun insert(token: AuthTokenEntity)
 
     @Query("DELETE FROM auth_tokens WHERE expiry < (strftime('%s', 'now') * 1000)")
-    suspend fun deleteExpiredTokens()
+    suspend fun deleteExpired()
 
     @Query("DELETE FROM auth_tokens WHERE token = :token")
-    suspend fun deleteToken(token: String)
+    suspend fun delete(token: String)
 }

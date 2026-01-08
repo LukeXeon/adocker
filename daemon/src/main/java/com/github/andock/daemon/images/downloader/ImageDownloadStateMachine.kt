@@ -129,7 +129,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                         )
                         val id = layer.id
                         downloadStep(id, layer.size) {
-                            val layerSize = layerDao.getLayerSizeById(id)
+                            val layerSize = layerDao.getSizeById(id)
                             val destFile = File(
                                 appContext.layersDir,
                                 "${id}.tar.gz"
@@ -156,7 +156,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                             if (sha256 != id) {
                                 throw IllegalStateException("Layer sha256 mismatch: ${sha256}!=${id}")
                             }
-                            layerDao.insertLayer(
+                            layerDao.insert(
                                 LayerEntity(
                                     id = id,
                                     size = layer.size,
@@ -199,7 +199,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             }
             database.withTransaction {
                 imageDao.insertImage(imageEntity)
-                layerDao.insertLayerReferences(references)
+                layerDao.insertReferences(references)
             }
             return override {
                 ImageDownloadState.Done(ref)

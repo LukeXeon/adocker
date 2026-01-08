@@ -19,7 +19,7 @@ class ImageRepositories @Inject constructor(
 
     init {
         scope.launch {
-            registryDao.getRegistryCountFlow().collect {
+            registryDao.getCountAsFlow().collect {
                 cache.resize(maxOf(1, builtinServers.size, it))
             }
         }

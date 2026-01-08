@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
-private fun getLineColor(line: String): Color {
+fun getLineColor(line: String): Color {
     return when {
         line.startsWith("$") -> Color(0xFF4CAF50)
         line.startsWith(">") -> Color(0xFF2196F3)

@@ -16,7 +16,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
@@ -108,7 +107,7 @@ class ContainerStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Starting>.startContainer(): ChangedState<ContainerState> {
         val containerId = snapshot.id
-        val config = containerDao.getContainerConfigById(snapshot.id)
+        val config = containerDao.findConfigById(snapshot.id)
         return if (config == null) {
             override {
                 ContainerState.Removed(containerId)
@@ -120,30 +119,22 @@ class ContainerStateMachine @AssistedInject constructor(
                     { mainProcess ->
                         val stdin = mainProcess.outputStream.bufferedWriter()
                         scope.launch {
-                            containerDao.setContainerLastRun(
+                            containerDao.setLastRun(
                                 id = containerId,
                                 timestamp = System.currentTimeMillis()
                             )
-                            arrayOf(
-                                mainProcess.inputStream to false,
-                                mainProcess.errorStream to true
-                            ).map { (input, isError) ->
-                                launch {
-                                    input.bufferedReader().useLines { lines ->
-                                        lines.forEach { line ->
-                                            containerLogDao.append(
-                                                ContainerLogEntity(
-                                                    id = 0,
-                                                    containerId = id,
-                                                    timestamp = System.currentTimeMillis(),
-                                                    isError = isError,
-                                                    message = line
-                                                )
-                                            )
-                                        }
-                                    }
+                            mainProcess.inputStream.bufferedReader().useLines { lines ->
+                                lines.forEach { line ->
+                                    containerLogDao.append(
+                                        ContainerLogEntity(
+                                            id = 0,
+                                            containerId = id,
+                                            timestamp = System.currentTimeMillis(),
+                                            message = line
+                                        )
+                                    )
                                 }
-                            }.joinAll()
+                            }
                         }
                         ContainerState.Running(
                             containerId,
@@ -222,7 +213,7 @@ class ContainerStateMachine @AssistedInject constructor(
 
     private suspend fun ChangeableState<ContainerState.Running>.execCommand(exec: ContainerOperation.Exec): ChangedState<ContainerState> {
         val containerId = snapshot.id
-        val config = containerDao.getContainerConfigById(snapshot.id)
+        val config = containerDao.findConfigById(snapshot.id)
         return if (config == null) {
             exec.process.completeExceptionally(
                 IllegalStateException("Container not found: $containerId")

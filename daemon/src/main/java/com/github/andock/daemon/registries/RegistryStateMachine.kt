@@ -63,7 +63,7 @@ class RegistryStateMachine @AssistedInject constructor(
     }
 
     private suspend fun ChangeableState<RegistryState.Checking>.checkServer(): ChangedState<RegistryState> {
-        val server = registryDao.getRegistryById(snapshot.id)
+        val server = registryDao.findById(snapshot.id)
         if (server != null) {
             try {
                 Timber.d("Checking health of server: ${server.name} (${server.url})")
@@ -102,7 +102,7 @@ class RegistryStateMachine @AssistedInject constructor(
     }
 
     private suspend fun <S : RegistryState> ChangeableState<S>.removeServer(): ChangedState<RegistryState> {
-        return when (registryDao.getRegistryById(snapshot.id)?.type) {
+        return when (registryDao.findById(snapshot.id)?.type) {
             null -> {
                 override {
                     RegistryState.Removed(id)

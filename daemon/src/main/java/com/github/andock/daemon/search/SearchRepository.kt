@@ -52,7 +52,7 @@ class SearchRepository @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = parameters.pageSize,
             ),
-            initialKey = SearchKey(
+            initialKey = SearchPagingKey(
                 URLBuilder("https://hub.docker.com/v2/search/repositories/")
                     .also {
                         it.parameters.apply {

@@ -3,8 +3,7 @@ package com.github.andock.daemon.containers
 import android.app.Application
 import com.github.andock.daemon.R
 import com.github.andock.daemon.database.dao.ContainerDao
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.yield
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,10 +29,10 @@ class ContainerName @Inject constructor(
     suspend fun generateName(): String {
         do {
             val name = randomContainerName()
-            if (containerDao.hasContainerByName(name)) {
+            if (!containerDao.hasName(name)) {
                 return name
             } else {
-                currentCoroutineContext().ensureActive()
+                yield()
             }
         } while (true)
     }

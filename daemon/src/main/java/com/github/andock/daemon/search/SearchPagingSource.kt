@@ -29,10 +29,10 @@ import javax.inject.Singleton
  */
 class SearchPagingSource @AssistedInject constructor(
     private val client: HttpClient
-) : PagingSource<SearchKey, SearchResult>() {
+) : PagingSource<SearchPagingKey, SearchResult>() {
 
     @Suppress("UnstableApiUsage")
-    override suspend fun load(params: LoadParams<SearchKey>): LoadResult<SearchKey, SearchResult> {
+    override suspend fun load(params: LoadParams<SearchPagingKey>): LoadResult<SearchPagingKey, SearchResult> {
         val key = params.key ?: return LoadResult.Page(
             emptyList(),
             null,
@@ -52,7 +52,7 @@ class SearchPagingSource @AssistedInject constructor(
                         it.repoName != null && names.put(it.repoName)
                     },
                     prevKey = if (!response.previous.isNullOrBlank()) {
-                        SearchKey(
+                        SearchPagingKey(
                             Url(response.previous),
                             names,
                         )
@@ -60,7 +60,7 @@ class SearchPagingSource @AssistedInject constructor(
                         null
                     },
                     nextKey = if (!response.next.isNullOrBlank()) {
-                        SearchKey(
+                        SearchPagingKey(
                             Url(response.next),
                             names
                         )
@@ -80,7 +80,7 @@ class SearchPagingSource @AssistedInject constructor(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<SearchKey, SearchResult>): SearchKey? {
+    override fun getRefreshKey(state: PagingState<SearchPagingKey, SearchResult>): SearchPagingKey? {
         return null
     }
 

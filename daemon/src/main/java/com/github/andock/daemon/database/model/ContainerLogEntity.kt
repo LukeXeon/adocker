@@ -24,6 +24,5 @@ data class ContainerLogEntity(
     val id: Long,
     val timestamp: Long,
     val containerId: String,
-    val isError: Boolean,
     val message: String
 )

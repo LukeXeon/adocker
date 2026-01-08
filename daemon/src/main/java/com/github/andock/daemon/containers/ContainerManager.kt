@@ -77,7 +77,7 @@ class ContainerManager @Inject constructor(
 
     init {
         scope.launch {
-            _containers.value = containerDao.getAllContainers().map { entity ->
+            _containers.value = containerDao.getAllLastRun().map { entity ->
                 factory.create(
                     if (entity.lastRunAt != null) {
                         ContainerState.Exited(entity.id)
@@ -90,7 +90,7 @@ class ContainerManager @Inject constructor(
     }
 
     internal suspend fun removeContainer(containerId: String) {
-        containerDao.deleteContainerById(containerId)
+        containerDao.deleteById(containerId)
         _containers.update {
             it - containerId
         }
@@ -107,7 +107,7 @@ class ContainerManager @Inject constructor(
         val containerName = if (name == null) {
             containerName.generateName()
         } else {
-            if (containerDao.hasContainerByName(name)) {
+            if (containerDao.hasName(name)) {
                 return Result.failure(
                     IllegalArgumentException("Container with name '${name}' already exists")
                 )
@@ -181,7 +181,7 @@ class ContainerManager @Inject constructor(
             imageName = "${image.repository}:${image.tag}",
             config = mergedConfig
         )
-        containerDao.insertContainer(entity)
+        containerDao.insert(entity)
         val container = factory.create(ContainerState.Created(containerId))
         _containers.update {
             it + (containerId to container)

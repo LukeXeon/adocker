@@ -10,26 +10,26 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface RegistryDao {
     @Query("SELECT id FROM registries")
-    suspend fun getAllRegistryIds(): List<String>
+    suspend fun getAllIds(): List<String>
 
     @Query("SELECT * FROM registries WHERE id = :id")
-    suspend fun getRegistryById(id: String): RegistryEntity?
+    suspend fun findById(id: String): RegistryEntity?
 
     @Query("SELECT COUNT(*) FROM registries")
-    fun getRegistryCountFlow(): Flow<Int>
+    fun getCountAsFlow(): Flow<Int>
 
     @Query("SELECT * FROM registries WHERE id = :id")
-    fun getRegistryFlowById(id: String): Flow<RegistryEntity?>
+    fun getByIdAsFlow(id: String): Flow<RegistryEntity?>
 
     @Query("SELECT bearerToken FROM registries WHERE url = :url")
-    suspend fun getBearerTokenByUrl(url: String): String?
+    suspend fun getTokenByUrl(url: String): String?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRegistry(mirror: RegistryEntity)
+    suspend fun insert(mirror: RegistryEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRegistries(mirrors: List<RegistryEntity>)
+    suspend fun insert(mirrors: List<RegistryEntity>)
 
     @Query("DELETE FROM registries WHERE id = :id")
-    suspend fun deleteRegistryById(id: String)
+    suspend fun deleteById(id: String)
 }

@@ -65,7 +65,7 @@ class ImageRepository @AssistedInject constructor(
         Timber.d("Authenticating for repository: $repository, registry: $registryUrl")
         try {
             // Check if this specific registry URL has a Bearer Token configured
-            val bearerToken = registryDao.getBearerTokenByUrl(registryUrl)
+            val bearerToken = registryDao.getTokenByUrl(registryUrl)
             if (!bearerToken.isNullOrEmpty()) {
                 Timber.i("Using configured Bearer Token for registry: $registryUrl")
                 return@runCatching bearerToken
@@ -99,19 +99,19 @@ class ImageRepository @AssistedInject constructor(
                 append("&scope=repository:$repository:pull")
             }
 
-            val token = authTokenDao.getTokenByUrl(authUrl)
+            val token = authTokenDao.findByUrl(authUrl)
             if (token != null) {
                 if (System.currentTimeMillis() < token.expiry) {
                     return@runCatching token.token
                 } else {
-                    authTokenDao.deleteExpiredTokens()
+                    authTokenDao.deleteExpired()
                 }
             }
 
             Timber.d("Requesting token from: $authUrl")
             val tokenResponse = client.get(authUrl).body<AuthTokenResponse>()
             val authToken = tokenResponse.token ?: tokenResponse.accessToken ?: ""
-            authTokenDao.insertToken(
+            authTokenDao.insert(
                 AuthTokenEntity(
                     authUrl,
                     authToken,
@@ -146,7 +146,7 @@ class ImageRepository @AssistedInject constructor(
             )
         }
         if (response.status == HttpStatusCode.Unauthorized) {
-            authTokenDao.deleteToken(authToken)
+            authTokenDao.delete(authToken)
         }
         response.body()
     }
@@ -178,7 +178,7 @@ class ImageRepository @AssistedInject constructor(
             )
         }
         if (response.status == HttpStatusCode.Unauthorized) {
-            authTokenDao.deleteToken(authToken)
+            authTokenDao.delete(authToken)
         }
         val contentType = response.contentType()?.toString() ?: ""
         val bodyText = response.bodyAsText()
@@ -222,7 +222,7 @@ class ImageRepository @AssistedInject constructor(
             }
         }
         if (response.status == HttpStatusCode.Unauthorized) {
-            authTokenDao.deleteToken(authToken)
+            authTokenDao.delete(authToken)
         }
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
@@ -254,7 +254,7 @@ class ImageRepository @AssistedInject constructor(
                 }
             }.execute { response ->
                 if (response.status == HttpStatusCode.Unauthorized) {
-                    authTokenDao.deleteToken(authToken)
+                    authTokenDao.delete(authToken)
                 }
                 Timber.d("Layer download response status: ${response.status}")
                 val contentLength = response.contentLength() ?: layer.size
@@ -289,7 +289,7 @@ class ImageRepository @AssistedInject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = N,
             ),
-            initialKey = ImageTagKey(
+            initialKey = ImageTagPagingKey(
                 registry = registryUrl,
                 repository = repository,
                 pageSize = N,

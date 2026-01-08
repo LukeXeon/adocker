@@ -43,7 +43,7 @@ class Registry @AssistedInject constructor(
     val state
         get() = stateMachine.state
 
-    val metadata = registryDao.getRegistryFlowById(id).stateIn(
+    val metadata = registryDao.getByIdAsFlow(id).stateIn(
         scope,
         SharingStarted.Eagerly,
         null
