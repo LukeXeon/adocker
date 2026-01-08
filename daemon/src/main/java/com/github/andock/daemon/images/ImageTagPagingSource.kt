@@ -59,7 +59,11 @@ class ImageTagPagingSource @AssistedInject constructor(
                             LoadResult.Page(
                                 data = it,
                                 prevKey = null,
-                                nextKey = key.copy(last = if (it.size == pageSize) it.lastOrNull() else null)
+                                if (it.size == pageSize && pageSize > 0) {
+                                    key.copy(last = it.last())
+                                } else {
+                                    null
+                                }
                             )
                         }
                     },
