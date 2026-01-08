@@ -13,10 +13,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Singleton
 
 class Container @AssistedInject constructor(
@@ -78,20 +80,32 @@ class Container @AssistedInject constructor(
     }
 
     suspend fun exec(command: List<String>): Result<Process> {
-        return try {
-            // TODO inState
+        if (stateMachine.state.value !is ContainerState.Running) {
+            return Result.failure(IllegalStateException("State no Running"))
+        }
+        return supervisorScope {
             val process = CompletableDeferred<Process>()
+            launch {
+//                stateMachine.state.map {
+//                    it is ContainerState.Running
+//                }.distinctUntilChanged().collect {
+//                    if (!it) {
+//                        process.completeExceptionally(IllegalStateException("State no Running"))
+//                    }
+//                }
+                awaitCancellation()
+            }
             stateMachine.dispatch(
                 ContainerOperation.Exec(
                     command,
                     process
                 )
             )
-            Result.success(
-                process.await()
-            )
-        } catch (e: IllegalStateException) {
-            Result.failure(e)
+            try {
+                Result.success(process.await())
+            } catch (e: IllegalStateException) {
+                Result.failure(e)
+            }
         }
     }
 
