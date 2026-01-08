@@ -1,6 +1,6 @@
 package com.github.andock.startup
 
-import android.app.Application
+import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
 import dagger.hilt.android.EntryPointAccessors
@@ -16,7 +16,7 @@ import timber.log.Timber
     ExperimentalCoroutinesApi::class
 )
 @MainThread
-fun Application.trigger(
+fun Context.trigger(
     key: String = "",
     timber: Timber.Tree = Timber
 ) {
