@@ -1,6 +1,5 @@
 package com.github.andock.ui.screens.containers
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +30,8 @@ class ContainerExecViewModel @Inject constructor(
     containerManager: ContainerManager,
     private val inMemoryLogStore: InMemoryLogDao
 ) : ViewModel() {
+
+    val containerId = savedStateHandle.toRoute<ContainerExecRoute>().containerId
     private val sessionId = UUID.randomUUID().toString()
     private val pager = Pager(
         config = PagingConfig(
@@ -44,6 +45,11 @@ class ContainerExecViewModel @Inject constructor(
         }
     )
 
+    val logLines = pager.flow.cachedIn(viewModelScope)
+
+    val container = containerManager.containers.map { it[containerId] }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     init {
         viewModelScope.launch {
             try {
@@ -55,13 +61,6 @@ class ContainerExecViewModel @Inject constructor(
             }
         }
     }
-
-    val logLines = pager.flow.cachedIn(viewModelScope)
-
-    val containerId = savedStateHandle.toRoute<ContainerExecRoute>().containerId
-
-    val container = containerManager.containers.map { it[containerId] }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun stopShell() {
 
