@@ -2,6 +2,7 @@ package com.github.andock.daemon.database
 
 import android.app.Application
 import androidx.room.Room
+import com.github.andock.daemon.app.AppContext
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,11 +14,18 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun appDatabase(application: Application) = Room.databaseBuilder(
+    fun appDatabase(
+        application: Application,
+        appContext: AppContext,
+    ) = Room.databaseBuilder(
         application,
         AppDatabase::class.java,
         "shared_database"
-    ).build()
+    ).apply {
+        if (appContext.isDebuggable) {
+            fallbackToDestructiveMigration(true)
+        }
+    }.build()
 
 
     @Provides
