@@ -73,7 +73,7 @@ fun ImageTagsScreen() {
                 InfoCard(
                     imageVector = Icons.Default.Layers,
                     title = repository,
-                    subtitle = "tags"
+                    subtitle = "select one tag download"
                 )
             }
             PaginationColumn(

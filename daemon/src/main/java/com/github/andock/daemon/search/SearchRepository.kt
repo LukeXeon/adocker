@@ -3,9 +3,13 @@ package com.github.andock.daemon.search
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.filter
 import com.github.andock.daemon.search.model.SearchResult
+import com.google.common.hash.BloomFilter
+import com.google.common.hash.Funnels
 import io.ktor.http.URLBuilder
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -44,6 +48,7 @@ class SearchRepository @Inject constructor(
      *
      * @return Flow of PagingData containing search results
      */
+    @Suppress("UnstableApiUsage")
     fun search(parameters: SearchParameters): Flow<PagingData<SearchResult>> {
         val jsonObject = json.encodeToJsonElement(parameters) as JsonObject
         return Pager(
@@ -52,33 +57,39 @@ class SearchRepository @Inject constructor(
                 enablePlaceholders = false,
                 initialLoadSize = parameters.pageSize,
             ),
-            initialKey = SearchPagingKey(
-                URLBuilder("https://hub.docker.com/v2/search/repositories/")
-                    .also {
-                        it.parameters.apply {
-                            jsonObject.asSequence().forEach { (k, v) ->
-                                when (v) {
-                                    is JsonPrimitive -> {
-                                        append(k, v.toString())
-                                    }
-
-                                    is JsonArray -> {
-                                        appendAll(
-                                            k,
-                                            v.asSequence().map { v -> v.toString() }.asIterable()
-                                        )
-                                    }
-
-                                    else -> Unit
+            initialKey = URLBuilder("https://hub.docker.com/v2/search/repositories/")
+                .also {
+                    it.parameters.apply {
+                        jsonObject.asSequence().forEach { (k, v) ->
+                            when (v) {
+                                is JsonPrimitive -> {
+                                    append(k, v.toString())
                                 }
 
+                                is JsonArray -> {
+                                    appendAll(
+                                        k,
+                                        v.asSequence().map { v -> v.toString() }.asIterable()
+                                    )
+                                }
+
+                                else -> Unit
                             }
+
                         }
                     }
-                    .build(),
-                null,
-            ),
+                }
+                .build(),
             pagingSourceFactory = factory
-        ).flow
+        ).flow.map {
+            val filter = BloomFilter.create(
+                Funnels.stringFunnel(Charsets.UTF_8), // 数据类型转换器（支持 String、Int 等）
+                100000,
+                0.01
+            )
+            it.filter { item ->
+                filter.put(item.repoName)
+            }
+        }
     }
 }
