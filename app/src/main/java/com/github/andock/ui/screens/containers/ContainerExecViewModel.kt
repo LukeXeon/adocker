@@ -7,10 +7,12 @@ import androidx.navigation.toRoute
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.shell.ContainerShell
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -26,4 +28,13 @@ class ContainerExecViewModel @Inject constructor(
 
     val shell = MutableStateFlow<ContainerShell?>(null)
 
+    init {
+        viewModelScope.launch {
+            try {
+                awaitCancellation()
+            } finally {
+                shell.value?.stop()
+            }
+        }
+    }
 }

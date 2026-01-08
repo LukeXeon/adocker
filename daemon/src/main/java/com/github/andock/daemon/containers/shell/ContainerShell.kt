@@ -57,6 +57,13 @@ class ContainerShell @AssistedInject constructor(
             }
         ).flow
 
+    fun stop() {
+        val state = state.value
+        if (state is ContainerShellState.Running) {
+            state.process.destroy()
+        }
+    }
+
     suspend fun exec(command: String) {
         mutex.withLock {
             withContext(Dispatchers.IO) {
