@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import timber.log.Timber
 
 @OptIn(
     DelicateCoroutinesApi::class,
@@ -18,8 +17,7 @@ import timber.log.Timber
 @MainThread
 fun Context.trigger(
     key: String = "",
-    timber: Timber.Tree = Timber
-) {
+): List<TaskResult> {
     require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
     val entrypoint = EntryPointAccessors.fromApplication<StartupEntryPoint>(this)
     val batch = entrypoint.factory.create(key)
@@ -34,8 +32,10 @@ fun Context.trigger(
         }
     }
     val tasks = async.getCompleted()
+    val results = ArrayList<TaskResult>(tasks.size + 1)
     tasks.forEach { key, ms ->
-        timber.i("task $key: ${ms}ms")
+        results.add(TaskResult(key, ms, false))
     }
-    timber.i("trigger: ${key.ifEmpty { "default" }}, task all: ${ms}ms")
+    results.add(TaskResult(key, ms, true))
+    return results
 }

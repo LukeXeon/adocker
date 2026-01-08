@@ -50,7 +50,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     compileOnly(libs.auto.value.annotations)
-    api(libs.timber)
     ksp(libs.hilt.compiler)
     ksp(libs.kotlin.metadata.jvm)
     kapt(libs.auto.value)
