@@ -16,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.Start
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -132,7 +132,7 @@ fun ContainerExecScreen() {
                             }
                         ) {
                             Icon(
-                                Icons.Default.Start,
+                                Icons.Default.PlayArrow,
                                 contentDescription = stringResource(R.string.action_start)
                             )
                         }
@@ -206,7 +206,7 @@ fun ContainerExecScreen() {
                             }
                         ) {
                             Icon(
-                                Icons.Default.Start,
+                                Icons.Default.PlayArrow,
                                 contentDescription = stringResource(R.string.action_close),
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
