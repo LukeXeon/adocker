@@ -5,8 +5,6 @@ import androidx.paging.PagingConfig
 import com.github.andock.daemon.containers.shell.ContainerShell
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ContainerLogDao
-import com.github.andock.daemon.utils.execute
-import com.github.andock.daemon.utils.inState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -81,19 +79,16 @@ class Container @AssistedInject constructor(
 
     suspend fun exec(command: List<String>): Result<Process> {
         return try {
+            // TODO inState
+            val process = CompletableDeferred<Process>()
+            stateMachine.dispatch(
+                ContainerOperation.Exec(
+                    command,
+                    process
+                )
+            )
             Result.success(
-                stateMachine.state.inState(
-                    ContainerState.Running::class
-                ).execute {
-                    val process = CompletableDeferred<Process>()
-                    stateMachine.dispatch(
-                        ContainerOperation.Exec(
-                            command,
-                            process
-                        )
-                    )
-                    process.await()
-                }
+                process.await()
             )
         } catch (e: IllegalStateException) {
             Result.failure(e)

@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Singleton
 
 
@@ -30,7 +31,7 @@ class ContainerShell @AssistedInject constructor(
     }
 
     private val mutex = Mutex()
-    private val writer = process.outputStream.bufferedWriter()
+    private val writer = process.outputStream.writer()
 
     private val scope = CoroutineScope(
         SupervisorJob(parent.coroutineContext[Job]) + Dispatchers.IO
@@ -63,6 +64,7 @@ class ContainerShell @AssistedInject constructor(
                 writer.appendLine(command)
             }
         }
+        Timber.e(command)
     }
 
     init {
