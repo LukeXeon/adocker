@@ -19,9 +19,8 @@ import java.net.ServerSocket
  */
 class TcpHttp4kServer(
     private val port: Int,
-    httpHandler: HttpHandler
+    private val httpHandler: HttpHandler
 ) : Http4kServer {
-    private val processor = HttpProcessor(httpHandler)
     private var serverSocket: ServerSocket? = null
     private var scope: CoroutineScope? = null
 
@@ -53,7 +52,7 @@ class TcpHttp4kServer(
                 try {
                     val clientSocket = serverSocket.accept()
                     scope.launch {
-                        processor.process(TcpClientConnection(clientSocket))
+                        httpHandler.process(TcpClientConnection(clientSocket))
                     }
                 } catch (e: Exception) {
                     if (isActive) {

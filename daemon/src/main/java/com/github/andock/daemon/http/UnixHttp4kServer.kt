@@ -25,7 +25,7 @@ import java.io.IOException
 class UnixHttp4kServer(
     private val name: String,
     private val namespace: Namespace,
-    httpHandler: HttpHandler
+    private val httpHandler: HttpHandler
 ) : Http4kServer {
 
     companion object {
@@ -42,7 +42,6 @@ class UnixHttp4kServer(
         }
     }
 
-    private val processor = HttpProcessor(httpHandler)
     private var scope: CoroutineScope? = null
 
     override fun port(): Int = -1 // Unix sockets don't have ports
@@ -88,7 +87,7 @@ class UnixHttp4kServer(
                 try {
                     val clientSocket = serverSocket.accept()
                     scope.launch {
-                        processor.process(UnixClientConnection(clientSocket))
+                        httpHandler.process(UnixClientConnection(clientSocket))
                     }
                 } catch (e: Exception) {
                     if (isActive) {
