@@ -1,7 +1,5 @@
 package com.github.andock.startup
 
-import androidx.collection.MutableObjectLongMap
-import androidx.collection.ObjectLongMap
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -16,7 +14,7 @@ internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
     private val tasks: @JvmSuppressWildcards Map<String, Map<String, SuspendLazy<Long>>>,
-) : Exception(key), suspend (CoroutineScope) -> ObjectLongMap<String>, Runnable {
+) : Exception(key), suspend (CoroutineScope) -> ArrayList<TaskResult>, Runnable {
 
     val key: String
         get() = message!!
@@ -26,21 +24,21 @@ internal class TaskBatch @AssistedInject constructor(
         return this
     }
 
-    override suspend fun invoke(scope: CoroutineScope): ObjectLongMap<String> {
+    override suspend fun invoke(scope: CoroutineScope): ArrayList<TaskResult> {
         val tasks = tasks.getValue(key)
-        val timeConsuming = MutableObjectLongMap<String>(tasks.size)
+        val results = ArrayList<TaskResult>(tasks.size)
         tasks.map { (key, task) ->
             scope.async(Dispatchers.IO) {
                 key to task.getValue()
             }
         }.awaitAll().forEach { (key, ms) ->
-            timeConsuming[key] = ms
+            results.add(TaskResult(key, ms, false))
         }
         Dispatchers.Main.immediate.dispatch(
             EmptyCoroutineContext,
             this
         )
-        return timeConsuming
+        return results
     }
 
     override fun run() {

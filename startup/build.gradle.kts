@@ -46,7 +46,6 @@ android {
 
 dependencies {
     implementation(libs.hilt.android)
-    implementation(libs.androidx.collection)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     compileOnly(libs.auto.value.annotations)

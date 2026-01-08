@@ -31,11 +31,7 @@ fun Context.trigger(
             }
         }
     }
-    val tasks = async.getCompleted()
-    val results = ArrayList<TaskResult>(tasks.size + 1)
-    tasks.forEach { key, ms ->
-        results.add(TaskResult(key, ms, false))
-    }
+    val results = async.getCompleted()
     results.add(TaskResult(key, ms, true))
     return results
 }
