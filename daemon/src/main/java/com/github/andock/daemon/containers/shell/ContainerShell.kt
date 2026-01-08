@@ -3,6 +3,7 @@ package com.github.andock.daemon.containers.shell
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.github.andock.daemon.database.dao.InMemoryLogDao
+import com.github.andock.daemon.database.model.InMemoryLogEntity
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -65,6 +66,14 @@ class ContainerShell @AssistedInject constructor(
     }
 
     suspend fun exec(command: String) {
+        inMemoryLogStore.append(
+            InMemoryLogEntity(
+                id = 0,
+                timestamp = System.currentTimeMillis(),
+                sessionId = id,
+                message = command
+            )
+        )
         mutex.withLock {
             withContext(Dispatchers.IO) {
                 try {
