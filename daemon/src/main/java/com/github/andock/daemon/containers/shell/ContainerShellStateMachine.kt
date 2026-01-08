@@ -47,7 +47,7 @@ class ContainerShellStateMachine @AssistedInject constructor(
                         if (e is CancellationException) {
                             throw e
                         } else {
-                            Timber.e(e)
+                            Timber.d(e)
                             process.await()
                         }
                     }
