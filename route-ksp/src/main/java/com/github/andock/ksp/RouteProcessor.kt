@@ -218,6 +218,11 @@ class RouteProcessor(
      */
     private fun buildModuleType(routeData: RouteData, moduleName: String): TypeSpec {
         return TypeSpec.objectBuilder(moduleName)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("javax.annotation.processing", "Generated"))
+                    .addMember("%S", "com.github.andock.ksp.RouteProcessor")
+                    .build()
+            )
             .addAnnotation(ClassName("dagger", "Module"))
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))

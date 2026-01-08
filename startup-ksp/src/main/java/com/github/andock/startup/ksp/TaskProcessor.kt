@@ -314,6 +314,11 @@ class TaskProcessor(
      */
     private fun buildModuleType(taskData: TaskData, moduleName: String): TypeSpec {
         return TypeSpec.objectBuilder(moduleName)
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("javax.annotation.processing", "Generated"))
+                    .addMember("%S", "com.github.andock.startup.ksp.TaskProcessor")
+                    .build()
+            )
             .addAnnotation(ClassName("dagger", "Module"))
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
