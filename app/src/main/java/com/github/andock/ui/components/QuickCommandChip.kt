@@ -1,4 +1,4 @@
-package com.github.andock.ui.screens.containers
+package com.github.andock.ui.components
 
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults

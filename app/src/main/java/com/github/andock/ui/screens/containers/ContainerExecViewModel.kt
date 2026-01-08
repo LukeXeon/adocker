@@ -70,10 +70,6 @@ class ContainerExecViewModel @Inject constructor(
         }
     }
 
-    fun stopShell() {
-
-    }
-
     fun startShell() {
 
     }

@@ -15,8 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Start
 import androidx.compose.material.icons.filled.Stop
@@ -52,6 +50,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
 import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.ui.components.QuickCommandChip
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
@@ -80,6 +79,7 @@ fun ContainerExecScreen() {
     val metadata = container.metadata.collectAsState().value ?: return
     val shell = viewModel.shell.collectAsState().value
     val state = container.state.collectAsState().value
+    val logLines = viewModel.logLines.collectAsLazyPagingItems()
     var inputText by remember { mutableStateOf("") }
     val isRunning = state is ContainerState.Running
     val onNavigateBack = debounceClick {
@@ -110,16 +110,6 @@ fun ContainerExecScreen() {
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            viewModel.stopShell()
-                        }
-                    ) {
-                        Icon(
-                            Icons.Default.Clear,
-                            contentDescription = stringResource(R.string.terminal_clear)
-                        )
-                    }
                     if (isRunning) {
                         IconButton(
                             onClick = {
@@ -163,34 +153,33 @@ fun ContainerExecScreen() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (shell != null) {
-                // Terminal output
-                val logLines = viewModel.logLines.collectAsLazyPagingItems()
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .background(Color(0xFF1E1E1E))
-                        .padding(horizontal = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    items(
-                        logLines.itemCount,
-                        logLines.itemKey { it.id }
-                    ) { index ->
-                        val line = logLines[index]
-                        if (line != null) {
-                            Text(
-                                text = line.content,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.sp,
-                                color = getLineColor(line.content),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(Color(0xFF1E1E1E))
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                items(
+                    logLines.itemCount,
+                    logLines.itemKey { it.id }
+                ) { index ->
+                    val line = logLines[index]
+                    if (line != null) {
+                        Text(
+                            text = line.content,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                            color = getLineColor(line.content),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
-            } else {
+            }
+            // Terminal output
+            if (shell == null) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.errorContainer
@@ -217,7 +206,7 @@ fun ContainerExecScreen() {
                             }
                         ) {
                             Icon(
-                                Icons.Default.Close,
+                                Icons.Default.Start,
                                 contentDescription = stringResource(R.string.action_close),
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
