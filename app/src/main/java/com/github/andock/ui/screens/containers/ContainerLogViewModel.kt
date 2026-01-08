@@ -31,7 +31,7 @@ class ContainerLogViewModel @Inject constructor(
     val logLines = containerManager.containers.map {
         it[containerId]
     }.filterNotNull().flatMapLatest {
-        it.logLines()
+        it.logLines
     }.cachedIn(viewModelScope)
 
 }

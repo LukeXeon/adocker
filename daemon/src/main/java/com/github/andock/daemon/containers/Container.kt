@@ -3,6 +3,7 @@ package com.github.andock.daemon.containers
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.github.andock.daemon.database.dao.ContainerDao
+import com.github.andock.daemon.database.dao.LogLineDao
 import com.github.andock.daemon.utils.execute
 import com.github.andock.daemon.utils.inState
 import dagger.assisted.Assisted
@@ -26,7 +27,7 @@ class Container @AssistedInject constructor(
     stateMachineFactory: ContainerStateMachine.Factory,
     parent: CoroutineScope,
     containerDao: ContainerDao,
-    private val logSourceFactory: ContainerLogPagingSource.Factory
+    logLineDao: LogLineDao
 ) {
     companion object {
         const val N = 1000
@@ -41,6 +42,18 @@ class Container @AssistedInject constructor(
     )
     private val stateMachine = stateMachineFactory.create(initialState).launchIn(scope)
 
+    private val pager = Pager(
+        config = PagingConfig(
+            pageSize = N,
+            enablePlaceholders = false,
+            initialLoadSize = N,
+        ),
+        initialKey = 1,
+        pagingSourceFactory = {
+            logLineDao.getLogLinesPaged(containerId = id)
+        }
+    )
+
     val id
         get() = state.value.id
 
@@ -52,6 +65,10 @@ class Container @AssistedInject constructor(
         SharingStarted.Eagerly,
         null
     )
+
+    val logLines
+        get() = pager.flow
+
 
     init {
         scope.launch {
@@ -86,19 +103,6 @@ class Container @AssistedInject constructor(
         }
     }
 
-    fun logLines() = Pager(
-        config = PagingConfig(
-            pageSize = N,
-            enablePlaceholders = false,
-            initialLoadSize = N,
-        ),
-        initialKey = ContainerLogKey(
-            containerId = id,
-            currentPage = 1,
-            pageSize = N
-        ),
-        pagingSourceFactory = logSourceFactory
-    ).flow
 
     suspend fun start() {
         stateMachine.dispatch(ContainerOperation.Start)
