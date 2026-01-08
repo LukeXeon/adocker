@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,13 +48,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
-import com.github.andock.daemon.containers.ContainerState
+import com.github.andock.daemon.containers.shell.ContainerShellState
 import com.github.andock.ui.components.QuickCommandChip
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 
 private fun getLineColor(line: String): Color {
@@ -74,14 +75,14 @@ private fun getLineColor(line: String): Color {
 @Composable
 fun ContainerExecScreen() {
     val viewModel = hiltViewModel<ContainerExecViewModel>()
+    val snackbarHostState = LocalSnackbarHostState.current
     val navController = LocalNavController.current
     val container = viewModel.container.collectAsState().value ?: return
     val metadata = container.metadata.collectAsState().value ?: return
     val shell = viewModel.shell.collectAsState().value
-    val state = container.state.collectAsState().value
-    val logLines = viewModel.logLines.collectAsLazyPagingItems()
+    val isRunning = shell?.state?.collectAsState()?.value is ContainerShellState.Running
+    val logLines = shell?.logLines?.collectAsLazyPagingItems()
     var inputText by remember { mutableStateOf("") }
-    val isRunning = state is ContainerState.Running
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
@@ -109,35 +110,6 @@ fun ContainerExecScreen() {
                         )
                     }
                 },
-                actions = {
-                    if (isRunning) {
-                        IconButton(
-                            onClick = {
-                                viewModel.viewModelScope.launch {
-                                    container.stop()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Stop,
-                                contentDescription = stringResource(R.string.action_stop)
-                            )
-                        }
-                    } else {
-                        IconButton(
-                            onClick = {
-                                viewModel.viewModelScope.launch {
-                                    container.start()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = stringResource(R.string.action_start)
-                            )
-                        }
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1E1E1E),
                     titleContentColor = Color.White,
@@ -153,7 +125,7 @@ fun ContainerExecScreen() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
+            // Terminal output
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -162,24 +134,25 @@ fun ContainerExecScreen() {
                     .padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                items(
-                    logLines.itemCount,
-                    logLines.itemKey { it.id }
-                ) { index ->
-                    val line = logLines[index]
-                    if (line != null) {
-                        Text(
-                            text = line.content,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            color = getLineColor(line.content),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                if (logLines != null) {
+                    items(
+                        logLines.itemCount,
+                        logLines.itemKey { it.id }
+                    ) { index ->
+                        val line = logLines[index]
+                        if (line != null) {
+                            Text(
+                                text = line.content,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                                color = getLineColor(line.content),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }
-            // Terminal output
-            if (shell == null) {
+            if (!isRunning) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.errorContainer
@@ -202,7 +175,17 @@ fun ContainerExecScreen() {
                         Spacer(modifier = Modifier.weight(1f))
                         IconButton(
                             onClick = {
-                                viewModel.startShell()
+                                viewModel.viewModelScope.launch {
+                                    container.shell().fold(
+                                        {
+                                            viewModel.shell.value = it
+                                        },
+                                        {
+                                            Timber.e(it)
+                                            snackbarHostState.showSnackbar("Shell 启动失败")
+                                        }
+                                    )
+                                }
                             }
                         ) {
                             Icon(
@@ -262,8 +245,10 @@ fun ContainerExecScreen() {
                         ),
                         keyboardActions = KeyboardActions(
                             onSend = {
-                                if (inputText.isNotBlank()) {
-                                    viewModel.executeCommand(inputText)
+                                if (inputText.isNotBlank() && shell != null) {
+                                    viewModel.viewModelScope.launch {
+                                        shell.exec(inputText)
+                                    }
                                     inputText = ""
                                 }
                             }
@@ -272,8 +257,10 @@ fun ContainerExecScreen() {
 
                     IconButton(
                         onClick = {
-                            if (inputText.isNotBlank()) {
-                                viewModel.executeCommand(inputText)
+                            if (inputText.isNotBlank() && shell != null) {
+                                viewModel.viewModelScope.launch {
+                                    shell.exec(inputText)
+                                }
                                 inputText = ""
                             }
                         },
@@ -299,16 +286,32 @@ fun ContainerExecScreen() {
                     horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
                 ) {
                     QuickCommandChip("ls -la") {
-                        viewModel.executeCommand(it)
+                        if (shell != null) {
+                            viewModel.viewModelScope.launch {
+                                shell.exec(it)
+                            }
+                        }
                     }
                     QuickCommandChip("pwd") {
-                        viewModel.executeCommand(it)
+                        if (shell != null) {
+                            viewModel.viewModelScope.launch {
+                                shell.exec(it)
+                            }
+                        }
                     }
                     QuickCommandChip("whoami") {
-                        viewModel.executeCommand(it)
+                        if (shell != null) {
+                            viewModel.viewModelScope.launch {
+                                shell.exec(it)
+                            }
+                        }
                     }
                     QuickCommandChip("cat /etc/os-release") {
-                        viewModel.executeCommand(it)
+                        if (shell != null) {
+                            viewModel.viewModelScope.launch {
+                                shell.exec(it)
+                            }
+                        }
                     }
                 }
             }

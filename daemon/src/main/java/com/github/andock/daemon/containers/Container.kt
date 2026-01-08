@@ -2,6 +2,7 @@ package com.github.andock.daemon.containers
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import com.github.andock.daemon.containers.shell.ContainerShell
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ContainerLogDao
 import com.github.andock.daemon.utils.execute
@@ -27,7 +28,8 @@ class Container @AssistedInject constructor(
     stateMachineFactory: ContainerStateMachine.Factory,
     parent: CoroutineScope,
     containerDao: ContainerDao,
-    containerLogDao: ContainerLogDao
+    private val containerLogDao: ContainerLogDao,
+    private val shellFactory: ContainerShell.Factory
 ) {
     companion object {
         const val N = 1000
@@ -42,18 +44,6 @@ class Container @AssistedInject constructor(
     )
     private val stateMachine = stateMachineFactory.create(initialState).launchIn(scope)
 
-    private val pager = Pager(
-        config = PagingConfig(
-            pageSize = N,
-            enablePlaceholders = false,
-            initialLoadSize = N,
-        ),
-        initialKey = 1,
-        pagingSourceFactory = {
-            containerLogDao.getLogLinesPaged(containerId = id)
-        }
-    )
-
     val id
         get() = state.value.id
 
@@ -67,7 +57,17 @@ class Container @AssistedInject constructor(
     )
 
     val logLines
-        get() = pager.flow
+        get() = Pager(
+            config = PagingConfig(
+                pageSize = N,
+                enablePlaceholders = false,
+                initialLoadSize = N,
+            ),
+            initialKey = 1,
+            pagingSourceFactory = {
+                containerLogDao.getLogLinesPaged(containerId = id)
+            }
+        ).flow
 
 
     init {
@@ -100,6 +100,12 @@ class Container @AssistedInject constructor(
             )
         } catch (e: IllegalStateException) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun shell(): Result<ContainerShell> {
+        return exec(listOf("/bin/sh")).map {
+            shellFactory.create(it)
         }
     }
 
