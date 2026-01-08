@@ -15,7 +15,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,9 +45,7 @@ object AppModule {
     @Singleton
     fun scope(): CoroutineScope {
         return CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e ->
-            if (e !is CancellationException) {
-                Timber.e(e)
-            }
+            Timber.e(e)
         })
     }
 
