@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.github.andock.daemon.database.dao.InMemoryLogDao
 import com.github.andock.daemon.database.model.InMemoryLogEntity
+import com.github.andock.daemon.os.id
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -43,7 +44,7 @@ class ContainerShell @AssistedInject constructor(
         get() = stateMachine.state
 
     val id
-        get() = state.value.id
+        get() = state.value.process.id
 
     val logLines
         get() = Pager(

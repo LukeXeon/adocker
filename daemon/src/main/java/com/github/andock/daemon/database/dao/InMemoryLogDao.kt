@@ -13,7 +13,7 @@ interface InMemoryLogDao {
     suspend fun append(line: InMemoryLogEntity)
 
     @Query("DELETE FROM in_memory_log_lines WHERE sessionId = :sessionId")
-    suspend fun deleteById(sessionId: String)
+    suspend fun deleteById(sessionId: Int)
 
     @Query(
         """
@@ -25,5 +25,5 @@ interface InMemoryLogDao {
      ORDER BY timestamp ASC
       """
     )
-    fun getAllAsPaging(sessionId: String): PagingSource<Int, LogLine>
+    fun getAllAsPaging(sessionId: Int): PagingSource<Int, LogLine>
 }

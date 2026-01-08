@@ -2,7 +2,11 @@ package com.github.andock.daemon.os
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import timber.log.Timber
 import java.io.File
+import java.lang.reflect.Field
+import java.util.WeakHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 
 /**
@@ -23,43 +27,36 @@ fun Process(
 }
 
 private val pidRegex = Regex("pid=(\\d+)")
+private val pidGen = AtomicInteger(1)
+private val pidMap = WeakHashMap<Process, Int>()
+private val pidField = HashMap<Class<*>, Result<Field>>()
 
-private val pidField = arrayOfNulls<Any?>(1)
-
-val Process.pid: Int
+val Process.id: Int
     get() {
-        val field = synchronized(pidField) {
-            var field = pidField[0]
-            if (field is Unit) {
-                return@synchronized null
-            } else {
-                field = javaClass.runCatching {
-                    getDeclaredField("pid").apply {
-                        isAccessible = true
+        return synchronized(pidMap) {
+            pidMap.getOrPut(this) {
+                pidField.getOrPut(javaClass) {
+                    javaClass.runCatching {
+                        getDeclaredField("pid").apply {
+                            isAccessible = true
+                        }
                     }
-                }.getOrNull()
-                if (field != null) {
-                    pidField[0] = field
-                    return@synchronized field
-                } else {
-                    pidField[0] = Unit
-                    return@synchronized null
-                }
+                }.mapCatching { field ->
+                    field.getInt(this@id)
+                }.fold(
+                    {
+                        it
+                    },
+                    {
+                        Timber.e(it)
+                        val pid = pidRegex.find(
+                            this@id.toString()
+                        )?.groups?.get(1)?.value?.toIntOrNull()
+                        pid ?: pidGen.getAndIncrement()
+                    }
+                )
             }
         }
-        var pid = field?.runCatching {
-            getInt(this@pid)
-        }?.getOrNull()
-        if (pid != null) {
-            return pid
-        }
-        pid = pidRegex.find(
-            this.toString()
-        )?.groups?.get(1)?.value?.toIntOrNull()
-        if (pid != null) {
-            return pid
-        }
-        return 0
     }
 
 suspend inline fun Process.await(): Int {

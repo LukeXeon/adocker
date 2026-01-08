@@ -12,6 +12,6 @@ data class InMemoryLogEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long,
     val timestamp: Long,
-    val sessionId: String,
+    val sessionId: Int,
     val message: String
 )
