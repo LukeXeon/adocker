@@ -75,6 +75,27 @@ fun ProcessLimited() {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {}
+    val startInstall = remember {
+        suspend {
+            viewModel.getInstallIntent().fold(
+                {
+                    launcher.launch(it)
+                },
+                {
+                    Timber.e(it)
+                }
+            )
+        }
+    }
+    val toInstallPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (context.packageManager.canRequestPackageInstalls()) {
+            viewModel.viewModelScope.launch {
+                startInstall()
+            }
+        }
+    }
     val nextStats = remember {
         suspend {
             ProcessLimitStats(
@@ -444,17 +465,10 @@ fun ProcessLimited() {
                         if (context.packageManager.canRequestPackageInstalls()) {
                             setDownloadDialog(false)
                             viewModel.viewModelScope.launch {
-                                viewModel.getInstallIntent().fold(
-                                    {
-                                        launcher.launch(it)
-                                    },
-                                    {
-                                        Timber.e(it)
-                                    }
-                                )
+                                startInstall()
                             }
                         } else {
-                            launcher.launch(
+                            toInstallPermission.launch(
                                 Intent(
                                     Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
                                 ).apply {
