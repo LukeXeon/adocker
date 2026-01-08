@@ -56,6 +56,13 @@ class ContainerShellStateMachine @AssistedInject constructor(
                         ContainerShellState.Exited(process)
                     }
                 }
+                on<Unit> {
+                    snapshot.process.destroy()
+                    snapshot.process.await()
+                    override {
+                        ContainerShellState.Exited(process)
+                    }
+                }
             }
         }
     }

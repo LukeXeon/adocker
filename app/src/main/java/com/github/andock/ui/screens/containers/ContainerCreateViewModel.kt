@@ -28,13 +28,11 @@ class ContainerCreateViewModel @Inject constructor(
         )
 
     // Create a container
-    suspend fun createContainer(
+    fun createContainer(
         imageId: String,
         name: String?,
-        config: ContainerConfig = ContainerConfig()
-    ) {
-        containerManager.createContainer(imageId, name, config)
-    }
+        config: ContainerConfig
+    ) = containerManager.createContainer(imageId, name, config)
 
     // Run container (create and start)
     suspend fun runContainer(
@@ -42,8 +40,6 @@ class ContainerCreateViewModel @Inject constructor(
         name: String?,
         config: ContainerConfig = ContainerConfig()
     ) {
-        containerManager.createContainer(imageId, name, config).map {
-            it.start()
-        }
+        TODO()
     }
 }

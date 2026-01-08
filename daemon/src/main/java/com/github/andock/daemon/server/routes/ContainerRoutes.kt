@@ -33,8 +33,8 @@ object ContainerRoutes {
         },
 
         // Create a container
-        "/containers/create" bind POST to { request ->
-            handler.createContainer(request)
+        "/containers/create" bind POST to {
+            Response(NOT_IMPLEMENTED)
         },
 
         // Inspect a container

@@ -1,18 +1,23 @@
-package com.github.andock.daemon.images.downloader
+package com.github.andock.daemon.containers.creator
 
+import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.images.DownloadProgress
-import com.github.andock.daemon.images.ImageReference
+import com.github.andock.daemon.images.models.ContainerConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-sealed interface ImageDownloadState {
-    val ref: ImageReference
-    class Downloading(
-        override val ref: ImageReference
-    ) : ImageDownloadState {
+interface ContainerCreateState {
+    val id: String
+
+    class Creating(
+        override val id: String,
+        val imageId: String,
+        val name: String?,
+        val config: ContainerConfig
+    ) : ContainerCreateState {
         private val mutex = Mutex()
         private val _progress = MutableStateFlow(emptyMap<String, DownloadProgress>())
 
@@ -26,11 +31,14 @@ sealed interface ImageDownloadState {
     }
 
     data class Error(
-        override val ref: ImageReference,
+        override val id: String,
         val throwable: Throwable
-    ) : ImageDownloadState
+    ) : ContainerCreateState
 
     data class Done(
-        override val ref: ImageReference
-    ) : ImageDownloadState
+        val container: Container
+    ) : ContainerCreateState {
+        override val id
+            get() = container.id
+    }
 }

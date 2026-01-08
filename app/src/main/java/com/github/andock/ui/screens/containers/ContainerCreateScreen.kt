@@ -43,8 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 import com.github.andock.R
+import com.github.andock.daemon.containers.creator.ContainerCreateState
+import com.github.andock.daemon.containers.creator.ContainerCreator
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.InfoCard
 import com.github.andock.ui.components.LoadingDialog
@@ -53,7 +54,6 @@ import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
-import kotlinx.coroutines.launch
 
 private fun parseEnvVars(input: String): Map<String, String> {
     return input.lines()
@@ -81,8 +81,8 @@ fun ContainerCreateScreen() {
     val onNavigateBack = debounceClick {
         navController.popBackStack()
     }
-    var isLoading by remember { mutableStateOf(false) }
-
+    val (creator, setCreator) = remember { mutableStateOf<ContainerCreator?>(null) }
+    val isLoading = creator?.state?.collectAsState()?.value is ContainerCreateState.Creating
     Scaffold(
         topBar = {
             TopAppBar(
@@ -223,27 +223,42 @@ fun ContainerCreateScreen() {
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
                         )
-                        viewModel.viewModelScope.launch {
-                            isLoading = true
-                            try {
-                                if (autoStart) {
-                                    viewModel.runContainer(
-                                        imageId = imageId,
-                                        name = containerName.ifBlank { null },
-                                        config = config
-                                    )
-                                } else {
-                                    viewModel.createContainer(
-                                        imageId = imageId,
-                                        name = containerName.ifBlank { null },
-                                        config = config
-                                    )
-                                }
-                            } finally {
-                                isLoading = false
-                            }
-                            onNavigateBack()
+                        if (autoStart) {
+//                            viewModel.runContainer(
+//                                imageId = imageId,
+//                                name = containerName.ifBlank { null },
+//                                config = config
+//                            )
+                        } else {
+                            setCreator(
+                                viewModel.createContainer(
+                                    imageId = imageId,
+                                    name = containerName.ifBlank { null },
+                                    config = config
+                                )
+                            )
                         }
+//                        viewModel.viewModelScope.launch {
+//                            isLoading = true
+//                            try {
+//                                if (autoStart) {
+//                                    viewModel.runContainer(
+//                                        imageId = imageId,
+//                                        name = containerName.ifBlank { null },
+//                                        config = config
+//                                    )
+//                                } else {
+//                                    viewModel.createContainer(
+//                                        imageId = imageId,
+//                                        name = containerName.ifBlank { null },
+//                                        config = config
+//                                    )
+//                                }
+//                            } finally {
+//                                isLoading = false
+//                            }
+//                            onNavigateBack()
+//                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

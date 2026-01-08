@@ -24,7 +24,7 @@ class ContainerShell @AssistedInject constructor(
     @Assisted
     process: Process,
     parent: CoroutineScope,
-    stateMachineFactory: ContainerShellStateMachine.Factory,
+    factory: ContainerShellStateMachine.Factory,
     private val inMemoryLogStore: InMemoryLogDao,
 ) {
     companion object {
@@ -38,7 +38,7 @@ class ContainerShell @AssistedInject constructor(
         SupervisorJob(parent.coroutineContext[Job]) + Dispatchers.IO
     )
 
-    private val stateMachine = stateMachineFactory.create(process).launchIn(scope)
+    private val stateMachine = factory.create(process).launchIn(scope)
 
     val state
         get() = stateMachine.state
@@ -59,11 +59,8 @@ class ContainerShell @AssistedInject constructor(
             }
         ).flow
 
-    fun stop() {
-        val state = state.value
-        if (state is ContainerShellState.Running) {
-            state.process.destroy()
-        }
+    suspend fun stop() {
+        stateMachine.dispatch(Unit)
     }
 
     suspend fun exec(command: String) {
