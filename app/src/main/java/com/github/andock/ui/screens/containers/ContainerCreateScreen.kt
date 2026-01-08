@@ -48,7 +48,6 @@ import com.github.andock.daemon.containers.creator.ContainerCreateState
 import com.github.andock.daemon.containers.creator.ContainerCreator
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.InfoCard
-import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
@@ -78,11 +77,8 @@ fun ContainerCreateScreen() {
     var envVars by remember { mutableStateOf("") }
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
-    val onNavigateBack = debounceClick {
-        navController.popBackStack()
-    }
+    val onNavigateBack = debounceClick { navController.popBackStack() }
     val (creator, setCreator) = remember { mutableStateOf<ContainerCreator?>(null) }
-    val isLoading = creator?.state?.collectAsState()?.value is ContainerCreateState.Creating
     Scaffold(
         topBar = {
             TopAppBar(
@@ -238,27 +234,6 @@ fun ContainerCreateScreen() {
                                 )
                             )
                         }
-//                        viewModel.viewModelScope.launch {
-//                            isLoading = true
-//                            try {
-//                                if (autoStart) {
-//                                    viewModel.runContainer(
-//                                        imageId = imageId,
-//                                        name = containerName.ifBlank { null },
-//                                        config = config
-//                                    )
-//                                } else {
-//                                    viewModel.createContainer(
-//                                        imageId = imageId,
-//                                        name = containerName.ifBlank { null },
-//                                        config = config
-//                                    )
-//                                }
-//                            } finally {
-//                                isLoading = false
-//                            }
-//                            onNavigateBack()
-//                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -281,7 +256,15 @@ fun ContainerCreateScreen() {
             }
         }
     }
-    if (isLoading) {
-        LoadingDialog()
+    if (creator != null) {
+        ContainerCreateDialog(
+            creator = creator,
+            onDismissRequest = {
+                setCreator(null)
+                if (creator.state.value is ContainerCreateState.Done) {
+                    onNavigateBack()
+                }
+            }
+        )
     }
 }
