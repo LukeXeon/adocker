@@ -33,6 +33,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,6 +90,24 @@ fun ContainerExecScreen() {
     var inputText by remember { mutableStateOf("") }
     val onNavigateBack = debounceClick {
         navController.popBackStack()
+    }
+    val startShell = remember {
+        suspend {
+            container.shell().fold(
+                {
+                    viewModel.shell.value = it
+                },
+                {
+                    Timber.e(it)
+                    snackbarHostState.showSnackbar("Shell 启动失败")
+                }
+            )
+        }
+    }
+    LaunchedEffect(Unit) {
+        if (viewModel.shell.value == null) {
+            startShell()
+        }
     }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.add(WindowInsets.ime),
@@ -181,15 +200,7 @@ fun ContainerExecScreen() {
                         IconButton(
                             onClick = {
                                 viewModel.viewModelScope.launch {
-                                    container.shell().fold(
-                                        {
-                                            viewModel.shell.value = it
-                                        },
-                                        {
-                                            Timber.e(it)
-                                            snackbarHostState.showSnackbar("Shell 启动失败")
-                                        }
-                                    )
+                                    startShell()
                                 }
                             }
                         ) {
