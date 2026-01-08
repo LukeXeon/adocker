@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Start
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,12 +75,12 @@ private fun getLineColor(line: String): Color {
 @Composable
 fun ContainerExecScreen() {
     val viewModel = hiltViewModel<ContainerExecViewModel>()
+    val shell = viewModel.shell.collectAsState().value
     val navController = LocalNavController.current
     val container = viewModel.container.collectAsState().value ?: return
     val metadata = container.metadata.collectAsState().value ?: return
     val state = container.state.collectAsState().value
     var inputText by remember { mutableStateOf("") }
-    val logLines = viewModel.logLines.collectAsLazyPagingItems()
     val isRunning = state is ContainerState.Running
     val onNavigateBack = debounceClick {
         navController.popBackStack()
@@ -159,32 +163,68 @@ fun ContainerExecScreen() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Terminal output
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color(0xFF1E1E1E))
-                    .padding(horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                items(
-                    logLines.itemCount,
-                    logLines.itemKey { it.id }
-                ) { index ->
-                    val line = logLines[index]
-                    if (line != null) {
-                        Text(
-                            text = line.content,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            color = getLineColor(line.content),
-                            modifier = Modifier.fillMaxWidth()
+            if (shell != null) {
+                // Terminal output
+                val logLines = viewModel.logLines.collectAsLazyPagingItems()
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFF1E1E1E))
+                        .padding(horizontal = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(
+                        logLines.itemCount,
+                        logLines.itemKey { it.id }
+                    ) { index ->
+                        val line = logLines[index]
+                        if (line != null) {
+                            Text(
+                                text = line.content,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                                color = getLineColor(line.content),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            } else {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Row(
+                        modifier = Modifier.padding(Spacing.Small),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Pending,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer
                         )
+                        Spacer(modifier = Modifier.width(Spacing.Small))
+                        Text(
+                            text = "Shell 未启动",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(
+                            onClick = {
+                                viewModel.startShell()
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.action_close),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
                     }
                 }
             }
-
             // Input field
             Surface(
                 modifier = Modifier.fillMaxWidth(),
