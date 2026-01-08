@@ -1,11 +1,13 @@
 package com.github.andock.daemon.app
 
 import android.app.Application
+import android.widget.Toast
 import com.github.andock.daemon.R
 import com.github.andock.startup.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.acra.config.mailSender
+import org.acra.config.toast
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 
@@ -43,6 +45,12 @@ suspend fun crashReporter(
             reportFormat = StringFormat.JSON
             mailSender {
                 mailTo = application.getString(R.string.qq_email)
+            }
+            toast {
+                //required
+                text = "Crash send to developer email"
+                //defaults to Toast.LENGTH_LONG
+                length = Toast.LENGTH_LONG
             }
         }
     }

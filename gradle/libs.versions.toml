@@ -1,5 +1,5 @@
 [versions]
-acraMail = "5.13.1"
+acra = "5.13.1"
 agp = "8.13.2"
 annotation = "1.9.1"
 collection = "1.5.0"
@@ -69,7 +69,8 @@ http4k = "6.25.1.0"
 paging = "3.3.6"
 
 [libraries]
-acra-mail = { module = "ch.acra:acra-mail", version.ref = "acraMail" }
+acra-mail = { module = "ch.acra:acra-mail", version.ref = "acra" }
+acra-toast = { module = "ch.acra:acra-toast", version.ref = "acra" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 androidx-collection = { module = "androidx.collection :collection ", version.ref = "collection" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

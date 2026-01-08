@@ -107,6 +107,7 @@ dependencies {
 
     // ACRA
     implementation(libs.acra.mail)
+    implementation(libs.acra.toast)
 
     // Guava
     implementation(libs.kotlinx.coroutines.guava)
