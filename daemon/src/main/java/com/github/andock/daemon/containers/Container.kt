@@ -10,15 +10,16 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import javax.inject.Singleton
 
 class Container @AssistedInject constructor(
@@ -79,33 +80,28 @@ class Container @AssistedInject constructor(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun exec(command: List<String>): Result<Process> {
         if (stateMachine.state.value !is ContainerState.Running) {
             return Result.failure(IllegalStateException("State no Running"))
         }
-        return supervisorScope {
-            val process = CompletableDeferred<Process>()
-            launch {
-//                stateMachine.state.map {
-//                    it is ContainerState.Running
-//                }.distinctUntilChanged().collect {
-//                    if (!it) {
-//                        process.completeExceptionally(IllegalStateException("State no Running"))
-//                    }
-//                }
-                awaitCancellation()
-            }
-            stateMachine.dispatch(
-                ContainerOperation.Exec(
-                    command,
-                    process
-                )
+        val process = CompletableDeferred<Process>()
+        val job = GlobalScope.launch {
+            stateMachine.state.first { it !is ContainerState.Running }
+            process.completeExceptionally(IllegalStateException("State no Running"))
+        }
+        stateMachine.dispatch(
+            ContainerOperation.Exec(
+                command,
+                process
             )
-            try {
-                Result.success(process.await())
-            } catch (e: IllegalStateException) {
-                Result.failure(e)
-            }
+        )
+        return try {
+            Result.success(process.await())
+        } catch (e: IllegalStateException) {
+            Result.failure(e)
+        } finally {
+            job.cancel()
         }
     }
 
