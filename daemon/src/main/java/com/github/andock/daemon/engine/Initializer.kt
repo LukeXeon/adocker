@@ -16,7 +16,7 @@ suspend fun loadEngineVersion(
     @Task("reporter")
     reporter: Unit
 ) {
-    withTimeoutOrNull(200) {
+    withTimeoutOrNull(100) {
         Timber.i(version.value.filterNotNull().first())
     }
 }
