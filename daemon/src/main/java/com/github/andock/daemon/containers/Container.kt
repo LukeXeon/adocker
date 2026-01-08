@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -86,9 +85,7 @@ class Container @AssistedInject constructor(
                 stateMachine.state.inState(
                     ContainerState.Running::class
                 ).execute {
-                    val process = CompletableDeferred<Process>(
-                        currentCoroutineContext()[Job]
-                    )
+                    val process = CompletableDeferred<Process>()
                     stateMachine.dispatch(
                         ContainerOperation.Exec(
                             command,

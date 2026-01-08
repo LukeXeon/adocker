@@ -2,11 +2,9 @@ package com.github.andock.daemon.shizuku
 
 import android.content.pm.PackageManager
 import androidx.collection.MutableIntObjectMap
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.CompletableDeferred
 import rikka.shizuku.Shizuku
 import timber.log.Timber
-import kotlin.coroutines.resume
 import kotlin.random.Random
 
 
@@ -40,24 +38,25 @@ val hasPermission: Boolean
     }
 
 private val requests = run {
-    val map = MutableIntObjectMap<CancellableContinuation<Boolean>>()
+    val map = MutableIntObjectMap<CompletableDeferred<Boolean>>()
     Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
         synchronized(map) {
             map.remove(requestCode)
-        }?.resume(
+        }?.complete(
             grantResult == PackageManager.PERMISSION_GRANTED
         )
     }
     return@run map
 }
 
-private fun toRequestCode(con: CancellableContinuation<Boolean>): Int {
+private fun nextRequestCode(): Pair<CompletableDeferred<Boolean>, Int> {
+    val deferred = CompletableDeferred<Boolean>()
     synchronized(requests) {
         while (true) {
             val code = Random.nextInt(1, UShort.MAX_VALUE.toInt())
             if (!requests.containsKey(code)) {
-                requests[code] = con
-                return code
+                requests[code] = deferred
+                return deferred to code
             }
         }
     }
@@ -73,15 +72,9 @@ suspend fun requestPermission(): Boolean {
         }
 
         !hasPermission -> {
-            return suspendCancellableCoroutine { con ->
-                val code = toRequestCode(con)
-                con.invokeOnCancellation {
-                    synchronized(requests) {
-                        requests.remove(code)
-                    }
-                }
-                Shizuku.requestPermission(code)
-            }
+            val (deferred, code) = nextRequestCode()
+            Shizuku.requestPermission(code)
+            return deferred.await()
         }
 
         else -> {
