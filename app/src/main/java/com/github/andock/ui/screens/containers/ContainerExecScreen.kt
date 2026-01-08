@@ -75,10 +75,10 @@ private fun getLineColor(line: String): Color {
 @Composable
 fun ContainerExecScreen() {
     val viewModel = hiltViewModel<ContainerExecViewModel>()
-    val shell = viewModel.shell.collectAsState().value
     val navController = LocalNavController.current
     val container = viewModel.container.collectAsState().value ?: return
     val metadata = container.metadata.collectAsState().value ?: return
+    val shell = viewModel.shell.collectAsState().value
     val state = container.state.collectAsState().value
     var inputText by remember { mutableStateOf("") }
     val isRunning = state is ContainerState.Running
