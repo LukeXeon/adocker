@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MoveToInbox
+import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -117,7 +117,7 @@ fun ContainerCreateDialog(
                                         modifier = Modifier.fillMaxSize()
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Layers,
+                                            imageVector = Icons.Default.ViewInAr,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(IconSize.Medium)
