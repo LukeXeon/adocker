@@ -8,7 +8,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object StartupModule {
+internal object StartupModule {
     @Provides
     @Singleton
     fun tasks(tasks: Map<TaskInfo, @JvmSuppressWildcards SuspendLazy<Long>>): Map<String, Map<String, SuspendLazy<Long>>> {

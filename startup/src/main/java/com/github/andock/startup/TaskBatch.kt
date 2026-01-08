@@ -12,7 +12,7 @@ import kotlinx.coroutines.awaitAll
 import javax.inject.Singleton
 import kotlin.coroutines.EmptyCoroutineContext
 
-class TaskBatch @AssistedInject constructor(
+internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
     private val tasks: @JvmSuppressWildcards Map<String, Map<String, SuspendLazy<Long>>>,
