@@ -22,5 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "andock"
 include(":app")
 include(":daemon")
-include(":ksp")
+include(":route-ksp")
 include(":stub")
+include(":startup")
+include(":startup-ksp")

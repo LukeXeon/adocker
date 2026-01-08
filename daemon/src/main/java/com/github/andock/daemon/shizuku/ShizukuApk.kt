@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import androidx.core.content.FileProvider
 import com.github.andock.daemon.R
-import com.github.andock.daemon.utils.suspendLazy
+import com.github.andock.startup.suspendLazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

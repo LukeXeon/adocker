@@ -1,7 +1,7 @@
 package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.daemon.app.AppTask
+import com.github.andock.startup.Task
 import com.github.andock.daemon.database.dao.ContainerDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
@@ -10,9 +10,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 
-@AppTask("clearContainers")
+@Task("clearContainers")
 suspend fun clearContainers(
-    @AppTask("app")
+    @Task("app")
     appContext: AppContext,
     containerDao: ContainerDao
 ) {

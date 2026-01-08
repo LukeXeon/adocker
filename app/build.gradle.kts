@@ -141,9 +141,10 @@ dependencies {
 
     // Daemon
     implementation(project(":daemon"))
+    implementation(project(":startup"))
+    ksp(project(":route-ksp"))
 
     // Ksp
-    ksp(project(":ksp"))
 
     // Testing
     testImplementation(libs.junit)

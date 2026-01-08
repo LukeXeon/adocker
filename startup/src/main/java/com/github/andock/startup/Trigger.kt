@@ -1,4 +1,4 @@
-package com.github.andock.daemon.app
+package com.github.andock.startup
 
 
 @Retention(AnnotationRetention.BINARY)

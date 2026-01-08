@@ -1,4 +1,4 @@
-package com.github.andock.daemon.utils
+package com.github.andock.startup
 
 import android.os.SystemClock
 import kotlin.contracts.ExperimentalContracts

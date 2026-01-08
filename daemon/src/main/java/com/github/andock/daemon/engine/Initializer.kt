@@ -1,19 +1,19 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.daemon.app.AppTask
+import com.github.andock.startup.Task
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
-@AppTask("loadEngineVersion")
+@Task("loadEngineVersion")
 suspend fun loadEngineVersion(
     version: PRootVersion,
     @Suppress("unused")
-    @AppTask("logging")
+    @Task("logging")
     logging: Unit,
     @Suppress("unused")
-    @AppTask("reporter")
+    @Task("reporter")
     reporter: Unit
 ) {
     withTimeoutOrNull(200) {

@@ -1,17 +1,17 @@
 package com.github.andock.daemon.server
 
-import com.github.andock.daemon.app.AppTask
+import com.github.andock.startup.Task
 import org.http4k.server.Http4kServer
 
 
-@AppTask("startServers")
+@Task("startServers")
 fun startServers(
     servers: Set<@JvmSuppressWildcards Http4kServer>,
     @Suppress("unused")
-    @AppTask("logging")
+    @Task("logging")
     logging: Unit,
     @Suppress("unused")
-    @AppTask("reporter")
+    @Task("reporter")
     reporter: Unit
 ) {
     servers.forEach {

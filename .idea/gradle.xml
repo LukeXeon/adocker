@@ -12,7 +12,9 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/daemon" />
-            <option value="$PROJECT_DIR$/ksp" />
+            <option value="$PROJECT_DIR$/route-ksp" />
+            <option value="$PROJECT_DIR$/startup" />
+            <option value="$PROJECT_DIR$/startup-ksp" />
             <option value="$PROJECT_DIR$/stub" />
           </set>
         </option>

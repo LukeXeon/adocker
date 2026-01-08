@@ -90,8 +90,6 @@ dependencies {
     // Auto
     implementation(libs.slf4j.api)
     compileOnly(libs.auto.service.annotations)
-    compileOnly(libs.auto.value.annotations)
-    kapt(libs.auto.value)
     kapt(libs.auto.service)
 
     // Timber Logging
@@ -113,11 +111,13 @@ dependencies {
     // Guava
     implementation(libs.kotlinx.coroutines.guava)
 
-    // Ksp
-    ksp(project(":ksp"))
-
     // Stub
     compileOnly(project(":stub"))
+
+    implementation(project(":startup"))
+
+    // Ksp
+    ksp(project(":startup-ksp"))
 
     // Leakcanary
     debugImplementation(libs.leakcanary.android)

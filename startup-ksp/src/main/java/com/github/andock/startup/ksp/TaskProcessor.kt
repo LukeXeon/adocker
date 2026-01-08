@@ -1,4 +1,4 @@
-package com.github.andock.ksp
+package com.github.andock.startup.ksp
 
 import com.google.auto.service.AutoService
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -29,14 +29,14 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 
-class AppTaskProcessor(
+class TaskProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger
 ) : SymbolProcessor {
 
     companion object {
-        private const val APP_TASK_ANNOTATION = "com.github.andock.daemon.app.AppTask"
-        private const val TRIGGER_ANNOTATION = "com.github.andock.daemon.app.Trigger"
+        private const val TASK_ANNOTATION = "com.github.andock.startup.Task"
+        private const val TRIGGER_ANNOTATION = "com.github.andock.startup.Trigger"
     }
 
     /**
@@ -50,13 +50,13 @@ class AppTaskProcessor(
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        // Find all symbols annotated with @AppTask
-        val appTaskAnnotatedSymbols = resolver
-            .getSymbolsWithAnnotation("com.github.andock.daemon.app.AppTask")
+        // Find all symbols annotated with @Task
+        val taskAnnotatedSymbols = resolver
+            .getSymbolsWithAnnotation(TASK_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
 
-        appTaskAnnotatedSymbols.forEach { function ->
-            // Validate function meets requirements for @AppTask annotation
+        taskAnnotatedSymbols.forEach { function ->
+            // Validate function meets requirements for @Task annotation
             if (!validateFunction(function)) {
                 return@forEach
             }
@@ -72,7 +72,7 @@ class AppTaskProcessor(
     }
 
     /**
-     * Validates that the function meets requirements for @AppTask annotation
+     * Validates that the function meets requirements for @Task annotation
      */
     private fun validateFunction(function: KSFunctionDeclaration): Boolean {
         var isValid = true
@@ -85,7 +85,7 @@ class AppTaskProcessor(
 
         if (!isTopLevel && !isInObject) {
             logger.error(
-                "@AppTask annotation can only be used on top-level functions or functions inside an object. " +
+                "@Task annotation can only be used on top-level functions or functions inside an object. " +
                         "Function ${function.simpleName.asString()} is inside ${parent.simpleName.asString()} which is not an object.",
                 symbol = function
             )
@@ -96,20 +96,20 @@ class AppTaskProcessor(
     }
 
     /**
-     * Extracts task data from @AppTask annotation
+     * Extracts task data from @Task annotation
      */
     private fun extractTaskData(function: KSFunctionDeclaration): TaskData? {
-        val appTaskAnnotation = function.annotations.firstOrNull {
-            it.isAnnotation(APP_TASK_ANNOTATION)
+        val taskAnnotation = function.annotations.firstOrNull {
+            it.isAnnotation(TASK_ANNOTATION)
         } ?: return null
 
         // Extract task name
-        val taskNameArg = appTaskAnnotation.arguments
+        val taskNameArg = taskAnnotation.arguments
             .firstOrNull { it.name?.asString() == "name" }
 
         if (taskNameArg == null) {
             logger.error(
-                "@AppTask annotation must specify a 'name' parameter",
+                "@Task annotation must specify a 'name' parameter",
                 symbol = function
             )
             return null
@@ -118,7 +118,7 @@ class AppTaskProcessor(
         val taskName = taskNameArg.value as? String
         if (taskName == null) {
             logger.error(
-                "@AppTask annotation 'name' parameter must be a valid string",
+                "@Task annotation 'name' parameter must be a valid string",
                 symbol = function
             )
             return null
@@ -133,7 +133,7 @@ class AppTaskProcessor(
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
             logger.error(
-                "@AppTask function ${function.simpleName.asString()} must have a return type",
+                "@Task function ${function.simpleName.asString()} must have a return type",
                 symbol = function
             )
             return null
@@ -155,24 +155,24 @@ class AppTaskProcessor(
     }
 
     /**
-     * Extracts parameter data including @AppTask annotation if present
+     * Extracts parameter data including @Task annotation if present
      */
     private fun extractParameterData(parameter: KSValueParameter): ParameterData {
-        // Check if parameter has @AppTask annotation
-        val appTaskAnnotation = parameter.annotations.firstOrNull {
-            it.isAnnotation(APP_TASK_ANNOTATION)
+        // Check if parameter has @Task annotation
+        val taskAnnotation = parameter.annotations.firstOrNull {
+            it.isAnnotation(TASK_ANNOTATION)
         }
 
-        val hasAppTask = appTaskAnnotation != null
-        val appTaskName = if (hasAppTask) {
-            appTaskAnnotation.arguments
+        val hasTask = taskAnnotation != null
+        val taskName = if (hasTask) {
+            taskAnnotation.arguments
                 .firstOrNull { it.name?.asString() == "name" }
                 ?.value as? String
         } else null
 
-        // Collect other annotations (excluding @AppTask)
+        // Collect other annotations (excluding @Task)
         val otherAnnotations = parameter.annotations
-            .filter { !it.isAnnotation(APP_TASK_ANNOTATION) }
+            .filter { !it.isAnnotation(TASK_ANNOTATION) }
             .map { convertToAnnotationSpec(it) }
             .toList()
 
@@ -215,8 +215,8 @@ class AppTaskProcessor(
         return ParameterData(
             name = parameter.name?.asString() ?: "",
             type = paramType,
-            hasAppTask = hasAppTask,
-            appTaskName = appTaskName,
+            hasTask = hasTask,
+            taskName = taskName,
             annotations = otherAnnotations
         )
     }
@@ -332,10 +332,10 @@ class AppTaskProcessor(
      * Builds the initializer provider function
      */
     private fun buildInitializerFunction(taskData: TaskData): FunSpec {
-        val suspendLazyClassName = ClassName("com.github.andock.daemon.utils", "SuspendLazy")
-        val suspendLazyMember = MemberName("com.github.andock.daemon.utils", "suspendLazy")
+        val suspendLazyClassName = ClassName("com.github.andock.startup", "SuspendLazy")
+        val suspendLazyMember = MemberName("com.github.andock.startup", "suspendLazy")
         val measureTimeMillisWithResultMember =
-            MemberName("com.github.andock.daemon.utils", "measureTimeMillisWithResult")
+            MemberName("com.github.andock.startup", "measureTimeMillisWithResult")
         val pairClassName = ClassName("kotlin", "Pair")
 
         return FunSpec.builder("initializer")
@@ -357,19 +357,28 @@ class AppTaskProcessor(
             .apply {
                 // Add transformed parameters
                 taskData.parameters.forEach { param ->
-                    val paramSpec = if (param.hasAppTask) {
+                    val paramSpec = if (param.hasTask) {
                         // Transform to SuspendLazy<Pair<T, Long>> with @Named annotation
                         val typeWithAnnotation = suspendLazyClassName.parameterizedBy(
                             pairClassName.parameterizedBy(
                                 param.type,
                                 ClassName("kotlin", "Long")
                             )
-                        ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards")).build()))
+                        ).copy(
+                            annotations = listOf(
+                                AnnotationSpec.builder(
+                                    ClassName(
+                                        "kotlin.jvm",
+                                        "JvmSuppressWildcards"
+                                    )
+                                ).build()
+                            )
+                        )
 
                         ParameterSpec.builder(param.name, typeWithAnnotation)
                             .addAnnotation(
                                 AnnotationSpec.builder(ClassName("javax.inject", "Named"))
-                                    .addMember("%S", param.appTaskName ?: "")
+                                    .addMember("%S", param.taskName ?: "")
                                     .build()
                             )
                             .build()
@@ -396,9 +405,9 @@ class AppTaskProcessor(
                     )
                     indent()
 
-                    // Generate local variables for @AppTask parameters before measureTimeMillisWithResult
+                    // Generate local variables for @Task parameters before measureTimeMillisWithResult
                     taskData.parameters.forEach { param ->
-                        if (param.hasAppTask) {
+                        if (param.hasTask) {
                             addStatement("val %N = %N.getValue().first", param.name, param.name)
                         }
                     }
@@ -429,14 +438,14 @@ class AppTaskProcessor(
      * Builds the initializerToMap function
      */
     private fun buildInitializerToMapFunction(taskData: TaskData): FunSpec {
-        val suspendLazyClassName = ClassName("com.github.andock.daemon.utils", "SuspendLazy")
+        val suspendLazyClassName = ClassName("com.github.andock.startup", "SuspendLazy")
         val pairClassName = ClassName("kotlin", "Pair")
 
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("com.github.andock.daemon.app", "AppTaskInfo"))
+                AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskInfo"))
                     .addMember("%S", taskData.taskName)
                     .addMember("%S", taskData.triggerKey)
                     .build()
@@ -451,7 +460,16 @@ class AppTaskProcessor(
                                 ClassName("kotlin", "Long")
                             )
                         )
-                    ).copy(annotations = listOf(AnnotationSpec.builder(ClassName("kotlin.jvm", "JvmSuppressWildcards")).build()))
+                    ).copy(
+                        annotations = listOf(
+                            AnnotationSpec.builder(
+                                ClassName(
+                                    "kotlin.jvm",
+                                    "JvmSuppressWildcards"
+                                )
+                            ).build()
+                        )
+                    )
                 )
                     .addAnnotation(
                         AnnotationSpec.builder(ClassName("javax.inject", "Named"))
@@ -465,8 +483,9 @@ class AppTaskProcessor(
                     ClassName("kotlin", "Long")
                 )
             )
-            .addStatement("return %M<%T>(%T.PUBLICATION) { task.get().getValue().second }",
-                MemberName("com.github.andock.daemon.utils", "suspendLazy"),
+            .addStatement(
+                "return %M<%T>(%T.PUBLICATION) { task.get().getValue().second }",
+                MemberName("com.github.andock.startup", "suspendLazy"),
                 ClassName("kotlin", "Long"),
                 ClassName("kotlin", "LazyThreadSafetyMode")
             )
@@ -491,8 +510,8 @@ class AppTaskProcessor(
     private data class ParameterData(
         val name: String,
         val type: TypeName,
-        val hasAppTask: Boolean,
-        val appTaskName: String?,
+        val hasTask: Boolean,
+        val taskName: String?,
         val annotations: List<AnnotationSpec>
     )
 
@@ -500,7 +519,7 @@ class AppTaskProcessor(
     @AutoService(SymbolProcessorProvider::class)
     class Provider : SymbolProcessorProvider {
         override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-            return AppTaskProcessor(
+            return TaskProcessor(
                 codeGenerator = environment.codeGenerator,
                 logger = environment.logger
             )

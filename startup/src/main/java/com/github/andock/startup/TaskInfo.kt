@@ -1,11 +1,11 @@
-package com.github.andock.daemon.app
+package com.github.andock.startup
 
 import dagger.MapKey
 
 @MapKey(unwrapValue = false)
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)
-annotation class AppTaskInfo(
+annotation class TaskInfo(
     val name: String,
     val trigger: String
 )

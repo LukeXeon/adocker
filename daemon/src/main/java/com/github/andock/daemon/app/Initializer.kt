@@ -2,30 +2,31 @@ package com.github.andock.daemon.app
 
 import android.app.Application
 import com.github.andock.daemon.R
+import com.github.andock.startup.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.acra.config.mailSender
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 
-@AppTask("app")
+@Task("app")
 fun appContext(
     appContext: AppContext,
     @Suppress("unused")
-    @AppTask("logging")
+    @Task("logging")
     logging: Unit,
     @Suppress("unused")
-    @AppTask("reporter")
+    @Task("reporter")
     reporter: Unit
 ): AppContext {
     appContext.initializeDirs()
     return appContext
 }
 
-@AppTask("reporter")
+@Task("reporter")
 suspend fun crashReporter(
     @Suppress("unused")
-    @AppTask("logging")
+    @Task("logging")
     logging: Unit,
     application: Application
 ) {

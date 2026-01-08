@@ -1,17 +1,16 @@
 package com.github.andock.daemon.registries
 
-import com.github.andock.daemon.app.AppTask
-import com.github.andock.daemon.database.AppDatabase
+import com.github.andock.startup.Task
 
 
-@AppTask("checkAllRegistries")
+@Task("checkAllRegistries")
 suspend fun checkAllRegistries(
     registryManager: RegistryManager,
     @Suppress("unused")
-    @AppTask("logging")
+    @Task("logging")
     logging: Unit,
     @Suppress("unused")
-    @AppTask("reporter")
+    @Task("reporter")
     reporter: Unit,
 ) {
     registryManager.checkAll()

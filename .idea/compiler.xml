@@ -8,9 +8,14 @@
       <module name="adocker.patch" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
       <module name="adocker.patch.main" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
       <module name="adocker.patch.test" options="--patch-module java.base=$PROJECT_DIR$/patch/src/main/java" />
-      <module name="andock.ksp" options="-proc:none" />
       <module name="andock.ksp.main" options="-proc:none" />
       <module name="andock.ksp.test" options="-proc:none" />
+      <module name="andock.route-ksp" options="-proc:none" />
+      <module name="andock.route-ksp.main" options="-proc:none" />
+      <module name="andock.route-ksp.test" options="-proc:none" />
+      <module name="andock.startup-ksp" options="-proc:none" />
+      <module name="andock.startup-ksp.main" options="-proc:none" />
+      <module name="andock.startup-ksp.test" options="-proc:none" />
     </option>
   </component>
 </project>
