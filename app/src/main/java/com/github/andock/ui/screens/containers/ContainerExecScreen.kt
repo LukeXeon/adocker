@@ -80,8 +80,7 @@ fun ContainerExecScreen() {
     val viewModel = hiltViewModel<ContainerExecViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val navController = LocalNavController.current
-    val container = viewModel.container.collectAsState().value ?: return
-    val metadata = container.metadata.collectAsState().value ?: return
+    val metadata = viewModel.metadata.collectAsState().value ?: return
     val shell = viewModel.shell.collectAsState().value
     val isRunning = shell?.state?.collectAsState()?.value is ContainerShellState.Running
     val logLines = shell?.logLines?.collectAsLazyPagingItems()
