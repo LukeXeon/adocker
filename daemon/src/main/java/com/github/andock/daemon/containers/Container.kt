@@ -3,7 +3,7 @@ package com.github.andock.daemon.containers
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.database.dao.LogLineDao
+import com.github.andock.daemon.database.dao.ContainerLogDao
 import com.github.andock.daemon.utils.execute
 import com.github.andock.daemon.utils.inState
 import dagger.assisted.Assisted
@@ -27,7 +27,7 @@ class Container @AssistedInject constructor(
     stateMachineFactory: ContainerStateMachine.Factory,
     parent: CoroutineScope,
     containerDao: ContainerDao,
-    logLineDao: LogLineDao
+    containerLogDao: ContainerLogDao
 ) {
     companion object {
         const val N = 1000
@@ -50,7 +50,7 @@ class Container @AssistedInject constructor(
         ),
         initialKey = 1,
         pagingSourceFactory = {
-            logLineDao.getLogLinesPaged(containerId = id)
+            containerLogDao.getLogLinesPaged(containerId = id)
         }
     )
 

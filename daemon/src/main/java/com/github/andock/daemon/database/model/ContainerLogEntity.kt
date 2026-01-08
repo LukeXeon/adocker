@@ -19,7 +19,7 @@ import androidx.room.PrimaryKey
         ),
     ]
 )
-data class LogLineEntity(
+data class ContainerLogEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long,
     val timestamp: Long,

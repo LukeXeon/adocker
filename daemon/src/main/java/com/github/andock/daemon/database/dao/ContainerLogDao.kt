@@ -4,13 +4,13 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.github.andock.daemon.database.model.ContainerLogEntity
 import com.github.andock.daemon.database.model.LogLineDTO
-import com.github.andock.daemon.database.model.LogLineEntity
 
 @Dao
-interface LogLineDao {
+interface ContainerLogDao {
     @Insert
-    suspend fun append(line: LogLineEntity)
+    suspend fun append(line: ContainerLogEntity)
 
     @Query("DELETE FROM log_lines WHERE containerId = :containerId")
     suspend fun clearLogById(containerId: String)
@@ -20,11 +20,8 @@ interface LogLineDao {
       FROM log_lines 
       WHERE containerId = :containerId 
       ORDER BY timestamp ASC
-  """)
+      """)
     fun getLogLinesPaged(containerId: String): PagingSource<Int, LogLineDTO>
 
-
-    @Query("SELECT COUNT(*) FROM log_lines WHERE containerId = :containerId")
-    suspend fun getTotalCount(containerId: String): Int
 
 }

@@ -7,8 +7,8 @@ import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.daemon.database.dao.LogLineDao
-import com.github.andock.daemon.database.model.LogLineEntity
+import com.github.andock.daemon.database.dao.ContainerLogDao
+import com.github.andock.daemon.database.model.ContainerLogEntity
 import com.github.andock.daemon.engine.PRootEngine
 import com.github.andock.daemon.os.await
 import dagger.assisted.Assisted
@@ -32,7 +32,7 @@ class ContainerStateMachine @AssistedInject constructor(
     private val prootEngine: PRootEngine,
     private val scope: CoroutineScope,
     private val containerManager: ContainerManager,
-    private val logLineDao: LogLineDao,
+    private val containerLogDao: ContainerLogDao,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
 
     init {
@@ -131,8 +131,8 @@ class ContainerStateMachine @AssistedInject constructor(
                                 launch {
                                     input.bufferedReader().useLines { lines ->
                                         lines.forEach { line ->
-                                            logLineDao.append(
-                                                LogLineEntity(
+                                            containerLogDao.append(
+                                                ContainerLogEntity(
                                                     id = 0,
                                                     containerId = id,
                                                     timestamp = System.currentTimeMillis(),

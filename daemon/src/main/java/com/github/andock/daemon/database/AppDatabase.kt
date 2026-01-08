@@ -5,17 +5,17 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.ContainerDao
+import com.github.andock.daemon.database.dao.ContainerLogDao
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
-import com.github.andock.daemon.database.dao.LogLineDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.dao.SearchRecordDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
 import com.github.andock.daemon.database.model.ContainerEntity
+import com.github.andock.daemon.database.model.ContainerLogEntity
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
-import com.github.andock.daemon.database.model.LogLineEntity
 import com.github.andock.daemon.database.model.RegistryEntity
 import com.github.andock.daemon.database.model.SearchRecordEntity
 
@@ -28,20 +28,18 @@ import com.github.andock.daemon.database.model.SearchRecordEntity
         RegistryEntity::class,
         AuthTokenEntity::class,
         SearchRecordEntity::class,
-        LogLineEntity::class
+        ContainerLogEntity::class
     ],
     version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun imageDao(): ImageDao
-    abstract fun containerDao(): ContainerDao
-    abstract fun layerDao(): LayerDao
-    abstract fun registryDao(): RegistryDao
-
-    abstract fun authTokenDao(): AuthTokenDao
-
-    abstract fun searchRecordDao(): SearchRecordDao
-    abstract fun logLineDao(): LogLineDao
+    abstract val imageDao: ImageDao
+    abstract val containerDao: ContainerDao
+    abstract val layerDao: LayerDao
+    abstract val registryDao: RegistryDao
+    abstract val authTokenDao: AuthTokenDao
+    abstract val searchRecordDao: SearchRecordDao
+    abstract val logLineDao: ContainerLogDao
 }

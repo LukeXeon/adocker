@@ -142,6 +142,7 @@ fun ContainerExecScreen() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Terminal output
 //            LazyColumn(
 //                state = listState,
 //                modifier = Modifier

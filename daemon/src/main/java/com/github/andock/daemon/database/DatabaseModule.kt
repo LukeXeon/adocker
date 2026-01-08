@@ -27,32 +27,45 @@ object DatabaseModule {
         }
     }.build()
 
+    @Provides
+    @Singleton
+    fun inMemoryDatabase(
+        application: Application,
+    ) = Room.inMemoryDatabaseBuilder(
+        application,
+        InMemoryDatabase::class.java
+    ).build()
 
     @Provides
     @Singleton
-    fun imageDao(database: AppDatabase) = database.imageDao()
+    fun inMemoryLog(database: InMemoryDatabase) = database.logDao
+
 
     @Provides
     @Singleton
-    fun containerDao(database: AppDatabase) = database.containerDao()
+    fun imageDao(database: AppDatabase) = database.imageDao
 
     @Provides
     @Singleton
-    fun mirrorDao(database: AppDatabase) = database.registryDao()
+    fun containerDao(database: AppDatabase) = database.containerDao
 
     @Provides
     @Singleton
-    fun layerDao(database: AppDatabase) = database.layerDao()
+    fun mirrorDao(database: AppDatabase) = database.registryDao
 
     @Provides
     @Singleton
-    fun authTokenDao(database: AppDatabase) = database.authTokenDao()
+    fun layerDao(database: AppDatabase) = database.layerDao
 
     @Provides
     @Singleton
-    fun searchRecordDao(database: AppDatabase) = database.searchRecordDao()
+    fun authTokenDao(database: AppDatabase) = database.authTokenDao
 
     @Provides
     @Singleton
-    fun logLineDao(database: AppDatabase) = database.logLineDao()
+    fun searchRecordDao(database: AppDatabase) = database.searchRecordDao
+
+    @Provides
+    @Singleton
+    fun logLineDao(database: AppDatabase) = database.logLineDao
 }
