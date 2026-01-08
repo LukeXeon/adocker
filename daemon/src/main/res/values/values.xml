@@ -1,29 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 对应 NOUNS 列表：名词数组 -->
-    <string-array name="nouns">
-        <item>panda</item>
-        <item>tiger</item>
-        <item>eagle</item>
-        <item>dolphin</item>
-        <item>falcon</item>
-        <item>wolf</item>
-        <item>bear</item>
-        <item>lion</item>
-    </string-array>
-
-    <!-- 对应 ADJECTIVES 列表：形容词数组 -->
-    <string-array name="adjectives">
-        <item>happy</item>
-        <item>sleepy</item>
-        <item>brave</item>
-        <item>clever</item>
-        <item>swift</item>
-        <item>calm</item>
-        <item>eager</item>
-        <item>fancy</item>
-    </string-array>
-
     <string name="qq_email">imlkluo@qq.com</string>
     <string name="unrestrict_command_32">settings put global settings_enable_monitor_phantom_procs false</string>
     <string name="unrestrict_command_31"><![CDATA[device_config set_sync_disabled_for_tests persistent && device_config put activity_manager max_phantom_processes 2147483647]]></string>

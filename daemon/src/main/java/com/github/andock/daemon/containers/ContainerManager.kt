@@ -32,7 +32,6 @@ class ContainerManager @Inject constructor(
     private val containerDao: ContainerDao,
     private val imageDao: ImageDao,
     private val appContext: AppContext,
-    private val containerName: ContainerName,
     scope: CoroutineScope,
 ) {
     private val _containers = MutableStateFlow<Map<String, Container>>(emptyMap())
@@ -105,7 +104,7 @@ class ContainerManager @Inject constructor(
             IllegalArgumentException("Image not found: $imageId")
         )
         val containerName = if (name == null) {
-            containerName.generateName()
+            containerDao.generateName()
         } else {
             if (containerDao.hasName(name)) {
                 return Result.failure(
