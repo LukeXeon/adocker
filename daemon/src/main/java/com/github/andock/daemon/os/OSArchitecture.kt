@@ -1,8 +1,8 @@
-package com.github.andock.daemon.app
+package com.github.andock.daemon.os
 
 import android.os.Build
 
-object AppArchitecture {
+object OSArchitecture {
     private fun mapAbi(supportedAbis: Array<String>): String {
         return when (supportedAbis.firstOrNull()) {
             "arm64-v8a" -> "arm64"

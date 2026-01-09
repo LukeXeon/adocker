@@ -43,7 +43,7 @@ import androidx.core.content.getSystemService
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
-import com.github.andock.daemon.app.AppArchitecture
+import com.github.andock.daemon.os.OSArchitecture
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.limits.ProcessLimitRoute
@@ -145,7 +145,7 @@ fun SettingsScreen() {
                     SettingsItem(
                         icon = Icons.Default.Memory,
                         title = stringResource(R.string.settings_architecture),
-                        subtitle = AppArchitecture.DEFAULT
+                        subtitle = OSArchitecture.DEFAULT
                     )
                 }
             }

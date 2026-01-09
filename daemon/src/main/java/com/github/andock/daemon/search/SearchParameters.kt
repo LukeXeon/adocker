@@ -1,6 +1,6 @@
 package com.github.andock.daemon.search
 
-import com.github.andock.daemon.app.AppArchitecture
+import com.github.andock.daemon.os.OSArchitecture
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -30,6 +30,6 @@ data class SearchParameters(
         1,
         25,
         "image",
-        listOf(AppArchitecture.DEFAULT_32_BIT, AppArchitecture.DEFAULT_64_BIT)
+        listOf(OSArchitecture.DEFAULT_32_BIT, OSArchitecture.DEFAULT_64_BIT)
     )
 }

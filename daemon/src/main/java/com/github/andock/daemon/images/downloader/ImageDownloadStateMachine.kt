@@ -5,7 +5,6 @@ import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
-import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
@@ -18,6 +17,7 @@ import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.ImageRepositories
 import com.github.andock.daemon.images.models.ImageConfig
 import com.github.andock.daemon.io.sha256
+import com.github.andock.daemon.os.OSArchitecture
 import com.github.andock.daemon.registries.RegistryManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -122,13 +122,13 @@ class ImageDownloadStateMachine @AssistedInject constructor(
             val layers = coroutineScope {
                 manifest.layers.map { layer ->
                     async {
-                        val layer = LayerEntity(
+                        val entity = LayerEntity(
                             id = layer.digest.removePrefix("sha256:"),
                             size = layer.size,
                             mediaType = layer.mediaType,
                         )
-                        val id = layer.id
-                        downloadStep(id, layer.size) {
+                        val id = entity.id
+                        downloadStep(id, entity.size) {
                             val layerSize = layerDao.getSizeById(id)
                             val destFile = File(
                                 appContext.layersDir,
@@ -148,7 +148,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 snapshot.updateProgress { from ->
                                     buildMap(from.size) {
                                         putAll(from)
-                                        put(layer.id, progress)
+                                        put(entity.id, progress)
                                     }
                                 }
                             }.getOrThrow()
@@ -159,12 +159,12 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                             layerDao.insert(
                                 LayerEntity(
                                     id = id,
-                                    size = layer.size,
-                                    mediaType = layer.mediaType,
+                                    size = entity.size,
+                                    mediaType = entity.mediaType,
                                 )
                             )
                         }
-                        return@async layer
+                        return@async entity
                     }
                 }.awaitAll()
             }
@@ -184,8 +184,8 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                 registry = imageRef.registry,
                 repository = imageRef.repository,
                 tag = imageRef.tag,
-                architecture = configResponse.architecture ?: AppArchitecture.DEFAULT,
-                os = configResponse.os ?: AppArchitecture.OS,
+                architecture = configResponse.architecture ?: OSArchitecture.DEFAULT,
+                os = configResponse.os ?: OSArchitecture.OS,
                 size = manifest.layers.sumOf { it.size },
                 layerIds = manifest.layers.map { it.digest },
                 created = System.currentTimeMillis(),

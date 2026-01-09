@@ -4,15 +4,15 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.filter
-import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
 import com.github.andock.daemon.database.model.AuthTokenEntity
-import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.images.models.AuthTokenResponse
 import com.github.andock.daemon.images.models.ImageConfigResponse
 import com.github.andock.daemon.images.models.ImageManifestV2
+import com.github.andock.daemon.images.models.LayerDescriptor
 import com.github.andock.daemon.images.models.ManifestListResponse
+import com.github.andock.daemon.os.OSArchitecture
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import dagger.assisted.Assisted
@@ -28,8 +28,10 @@ import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.buildUrl
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
+import io.ktor.http.takeFrom
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -97,13 +99,13 @@ class ImageRepository @AssistedInject constructor(
             val service = serviceRegex.find(wwwAuth)?.groupValues?.get(1) ?: ""
 
             // Step 3: Build auth URL and request token
-            val authUrl = buildString {
-                append(realm)
-                append("?service=").append(service)
-                append("&scope=repository:$repository:pull")
+            val authUrl = buildUrl {
+                takeFrom(realm)
+                parameters.append("service", service)
+                parameters.append("scope", "repository:$repository:pull")
             }
-
-            val token = authTokenDao.findByUrl(authUrl)
+            val urlString = authUrl.toString()
+            val token = authTokenDao.findByUrl(urlString)
             if (token != null) {
                 if (System.currentTimeMillis() < token.expiry) {
                     return@runCatching token.token
@@ -117,7 +119,7 @@ class ImageRepository @AssistedInject constructor(
             val authToken = tokenResponse.token ?: tokenResponse.accessToken ?: ""
             authTokenDao.insert(
                 AuthTokenEntity(
-                    authUrl,
+                    urlString,
                     authToken,
                     System.currentTimeMillis() + tokenResponse.expiresIn * 1000L
                 )
@@ -193,10 +195,10 @@ class ImageRepository @AssistedInject constructor(
                 // It's a manifest list, find the right architecture
                 val manifestList = json.decodeFromString<ManifestListResponse>(bodyText)
                 val platformManifest = manifestList.manifests?.find { manifest ->
-                    manifest.platform?.architecture == AppArchitecture.DEFAULT &&
-                            manifest.platform.os == AppArchitecture.OS
+                    manifest.platform?.architecture == OSArchitecture.DEFAULT &&
+                            manifest.platform.os == OSArchitecture.OS
                 } ?: manifestList.manifests?.firstOrNull()
-                ?: throw NoSuchElementException("No suitable manifest found for ${AppArchitecture.OS}:${AppArchitecture.DEFAULT}")
+                ?: throw NoSuchElementException("No suitable manifest found for ${OSArchitecture.OS}:${OSArchitecture.DEFAULT}")
 
                 // Get the specific manifest
                 getManifestByDigest(
@@ -231,8 +233,8 @@ class ImageRepository @AssistedInject constructor(
         // Some registries (like DaoCloud) don't set ContentType header,
         // so manually parse JSON from body text
         val body = json.decodeFromString<ImageConfigResponse>(response.bodyAsText())
-        if (body.architecture != AppArchitecture.DEFAULT || body.os != AppArchitecture.OS) {
-            throw NoSuchElementException("No config found for ${AppArchitecture.OS}:${AppArchitecture.DEFAULT}")
+        if (body.architecture != OSArchitecture.DEFAULT || body.os != OSArchitecture.OS) {
+            throw NoSuchElementException("No config found for ${OSArchitecture.OS}:${OSArchitecture.DEFAULT}")
         }
         return@runCatching body
     }
@@ -242,14 +244,14 @@ class ImageRepository @AssistedInject constructor(
      */
     suspend fun downloadLayer(
         repository: String,
-        layer: LayerEntity,
+        layer: LayerDescriptor,
         destFile: File,
         onProgress: suspend (DownloadProgress) -> Unit = { }
     ): Result<Unit> {
         return runCatching {
             val authToken = authenticate(repository).getOrThrow()
-            Timber.d("Starting layer download: ${layer.id.take(16)}, size: ${layer.size}")
-            client.prepareGet("$registryUrl/v2/${repository}/blobs/sha256:${layer.id}") {
+            Timber.d("Starting layer download: ${layer.digest.take(16)}, size: ${layer.size}")
+            client.prepareGet("$registryUrl/v2/${repository}/blobs/${layer.digest}") {
                 if (authToken.isNotEmpty()) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
@@ -279,10 +281,10 @@ class ImageRepository @AssistedInject constructor(
                         }
                     }
                 }
-                Timber.i("Layer download completed: ${layer.id.take(16)}, downloaded: $downloaded bytes")
+                Timber.i("Layer download completed: ${layer.digest.take(16)}, downloaded: $downloaded bytes")
             }
         }.onFailure { e ->
-            Timber.e(e, "Layer download failed: ${layer.id.take(16)}")
+            Timber.e(e, "Layer download failed: ${layer.digest.take(16)}")
         }
     }
 
