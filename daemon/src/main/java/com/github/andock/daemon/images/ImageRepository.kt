@@ -3,6 +3,7 @@ package com.github.andock.daemon.images
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.filter
 import com.github.andock.daemon.app.AppArchitecture
 import com.github.andock.daemon.database.dao.AuthTokenDao
 import com.github.andock.daemon.database.dao.RegistryDao
@@ -12,6 +13,8 @@ import com.github.andock.daemon.images.models.AuthTokenResponse
 import com.github.andock.daemon.images.models.ImageConfigResponse
 import com.github.andock.daemon.images.models.ImageManifestV2
 import com.github.andock.daemon.images.models.ManifestListResponse
+import com.google.common.hash.BloomFilter
+import com.google.common.hash.Funnels
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,6 +32,7 @@ import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
@@ -282,6 +286,7 @@ class ImageRepository @AssistedInject constructor(
         }
     }
 
+    @Suppress("UnstableApiUsage")
     fun tags(repository: String): Flow<PagingData<String>> {
         return Pager(
             config = PagingConfig(
@@ -296,7 +301,16 @@ class ImageRepository @AssistedInject constructor(
                 last = null
             ),
             pagingSourceFactory = factory
-        ).flow
+        ).flow.map {
+            val filter = BloomFilter.create(
+                Funnels.stringFunnel(Charsets.UTF_8), // 数据类型转换器（支持 String、Int 等）
+                100000,
+                0.01
+            )
+            it.filter { item ->
+                filter.put(item)
+            }
+        }
     }
 
 
