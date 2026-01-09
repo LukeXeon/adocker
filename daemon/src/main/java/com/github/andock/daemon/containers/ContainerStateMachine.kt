@@ -95,6 +95,7 @@ class ContainerStateMachine @AssistedInject constructor(
                     execCommand(it)
                 }
                 on<ContainerOperation.Stop> {
+                    snapshot.mainProcess.destroy()
                     toStoping()
                 }
             }
@@ -211,10 +212,7 @@ class ContainerStateMachine @AssistedInject constructor(
         return override {
             ContainerState.Stopping(
                 id,
-                buildList(childProcesses.size + 1) {
-                    add(mainProcess)
-                    addAll(childProcesses)
-                }
+                childProcesses
             )
         }
     }

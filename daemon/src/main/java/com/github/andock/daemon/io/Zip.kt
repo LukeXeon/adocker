@@ -2,6 +2,7 @@ package com.github.andock.daemon.io
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
@@ -74,6 +75,7 @@ suspend fun extractTarGz(
                     }
                 }
                 entry = tarIn.nextEntry
+                yield()
             }
         }
     }
