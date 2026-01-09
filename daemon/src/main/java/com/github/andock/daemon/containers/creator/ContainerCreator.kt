@@ -41,7 +41,7 @@ class ContainerCreator @AssistedInject constructor(
         get() = stateMachine.state
 
     val id
-        get() = stateMachine.state.value.id
+        get() = state.value.id
 
     fun cancel() {
         stateMachine.dispatchAction(CancellationException())
