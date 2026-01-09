@@ -81,8 +81,7 @@ class ContainerManager @Inject constructor(
         }
     }
 
-    internal suspend fun removeContainer(containerId: String) {
-        containerDao.deleteById(containerId)
+    internal fun removeContainer(containerId: String) {
         _containers.update {
             it - containerId
         }

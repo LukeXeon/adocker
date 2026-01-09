@@ -180,6 +180,7 @@ class ContainerStateMachine @AssistedInject constructor(
         val containerDir = File(appContext.containersDir, containerId)
         containerDir.deleteRecursively()
         // Delete from database
+        containerDao.deleteById(containerId)
         containerManager.removeContainer(containerId)
         return override {
             ContainerState.Removed(containerId)
