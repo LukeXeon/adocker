@@ -12,7 +12,6 @@ import com.github.andock.daemon.database.dao.LayerDao
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.database.model.LayerEntity
 import com.github.andock.daemon.database.model.LayerReferenceEntity
-import com.github.andock.daemon.images.DownloadProgress
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.ImageRepositories
 import com.github.andock.daemon.images.models.ImageConfig
@@ -70,39 +69,10 @@ class ImageDownloadStateMachine @AssistedInject constructor(
         }
     }
 
-    private suspend inline fun <T> ChangeableState<ImageDownloadState.Downloading>.downloadStep(
-        name: String,
-        total: Long,
-        block: suspend () -> T
-    ): T {
-        var exception: Exception? = null
-        snapshot.updateProgress { from ->
-            buildMap(from.size + 1) {
-                putAll(from)
-                put(name, DownloadProgress(0, total))
-            }
-        }
-        try {
-            return block()
-        } catch (e: Exception) {
-            exception = e
-            throw e
-        } finally {
-            if (exception == null) {
-                snapshot.updateProgress { from ->
-                    buildMap(from.size) {
-                        putAll(from)
-                        put(name, DownloadProgress(total, total))
-                    }
-                }
-            }
-        }
-    }
-
     private suspend fun ChangeableState<ImageDownloadState.Downloading>.downloadImage(): ChangedState<ImageDownloadState> {
         try {
             val imageRef = snapshot.ref
-            val manifest = downloadStep("manifest", 1) {
+            val manifest = snapshot.step("manifest") {
                 imageRepository.getManifest(imageRef.repository, imageRef.tag).getOrThrow()
             }
             val configDigest = manifest.config.digest
@@ -113,7 +83,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                     ImageDownloadState.Done(ref)
                 }
             }
-            val configResponse = downloadStep("config", 1) {
+            val configResponse = snapshot.step("config") {
                 imageRepository.getImageConfig(
                     imageRef.repository,
                     configDigest
@@ -128,7 +98,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                             mediaType = layer.mediaType,
                         )
                         val id = entity.id
-                        downloadStep(id, entity.size) {
+                        snapshot.step(id) {
                             val layerSize = layerDao.getSizeById(id)
                             val destFile = File(
                                 appContext.layersDir,
@@ -138,18 +108,15 @@ class ImageDownloadStateMachine @AssistedInject constructor(
                                 && layerSize == destFile.length()
                                 && destFile.sha256() == id
                             ) {
-                                return@downloadStep
+                                return@step
                             }
                             imageRepository.downloadLayer(
                                 imageRef.repository,
                                 layer,
                                 destFile
-                            ) { progress ->
-                                snapshot.updateProgress { from ->
-                                    buildMap(from.size) {
-                                        putAll(from)
-                                        put(entity.id, progress)
-                                    }
+                            ) { progress, total ->
+                                if (total > 0) {
+                                    value = progress.toFloat() / total
                                 }
                             }.getOrThrow()
                             val sha256 = destFile.sha256()

@@ -246,7 +246,7 @@ class ImageRepository @AssistedInject constructor(
         repository: String,
         layer: LayerDescriptor,
         destFile: File,
-        onProgress: suspend (DownloadProgress) -> Unit = { }
+        onProgress: suspend (downloaded: Long, total: Long) -> Unit
     ): Result<Unit> {
         return runCatching {
             val authToken = authenticate(repository).getOrThrow()
@@ -274,7 +274,7 @@ class ImageRepository @AssistedInject constructor(
                         if (bytesRead > 0) {
                             fos.write(buffer, 0, bytesRead)
                             downloaded += bytesRead
-                            onProgress(DownloadProgress(downloaded, contentLength))
+                            onProgress(downloaded, contentLength)
                             if (downloaded % (512 * 1024) == 0L || downloaded == contentLength) {
                                 Timber.d("Download progress: $downloaded/$contentLength bytes")
                             }

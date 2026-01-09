@@ -86,7 +86,7 @@ fun ImageDownloadDialog(
                 Column(modifier = Modifier.padding(16.dp)) {
                     when (state) {
                         is ImageDownloadState.Downloading -> {
-                            val progress by state.progress.collectAsState()
+                            val steps by state.steps.collectAsState()
                             Text(
                                 text = stringResource(R.string.pull_image_downloading, imageName),
                                 style = MaterialTheme.typography.titleMedium,
@@ -96,33 +96,28 @@ fun ImageDownloadDialog(
                             LazyColumn(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
-                                items(progress.entries.toList(), { it.key }) { (id, progress) ->
+                                items(steps, { it.name }) { step ->
+                                    val progress by step.progress.collectAsState()
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = id.take(12),
+                                            text = step.name.take(12),
                                             style = MaterialTheme.typography.bodySmall,
                                             fontFamily = FontFamily.Monospace,
                                             modifier = Modifier.weight(0.3f)
                                         )
 
                                         LinearProgressIndicator(
-                                            progress = {
-                                                if (progress.total > 0) {
-                                                    (progress.downloaded.toFloat() / progress.total)
-                                                } else {
-                                                    0f
-                                                }
-                                            },
+                                            progress = { progress },
                                             modifier = Modifier
                                                 .weight(0.5f)
                                                 .height(8.dp),
                                         )
                                         Text(
-                                            text = if (progress.downloaded == progress.total) {
+                                            text = if (progress == 1f) {
                                                 "Done"
                                             } else {
                                                 "Downloading"
