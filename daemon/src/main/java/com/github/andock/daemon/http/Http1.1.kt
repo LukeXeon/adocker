@@ -8,9 +8,6 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import timber.log.Timber
-import java.io.InputStream
-import java.io.OutputStream
-
 
 
 private const val HTTP_VERSION = "HTTP/1.1"
@@ -20,7 +17,7 @@ private const val CRLF = "\r\n"
  * Parses an HTTP/1.1 request from the input stream.
  * Returns null if the connection was closed or the request is invalid.
  */
-private fun readRequest(inputStream: InputStream): Request? {
+private fun ClientConnection.readRequest(): Request? {
     val reader = inputStream.bufferedReader()
     // Read request line
     val requestLine = reader.readLine() ?: return null
@@ -44,7 +41,7 @@ private fun readRequest(inputStream: InputStream): Request? {
 
         val colonIndex = line.indexOf(':')
         if (colonIndex > 0) {
-            val name = line.substring(0, colonIndex).trim()
+            val name = line.take(colonIndex).trim()
             val value = line.substring(colonIndex + 1).trim()
             headers.add(name to value)
 
@@ -80,7 +77,7 @@ private fun readRequest(inputStream: InputStream): Request? {
 /**
  * Writes an HTTP/1.1 response to the output stream.
  */
-private fun writeResponse(response: Response, outputStream: OutputStream) {
+private fun ClientConnection.writeResponse(response: Response) {
     val statusLine =
         "$HTTP_VERSION ${response.status.code} ${response.status.description}$CRLF"
     outputStream.write(statusLine.toByteArray(Charsets.UTF_8))
@@ -119,7 +116,7 @@ fun HttpHandler.process(connection: ClientConnection) {
         try {
             // For simplicity, handle one request per connection
             // Keep-alive can be added later if needed
-            val request = readRequest(conn.inputStream)
+            val request = conn.readRequest()
 
             if (request != null) {
                 Timber.d("Received request: ${request.method} ${request.uri}")
@@ -130,12 +127,12 @@ fun HttpHandler.process(connection: ClientConnection) {
                     Response(Status.INTERNAL_SERVER_ERROR)
                         .body("Internal Server Error: ${e.message}")
                 }
-                writeResponse(response, conn.outputStream)
+                conn.writeResponse(response)
             } else {
                 Timber.w("Failed to parse request")
                 val errorResponse = Response(Status.BAD_REQUEST)
                     .body("Bad Request")
-                writeResponse(errorResponse, conn.outputStream)
+                conn.writeResponse(errorResponse)
             }
         } catch (e: Exception) {
             Timber.e(e, "Error in connection handler")
