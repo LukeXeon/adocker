@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.containers.creator.ContainerCreateState
 import com.github.andock.daemon.containers.creator.ContainerCreator
@@ -53,6 +54,7 @@ import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
+import kotlinx.coroutines.launch
 
 private fun parseEnvVars(input: String): Map<String, String> {
     return input.lines()
@@ -219,21 +221,13 @@ fun ContainerCreateScreen() {
                             env = parseEnvVars(envVars),
                             hostname = hostname.ifBlank { "localhost" },
                         )
-                        if (autoStart) {
-//                            viewModel.runContainer(
-//                                imageId = imageId,
-//                                name = containerName.ifBlank { null },
-//                                config = config
-//                            )
-                        } else {
-                            setCreator(
-                                viewModel.createContainer(
-                                    imageId = imageId,
-                                    name = containerName.ifBlank { null },
-                                    config = config
-                                )
+                        setCreator(
+                            viewModel.createContainer(
+                                imageId = imageId,
+                                name = containerName.ifBlank { null },
+                                config = config
                             )
-                        }
+                        )
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -261,8 +255,14 @@ fun ContainerCreateScreen() {
             creator = creator,
             onDismissRequest = {
                 setCreator(null)
-                if (creator.state.value is ContainerCreateState.Done) {
-                    onNavigateBack()
+                val state = creator.state.value
+                if (state is ContainerCreateState.Done) {
+                    viewModel.viewModelScope.launch {
+                        if (autoStart) {
+                            state.container.start()
+                        }
+                        onNavigateBack()
+                    }
                 }
             }
         )
