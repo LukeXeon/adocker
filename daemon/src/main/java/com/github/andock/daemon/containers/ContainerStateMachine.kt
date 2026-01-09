@@ -212,7 +212,10 @@ class ContainerStateMachine @AssistedInject constructor(
         return override {
             ContainerState.Stopping(
                 id,
-                childProcesses
+                buildList(childProcesses.size + 1) {
+                    add(mainProcess)
+                    addAll(childProcesses)
+                }
             )
         }
     }
