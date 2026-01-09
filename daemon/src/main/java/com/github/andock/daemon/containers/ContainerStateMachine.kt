@@ -14,11 +14,12 @@ import com.github.andock.daemon.os.await
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
 import java.io.File
 import javax.inject.Singleton
 
@@ -29,7 +30,6 @@ class ContainerStateMachine @AssistedInject constructor(
     private val containerDao: ContainerDao,
     private val appContext: AppContext,
     private val prootEngine: PRootEngine,
-    private val scope: CoroutineScope,
     private val containerManager: ContainerManager,
     private val containerLogDao: ContainerLogDao,
 ) : FlowReduxStateMachineFactory<ContainerState, ContainerOperation>() {
@@ -56,7 +56,34 @@ class ContainerStateMachine @AssistedInject constructor(
             }
             inState<ContainerState.Running> {
                 onEnter {
-                    snapshot.mainProcess.await()
+                    val containerId = snapshot.id
+                    val mainProcess = snapshot.mainProcess
+                    containerDao.setLastRun(
+                        id = containerId,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    try {
+                        mainProcess.inputStream.bufferedReader().useLines { lines ->
+                            lines.forEach { line ->
+                                containerLogDao.append(
+                                    ContainerLogEntity(
+                                        id = 0,
+                                        containerId = containerId,
+                                        timestamp = System.currentTimeMillis(),
+                                        message = line
+                                    )
+                                )
+                            }
+                        }
+                        mainProcess.await()
+                    } catch (e: Exception) {
+                        if (e is CancellationException) {
+                            throw e
+                        } else {
+                            Timber.d(e)
+                            mainProcess.await()
+                        }
+                    }
                     toStoping()
                 }
                 untilIdentityChanges({ it.childProcesses }) {
@@ -117,29 +144,10 @@ class ContainerStateMachine @AssistedInject constructor(
                 val process = prootEngine.startProcess(containerId, config = config)
                 process.fold(
                     { mainProcess ->
-                        val stdin = mainProcess.outputStream.bufferedWriter()
-                        scope.launch {
-                            containerDao.setLastRun(
-                                id = containerId,
-                                timestamp = System.currentTimeMillis()
-                            )
-                            mainProcess.inputStream.bufferedReader().useLines { lines ->
-                                lines.forEach { line ->
-                                    containerLogDao.append(
-                                        ContainerLogEntity(
-                                            id = 0,
-                                            containerId = id,
-                                            timestamp = System.currentTimeMillis(),
-                                            message = line
-                                        )
-                                    )
-                                }
-                            }
-                        }
                         ContainerState.Running(
                             containerId,
                             mainProcess,
-                            stdin
+                            mainProcess.outputStream.bufferedWriter()
                         )
                     },
                     { exception ->
