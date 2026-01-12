@@ -45,7 +45,6 @@ import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -57,18 +56,12 @@ fun ContainersScreen() {
     val navController = LocalNavController.current
     val viewModel = hiltViewModel<ContainersViewModel>()
     val containers by viewModel.sortedList.collectAsState()
-    val (isLoading, setLoading) = remember { mutableStateOf(false) }
-    val statesCount by remember(containers) {
-        combine(containers.map { it.state }) { states ->
-            ContainerFilterType.entries.asSequence().map {
-                it to states.asSequence().filter(it.predicate).count()
-            }.toMap()
-        }
-    }.collectAsState(emptyMap())
+    val statesCount by viewModel.stateCounts.collectAsState()
     var filterType by remember { mutableStateOf(ContainerFilterType.All) }
     val filteredContainers by remember(filterType) {
         viewModel.filterState(filterType.predicate)
     }.collectAsState(emptyList())
+    val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
 
     Scaffold(
