@@ -18,11 +18,11 @@ import kotlinx.coroutines.async
 fun Context.trigger(
     key: String = "",
 ): List<TaskResult> {
-    require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
-    val entrypoint = EntryPointAccessors.fromApplication<StartupEntryPoint>(this)
-    val batch = entrypoint.factory.create(key)
-    val async = GlobalScope.async(Dispatchers.Main.immediate, block = batch)
-    val ms = measureTimeMillis {
+    val (results, ms) = measureTimeMillisWithResult {
+        require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
+        val entrypoint = EntryPointAccessors.fromApplication<StartupEntryPoint>(this)
+        val batch = entrypoint.factory.create(key)
+        val async = GlobalScope.async(Dispatchers.Main.immediate, block = batch)
         try {
             Looper.loop()
         } catch (e: TaskBatch) {
@@ -30,8 +30,8 @@ fun Context.trigger(
                 throw e
             }
         }
+        async.getCompleted()
     }
-    val results = async.getCompleted()
     results.add(TaskResult(key, ms, true))
     return results
 }
