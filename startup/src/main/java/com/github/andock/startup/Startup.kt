@@ -24,7 +24,7 @@ fun Context.trigger(
         val entrypoint = EntryPointAccessors.fromApplication<StartupEntryPoint>(this)
         val batch = entrypoint.factory.create(key)
         val async = GlobalScope.async(
-            Dispatchers.Main.immediate,
+            context = Dispatchers.Main.immediate,
             start = CoroutineStart.UNDISPATCHED,
             block = batch
         )
