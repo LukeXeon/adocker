@@ -1,5 +1,6 @@
 package com.github.andock.startup
 
+import android.os.Handler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -7,13 +8,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import javax.inject.Named
 import javax.inject.Singleton
-import kotlin.coroutines.EmptyCoroutineContext
 
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
-    private val tasks: @JvmSuppressWildcards Map<String, Map<String, SuspendLazy<Long>>>,
+    @param:Named("main-thread")
+    private val mainThread: Handler,
+    private val tasks: @JvmSuppressWildcards Map<String, Map<String, TaskComputeTime>>,
 ) : Exception(key), suspend (CoroutineScope) -> ArrayList<TaskResult>, Runnable {
 
     val key: String
@@ -29,15 +32,12 @@ internal class TaskBatch @AssistedInject constructor(
         val results = ArrayList<TaskResult>(tasks.size + 1)
         tasks.map { (key, task) ->
             scope.async(Dispatchers.IO) {
-                key to task.getValue()
+                key to task()
             }
-        }.awaitAll().forEach { (key, ms) ->
-            results.add(TaskResult(key, ms, false))
+        }.awaitAll().forEach { (key, times) ->
+            results.add(TaskResult("task:$key", times))
         }
-        Dispatchers.Main.immediate.dispatch(
-            EmptyCoroutineContext,
-            this
-        )
+        mainThread.postAtFrontOfQueue(this)
         return results
     }
 

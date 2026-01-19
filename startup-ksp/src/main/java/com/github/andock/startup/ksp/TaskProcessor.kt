@@ -337,12 +337,9 @@ class TaskProcessor(
      * Builds the initializer provider function
      */
     private fun buildInitializerFunction(taskData: TaskData): FunSpec {
-        val suspendLazyClassName = ClassName("com.github.andock.startup", "SuspendLazy")
-        val suspendLazyMember = MemberName("com.github.andock.startup", "suspendLazy")
+        val taskComputeClassName = ClassName("com.github.andock.startup", "TaskCompute")
         val measureTimeMillisWithResultMember =
             MemberName("com.github.andock.startup", "measureTimeMillisWithResult")
-        val pairClassName = ClassName("kotlin", "Pair")
-
         return FunSpec.builder("initializer")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))
@@ -352,23 +349,16 @@ class TaskProcessor(
                     .build()
             )
             .returns(
-                suspendLazyClassName.parameterizedBy(
-                    pairClassName.parameterizedBy(
-                        taskData.returnType,
-                        ClassName("kotlin", "Long")
-                    )
+                taskComputeClassName.parameterizedBy(
+                    taskData.returnType,
                 )
             )
             .apply {
                 // Add transformed parameters
                 taskData.parameters.forEach { param ->
                     val paramSpec = if (param.hasTask) {
-                        // Transform to SuspendLazy<Pair<T, Long>> with @Named annotation
-                        val typeWithAnnotation = suspendLazyClassName.parameterizedBy(
-                            pairClassName.parameterizedBy(
-                                param.type,
-                                ClassName("kotlin", "Long")
-                            )
+                        val typeWithAnnotation = taskComputeClassName.parameterizedBy(
+                            param.type,
                         ).copy(
                             annotations = listOf(
                                 AnnotationSpec.builder(
@@ -401,19 +391,16 @@ class TaskProcessor(
             .addCode(
                 buildCodeBlock {
                     add(
-                        "return %M<%T> {\n",
-                        suspendLazyMember,
-                        pairClassName.parameterizedBy(
-                            taskData.returnType,
-                            ClassName("kotlin", "Long")
-                        )
+                        "return %T<%T> {\n",
+                        taskComputeClassName,
+                        taskData.returnType,
                     )
                     indent()
 
                     // Generate local variables for @Task parameters before measureTimeMillisWithResult
                     taskData.parameters.forEach { param ->
                         if (param.hasTask) {
-                            addStatement("val %N = %N.getValue().first", param.name, param.name)
+                            addStatement("val %N = %N().first", param.name, param.name)
                         }
                     }
 
@@ -443,9 +430,8 @@ class TaskProcessor(
      * Builds the initializerToMap function
      */
     private fun buildInitializerToMapFunction(taskData: TaskData): FunSpec {
-        val suspendLazyClassName = ClassName("com.github.andock.startup", "SuspendLazy")
-        val pairClassName = ClassName("kotlin", "Pair")
-
+        val taskComputeClassName = ClassName("com.github.andock.startup", "TaskCompute")
+        val taskComputeTimeClassName = ClassName("com.github.andock.startup", "TaskComputeTime")
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
@@ -459,11 +445,8 @@ class TaskProcessor(
                 ParameterSpec.builder(
                     "task",
                     ClassName("dagger", "Lazy").parameterizedBy(
-                        suspendLazyClassName.parameterizedBy(
-                            pairClassName.parameterizedBy(
-                                taskData.returnType,
-                                ClassName("kotlin", "Long")
-                            )
+                        taskComputeClassName.parameterizedBy(
+                            taskData.returnType,
                         )
                     ).copy(
                         annotations = listOf(
@@ -484,15 +467,11 @@ class TaskProcessor(
                     .build()
             )
             .returns(
-                suspendLazyClassName.parameterizedBy(
-                    ClassName("kotlin", "Long")
-                )
+                taskComputeTimeClassName
             )
             .addStatement(
-                "return %M<%T>(%T.PUBLICATION) { task.get().getValue().second }",
-                MemberName("com.github.andock.startup", "suspendLazy"),
-                ClassName("kotlin", "Long"),
-                ClassName("kotlin", "LazyThreadSafetyMode")
+                "return %T(task)",
+                taskComputeTimeClassName
             )
             .build()
     }

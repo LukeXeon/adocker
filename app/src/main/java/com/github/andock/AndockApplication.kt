@@ -12,12 +12,8 @@ class AndockApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        trigger().forEach { (key, ms, all) ->
-            if (all) {
-                Timber.i("trigger: $key, task all: ${ms}ms")
-            } else {
-                Timber.i("task $key: ${ms}ms")
-            }
+        trigger().forEach { task ->
+            Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms, totalTime: ${task.totalTime}")
         }
     }
 }

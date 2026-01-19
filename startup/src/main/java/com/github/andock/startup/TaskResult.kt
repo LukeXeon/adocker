@@ -1,7 +1,12 @@
 package com.github.andock.startup
 
-data class TaskResult(
-    val key: String,
-    val time: Long,
-    val all: Boolean
-)
+class TaskResult(
+    val name: String,
+    private val times: LongArray,
+) {
+    val phaseTime: Long
+        get() = times[0]
+
+    val totalTime: Long
+        get() = times[1]
+}

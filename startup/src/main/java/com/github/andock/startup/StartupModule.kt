@@ -1,9 +1,12 @@
 package com.github.andock.startup
 
+import android.os.Handler
+import android.os.Looper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -11,11 +14,18 @@ import javax.inject.Singleton
 internal object StartupModule {
     @Provides
     @Singleton
-    fun tasks(tasks: Map<TaskInfo, @JvmSuppressWildcards SuspendLazy<Long>>): Map<String, Map<String, SuspendLazy<Long>>> {
-        val map = mutableMapOf<String, MutableMap<String, SuspendLazy<Long>>>()
+    fun tasks(tasks: Map<TaskInfo, TaskComputeTime>): Map<String, Map<String, TaskComputeTime>> {
+        val map = mutableMapOf<String, MutableMap<String, TaskComputeTime>>()
         tasks.forEach { (key, value) ->
             map.getOrPut(key.trigger) { mutableMapOf() }[key.name] = value
         }
         return map
+    }
+
+    @Named("main-thread")
+    @Provides
+    @Singleton
+    fun mainThread(): Handler {
+        return Handler(Looper.getMainLooper())
     }
 }
