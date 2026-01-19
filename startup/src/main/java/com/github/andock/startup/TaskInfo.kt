@@ -7,5 +7,6 @@ import dagger.MapKey
 @Target(AnnotationTarget.FUNCTION)
 annotation class TaskInfo(
     val name: String,
-    val trigger: String
+    val trigger: String,
+    val processes: Array<String>
 )

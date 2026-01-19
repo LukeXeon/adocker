@@ -16,7 +16,7 @@ internal class TaskBatch @AssistedInject constructor(
     key: String,
     @param:Named("main-thread")
     private val mainThread: Handler,
-    private val tasks: @JvmSuppressWildcards Map<String, Map<String, TaskComputeTime>>,
+    private val tasks: @JvmSuppressWildcards Map<String, List<TaskComputeTime>>,
 ) : Exception(key), suspend (CoroutineScope) -> ArrayList<TaskResult>, Runnable {
 
     val key: String
@@ -28,10 +28,9 @@ internal class TaskBatch @AssistedInject constructor(
     }
 
     override suspend fun invoke(scope: CoroutineScope): ArrayList<TaskResult> {
-        val tasks = tasks.getValue(key)
         val results = ArrayList<TaskResult>(tasks.size + 1)
-        tasks.map { (key, task) ->
-            scope.async(Dispatchers.IO) {
+        tasks.getValue(key).map { task ->
+            scope.async(Dispatchers.Default) {
                 key to task()
             }
         }.awaitAll().forEach { (key, times) ->

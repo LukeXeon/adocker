@@ -124,11 +124,20 @@ class TaskProcessor(
             return null
         }
 
-        val triggerKey = function.annotations.firstOrNull {
+        val triggerAnnotation = function.annotations.firstOrNull {
             it.isAnnotation(TRIGGER_ANNOTATION)
-        }?.arguments?.firstOrNull {
+        }
+
+        val triggerKey = triggerAnnotation?.arguments?.firstOrNull {
             it.name?.asString() == "value"
         }?.value as? String ?: ""
+
+        val processes = triggerAnnotation?.arguments?.firstOrNull {
+            it.name?.asString() == "processes"
+        }?.value?.let {
+            @Suppress("UNCHECKED_CAST")
+            it as Array<String>
+        }?.asList() ?: listOf("")
 
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
@@ -150,7 +159,8 @@ class TaskProcessor(
             taskName = taskName,
             triggerKey = triggerKey,
             returnType = returnType,
-            parameters = parameters
+            processes = processes,
+            parameters = parameters,
         )
     }
 
@@ -439,6 +449,10 @@ class TaskProcessor(
                 AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskInfo"))
                     .addMember("%S", taskData.taskName)
                     .addMember("%S", taskData.triggerKey)
+                    .addMember(
+                        taskData.processes.joinToString(",", "[", "]") { "%S" },
+                        *taskData.processes.toTypedArray()
+                    )
                     .build()
             )
             .addParameter(
@@ -484,6 +498,7 @@ class TaskProcessor(
         val packageName: String,
         val taskName: String,
         val triggerKey: String,
+        val processes: List<String>,
         val returnType: TypeName,
         val parameters: List<ParameterData>
     )
