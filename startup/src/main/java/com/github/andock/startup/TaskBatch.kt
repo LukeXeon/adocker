@@ -28,16 +28,17 @@ internal class TaskBatch @AssistedInject constructor(
     }
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
-        val results = ArrayList<TaskResult>(tasks.size)
-        tasks.getValue(key).map { task ->
-            scope.async(Dispatchers.Default) {
-                key to task()
-            }
-        }.awaitAll().forEach { (key, times) ->
-            results.add(TaskResult(key, times[0], times[1]))
+        try {
+            return tasks.getValue(key).map { task ->
+                scope.async(Dispatchers.Default) {
+                    key to task()
+                }
+            }.awaitAll().asSequence().map { (key, times) ->
+                TaskResult(key, times[0], times[1])
+            }.toCollection(ArrayList(tasks.size))
+        } finally {
+            mainThread.postAtFrontOfQueue(this)
         }
-        mainThread.postAtFrontOfQueue(this)
-        return results
     }
 
     override fun run() {
