@@ -46,8 +46,8 @@ internal class TaskBatch @AssistedInject constructor(
 
     @Singleton
     @AssistedFactory
-    interface Factory {
-        fun create(
+    interface NewInstance {
+        operator fun invoke(
             @Assisted key: String
         ): TaskBatch
     }

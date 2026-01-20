@@ -17,8 +17,8 @@ fun Context.trigger(
     key: String = "",
 ): List<TaskResult> {
     require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
-    val entrypoint = EntryPointAccessors.fromApplication<StartupEntryPoint>(this)
-    val batch = entrypoint.factory.create(key)
+    val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
+    val batch = entrypoint.newInstance(key)
     val job = GlobalScope.async(
         context = Dispatchers.Main.immediate,
         start = CoroutineStart.UNDISPATCHED,

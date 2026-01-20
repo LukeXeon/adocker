@@ -6,6 +6,6 @@ import dagger.hilt.components.SingletonComponent
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-internal interface StartupEntryPoint {
-    val factory: TaskBatch.Factory
+internal interface TaskBatchFactory {
+    val newInstance: TaskBatch.NewInstance
 }
