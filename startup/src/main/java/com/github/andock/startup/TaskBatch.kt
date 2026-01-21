@@ -8,14 +8,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import javax.inject.Named
 import javax.inject.Singleton
 
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
-    @param:Named("main-thread")
+    @param:Scoped
     private val mainThread: Handler,
+    @param:Scoped
     private val tasks: @JvmSuppressWildcards Map<String, List<TaskComputeTime>>,
 ) : Exception(key), suspend (CoroutineScope) -> List<TaskResult>, Runnable {
 

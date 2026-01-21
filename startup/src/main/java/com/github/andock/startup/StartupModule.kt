@@ -13,20 +13,19 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.io.File
 import java.io.IOException
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal object StartupModule {
+    @Scoped
     @Provides
     @Singleton
     fun tasks(
         tasks: Map<TaskInfo, TaskComputeTime>,
-        @Named("process-name")
-        processName: String,
         application: Application,
     ): Map<String, List<TaskComputeTime>> {
+        val processName = processName(application)
         val map = mutableMapOf<String, MutableList<TaskComputeTime>>()
         if (processName.startsWith(application.packageName)) {
             val processName = processName.removePrefix(application.packageName)
@@ -43,7 +42,7 @@ internal object StartupModule {
         return map
     }
 
-    @Named("main-thread")
+    @Scoped
     @Provides
     @Singleton
     fun mainThread(): Handler {
@@ -55,10 +54,7 @@ internal object StartupModule {
      * @param context 上下文（建议用 Application Context）
      * @return 进程名（失败返回空字符串）
      */
-    @Named("process-name")
-    @Provides
-    @Singleton
-    fun processName(context: Application): String {
+    private fun processName(context: Application): String {
         // 方式1：Android 8.0+ 推荐使用（更高效）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return try {
