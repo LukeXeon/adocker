@@ -354,7 +354,7 @@ class TaskProcessor(
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("javax.inject", "Named"))
+                AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskName"))
                     .addMember("%S", taskData.taskName)
                     .build()
             )
@@ -382,7 +382,12 @@ class TaskProcessor(
 
                         ParameterSpec.builder(param.name, typeWithAnnotation)
                             .addAnnotation(
-                                AnnotationSpec.builder(ClassName("javax.inject", "Named"))
+                                AnnotationSpec.builder(
+                                    ClassName(
+                                        "com.github.andock.startup",
+                                        "TaskName"
+                                    )
+                                )
                                     .addMember("%S", param.taskName ?: "")
                                     .build()
                             )
@@ -474,7 +479,7 @@ class TaskProcessor(
                     )
                 )
                     .addAnnotation(
-                        AnnotationSpec.builder(ClassName("javax.inject", "Named"))
+                        AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskName"))
                             .addMember("%S", taskData.taskName)
                             .build()
                     )

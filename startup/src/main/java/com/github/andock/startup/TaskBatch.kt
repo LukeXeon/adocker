@@ -13,9 +13,9 @@ import javax.inject.Singleton
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
-    @param:Scoped
+    @param:Internal
     private val mainThread: Handler,
-    @param:Scoped
+    @param:Internal
     private val tasks: @JvmSuppressWildcards Map<String, List<TaskComputeTime>>,
 ) : Exception(key), suspend (CoroutineScope) -> List<TaskResult>, Runnable {
 

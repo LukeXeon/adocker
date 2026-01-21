@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object StartupModule {
-    @Scoped
+    @Internal
     @Provides
     @Singleton
     fun tasks(
@@ -42,7 +42,7 @@ internal object StartupModule {
         return map
     }
 
-    @Scoped
+    @Internal
     @Provides
     @Singleton
     fun mainThread(): Handler {
