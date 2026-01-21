@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -21,7 +20,6 @@ fun Context.trigger(
     val batch = entrypoint.newInstance(key)
     val job = GlobalScope.async(
         context = Dispatchers.Main.immediate,
-        start = CoroutineStart.UNDISPATCHED,
         block = batch
     )
     try {
