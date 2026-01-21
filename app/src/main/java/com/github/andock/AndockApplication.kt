@@ -12,7 +12,7 @@ class AndockApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        AndroidXTrigger.getResults(this).forEach { task ->
+        AndroidXTrigger.results.forEach { task ->
             Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms, totalTime: ${task.totalTime}")
         }
     }
