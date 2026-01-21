@@ -24,9 +24,9 @@ internal object StartupModule {
     fun tasks(
         tasks: Map<TaskInfo, TaskComputeTime>,
         application: Application,
-    ): Map<String, List<TaskComputeTime>> {
+    ): Map<String, List<Pair<String, TaskComputeTime>>> {
         val processName = processName(application)
-        val map = mutableMapOf<String, MutableList<TaskComputeTime>>()
+        val map = mutableMapOf<String, MutableList<Pair<String, TaskComputeTime>>>()
         if (processName.startsWith(application.packageName)) {
             val processName = processName.removePrefix(application.packageName)
                 .removePrefix(":")
@@ -34,7 +34,7 @@ internal object StartupModule {
                 val tasks = map.getOrPut(key.trigger) { mutableListOf() }
                 key.processes.forEach { process ->
                     if (process == processName) {
-                        tasks.add(task)
+                        tasks.add(key.name to task)
                     }
                 }
             }
