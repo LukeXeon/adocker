@@ -45,9 +45,10 @@ android {
 }
 
 dependencies {
-    implementation(libs.hilt.android)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
+    api(libs.hilt.android)
+    api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.coroutines.android)
+    api(libs.androidx.startup)
     compileOnly(libs.auto.value.annotations)
     ksp(libs.hilt.compiler)
     ksp(libs.kotlin.metadata.jvm)

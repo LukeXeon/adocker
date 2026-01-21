@@ -68,6 +68,8 @@ http4k = "6.25.1.0"
 # Paging 3
 paging = "3.3.6"
 
+startup = "1.2.0"
+
 [libraries]
 acra-mail = { module = "ch.acra:acra-mail", version.ref = "acra" }
 acra-toast = { module = "ch.acra:acra-toast", version.ref = "acra" }
@@ -172,6 +174,9 @@ androidx-paging-compose = { group = "androidx.paging", name = "paging-compose", 
 
 # kotlinpoet
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet-ksp" }
+
+# startup
+androidx-startup = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

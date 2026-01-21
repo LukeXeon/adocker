@@ -1,7 +1,7 @@
 package com.github.andock
 
 import android.app.Application
-import com.github.andock.startup.trigger
+import com.github.andock.startup.AndroidXTrigger
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
@@ -12,7 +12,7 @@ class AndockApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        trigger().forEach { task ->
+        AndroidXTrigger.getResults(this).forEach { task ->
             Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms, totalTime: ${task.totalTime}")
         }
     }

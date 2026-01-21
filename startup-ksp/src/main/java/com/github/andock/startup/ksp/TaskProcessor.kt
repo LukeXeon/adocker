@@ -37,6 +37,7 @@ class TaskProcessor(
     companion object {
         private const val TASK_ANNOTATION = "com.github.andock.startup.Task"
         private const val TRIGGER_ANNOTATION = "com.github.andock.startup.Trigger"
+        private const val DEFAULT_TRIGGER_KEY = "androidx.startup"
     }
 
     /**
@@ -130,7 +131,7 @@ class TaskProcessor(
 
         val triggerKey = triggerAnnotation?.arguments?.firstOrNull {
             it.name?.asString() == "value"
-        }?.value as? String ?: ""
+        }?.value as? String ?: DEFAULT_TRIGGER_KEY
 
         val processes = triggerAnnotation?.arguments?.firstOrNull {
             it.name?.asString() == "processes"
