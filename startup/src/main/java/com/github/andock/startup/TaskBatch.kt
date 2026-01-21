@@ -32,11 +32,10 @@ internal class TaskBatch @AssistedInject constructor(
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
                 scope.async(Dispatchers.Default) {
-                    task.first to task.second()
+                    val (phaseTime, totalTime) = task.second()
+                    TaskResult(task.first, phaseTime, totalTime)
                 }
-            }.awaitAll().asSequence().map { (key, times) ->
-                TaskResult(key, times[0], times[1])
-            }.toCollection(ArrayList(tasks.size))
+            }.awaitAll()
         } finally {
             mainThread.postAtFrontOfQueue(this)
         }
