@@ -29,7 +29,8 @@ internal class TaskBatch @AssistedInject constructor(
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
         try {
-            return tasks.getValue(key).map { task ->
+            val tasks = tasks.getValue(key)
+            return tasks.map { task ->
                 scope.async(Dispatchers.Default) {
                     key to task()
                 }
