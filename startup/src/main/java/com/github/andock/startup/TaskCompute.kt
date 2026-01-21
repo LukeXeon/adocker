@@ -4,12 +4,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.Volatile
 
-class TaskCompute<T>(
+class TaskCompute<T> @PublishedApi internal constructor(
     initializer: Initializer<T>
 ) {
-    fun interface Initializer<T> {
-        suspend fun invoke(): TimeMillisWithResult<T>
-    }
 
     @Volatile
     private var value: Any = initializer
@@ -31,6 +28,12 @@ class TaskCompute<T>(
                 value = typedValue
                 typedValue
             }
+        }
+    }
+
+    companion object {
+        inline operator fun <T> invoke(crossinline block: suspend () -> TimeMillisWithResult<T>): TaskCompute<T> {
+            return TaskCompute { block() }
         }
     }
 }

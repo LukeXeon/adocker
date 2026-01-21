@@ -8,7 +8,7 @@ class TaskComputeTime(
     suspend operator fun invoke(): LongArray {
         val times = LongArray(2)
         times[1] = measureTimeMillis {
-            times[0] = task.get().invoke().second
+            times[0] = task.get().invoke().timeMillis
         }
         return times
     }

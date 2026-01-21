@@ -415,7 +415,7 @@ class TaskProcessor(
                     // Generate local variables for @Task parameters before measureTimeMillisWithResult
                     taskData.parameters.forEach { param ->
                         if (param.hasTask) {
-                            addStatement("val %N = %N().first", param.name, param.name)
+                            addStatement("val %N = %N.invoke().result", param.name, param.name)
                         }
                     }
 
