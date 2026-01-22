@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 @OptIn(DelicateCoroutinesApi::class)
 @MainThread
 fun Context.trigger(
-    key: String = "",
+    key: String,
 ): List<TaskResult> {
     require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
     val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
