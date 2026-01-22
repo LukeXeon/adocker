@@ -19,7 +19,7 @@ fun Context.trigger(
     val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
     val batch = entrypoint.newInstance(key)
     runBlocking(
-        context = RootCoroutineContext
+        context = StartupRootContext
     ) {
         withContext(
             context = RedirectDispatchers(

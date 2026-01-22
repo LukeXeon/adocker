@@ -4,17 +4,17 @@ import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-internal class CombinedContext(
+internal class StartupCombinedContext(
     private val left: CoroutineContext,
     private val element: CoroutineContext.Element
-) : CoroutineContext {
+) : StartupCoroutineContext {
 
     override fun <E : CoroutineContext.Element> get(key: CoroutineContext.Key<E>): E? {
         var cur = this
         while (true) {
             cur.element[key]?.let { return it }
             val next = cur.left
-            if (next is CombinedContext) {
+            if (next is StartupCombinedContext) {
                 cur = next
             } else {
                 return next[key]
@@ -31,7 +31,7 @@ internal class CombinedContext(
         return when {
             newLeft === left -> this
             newLeft === EmptyCoroutineContext -> element
-            else -> CombinedContext(newLeft, element)
+            else -> StartupCombinedContext(newLeft, element)
         }
     }
 
@@ -39,7 +39,7 @@ internal class CombinedContext(
         var cur = this
         var size = 2
         while (true) {
-            cur = cur.left as? CombinedContext ?: return size
+            cur = cur.left as? StartupCombinedContext ?: return size
             size++
         }
     }
@@ -47,12 +47,12 @@ internal class CombinedContext(
     private fun contains(element: CoroutineContext.Element): Boolean =
         get(element.key) == element
 
-    private fun containsAll(context: CombinedContext): Boolean {
+    private fun containsAll(context: StartupCombinedContext): Boolean {
         var cur = context
         while (true) {
             if (!contains(cur.element)) return false
             val next = cur.left
-            if (next is CombinedContext) {
+            if (next is StartupCombinedContext) {
                 cur = next
             } else {
                 return contains(next as CoroutineContext.Element)
@@ -61,21 +61,21 @@ internal class CombinedContext(
     }
 
     override fun plus(context: CoroutineContext): CoroutineContext {
-        val context = combine(this, context)
+        val context = super.plus(context)
         var interceptor = context[ContinuationInterceptor]
-        val interceptorInterceptor = context[ContinuationInterceptorInterceptor]
-        if (interceptor != null && interceptorInterceptor != null) {
-            interceptor = interceptorInterceptor.intercept(interceptor)
+        val ciInterceptor = context[ContinuationInterceptorInterceptor]
+        if (interceptor != null && ciInterceptor != null) {
+            interceptor = ciInterceptor.intercept(interceptor)
         }
         return if (interceptor != null) {
-            return CombinedContext(context.minusKey(ContinuationInterceptor), interceptor)
+            return StartupCombinedContext(context.minusKey(ContinuationInterceptor), interceptor)
         } else {
             context
         }
     }
 
     override fun equals(other: Any?): Boolean =
-        this === other || other is CombinedContext
+        this === other || other is StartupCombinedContext
                 && other.size() == size()
                 && other.containsAll(this)
 
@@ -86,31 +86,4 @@ internal class CombinedContext(
             if (acc.isEmpty()) element.toString() else "$acc, $element"
         } + "]"
 
-
-    companion object {
-        fun combine(context1: CoroutineContext, context2: CoroutineContext): CoroutineContext {
-            return if (context1 === EmptyCoroutineContext) {
-                // fast path -- avoid lambda creation
-                context1
-            } else {
-                context2.fold(context1) { acc, element ->
-                    val removed = acc.minusKey(element.key)
-                    if (removed === EmptyCoroutineContext) element else {
-                        // make sure interceptor is always last in the context (and thus is fast to get when present)
-                        val interceptor = removed[ContinuationInterceptor]
-                        if (interceptor == null) {
-                            CombinedContext(removed, element)
-                        } else {
-                            val left = removed.minusKey(ContinuationInterceptor)
-                            if (left === EmptyCoroutineContext) {
-                                CombinedContext(element, interceptor)
-                            } else {
-                                CombinedContext(CombinedContext(left, element), interceptor)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
