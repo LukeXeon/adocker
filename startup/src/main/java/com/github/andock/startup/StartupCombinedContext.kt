@@ -66,9 +66,9 @@ internal class StartupCombinedContext(
 
     override fun plus(context: CoroutineContext): CoroutineContext {
         return fold(combine(context)) { acc, element ->
-            if (element is ContextElementInterceptor<*>) {
+            if (acc is StartupCombinedContext && element is ContextElementInterceptor<*>) {
                 val element = element.intercept(acc)
-                if (element != null && acc is StartupCombinedContext) {
+                if (element != null) {
                     return@fold acc.combine(element)
                 }
             }
