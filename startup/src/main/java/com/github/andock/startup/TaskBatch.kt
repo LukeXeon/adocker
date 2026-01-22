@@ -11,18 +11,10 @@ import javax.inject.Singleton
 
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
-    key: String,
+    private val key: String,
     @param:InternalName("tasks")
     private val tasks: @JvmSuppressWildcards Map<String, List<Pair<String, TaskComputeTime>>>,
-) : Exception(key), suspend (CoroutineScope) -> List<TaskResult>, Runnable {
-
-    val key: String
-        get() = message!!
-
-    override fun fillInStackTrace(): Throwable {
-        stackTrace = emptyArray()
-        return this
-    }
+) : suspend (CoroutineScope) -> List<TaskResult> {
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
         val tasks = tasks.getValue(key)
@@ -32,10 +24,6 @@ internal class TaskBatch @AssistedInject constructor(
                 TaskResult(task.first, phaseTime, totalTime)
             }
         }.awaitAll()
-    }
-
-    override fun run() {
-        throw this
     }
 
     @Singleton
