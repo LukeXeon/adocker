@@ -11,5 +11,5 @@ internal object StartupRootContext : StartupCoroutineContext {
     override fun <R> fold(initial: R, operation: (R, Element) -> R): R = initial
     override fun minusKey(key: Key<*>): CoroutineContext = this
     override fun hashCode(): Int = 0
-    override fun toString(): String = "StartupRootContext"
+    override fun toString(): String = javaClass.name
 }
