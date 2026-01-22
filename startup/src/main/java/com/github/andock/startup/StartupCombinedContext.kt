@@ -59,13 +59,19 @@ internal class StartupCombinedContext(
         }
     }
 
+    private fun combine(context: CoroutineContext): CoroutineContext {
+        return super.plus(context)
+    }
+
     override fun plus(context: CoroutineContext): CoroutineContext {
-        return fold(super.plus(context)) { acc, element ->
+        return fold(combine(context)) { acc, element ->
             if (element is ContextElementInterceptor<*>) {
-                element.intercept(acc)
-            } else {
-                acc
+                val element = element.intercept(acc)
+                if (element != null && acc is StartupCombinedContext) {
+                    return@fold acc.combine(element)
+                }
             }
+            return@fold acc
         }
     }
 

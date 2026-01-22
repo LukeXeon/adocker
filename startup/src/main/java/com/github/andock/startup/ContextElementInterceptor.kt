@@ -9,13 +9,8 @@ internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
 
     fun intercept(interceptor: E): E
 
-    fun intercept(context: CoroutineContext): CoroutineContext {
-        val element = context[target]
-        return if (element != null) {
-            StartupCombinedContext(context.minusKey(target), intercept(element))
-        } else {
-            context
-        }
+    fun intercept(context: CoroutineContext): E? {
+        return intercept(context[target] ?: return null)
     }
 
     companion object {
