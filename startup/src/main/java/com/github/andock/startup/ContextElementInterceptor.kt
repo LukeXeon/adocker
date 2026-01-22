@@ -1,6 +1,7 @@
 package com.github.andock.startup
 
 import kotlin.coroutines.CoroutineContext
+import kotlin.reflect.KClass
 
 internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
     CoroutineContext.Element {
@@ -9,9 +10,12 @@ internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
 
     fun intercept(interceptor: E): E
 
+    data class Key<E : CoroutineContext.Element>(val type: KClass<E>) :
+        CoroutineContext.Key<ContextElementInterceptor<E>>
+
     companion object {
-        operator fun <E : CoroutineContext.Element> invoke(): CoroutineContext.Key<ContextElementInterceptor<E>> {
-            return object : CoroutineContext.Key<ContextElementInterceptor<E>> {}
+        inline operator fun <reified E : CoroutineContext.Element> invoke(): CoroutineContext.Key<ContextElementInterceptor<E>> {
+            return Key(E::class)
         }
 
         internal fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.intercept(context: CoroutineContext): E? {
