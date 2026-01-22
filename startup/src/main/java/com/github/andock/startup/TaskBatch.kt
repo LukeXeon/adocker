@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import javax.inject.Singleton
 
@@ -32,8 +31,7 @@ internal class TaskBatch @AssistedInject constructor(
         } else {
             try {
                 isEntered = true
-                val context = currentCoroutineContext()
-                val mainDispatcher = checkNotNull(context[CoroutineDispatcher]) {
+                val mainDispatcher = checkNotNull(scope.coroutineContext[CoroutineDispatcher]) {
                     "not found CoroutineDispatcher"
                 }
                 return withContext(
