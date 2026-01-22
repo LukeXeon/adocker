@@ -18,7 +18,7 @@ fun Context.trigger(
     require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
     val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
     val batch = entrypoint.newInstance(key)
-    runBlocking(
+    return runBlocking(
         context = StartupRootContext
     ) {
         withContext(
@@ -28,5 +28,4 @@ fun Context.trigger(
             block = batch
         )
     }
-    return runBlocking(block = batch)
 }
