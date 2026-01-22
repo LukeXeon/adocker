@@ -18,7 +18,7 @@ internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
             return Key(E::class)
         }
 
-        internal fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.intercept(context: CoroutineContext): E? {
+        fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.intercept(context: CoroutineContext): E? {
             return intercept(context[target] ?: return null)
         }
     }
