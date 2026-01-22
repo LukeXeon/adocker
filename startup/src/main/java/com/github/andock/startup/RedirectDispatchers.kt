@@ -6,11 +6,10 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.ContinuationInterceptor
 
 internal class RedirectDispatchers(
-    thread: Thread,
-    dispatcher: CoroutineDispatcher,
+    mainDispatcher: CoroutineDispatcher,
 ) : AbstractCoroutineContextElement(ContinuationInterceptorInterceptor),
     ContinuationInterceptorInterceptor {
-    private val main = EventLoopMainCoroutineDispatcher(thread, dispatcher)
+    private val main = EventLoopMainCoroutineDispatcher(mainDispatcher)
 
     override fun intercept(interceptor: ContinuationInterceptor): ContinuationInterceptor {
         return when (interceptor) {

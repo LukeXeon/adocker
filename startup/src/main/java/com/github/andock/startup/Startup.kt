@@ -22,8 +22,7 @@ fun Context.trigger(
     ) {
         withContext(
             context = RedirectDispatchers(
-                thread = Thread.currentThread(),
-                dispatcher = coroutineContext[CoroutineDispatcher]!!
+                mainDispatcher = coroutineContext[CoroutineDispatcher]!!
             ),
             block = batch
         )
