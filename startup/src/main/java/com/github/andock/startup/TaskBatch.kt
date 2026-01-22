@@ -1,6 +1,5 @@
 package com.github.andock.startup
 
-import android.os.Handler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -13,9 +12,7 @@ import javax.inject.Singleton
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
     key: String,
-    @param:Internal
-    private val mainThread: Handler,
-    @param:Internal
+    @param:InternalName("tasks")
     private val tasks: @JvmSuppressWildcards Map<String, List<Pair<String, TaskComputeTime>>>,
 ) : Exception(key), suspend (CoroutineScope) -> List<TaskResult>, Runnable {
 
@@ -28,17 +25,13 @@ internal class TaskBatch @AssistedInject constructor(
     }
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
-        try {
-            val tasks = tasks.getValue(key)
-            return tasks.map { task ->
-                scope.async(Dispatchers.Default) {
-                    val (phaseTime, totalTime) = task.second()
-                    TaskResult(task.first, phaseTime, totalTime)
-                }
-            }.awaitAll()
-        } finally {
-            mainThread.postAtFrontOfQueue(this)
-        }
+        val tasks = tasks.getValue(key)
+        return tasks.map { task ->
+            scope.async(Dispatchers.Default) {
+                val (phaseTime, totalTime) = task.second()
+                TaskResult(task.first, phaseTime, totalTime)
+            }
+        }.awaitAll()
     }
 
     override fun run() {

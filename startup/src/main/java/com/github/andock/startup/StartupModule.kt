@@ -3,8 +3,6 @@ package com.github.andock.startup
 import android.app.ActivityManager
 import android.app.Application
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.Process
 import androidx.core.content.getSystemService
 import dagger.Module
@@ -18,14 +16,15 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object StartupModule {
-    @Internal
+    @InternalName("tasks")
     @Provides
     @Singleton
     fun tasks(
         tasks: Map<TaskInfo, TaskComputeTime>,
         application: Application,
+        @InternalName("process-name")
+        processName: String,
     ): Map<String, List<Pair<String, TaskComputeTime>>> {
-        val processName = processName(application)
         val map = mutableMapOf<String, MutableList<Pair<String, TaskComputeTime>>>()
         if (processName.startsWith(application.packageName)) {
             val processName = processName.removePrefix(application.packageName)
@@ -42,19 +41,15 @@ internal object StartupModule {
         return map
     }
 
-    @Internal
-    @Provides
-    @Singleton
-    fun mainThread(): Handler {
-        return Handler(Looper.getMainLooper())
-    }
-
     /**
      * 获取当前进程名
      * @param context 上下文（建议用 Application Context）
      * @return 进程名（失败返回空字符串）
      */
-    private fun processName(context: Application): String {
+    @InternalName("process-name")
+    @Provides
+    @Singleton
+    fun processName(context: Application): String {
         // 方式1：Android 8.0+ 推荐使用（更高效）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return try {

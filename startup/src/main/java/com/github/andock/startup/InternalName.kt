@@ -4,4 +4,6 @@ import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-internal annotation class Internal
+internal annotation class InternalName(
+    val value: String = ""
+)

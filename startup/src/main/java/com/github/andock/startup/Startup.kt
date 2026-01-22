@@ -4,12 +4,10 @@ import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @OptIn(DelicateCoroutinesApi::class)
 @MainThread
@@ -19,17 +17,17 @@ fun Context.trigger(
     require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
     val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
     val batch = entrypoint.newInstance(key)
-    val job = GlobalScope.async(
-        context = Dispatchers.Main.immediate,
-        start = CoroutineStart.UNDISPATCHED,
-        block = batch
-    )
-    try {
-        Looper.loop()
-    } catch (e: TaskBatch) {
-        if (e != batch) {
-            throw e
-        }
+    runBlocking(
+        context = RootCoroutineContext
+    ) {
+        withContext(
+            context = RedirectDispatchers(
+                thread = Thread.currentThread(),
+                dispatcher = coroutineContext[CoroutineDispatcher]!!
+            ),
+            block = batch
+        )
+
     }
-    return job.asCompletableFuture().get()
+    return runBlocking(block = batch)
 }
