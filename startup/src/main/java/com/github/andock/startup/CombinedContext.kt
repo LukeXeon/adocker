@@ -61,15 +61,16 @@ internal class CombinedContext(
     }
 
     override fun plus(context: CoroutineContext): CoroutineContext {
+        val context = combine(this, context)
         var interceptor = context[ContinuationInterceptor]
-        val interceptorInterceptor = this[ContinuationInterceptorInterceptor]
+        val interceptorInterceptor = context[ContinuationInterceptorInterceptor]
         if (interceptor != null && interceptorInterceptor != null) {
             interceptor = interceptorInterceptor.intercept(interceptor)
         }
         return if (interceptor != null) {
-            combine(this, context + interceptor)
+            return CombinedContext(context.minusKey(ContinuationInterceptor), interceptor)
         } else {
-            combine(this, context)
+            context
         }
     }
 
