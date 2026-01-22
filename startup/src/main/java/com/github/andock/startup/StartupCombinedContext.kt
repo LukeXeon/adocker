@@ -1,6 +1,5 @@
 package com.github.andock.startup
 
-import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -61,16 +60,12 @@ internal class StartupCombinedContext(
     }
 
     override fun plus(context: CoroutineContext): CoroutineContext {
-        val context = super.plus(context)
-        var interceptor = context[ContinuationInterceptor]
-        val ciInterceptor = context[ContinuationInterceptorInterceptor]
-        if (interceptor != null && ciInterceptor != null) {
-            interceptor = ciInterceptor.intercept(interceptor)
-        }
-        return if (interceptor != null) {
-            return StartupCombinedContext(context.minusKey(ContinuationInterceptor), interceptor)
-        } else {
-            context
+        return fold(super.plus(context)) { acc, element ->
+            if (element is ContextElementInterceptor<*>) {
+                element.intercept(acc)
+            } else {
+                acc
+            }
         }
     }
 
