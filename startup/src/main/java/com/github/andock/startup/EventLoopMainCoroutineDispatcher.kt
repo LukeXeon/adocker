@@ -38,8 +38,6 @@ internal class EventLoopMainCoroutineDispatcher(
 
         if (invokeImmediately != other.invokeImmediately) return false
         if (dispatcher != other.dispatcher) return false
-        if (immediate != other.immediate) return false
-
         return true
     }
 
