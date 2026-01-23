@@ -25,7 +25,7 @@ class TaskCompute<T> @PublishedApi internal constructor(
             if (v2 !is Initializer<*>) {
                 v2 as TimeMillisWithResult<T>
             } else {
-                val typedValue = (v2 as Initializer<T>).invoke()
+                val typedValue = (v2 as Initializer<T>)()
                 value = typedValue
                 typedValue
             }
