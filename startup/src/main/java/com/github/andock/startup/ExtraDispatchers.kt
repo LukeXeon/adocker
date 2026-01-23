@@ -20,7 +20,7 @@ val Dispatchers.QueuedWork by lazy {
         Class.forName("android.os.QueuedWork")
             .getDeclaredMethod("getHandler").apply {
                 isAccessible = true
-            }.invoke(null) as Handler
+            }(null) as Handler
     }.map {
         it.looper
     }.recover {
