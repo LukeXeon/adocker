@@ -1,5 +1,6 @@
 package com.github.andock.startup
 
+import android.os.AsyncTask
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
@@ -34,7 +35,7 @@ val Dispatchers.QueuedWork by lazy {
 }
 
 val Dispatchers.AsyncTask by lazy {
-    android.os.AsyncTask.THREAD_POOL_EXECUTOR.asCoroutineDispatcher()
+    AsyncTask.THREAD_POOL_EXECUTOR.asCoroutineDispatcher()
 }
 
 val Dispatchers.ForkJoin by lazy {
