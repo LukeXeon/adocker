@@ -35,7 +35,7 @@ class TaskProcessor(
 ) : SymbolProcessor {
 
     companion object {
-        private const val TASK_ANNOTATION = "com.github.andock.startup.tasks.Task"
+        private const val TASK_ANNOTATION = "com.github.andock.startup.Task"
         private const val TRIGGER_ANNOTATION = "com.github.andock.startup.Trigger"
         private const val DEFAULT_TRIGGER_KEY = "androidx.startup"
     }
@@ -137,8 +137,8 @@ class TaskProcessor(
             it.name?.asString() == "processes"
         }?.value?.let {
             @Suppress("UNCHECKED_CAST")
-            it as Array<String>
-        }?.asList() ?: listOf("")
+            it as List<String>
+        }?: listOf("")
 
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
@@ -447,7 +447,8 @@ class TaskProcessor(
      */
     private fun buildInitializerToMapFunction(taskData: TaskData): FunSpec {
         val taskComputeClassName = ClassName("com.github.andock.startup.tasks", "TaskCompute")
-        val taskComputeTimeClassName = ClassName("com.github.andock.startup.tasks", "TaskComputeTime")
+        val taskComputeTimeClassName =
+            ClassName("com.github.andock.startup.tasks", "TaskComputeTime")
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
@@ -480,7 +481,12 @@ class TaskProcessor(
                     )
                 )
                     .addAnnotation(
-                        AnnotationSpec.builder(ClassName("com.github.andock.startup.tasks", "TaskName"))
+                        AnnotationSpec.builder(
+                            ClassName(
+                                "com.github.andock.startup.tasks",
+                                "TaskName"
+                            )
+                        )
                             .addMember("%S", taskData.taskName)
                             .build()
                     )

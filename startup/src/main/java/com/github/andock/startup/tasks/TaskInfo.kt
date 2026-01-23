@@ -1,5 +1,6 @@
 package com.github.andock.startup.tasks
 
+import com.github.andock.startup.DispatcherType
 import dagger.MapKey
 
 @MapKey(unwrapValue = false)
@@ -8,5 +9,6 @@ import dagger.MapKey
 annotation class TaskInfo(
     val name: String,
     val trigger: String,
-    val processes: Array<String>
+    val processes: Array<String>,
+    val dispatcher: DispatcherType
 )

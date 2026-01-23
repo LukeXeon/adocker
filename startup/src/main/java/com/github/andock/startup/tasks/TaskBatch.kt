@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import javax.inject.Singleton
@@ -17,7 +16,7 @@ internal class TaskBatch @AssistedInject constructor(
     @Assisted
     private val key: String,
     @param:InternalName("tasks")
-    private val tasks: @JvmSuppressWildcards Map<String, List<Pair<String, TaskComputeTime>>>,
+    private val tasks: @JvmSuppressWildcards Map<String, List<TaskEntry>>,
 ) : suspend (CoroutineScope) -> List<TaskResult> {
     private var isEntered: Boolean = false
 
@@ -25,10 +24,7 @@ internal class TaskBatch @AssistedInject constructor(
         if (isEntered) {
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
-                scope.async(Dispatchers.Default) {
-                    val (phaseTime, totalTime) = task.second()
-                    TaskResult(task.first, phaseTime, totalTime)
-                }
+                task.start(scope)
             }.awaitAll()
         } else {
             try {

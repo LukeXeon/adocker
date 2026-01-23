@@ -25,7 +25,6 @@ class AndroidXTrigger : Initializer<AndroidXTrigger.Stats> {
     )
 
     companion object {
-
         fun stats(context: Context): Stats {
             return AppInitializer.getInstance(context)
                 .initializeComponent(AndroidXTrigger::class.java)

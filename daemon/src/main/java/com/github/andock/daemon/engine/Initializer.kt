@@ -1,6 +1,6 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.startup.tasks.Task
+import com.github.andock.startup.Task
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull

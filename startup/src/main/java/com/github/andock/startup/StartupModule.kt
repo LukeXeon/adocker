@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Process
 import androidx.core.content.getSystemService
 import com.github.andock.startup.tasks.TaskComputeTime
+import com.github.andock.startup.tasks.TaskEntry
 import com.github.andock.startup.tasks.TaskInfo
 import dagger.Module
 import dagger.Provides
@@ -26,8 +27,8 @@ internal object StartupModule {
         application: Application,
         @InternalName("process-name")
         processName: String,
-    ): Map<String, List<Pair<String, TaskComputeTime>>> {
-        val map = mutableMapOf<String, MutableList<Pair<String, TaskComputeTime>>>()
+    ): Map<String, List<TaskEntry>> {
+        val map = mutableMapOf<String, MutableList<TaskEntry>>()
         if (processName.startsWith(application.packageName)) {
             val processName = processName.removePrefix(application.packageName)
                 .removePrefix(":")
@@ -35,7 +36,13 @@ internal object StartupModule {
                 val tasks = map.getOrPut(key.trigger) { mutableListOf() }
                 key.processes.forEach { process ->
                     if (process == processName) {
-                        tasks.add(key.name to task)
+                        tasks.add(
+                            TaskEntry(
+                                name = key.name,
+                                dispatcher = key.dispatcher.get(),
+                                compute = task
+                            )
+                        )
                     }
                 }
             }

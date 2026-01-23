@@ -1,6 +1,6 @@
 package com.github.andock.daemon.registries
 
-import com.github.andock.startup.tasks.Task
+import com.github.andock.startup.Task
 
 
 @Task("checkAllRegistries")

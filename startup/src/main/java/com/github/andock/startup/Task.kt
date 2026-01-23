@@ -1,4 +1,4 @@
-package com.github.andock.startup.tasks
+package com.github.andock.startup
 
 @Retention(AnnotationRetention.BINARY)
 @Target(

@@ -1,8 +1,12 @@
 package com.github.andock.daemon.containers
 
+import android.app.Application
+import android.webkit.WebView
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.startup.tasks.Task
 import com.github.andock.daemon.database.dao.ContainerDao
+import com.github.andock.startup.DispatcherType
+import com.github.andock.startup.Task
+import com.github.andock.startup.Trigger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -11,6 +15,7 @@ import java.io.File
 
 
 @Task("clearContainers")
+@Trigger("", dispatcher = DispatcherType.Main)
 suspend fun clearContainers(
     @Task("app")
     appContext: AppContext,
@@ -27,5 +32,12 @@ suspend fun clearContainers(
                 file.deleteRecursively()
             }
         }.joinAll()
+    }
+}
+
+@Task("webview")
+suspend fun webview(application: Application) {
+    withContext(Dispatchers.Main.immediate) {
+        WebView(application)
     }
 }

@@ -5,5 +5,6 @@ package com.github.andock.startup
 @Target(AnnotationTarget.FUNCTION)
 annotation class Trigger(
     val value: String,
-    val processes: Array<String> = [""]
+    val processes: Array<String> = [""],
+    val dispatcher: DispatcherType = DispatcherType.Default
 )

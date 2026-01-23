@@ -3,7 +3,7 @@ package com.github.andock.daemon.app
 import android.app.Application
 import android.widget.Toast
 import com.github.andock.daemon.R
-import com.github.andock.startup.tasks.Task
+import com.github.andock.startup.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.acra.config.mailSender
