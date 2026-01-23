@@ -3,19 +3,18 @@ package com.github.andock.startup.coroutines
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.AbstractCoroutineContextElement
-import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 
 internal class MainDispatcherInterceptor(
     mainDispatcher: CoroutineDispatcher,
-) : AbstractCoroutineContextElement(ContextElementInterceptor<ContinuationInterceptor>()),
-    ContextElementInterceptor<ContinuationInterceptor> {
+) : AbstractCoroutineContextElement(ContextElementInterceptor<CoroutineDispatcher>()),
+    ContextElementInterceptor<CoroutineDispatcher> {
     private val main = EventLoopMainDispatcher(mainDispatcher)
 
-    override val target: CoroutineContext.Key<ContinuationInterceptor>
-        get() = ContinuationInterceptor.Key
+    override val target: CoroutineContext.Key<CoroutineDispatcher>
+        get() = CoroutineDispatcher
 
-    override fun intercept(interceptor: ContinuationInterceptor): ContinuationInterceptor {
+    override fun intercept(interceptor: CoroutineDispatcher): CoroutineDispatcher {
         return when (interceptor) {
             Dispatchers.Main -> {
                 main
