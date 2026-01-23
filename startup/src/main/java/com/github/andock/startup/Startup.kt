@@ -3,6 +3,7 @@ package com.github.andock.startup
 import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
+import androidx.startup.AppInitializer
 import com.github.andock.startup.coroutines.RootContext
 import com.github.andock.startup.tasks.TaskBatchFactory
 import com.github.andock.startup.tasks.TaskResult
@@ -30,6 +31,12 @@ suspend fun triggerKey(): String {
     return requireNotNull(
         currentCoroutineContext()[RootContext]
     ) {
-        "not found TriggerCoroutineContext"
+        "not found RootContext"
     }.triggerKey
 }
+
+val Context.stats: Stats
+    get() {
+        return AppInitializer.getInstance(this)
+            .initializeComponent(AndroidXTrigger::class.java)
+    }

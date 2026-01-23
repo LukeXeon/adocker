@@ -1,7 +1,7 @@
 package com.github.andock
 
 import android.app.Application
-import com.github.andock.startup.AndroidXTrigger
+import com.github.andock.startup.stats
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.DelicateCoroutinesApi
 import timber.log.Timber
@@ -12,10 +12,9 @@ class AndockApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val stats = AndroidXTrigger.stats(this)
         stats.tasks.forEach { task ->
             Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms, totalTime: ${task.totalTime}")
         }
-        Timber.i("AndroidXTrigger, totalTime: ${stats.time}")
+        Timber.i("AndroidXTrigger, totalTime: ${stats.totalTime}")
     }
 }
