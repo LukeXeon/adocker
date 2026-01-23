@@ -5,6 +5,8 @@ import android.app.Application
 import android.os.Build
 import android.os.Process
 import androidx.core.content.getSystemService
+import com.github.andock.startup.tasks.TaskComputeTime
+import com.github.andock.startup.tasks.TaskInfo
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

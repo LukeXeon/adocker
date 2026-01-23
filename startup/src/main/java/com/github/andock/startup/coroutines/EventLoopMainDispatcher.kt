@@ -1,4 +1,4 @@
-package com.github.andock.startup
+package com.github.andock.startup.coroutines
 
 import android.os.Looper
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,14 +9,14 @@ import kotlinx.coroutines.Runnable
 import kotlin.coroutines.CoroutineContext
 
 @OptIn(InternalCoroutinesApi::class)
-internal class EventLoopMainCoroutineDispatcher(
+internal class EventLoopMainDispatcher(
     private val dispatcher: CoroutineDispatcher,
     private val invokeImmediately: Boolean = false
 ) : MainCoroutineDispatcher(), Delay by dispatcher as Delay {
     override val immediate: MainCoroutineDispatcher = if (invokeImmediately) {
         this
     } else {
-        EventLoopMainCoroutineDispatcher(dispatcher, true)
+        EventLoopMainDispatcher(dispatcher, true)
     }
 
     override fun isDispatchNeeded(context: CoroutineContext): Boolean {
@@ -34,7 +34,7 @@ internal class EventLoopMainCoroutineDispatcher(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as EventLoopMainCoroutineDispatcher
+        other as EventLoopMainDispatcher
 
         if (invokeImmediately != other.invokeImmediately) return false
         if (dispatcher != other.dispatcher) return false

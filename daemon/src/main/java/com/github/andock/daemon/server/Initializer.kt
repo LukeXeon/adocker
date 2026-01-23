@@ -1,6 +1,6 @@
 package com.github.andock.daemon.server
 
-import com.github.andock.startup.Task
+import com.github.andock.startup.tasks.Task
 import org.http4k.server.Http4kServer
 
 

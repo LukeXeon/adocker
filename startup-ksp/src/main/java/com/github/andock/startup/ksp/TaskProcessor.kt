@@ -35,7 +35,7 @@ class TaskProcessor(
 ) : SymbolProcessor {
 
     companion object {
-        private const val TASK_ANNOTATION = "com.github.andock.startup.Task"
+        private const val TASK_ANNOTATION = "com.github.andock.startup.tasks.Task"
         private const val TRIGGER_ANNOTATION = "com.github.andock.startup.Trigger"
         private const val DEFAULT_TRIGGER_KEY = "androidx.startup"
     }
@@ -348,14 +348,14 @@ class TaskProcessor(
      * Builds the initializer provider function
      */
     private fun buildInitializerFunction(taskData: TaskData): FunSpec {
-        val taskComputeClassName = ClassName("com.github.andock.startup", "TaskCompute")
+        val taskComputeClassName = ClassName("com.github.andock.startup.tasks", "TaskCompute")
         val measureTimeMillisWithResultMember =
-            MemberName("com.github.andock.startup", "measureTimeMillisWithResult")
+            MemberName("com.github.andock.startup.utils", "measureTimeMillisWithResult")
         return FunSpec.builder("initializer")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskName"))
+                AnnotationSpec.builder(ClassName("com.github.andock.startup.tasks", "TaskName"))
                     .addMember("%S", taskData.taskName)
                     .build()
             )
@@ -385,7 +385,7 @@ class TaskProcessor(
                             .addAnnotation(
                                 AnnotationSpec.builder(
                                     ClassName(
-                                        "com.github.andock.startup",
+                                        "com.github.andock.startup.tasks",
                                         "TaskName"
                                     )
                                 )
@@ -446,13 +446,13 @@ class TaskProcessor(
      * Builds the initializerToMap function
      */
     private fun buildInitializerToMapFunction(taskData: TaskData): FunSpec {
-        val taskComputeClassName = ClassName("com.github.andock.startup", "TaskCompute")
-        val taskComputeTimeClassName = ClassName("com.github.andock.startup", "TaskComputeTime")
+        val taskComputeClassName = ClassName("com.github.andock.startup.tasks", "TaskCompute")
+        val taskComputeTimeClassName = ClassName("com.github.andock.startup.tasks", "TaskComputeTime")
         return FunSpec.builder("initializerToMap")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskInfo"))
+                AnnotationSpec.builder(ClassName("com.github.andock.startup.tasks", "TaskInfo"))
                     .addMember("%S", taskData.taskName)
                     .addMember("%S", taskData.triggerKey)
                     .addMember(
@@ -480,7 +480,7 @@ class TaskProcessor(
                     )
                 )
                     .addAnnotation(
-                        AnnotationSpec.builder(ClassName("com.github.andock.startup", "TaskName"))
+                        AnnotationSpec.builder(ClassName("com.github.andock.startup.tasks", "TaskName"))
                             .addMember("%S", taskData.taskName)
                             .build()
                     )

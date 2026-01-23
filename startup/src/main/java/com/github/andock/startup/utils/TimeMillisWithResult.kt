@@ -1,4 +1,4 @@
-package com.github.andock.startup
+package com.github.andock.startup.utils
 
 data class TimeMillisWithResult<T>(
     val result: T,

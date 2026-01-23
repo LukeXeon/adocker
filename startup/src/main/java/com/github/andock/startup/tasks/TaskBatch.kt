@@ -1,5 +1,7 @@
-package com.github.andock.startup
+package com.github.andock.startup.tasks
 
+import com.github.andock.startup.InternalName
+import com.github.andock.startup.coroutines.MainDispatcherInterceptor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,7 +37,7 @@ internal class TaskBatch @AssistedInject constructor(
                     "not found CoroutineDispatcher"
                 }
                 return withContext(
-                    context = RedirectDispatchers(mainDispatcher) + Dispatchers.Main.immediate,
+                    context = MainDispatcherInterceptor(mainDispatcher) + Dispatchers.Main.immediate,
                     block = this
                 )
             } finally {

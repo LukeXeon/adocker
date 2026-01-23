@@ -1,10 +1,10 @@
-package com.github.andock.startup
+package com.github.andock.startup.coroutines
 
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-interface StartupCoroutineContext : CoroutineContext {
+abstract class AbstractCoroutineContext : CoroutineContext {
     override fun plus(context: CoroutineContext): CoroutineContext {
         return if (context === EmptyCoroutineContext) {
             // fast path -- avoid lambda creation
@@ -18,14 +18,14 @@ interface StartupCoroutineContext : CoroutineContext {
                     // make sure interceptor is always last in the context (and thus is fast to get when present)
                     val interceptor = removed[ContinuationInterceptor]
                     if (interceptor == null) {
-                        StartupCombinedContext(removed, element)
+                        CombinedCoroutineContext(removed, element)
                     } else {
                         val left = removed.minusKey(ContinuationInterceptor)
                         if (left === EmptyCoroutineContext) {
-                            StartupCombinedContext(element, interceptor)
+                            CombinedCoroutineContext(element, interceptor)
                         } else {
-                            StartupCombinedContext(
-                                StartupCombinedContext(left, element),
+                            CombinedCoroutineContext(
+                                CombinedCoroutineContext(left, element),
                                 interceptor
                             )
                         }

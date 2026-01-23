@@ -1,11 +1,12 @@
-package com.github.andock.startup
+package com.github.andock.startup.tasks
 
+import com.github.andock.startup.utils.TimeMillisWithResult
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.Volatile
 
 class TaskCompute<T> @PublishedApi internal constructor(
-    initializer: SuspendInitializer<T>
+    initializer: Initializer<T>
 ) {
 
     @Volatile
@@ -16,15 +17,15 @@ class TaskCompute<T> @PublishedApi internal constructor(
     @Suppress("UNCHECKED_CAST")
     suspend operator fun invoke(): TimeMillisWithResult<T> {
         val v1 = value
-        if (v1 !is SuspendInitializer<*>) {
+        if (v1 !is Initializer<*>) {
             return v1 as TimeMillisWithResult<T>
         }
         return mutex.withLock {
             val v2 = value
-            if (v2 !is SuspendInitializer<*>) {
+            if (v2 !is Initializer<*>) {
                 v2 as TimeMillisWithResult<T>
             } else {
-                val typedValue = (v2 as SuspendInitializer<T>).invoke()
+                val typedValue = (v2 as Initializer<T>).invoke()
                 value = typedValue
                 typedValue
             }

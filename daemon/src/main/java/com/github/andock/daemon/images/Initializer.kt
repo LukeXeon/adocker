@@ -1,7 +1,7 @@
 package com.github.andock.daemon.images
 
 import com.github.andock.daemon.app.AppContext
-import com.github.andock.startup.Task
+import com.github.andock.startup.tasks.Task
 
 
 @Task("deleteUnreferencedLayers")

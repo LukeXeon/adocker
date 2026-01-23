@@ -1,4 +1,4 @@
-package com.github.andock.startup
+package com.github.andock.startup.coroutines
 
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass

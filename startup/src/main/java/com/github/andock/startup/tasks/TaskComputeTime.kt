@@ -1,5 +1,6 @@
-package com.github.andock.startup
+package com.github.andock.startup.tasks
 
+import com.github.andock.startup.utils.measureTimeMillis
 import dagger.Lazy
 
 class TaskComputeTime(
