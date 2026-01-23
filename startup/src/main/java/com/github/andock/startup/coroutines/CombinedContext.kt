@@ -4,7 +4,7 @@ import com.github.andock.startup.coroutines.ContextElementInterceptor.Companion.
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-internal class CombinedCoroutineContext(
+internal class CombinedContext(
     private val left: CoroutineContext,
     private val element: CoroutineContext.Element
 ) : AbstractCoroutineContext() {
@@ -14,7 +14,7 @@ internal class CombinedCoroutineContext(
         while (true) {
             cur.element[key]?.let { return it }
             val next = cur.left
-            if (next is CombinedCoroutineContext) {
+            if (next is CombinedContext) {
                 cur = next
             } else {
                 return next[key]
@@ -31,7 +31,7 @@ internal class CombinedCoroutineContext(
         return when {
             newLeft === left -> this
             newLeft === EmptyCoroutineContext -> element
-            else -> CombinedCoroutineContext(newLeft, element)
+            else -> CombinedContext(newLeft, element)
         }
     }
 
@@ -39,7 +39,7 @@ internal class CombinedCoroutineContext(
         var cur = this
         var size = 2
         while (true) {
-            cur = cur.left as? CombinedCoroutineContext ?: return size
+            cur = cur.left as? CombinedContext ?: return size
             size++
         }
     }
@@ -47,12 +47,12 @@ internal class CombinedCoroutineContext(
     private fun contains(element: CoroutineContext.Element): Boolean =
         get(element.key) == element
 
-    private fun containsAll(context: CombinedCoroutineContext): Boolean {
+    private fun containsAll(context: CombinedContext): Boolean {
         var cur = context
         while (true) {
             if (!contains(cur.element)) return false
             val next = cur.left
-            if (next is CombinedCoroutineContext) {
+            if (next is CombinedContext) {
                 cur = next
             } else {
                 return contains(next as CoroutineContext.Element)
@@ -66,7 +66,7 @@ internal class CombinedCoroutineContext(
 
     override fun plus(context: CoroutineContext): CoroutineContext {
         return fold(combine(context)) { acc, element ->
-            if (acc is CombinedCoroutineContext && element is ContextElementInterceptor<*>) {
+            if (acc is CombinedContext && element is ContextElementInterceptor<*>) {
                 val element = element.intercept(acc)
                 if (element != null) {
                     return@fold acc.combine(element)
@@ -77,7 +77,7 @@ internal class CombinedCoroutineContext(
     }
 
     override fun equals(other: Any?): Boolean =
-        this === other || other is CombinedCoroutineContext
+        this === other || other is CombinedContext
                 && other.size() == size()
                 && other.containsAll(this)
 

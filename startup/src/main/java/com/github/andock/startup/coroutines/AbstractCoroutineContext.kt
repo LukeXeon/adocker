@@ -18,14 +18,14 @@ abstract class AbstractCoroutineContext : CoroutineContext {
                     // make sure interceptor is always last in the context (and thus is fast to get when present)
                     val interceptor = removed[ContinuationInterceptor]
                     if (interceptor == null) {
-                        CombinedCoroutineContext(removed, element)
+                        CombinedContext(removed, element)
                     } else {
                         val left = removed.minusKey(ContinuationInterceptor)
                         if (left === EmptyCoroutineContext) {
-                            CombinedCoroutineContext(element, interceptor)
+                            CombinedContext(element, interceptor)
                         } else {
-                            CombinedCoroutineContext(
-                                CombinedCoroutineContext(left, element),
+                            CombinedContext(
+                                CombinedContext(left, element),
                                 interceptor
                             )
                         }

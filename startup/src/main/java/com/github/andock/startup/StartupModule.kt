@@ -5,13 +5,16 @@ import android.app.Application
 import android.os.Build
 import android.os.Process
 import androidx.core.content.getSystemService
+import com.github.andock.startup.tasks.TaskCompute
 import com.github.andock.startup.tasks.TaskComputeTime
 import com.github.andock.startup.tasks.TaskEntry
 import com.github.andock.startup.tasks.TaskInfo
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
 import java.io.File
 import java.io.IOException
 import javax.inject.Singleton
@@ -48,6 +51,18 @@ internal object StartupModule {
             }
         }
         return map
+    }
+
+    @Provides
+    @IntoMap
+    @TaskInfo(
+        name = "dummy-task",
+        trigger = "dummy-trigger",
+        processes = ["dummy-process"],
+        dispatcher = DispatcherType.Default,
+    )
+    fun dummyTask(): TaskComputeTime {
+        return TaskComputeTime(Lazy<TaskCompute<*>> { throw NotImplementedError("dummy task") })
     }
 
     /**
