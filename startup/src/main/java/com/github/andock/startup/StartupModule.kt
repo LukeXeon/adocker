@@ -59,7 +59,7 @@ internal object StartupModule {
         name = "dummy-task",
         trigger = "dummy-trigger",
         processes = ["dummy-process"],
-        dispatcher = DispatcherType.Default,
+        dispatcher = TaskDispatchers.Default,
     )
     fun dummyTask(): TaskComputeTime {
         return TaskComputeTime(Lazy<TaskCompute<*>> { throw NotImplementedError("dummy task") })

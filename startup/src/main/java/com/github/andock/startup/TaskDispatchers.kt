@@ -4,7 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Provider
 
-enum class DispatcherType : Provider<CoroutineDispatcher> {
+enum class TaskDispatchers : Provider<CoroutineDispatcher> {
     Main {
         override fun get() = Dispatchers.Main
     },

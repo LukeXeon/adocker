@@ -467,7 +467,7 @@ class TaskProcessor(
                     )
                     .addMember(
                         "dispatcher = %T.%L",
-                        ClassName("com.github.andock.startup", "DispatcherType"),
+                        ClassName("com.github.andock.startup", "TaskDispatchers"),
                         taskData.dispatcher
                     )
                     .build()
