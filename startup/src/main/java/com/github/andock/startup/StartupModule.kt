@@ -42,7 +42,6 @@ internal object StartupModule {
                         tasks.add(
                             TaskEntry(
                                 name = key.name,
-                                dispatcher = key.dispatcher.get(),
                                 compute = task
                             )
                         )
@@ -58,8 +57,7 @@ internal object StartupModule {
     @TaskInfo(
         name = "dummy-task",
         trigger = "dummy-trigger",
-        processes = ["dummy-process"],
-        dispatcher = TaskDispatchers.Default,
+        processes = ["dummy-process"]
     )
     fun dummyTask(): TaskComputeTime {
         return TaskComputeTime(Lazy<TaskCompute<*>> { throw NotImplementedError("dummy task") })

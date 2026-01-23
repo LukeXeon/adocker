@@ -12,7 +12,7 @@ import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 
 @Task("app")
-fun appContext(
+suspend fun appContext(
     appContext: AppContext,
     @Suppress("unused")
     @Task("logging")
@@ -21,7 +21,9 @@ fun appContext(
     @Task("reporter")
     reporter: Unit
 ): AppContext {
-    appContext.initializeDirs()
+    withContext(Dispatchers.Default) {
+        appContext.initializeDirs()
+    }
     return appContext
 }
 
@@ -32,7 +34,7 @@ suspend fun crashReporter(
     logging: Unit,
     application: Application
 ) {
-    withContext(Dispatchers.IO) {
+    withContext(Dispatchers.Default) {
         application.initAcra {
             buildConfigClass = sequenceOf(
                 application.packageName,

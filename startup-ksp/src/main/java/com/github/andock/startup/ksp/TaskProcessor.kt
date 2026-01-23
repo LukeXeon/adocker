@@ -138,11 +138,7 @@ class TaskProcessor(
         }?.value?.let {
             @Suppress("UNCHECKED_CAST")
             it as List<String>
-        }?: listOf("")
-
-        val dispatcher = triggerAnnotation?.arguments?.firstOrNull {
-            it.name?.asString() == "dispatcher"
-        }?.value?.toString()?.substringAfterLast('.') ?: "Default"
+        } ?: listOf("")
 
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
@@ -165,7 +161,6 @@ class TaskProcessor(
             triggerKey = triggerKey,
             returnType = returnType,
             processes = processes,
-            dispatcher = dispatcher,
             parameters = parameters,
         )
     }
@@ -465,11 +460,6 @@ class TaskProcessor(
                         "processes = " + taskData.processes.joinToString(",", "[", "]") { "%S" },
                         *taskData.processes.toTypedArray()
                     )
-                    .addMember(
-                        "dispatcher = %T.%L",
-                        ClassName("com.github.andock.startup", "TaskDispatchers"),
-                        taskData.dispatcher
-                    )
                     .build()
             )
             .addParameter(
@@ -521,7 +511,6 @@ class TaskProcessor(
         val taskName: String,
         val triggerKey: String,
         val processes: List<String>,
-        val dispatcher: String,
         val returnType: TypeName,
         val parameters: List<ParameterData>
     )
