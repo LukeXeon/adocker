@@ -6,5 +6,4 @@ package com.github.andock.startup
 annotation class Trigger(
     val value: String,
     val processes: Array<String> = [""],
-    val dispatcher: TaskDispatchers = TaskDispatchers.Default
 )
