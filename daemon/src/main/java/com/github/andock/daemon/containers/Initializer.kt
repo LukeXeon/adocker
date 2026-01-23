@@ -2,9 +2,7 @@ package com.github.andock.daemon.containers
 
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
-import com.github.andock.startup.DispatcherType
 import com.github.andock.startup.Task
-import com.github.andock.startup.Trigger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -13,7 +11,6 @@ import java.io.File
 
 
 @Task("clearContainers")
-@Trigger("", dispatcher = DispatcherType.Main)
 suspend fun clearContainers(
     @Task("app")
     appContext: AppContext,
