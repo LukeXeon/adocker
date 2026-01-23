@@ -10,8 +10,7 @@ data class TaskEntry(
 ) : suspend (CoroutineScope) -> TaskResult {
 
     override suspend fun invoke(scope: CoroutineScope): TaskResult {
-        val (phaseTime, totalTime) = compute()
-        return TaskResult(name, phaseTime, totalTime)
+        return TaskResult(name, compute())
     }
 
     fun start(scope: CoroutineScope): Deferred<TaskResult> {

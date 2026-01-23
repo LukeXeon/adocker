@@ -13,8 +13,8 @@ class AndockApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         stats.tasks.forEach { task ->
-            Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms, totalTime: ${task.totalTime}")
+            Timber.i("${task.name}, phaseTime: ${task.phaseTime}ms")
         }
-        Timber.i("AndroidXTrigger, totalTime: ${stats.totalTime}")
+        Timber.i("AndroidXTrigger, totalTime: ${stats.totalTime}ms")
     }
 }
