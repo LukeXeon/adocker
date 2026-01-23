@@ -36,7 +36,7 @@ internal object StartupModule {
             val processName = processName.removePrefix(application.packageName)
                 .removePrefix(":")
             tasks.forEach { (key, task) ->
-                val tasks = map.getOrPut(key.trigger) { mutableListOf() }
+                val tasks = map.getOrPut(key.trigger) { ArrayList(key.processes.size) }
                 key.processes.forEach { process ->
                     if (process == processName) {
                         tasks.add(
