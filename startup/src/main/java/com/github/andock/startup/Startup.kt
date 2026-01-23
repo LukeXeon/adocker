@@ -7,6 +7,7 @@ import androidx.startup.AppInitializer
 import com.github.andock.startup.coroutines.RootContext
 import com.github.andock.startup.tasks.TaskBatchFactory
 import com.github.andock.startup.tasks.TaskResult
+import com.github.andock.startup.utils.measureTimeMillis
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
@@ -17,14 +18,18 @@ import kotlinx.coroutines.runBlocking
 @MainThread
 fun Context.trigger(
     key: String,
-): List<TaskResult> {
-    require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
-    val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
-    val batch = entrypoint.newInstance(key)
-    return runBlocking(
-        context = RootContext(key),
-        block = batch
-    )
+): Stats {
+    val tasks: List<TaskResult>
+    val ms = measureTimeMillis {
+        require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
+        val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
+        val batch = entrypoint.newInstance(key)
+        tasks = runBlocking(
+            context = RootContext(key),
+            block = batch
+        )
+    }
+    return Stats(key, ms, tasks)
 }
 
 suspend fun triggerKey(): String {
