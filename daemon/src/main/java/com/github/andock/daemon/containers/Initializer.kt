@@ -1,7 +1,5 @@
 package com.github.andock.daemon.containers
 
-import android.app.Application
-import android.webkit.WebView
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.startup.DispatcherType
@@ -32,12 +30,5 @@ suspend fun clearContainers(
                 file.deleteRecursively()
             }
         }.joinAll()
-    }
-}
-
-@Task("webview")
-suspend fun webview(application: Application) {
-    withContext(Dispatchers.Main.immediate) {
-        WebView(application)
     }
 }

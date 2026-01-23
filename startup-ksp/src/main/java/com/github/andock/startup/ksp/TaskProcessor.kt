@@ -140,6 +140,10 @@ class TaskProcessor(
             it as List<String>
         }?: listOf("")
 
+        val dispatcher = triggerAnnotation?.arguments?.firstOrNull {
+            it.name?.asString() == "dispatcher"
+        }?.value?.toString()?.substringAfterLast('.') ?: "Default"
+
         // Extract return type
         val returnType = function.returnType?.resolve()?.toTypeName() ?: run {
             logger.error(
@@ -161,6 +165,7 @@ class TaskProcessor(
             triggerKey = triggerKey,
             returnType = returnType,
             processes = processes,
+            dispatcher = dispatcher,
             parameters = parameters,
         )
     }
@@ -454,11 +459,16 @@ class TaskProcessor(
             .addAnnotation(ClassName("dagger.multibindings", "IntoMap"))
             .addAnnotation(
                 AnnotationSpec.builder(ClassName("com.github.andock.startup.tasks", "TaskInfo"))
-                    .addMember("%S", taskData.taskName)
-                    .addMember("%S", taskData.triggerKey)
+                    .addMember("name = %S", taskData.taskName)
+                    .addMember("trigger = %S", taskData.triggerKey)
                     .addMember(
-                        taskData.processes.joinToString(",", "[", "]") { "%S" },
+                        "processes = " + taskData.processes.joinToString(",", "[", "]") { "%S" },
                         *taskData.processes.toTypedArray()
+                    )
+                    .addMember(
+                        "dispatcher = %T.%L",
+                        ClassName("com.github.andock.startup", "DispatcherType"),
+                        taskData.dispatcher
                     )
                     .build()
             )
@@ -511,6 +521,7 @@ class TaskProcessor(
         val taskName: String,
         val triggerKey: String,
         val processes: List<String>,
+        val dispatcher: String,
         val returnType: TypeName,
         val parameters: List<ParameterData>
     )
