@@ -25,6 +25,6 @@ internal class RootContext(
     }
 
     override fun toString(): String {
-        return "RootContext(name='$triggerKey')"
+        return "RootContext(triggerKey='$triggerKey')"
     }
 }
