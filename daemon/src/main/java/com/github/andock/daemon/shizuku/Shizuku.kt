@@ -49,19 +49,6 @@ private val requests = run {
     return@run map
 }
 
-private fun nextRequestCode(): Pair<CompletableDeferred<Boolean>, Int> {
-    val deferred = CompletableDeferred<Boolean>()
-    synchronized(requests) {
-        while (true) {
-            val code = Random.nextInt(1, UShort.MAX_VALUE.toInt())
-            if (!requests.containsKey(code)) {
-                requests[code] = deferred
-                return deferred to code
-            }
-        }
-    }
-}
-
 /**
  * Request Shizuku permission
  */
@@ -72,7 +59,17 @@ suspend fun requestPermission(): Boolean {
         }
 
         !hasPermission -> {
-            val (deferred, code) = nextRequestCode()
+            var code: Int
+            val deferred = CompletableDeferred<Boolean>()
+            synchronized(requests) {
+                while (true) {
+                    code = Random.nextInt(1, UShort.MAX_VALUE.toInt())
+                    if (!requests.containsKey(code)) {
+                        requests[code] = deferred
+                        break
+                    }
+                }
+            }
             Shizuku.requestPermission(code)
             return deferred.await()
         }
