@@ -10,17 +10,8 @@ internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
 
     fun intercept(interceptor: E): E
 
-    data class Key<E : CoroutineContext.Element>(val type: KClass<E>) :
-        CoroutineContext.Key<ContextElementInterceptor<E>>
-
-    companion object {
-        inline operator fun <reified E : CoroutineContext.Element> invoke(): CoroutineContext.Key<ContextElementInterceptor<E>> {
-            return Key(E::class)
-        }
-
-        fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.intercept(context: CoroutineContext): E? {
-            return intercept(context[target] ?: return null)
-        }
-    }
+    data class Key<E : CoroutineContext.Element>(
+        val type: KClass<E>
+    ) : CoroutineContext.Key<ContextElementInterceptor<E>>
 }
 

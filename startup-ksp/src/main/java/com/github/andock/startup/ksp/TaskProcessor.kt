@@ -350,7 +350,7 @@ class TaskProcessor(
     private fun buildInitializerFunction(taskData: TaskData): FunSpec {
         val taskComputeClassName = ClassName("com.github.andock.startup.tasks", "TaskCompute")
         val measureTimeMillisWithResultMember =
-            MemberName("com.github.andock.startup.utils", "measureTimeMillisWithResult")
+            MemberName("com.github.andock.startup.tasks", "measureTimeMillisWithResult")
         return FunSpec.builder("initializer")
             .addAnnotation(ClassName("dagger", "Provides"))
             .addAnnotation(ClassName("javax.inject", "Singleton"))

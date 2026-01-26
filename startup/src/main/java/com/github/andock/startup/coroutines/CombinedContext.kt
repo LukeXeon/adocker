@@ -1,6 +1,5 @@
 package com.github.andock.startup.coroutines
 
-import com.github.andock.startup.coroutines.ContextElementInterceptor.Companion.intercept
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
