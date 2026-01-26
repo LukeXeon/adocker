@@ -24,7 +24,9 @@ internal class TaskBatch @AssistedInject constructor(
         if (isEntered) {
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
-                task.start(scope)
+                with(task) {
+                    scope.start()
+                }
             }.awaitAll()
         } else {
             try {

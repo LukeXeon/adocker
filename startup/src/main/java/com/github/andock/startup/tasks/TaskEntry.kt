@@ -13,7 +13,7 @@ data class TaskEntry(
         return TaskResult(name, compute())
     }
 
-    fun start(scope: CoroutineScope): Deferred<TaskResult> {
-        return scope.async(block = this)
+    fun CoroutineScope.start(): Deferred<TaskResult> {
+        return async(block = this@TaskEntry)
     }
 }
