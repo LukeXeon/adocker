@@ -9,7 +9,7 @@ internal class MainDispatcherInterceptor(
     mainDispatcher: CoroutineDispatcher,
 ) : AbstractCoroutineContextElement(ContextElementInterceptor<CoroutineDispatcher>()),
     ContextElementInterceptor<CoroutineDispatcher> {
-    private val main = EventLoopMainDispatcher(mainDispatcher)
+    private val main = BlockingMainCoroutineDispatcher(mainDispatcher)
 
     override val target: CoroutineContext.Key<CoroutineDispatcher>
         get() = CoroutineDispatcher

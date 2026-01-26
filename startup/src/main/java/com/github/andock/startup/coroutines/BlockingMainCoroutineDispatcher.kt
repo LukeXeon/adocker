@@ -9,14 +9,14 @@ import kotlinx.coroutines.Runnable
 import kotlin.coroutines.CoroutineContext
 
 @OptIn(InternalCoroutinesApi::class)
-internal class EventLoopMainDispatcher(
+internal class BlockingMainCoroutineDispatcher(
     private val dispatcher: CoroutineDispatcher,
     private val invokeImmediately: Boolean = false
 ) : MainCoroutineDispatcher(), Delay by dispatcher as Delay {
     override val immediate: MainCoroutineDispatcher = if (invokeImmediately) {
         this
     } else {
-        EventLoopMainDispatcher(dispatcher, true)
+        BlockingMainCoroutineDispatcher(dispatcher, true)
     }
 
     override fun isDispatchNeeded(context: CoroutineContext): Boolean {
@@ -34,7 +34,7 @@ internal class EventLoopMainDispatcher(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as EventLoopMainDispatcher
+        other as BlockingMainCoroutineDispatcher
 
         if (invokeImmediately != other.invokeImmediately) return false
         if (dispatcher != other.dispatcher) return false
