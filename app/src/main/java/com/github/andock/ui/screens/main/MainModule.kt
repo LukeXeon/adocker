@@ -12,11 +12,11 @@ import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewInAr
 import com.github.andock.R
-import com.github.andock.ui.screens.containers.ContainersRoute
-import com.github.andock.ui.screens.home.HomeRoute
-import com.github.andock.ui.screens.images.ImagesRoute
-import com.github.andock.ui.screens.search.SearchRoute
-import com.github.andock.ui.screens.settings.SettingsRoute
+import com.github.andock.ui.screens.containers.ContainersKey
+import com.github.andock.ui.screens.home.HomeKey
+import com.github.andock.ui.screens.images.ImagesKey
+import com.github.andock.ui.screens.search.SearchKey
+import com.github.andock.ui.screens.settings.SettingsKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,35 +34,35 @@ object MainModule {
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
         ) {
-            HomeRoute
+            HomeKey
         },
         MainBottomTab(
             titleResId = R.string.nav_discover,
             selectedIcon = Icons.Filled.Explore,
             unselectedIcon = Icons.Outlined.Explore,
         ) {
-            SearchRoute
+            SearchKey
         },
         MainBottomTab(
             titleResId = R.string.nav_containers,
             selectedIcon = Icons.Filled.ViewInAr,
             unselectedIcon = Icons.Outlined.ViewInAr,
         ) {
-            ContainersRoute
+            ContainersKey
         },
         MainBottomTab(
             titleResId = R.string.nav_images,
             selectedIcon = Icons.Filled.Layers,
             unselectedIcon = Icons.Outlined.Layers,
         ) {
-            ImagesRoute
+            ImagesKey
         },
         MainBottomTab(
             titleResId = R.string.nav_settings,
             selectedIcon = Icons.Filled.Settings,
             unselectedIcon = Icons.Outlined.Settings,
         ) {
-            SettingsRoute
+            SettingsKey
         }
     )
 

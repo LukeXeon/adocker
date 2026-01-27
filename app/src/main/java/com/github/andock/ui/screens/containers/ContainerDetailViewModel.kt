@@ -17,7 +17,7 @@ class ContainerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val containerManager: ContainerManager,
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerDetailRoute>().containerId
+    val containerId = savedStateHandle.toRoute<ContainerDetailKey>().containerId
 
     val container = containerManager.containers.map { it[containerId] }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)

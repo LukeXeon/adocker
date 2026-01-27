@@ -29,12 +29,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ContainerLogRoute::class)
 @Composable
 fun ContainerLogScreen() {
     val viewModel = hiltViewModel<ContainerLogViewModel>()

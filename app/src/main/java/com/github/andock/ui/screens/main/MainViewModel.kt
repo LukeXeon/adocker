@@ -1,16 +1,13 @@
 package com.github.andock.ui.screens.main
 
 import androidx.lifecycle.ViewModel
-import com.github.andock.ui.route.Screen
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    screens: Map<Class<*>, Screen>,
+    val entryBuilders: Set<@JvmSuppressWildcards EntryProviderScope<NavKey>.() -> Unit>,
     val bottomTabs: List<@JvmSuppressWildcards MainBottomTab<*>>,
-) : ViewModel() {
-    val screens = screens.asSequence().map {
-        it.key.kotlin to it.value
-    }.toList()
-}
+) : ViewModel()

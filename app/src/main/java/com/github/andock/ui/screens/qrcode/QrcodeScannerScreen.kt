@@ -57,7 +57,6 @@ import com.github.andock.ui.utils.savedStateHandleKey
 val ScannedData by savedStateHandleKey<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(QrcodeScannerRoute::class)
 @Composable
 fun QrcodeScannerScreen() {
     val navController = LocalNavController.current

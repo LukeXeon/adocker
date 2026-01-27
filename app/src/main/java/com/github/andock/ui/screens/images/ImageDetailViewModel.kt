@@ -15,7 +15,7 @@ class ImageDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val imageManager: ImageManager,
 ) : ViewModel() {
-    val imageId = savedStateHandle.toRoute<ImageDetailRoute>().imageId
+    val imageId = savedStateHandle.toRoute<ImageDetailKey>().imageId
 
     val image = imageManager.getImageById(imageId).stateIn(
         viewModelScope,

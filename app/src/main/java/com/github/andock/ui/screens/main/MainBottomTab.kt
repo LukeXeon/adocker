@@ -9,9 +9,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation3.runtime.NavKey
 import kotlin.reflect.KClass
 
-data class MainBottomTab<T : Any>(
+data class MainBottomTab<T : NavKey>(
     val type: KClass<T>,
     @param:StringRes
     val titleResId: Int,
@@ -20,7 +21,7 @@ data class MainBottomTab<T : Any>(
     val route: @Composable () -> T
 ) {
     companion object {
-        inline operator fun <reified T : Any> invoke(
+        inline operator fun <reified T : NavKey> invoke(
             @StringRes
             titleResId: Int,
             selectedIcon: ImageVector,

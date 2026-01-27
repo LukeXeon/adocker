@@ -45,9 +45,9 @@ import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.containers.ContainerCreateRoute
+import com.github.andock.ui.screens.containers.ContainerCreateKey
 import com.github.andock.ui.screens.main.LocalNavController
-import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
+import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
 import com.github.andock.ui.screens.qrcode.ScannedData
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -57,7 +57,6 @@ import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ImagesRoute::class)
 @Composable
 fun ImagesScreen() {
     val navController = LocalNavController.current
@@ -89,7 +88,7 @@ fun ImagesScreen() {
                 actions = {
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerRoute)
+                            navController.navigate(QrcodeScannerKey)
                         }
                     ) {
                         Icon(
@@ -176,11 +175,11 @@ fun ImagesScreen() {
                         ImageCard(
                             image = image,
                             onRun = debounceClick {
-                                navController.navigate(ContainerCreateRoute(image.id))
+                                navController.navigate(ContainerCreateKey(image.id))
                             },
                             onDelete = debounceClick { setDeleteDialog(image) },
                             onClick = debounceClick {
-                                navController.navigate(ImageDetailRoute(image.id))
+                                navController.navigate(ImageDetailKey(image.id))
                             }
                         )
                     }

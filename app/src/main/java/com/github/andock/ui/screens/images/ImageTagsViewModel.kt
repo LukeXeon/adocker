@@ -18,7 +18,7 @@ class ImageTagsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     repositories: ImageRepositories,
 ) : ViewModel() {
-    val repository = savedStateHandle.toRoute<ImageTagsRoute>().repository
+    val repository = savedStateHandle.toRoute<ImageTagsKey>().repository
 
     val tags = repositories[RegistryModule.DEFAULT_REGISTRY]
         .tags(repository)

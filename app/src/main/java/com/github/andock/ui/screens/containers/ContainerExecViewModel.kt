@@ -30,7 +30,7 @@ class ContainerExecViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     containerManager: ContainerManager
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerExecRoute>().containerId
+    val containerId = savedStateHandle.toRoute<ContainerExecKey>().containerId
     private val container = containerManager.containers.map { it[containerId] }
     val metadata = container
         .filterNotNull()

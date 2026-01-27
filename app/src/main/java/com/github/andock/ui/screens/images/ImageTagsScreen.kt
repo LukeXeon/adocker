@@ -34,7 +34,6 @@ import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ImageTagsRoute::class)
 @Composable
 fun ImageTagsScreen() {
     val viewModel = hiltViewModel<ImageTagsViewModel>()

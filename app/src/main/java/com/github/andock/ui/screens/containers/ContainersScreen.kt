@@ -41,7 +41,6 @@ import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -49,7 +48,6 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-@Route(ContainersRoute::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainersScreen() {
@@ -196,17 +194,17 @@ fun ContainersScreen() {
                                 onDelete = { setDeleteDialog(container) },
                                 onTerminal = {
                                     navController.navigate(
-                                        ContainerExecRoute(container.id)
+                                        ContainerExecKey(container.id)
                                     )
                                 },
                                 onLog = {
                                     navController.navigate(
-                                        ContainerLogRoute(container.id)
+                                        ContainerLogKey(container.id)
                                     )
                                 },
                                 onClick = {
                                     navController.navigate(
-                                        ContainerDetailRoute(container.id)
+                                        ContainerDetailKey(container.id)
                                     )
                                 }
                             )

@@ -18,7 +18,7 @@ class ContainerCreateViewModel @Inject constructor(
     imageManager: ImageManager,
     private val containerManager: ContainerManager
 ) : ViewModel() {
-    val imageId = savedStateHandle.toRoute<ContainerCreateRoute>().imageId
+    val imageId = savedStateHandle.toRoute<ContainerCreateKey>().imageId
 
     val image = imageManager.getImageById(imageId)
         .stateIn(

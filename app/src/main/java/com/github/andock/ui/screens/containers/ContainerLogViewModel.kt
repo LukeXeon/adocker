@@ -21,7 +21,7 @@ class ContainerLogViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     containerManager: ContainerManager,
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerLogRoute>().containerId
+    val containerId = savedStateHandle.toRoute<ContainerLogKey>().containerId
 
     val metadata = containerManager.containers.map {
         it[containerId]

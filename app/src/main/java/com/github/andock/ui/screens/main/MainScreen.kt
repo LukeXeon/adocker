@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -27,11 +28,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.andock.ui.screens.home.HomeRoute
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+import com.github.andock.ui.screens.home.HomeKey
 import com.github.andock.ui.utils.debounceClick
 
 val LocalNavController = staticCompositionLocalOf<NavHostController> {
@@ -46,7 +48,6 @@ val LocalSnackbarHostState = staticCompositionLocalOf {
 fun MainScreen() {
     val mainViewModel = hiltViewModel<MainViewModel>()
     val bottomTabs = mainViewModel.bottomTabs
-    val screens = mainViewModel.screens
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -56,6 +57,7 @@ fun MainScreen() {
             currentDestination?.hierarchy?.any { it.hasRoute(tab.type) } == true
         }
     }
+    val backStack = remember { mutableStateListOf<NavKey>(HomeKey) }
     MainTheme {
         CompositionLocalProvider(
             LocalNavController provides navController
@@ -67,18 +69,13 @@ fun MainScreen() {
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = HomeRoute::class,
-                    ) {
-                        screens.forEach { (route, screen) ->
-                            composable(
-                                route = route,
-                                deepLinks = screen.deepLinks,
-                                content = screen.content
-                            )
-                        }
-                    }
+                    NavDisplay(
+                        backStack = backStack,
+                        onBack = { backStack.removeLastOrNull() },
+                        entryProvider = entryProvider {
+                            mainViewModel.entryBuilders.forEach { builder -> this.builder() }
+                        },
+                    )
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)

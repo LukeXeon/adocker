@@ -46,10 +46,10 @@ import com.github.andock.R
 import com.github.andock.daemon.os.OSArchitecture
 import com.github.andock.daemon.io.formatFileSize
 import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.limits.ProcessLimitRoute
+import com.github.andock.ui.screens.limits.ProcessLimitKey
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
-import com.github.andock.ui.screens.registries.RegistriesRoute
+import com.github.andock.ui.screens.registries.RegistriesKey
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,6 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(SettingsRoute::class)
 @Composable
 fun SettingsScreen() {
     val navController = LocalNavController.current
@@ -113,7 +112,7 @@ fun SettingsScreen() {
                         title = stringResource(R.string.settings_registry_mirror),
                         subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
                         onClick = debounceClick {
-                            navController.navigate(RegistriesRoute)
+                            navController.navigate(RegistriesKey)
                         }
                     )
                 }
@@ -128,7 +127,7 @@ fun SettingsScreen() {
                         title = stringResource(R.string.settings_phantom_process),
                         subtitle = stringResource(R.string.settings_phantom_process_subtitle),
                         onClick = debounceClick {
-                            navController.navigate(ProcessLimitRoute)
+                            navController.navigate(ProcessLimitKey)
                         },
                         isWarning = true
                     )

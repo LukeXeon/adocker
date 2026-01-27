@@ -49,7 +49,6 @@ import com.github.andock.daemon.containers.creator.ContainerCreateState
 import com.github.andock.daemon.containers.creator.ContainerCreator
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.InfoCard
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
@@ -66,7 +65,6 @@ private fun parseEnvVars(input: String): Map<String, String> {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ContainerCreateRoute::class)
 @Composable
 fun ContainerCreateScreen() {
     val viewModel = hiltViewModel<ContainerCreateViewModel>()

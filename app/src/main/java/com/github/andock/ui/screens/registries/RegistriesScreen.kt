@@ -43,7 +43,7 @@ import com.github.andock.daemon.registries.Registry
 import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
-import com.github.andock.ui.screens.qrcode.QrcodeScannerRoute
+import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
 import com.github.andock.ui.screens.qrcode.ScannedData
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -51,7 +51,6 @@ import com.github.andock.ui.utils.get
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(RegistriesRoute::class)
 @Composable
 fun RegistriesScreen() {
     val navController = LocalNavController.current
@@ -101,7 +100,7 @@ fun RegistriesScreen() {
                     }
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerRoute)
+                            navController.navigate(QrcodeScannerKey)
                         },
                     ) {
                         Icon(
@@ -144,7 +143,7 @@ fun RegistriesScreen() {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
                     onClick = debounceClick {
-                        navController.navigate(AddMirrorRoute)
+                        navController.navigate(AddMirrorKey)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

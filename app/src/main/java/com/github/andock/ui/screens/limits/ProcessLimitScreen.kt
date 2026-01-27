@@ -21,7 +21,6 @@ import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
-@Route(ProcessLimitRoute::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessLimitScreen() {

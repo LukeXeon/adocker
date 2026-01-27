@@ -41,7 +41,6 @@ import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(AddMirrorRoute::class)
 @Composable
 fun AddMirrorScreen() {
     val navController = LocalNavController.current

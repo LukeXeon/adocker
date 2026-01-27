@@ -34,7 +34,7 @@ import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.containers.ContainerCreateRoute
+import com.github.andock.ui.screens.containers.ContainerCreateKey
 import com.github.andock.ui.screens.main.LocalNavController
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
@@ -43,7 +43,6 @@ import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ImageDetailRoute::class)
 @Composable
 fun ImageDetailScreen() {
     val viewModel = hiltViewModel<ImageDetailViewModel>()
@@ -71,7 +70,7 @@ fun ImageDetailScreen() {
                 actions = {
                     // Run container button
                     IconButton(onClick = debounceClick {
-                        navController.navigate(ContainerCreateRoute(image.id))
+                        navController.navigate(ContainerCreateKey(image.id))
                     }) {
                         Icon(
                             Icons.Default.PlayArrow,

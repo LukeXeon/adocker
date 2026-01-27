@@ -74,7 +74,7 @@ fun getLineColor(line: String): Color {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ContainerExecRoute::class)
+@Route(ContainerExecKey::class)
 @Composable
 fun ContainerExecScreen() {
     val viewModel = hiltViewModel<ContainerExecViewModel>()
