@@ -25,7 +25,9 @@ class EventBus {
         crossinline onResult: suspend (T) -> Unit
     ) {
         LaunchedEffect(channels, key) {
-            channels[key]?.consumeAsFlow()?.collect { result ->
+            withContext(Dispatchers.Main.immediate) {
+                channels[key]
+            }?.consumeAsFlow()?.collect { result ->
                 onResult(result as T)
             }
         }
