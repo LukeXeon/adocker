@@ -146,7 +146,6 @@ dependencies {
     // Daemon
     implementation(project(":daemon"))
     implementation(project(":startup"))
-    ksp(project(":route-ksp"))
 
     // Ksp
 
