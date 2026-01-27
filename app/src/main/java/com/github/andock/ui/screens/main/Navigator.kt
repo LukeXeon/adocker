@@ -2,7 +2,6 @@ package com.github.andock.ui.screens.main
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
-import com.github.andock.ui.screens.home.HomeKey
 
 /**
  * Navigator handles navigation logic for Navigation 3.
@@ -55,10 +54,6 @@ class Navigator(
             backStack.size > 1 -> {
                 backStack.removeLastOrNull()
             }
-
-            backStack[0] != HomeKey -> {
-                backStack[0] = HomeKey
-            }
         }
     }
 
@@ -68,10 +63,6 @@ class Navigator(
     fun canGoBack(): Boolean {
         return when {
             backStack.size > 1 -> {
-                true
-            }
-
-            backStack[0] != HomeKey -> {
                 true
             }
 
