@@ -52,18 +52,15 @@ fun MainScreen() {
     // Create backstack and navigator for Navigation 3
     val backStack = remember { mutableStateListOf<NavKey>(HomeKey) }
     val topLevelRoutes = remember(bottomTabs) {
-        bottomTabs.map { it.route() }.toSet()
+        bottomTabs.map { it.route }.toSet()
     }
     val navigator = remember(backStack, topLevelRoutes) {
         Navigator(backStack, topLevelRoutes)
     }
     val snackbarHostState = remember { SnackbarHostState() }
     val bus = remember { EventBus() }
-    // Check if we should show bottom navigation
-    val showBottomBar = remember(navigator.topLevelRoute) {
-        navigator.topLevelRoute in topLevelRoutes
-    }
-
+    val currentRoute = backStack.lastOrNull()
+    val showBottomBar = currentRoute in topLevelRoutes
     MainTheme {
         CompositionLocalProvider(
             LocalNavigator provides navigator,
@@ -101,8 +98,8 @@ fun MainScreen() {
                         ) {
                             NavigationBar {
                                 bottomTabs.forEach { tab ->
-                                    val route = tab.route()
-                                    val selected = navigator.topLevelRoute == route
+                                    val route = tab.route
+                                    val selected = currentRoute == route
                                     NavigationBarItem(
                                         icon = {
                                             Icon(

@@ -2,6 +2,7 @@ package com.github.andock.ui.screens.main
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
+import com.github.andock.ui.screens.home.HomeKey
 
 /**
  * Navigator handles navigation logic for Navigation 3.
@@ -16,12 +17,6 @@ class Navigator(
      */
     val currentRoute: NavKey?
         get() = backStack.lastOrNull()
-
-    /**
-     * Current top-level route (for bottom navigation selection)
-     */
-    val topLevelRoute: NavKey?
-        get() = backStack.lastOrNull { it in topLevelRoutes }
 
     /**
      * Navigate to a destination.
@@ -44,33 +39,11 @@ class Navigator(
      * Navigate to a top-level route with save/restore behavior
      */
     private fun navigateToTopLevel(route: NavKey) {
-        val currentTopLevel = topLevelRoute
-        if (currentTopLevel == route) {
-            // Same tab - pop to root
-            val firstIndex = backStack.indexOfFirst { it == route }
-            if (firstIndex >= 0) {
-                while (backStack.size > firstIndex + 1) {
-                    backStack.removeLast()
-                }
-            }
+        if (backStack[0] == route) {
+            backStack.removeRange(1, backStack.size)
         } else {
-            // Different tab - find or create the tab stack
-            val existingIndex = backStack.indexOfFirst { it == route }
-            if (existingIndex >= 0) {
-                // Tab exists in stack - restore it (remove everything after current top level, add back this tab's stack)
-                val currentTopLevelIndex = backStack.indexOfLast { it in topLevelRoutes && it == currentTopLevel }
-                if (currentTopLevelIndex >= 0) {
-                    // Keep stack up to current top level
-                    while (backStack.size > currentTopLevelIndex + 1) {
-                        backStack.removeLast()
-                    }
-                }
-                // Add the new top level route
-                backStack.add(route)
-            } else {
-                // New tab - just add it
-                backStack.add(route)
-            }
+            backStack.clear()
+            backStack.add(route)
         }
     }
 
@@ -78,13 +51,33 @@ class Navigator(
      * Go back in navigation stack
      */
     fun goBack() {
-        if (backStack.size > 1) {
-            backStack.removeLast()
+        when {
+            backStack.size > 1 -> {
+                backStack.removeLastOrNull()
+            }
+
+            backStack[0] != HomeKey -> {
+                backStack[0] = HomeKey
+            }
         }
     }
 
     /**
      * Check if we can go back
      */
-    fun canGoBack(): Boolean = backStack.size > 1
+    fun canGoBack(): Boolean {
+        return when {
+            backStack.size > 1 -> {
+                true
+            }
+
+            backStack[0] != HomeKey -> {
+                true
+            }
+
+            else -> {
+                false
+            }
+        }
+    }
 }

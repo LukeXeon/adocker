@@ -33,37 +33,32 @@ object MainModule {
             titleResId = R.string.nav_home,
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
-        ) {
-            HomeKey
-        },
+            route = HomeKey,
+        ),
         MainBottomTab(
             titleResId = R.string.nav_discover,
             selectedIcon = Icons.Filled.Explore,
             unselectedIcon = Icons.Outlined.Explore,
-        ) {
-            SearchKey
-        },
+            route = SearchKey
+        ),
         MainBottomTab(
             titleResId = R.string.nav_containers,
             selectedIcon = Icons.Filled.ViewInAr,
             unselectedIcon = Icons.Outlined.ViewInAr,
-        ) {
-            ContainersKey
-        },
+            route = ContainersKey
+        ),
         MainBottomTab(
             titleResId = R.string.nav_images,
             selectedIcon = Icons.Filled.Layers,
             unselectedIcon = Icons.Outlined.Layers,
-        ) {
-            ImagesKey
-        },
+            route = ImagesKey
+        ),
         MainBottomTab(
             titleResId = R.string.nav_settings,
             selectedIcon = Icons.Filled.Settings,
             unselectedIcon = Icons.Outlined.Settings,
-        ) {
-            SettingsKey
-        }
+            route = SettingsKey
+        )
     )
 
 }
