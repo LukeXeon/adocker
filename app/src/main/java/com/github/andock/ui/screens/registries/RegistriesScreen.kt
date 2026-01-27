@@ -41,7 +41,7 @@ import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalResultEventBus
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
-import com.github.andock.ui.screens.qrcode.scannedData
+import com.github.andock.ui.screens.qrcode.scannedDataKey
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
@@ -57,7 +57,7 @@ fun RegistriesScreen() {
     val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
     val errorMessage = stringResource(R.string.message_error)
-    bus.subscribe(scannedData) { scannedData ->
+    bus.subscribe(scannedDataKey) { scannedData ->
         if (!scannedData.isNullOrEmpty()) {
             if (!viewModel.addScannedCode(scannedData)) {
                 snackbarHostState.showSnackbar(errorMessage)

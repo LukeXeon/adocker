@@ -49,13 +49,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
+import com.github.andock.ui.screens.main.EventBus
 import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalResultEventBus
-import com.github.andock.ui.screens.main.EventBus
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
-val scannedData by EventBus.key<String?>(null)
+val scannedDataKey by EventBus.key<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -299,7 +299,7 @@ fun QrcodeScannerScreen() {
             onConfirm = {
                 scope.launch {
                     setScannedData(null)
-                    bus.send(com.github.andock.ui.screens.qrcode.scannedData, scannedData)
+                    bus.send(scannedDataKey, scannedData)
                     onNavigateBack()
                 }
             },

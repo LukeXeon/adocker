@@ -45,7 +45,7 @@ import com.github.andock.ui.screens.containers.ContainerCreateKey
 import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalResultEventBus
 import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
-import com.github.andock.ui.screens.qrcode.scannedData
+import com.github.andock.ui.screens.qrcode.scannedDataKey
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -63,7 +63,7 @@ fun ImagesScreen() {
     val (showPullDialog, setPullDialog) = remember { mutableStateOf<Boolean?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
-    bus.subscribe(scannedData) { scannedData ->
+    bus.subscribe(scannedDataKey) { scannedData ->
         if (!scannedData.isNullOrEmpty()) {
             setProgressDialog(
                 viewModel.pullImage(
