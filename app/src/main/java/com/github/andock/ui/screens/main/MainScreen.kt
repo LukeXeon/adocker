@@ -17,7 +17,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -41,8 +40,9 @@ val LocalSnackbarHostState = staticCompositionLocalOf {
     SnackbarHostState()
 }
 
-val LocalResultEventBus: ProvidableCompositionLocal<EventBus> =
-    staticCompositionLocalOf { error("No ResultEventBus has been provided") }
+val LocalResultEventBus = staticCompositionLocalOf<EventBus> {
+    error("No ResultEventBus has been provided")
+}
 
 @Composable
 fun MainScreen() {
@@ -57,7 +57,8 @@ fun MainScreen() {
     val navigator = remember(backStack, topLevelRoutes) {
         Navigator(backStack, topLevelRoutes)
     }
-
+    val snackbarHostState = remember { SnackbarHostState() }
+    val bus = remember { EventBus() }
     // Check if we should show bottom navigation
     val showBottomBar = remember(navigator.topLevelRoute) {
         navigator.topLevelRoute in topLevelRoutes
@@ -65,7 +66,9 @@ fun MainScreen() {
 
     MainTheme {
         CompositionLocalProvider(
-            LocalNavigator provides navigator
+            LocalNavigator provides navigator,
+            LocalSnackbarHostState provides snackbarHostState,
+            LocalResultEventBus provides bus
         ) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
