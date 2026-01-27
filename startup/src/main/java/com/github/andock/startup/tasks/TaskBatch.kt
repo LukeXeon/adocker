@@ -2,6 +2,7 @@ package com.github.andock.startup.tasks
 
 import com.github.andock.startup.InternalName
 import com.github.andock.startup.coroutines.MainDispatcherInterceptor
+import com.github.andock.startup.coroutines.contextElementInterceptorKey
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import javax.inject.Singleton
+import kotlin.coroutines.ContinuationInterceptor
 
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
@@ -18,10 +20,10 @@ internal class TaskBatch @AssistedInject constructor(
     @param:InternalName("tasks")
     private val tasks: @JvmSuppressWildcards Map<String, List<TaskEntry>>,
 ) : suspend (CoroutineScope) -> List<TaskResult> {
-    private var isEntered: Boolean = false
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
-        if (isEntered) {
+        val interceptor = scope.coroutineContext[contextElementInterceptorKey<ContinuationInterceptor>()]
+        if (interceptor != null) {
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
                 with(task) {
@@ -29,18 +31,13 @@ internal class TaskBatch @AssistedInject constructor(
                 }
             }.awaitAll()
         } else {
-            try {
-                isEntered = true
-                val mainDispatcher = checkNotNull(scope.coroutineContext[CoroutineDispatcher]) {
-                    "not found CoroutineDispatcher"
-                }
-                return withContext(
-                    context = MainDispatcherInterceptor(mainDispatcher) + Dispatchers.Main.immediate,
-                    block = this
-                )
-            } finally {
-                isEntered = false
+            val dispatcher = checkNotNull(scope.coroutineContext[CoroutineDispatcher]) {
+                "not found CoroutineDispatcher"
             }
+            return withContext(
+                context = MainDispatcherInterceptor(dispatcher) + Dispatchers.Main.immediate,
+                block = this
+            )
         }
     }
 

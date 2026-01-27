@@ -7,7 +7,7 @@ import kotlin.coroutines.CoroutineContext
 
 internal class MainDispatcherInterceptor(
     mainDispatcher: CoroutineDispatcher,
-) : AbstractCoroutineContextElement(contextElementInterceptor<CoroutineDispatcher>()),
+) : AbstractCoroutineContextElement(contextElementInterceptorKey<CoroutineDispatcher>()),
     ContextElementInterceptor<CoroutineDispatcher> {
 
     private val main = BlockingMainCoroutineDispatcher(mainDispatcher.asDelayable())
