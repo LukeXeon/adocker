@@ -13,7 +13,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.uuid.ExperimentalUuidApi
 
-class ResultEventBus {
+class EventBus {
     private val _channels = mutableStateMapOf<Key<*>, Channel<Any?>>()
 
     val channels: Map<Key<*>, Channel<Any?>>

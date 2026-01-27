@@ -51,11 +51,11 @@ import androidx.core.content.ContextCompat
 import com.github.andock.R
 import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalResultEventBus
-import com.github.andock.ui.screens.main.ResultEventBus
+import com.github.andock.ui.screens.main.EventBus
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
-val scannedData by ResultEventBus.key<String?>(null)
+val scannedData by EventBus.key<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

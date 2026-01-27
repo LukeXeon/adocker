@@ -41,7 +41,7 @@ val LocalSnackbarHostState = staticCompositionLocalOf {
     SnackbarHostState()
 }
 
-val LocalResultEventBus: ProvidableCompositionLocal<ResultEventBus> =
+val LocalResultEventBus: ProvidableCompositionLocal<EventBus> =
     staticCompositionLocalOf { error("No ResultEventBus has been provided") }
 
 @Composable
