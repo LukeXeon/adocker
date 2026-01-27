@@ -17,11 +17,11 @@ object ImagesModule {
         entry<ImagesKey> {
             ImagesScreen()
         }
-        entry<ImageDetailKey> {
-            ImageDetailScreen()
+        entry<ImageDetailKey> { key ->
+            ImageDetailScreen(key)
         }
-        entry<ImageTagsKey> {
-            ImageTagsScreen()
+        entry<ImageTagsKey> { key ->
+            ImageTagsScreen(key)
         }
     }
 }

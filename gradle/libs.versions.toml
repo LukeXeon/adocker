@@ -19,7 +19,6 @@ kotlinpoet-ksp = "2.2.0"
 composeBom = "2025.12.01"
 activityCompose = "1.12.2"
 lifecycleRuntimeKtx = "2.10.0"
-navigationCompose = "2.9.6"
 lifecycleViewmodelCompose = "2.10.0"
 
 # Hilt
@@ -118,6 +117,7 @@ androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 
 # Networking

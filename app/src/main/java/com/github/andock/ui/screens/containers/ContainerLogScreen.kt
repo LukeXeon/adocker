@@ -29,18 +29,18 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.github.andock.R
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainerLogScreen() {
-    val viewModel = hiltViewModel<ContainerLogViewModel>()
+fun ContainerLogScreen(navKey: ContainerLogKey) {
+    val viewModel = hiltViewModel<ContainerLogViewModel, ContainerLogViewModel.Factory> { factory -> factory.create(navKey) }
     val metadata = viewModel.metadata.collectAsState().value ?: return
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val logLines = viewModel.logLines.collectAsLazyPagingItems()
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     Scaffold(
         topBar = {

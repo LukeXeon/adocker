@@ -26,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,49 +35,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.daemon.images.ImageReference
 import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.containers.ContainerCreateKey
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
+import com.github.andock.ui.screens.main.LocalResultEventBus
 import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
-import com.github.andock.ui.screens.qrcode.ScannedData
+import com.github.andock.ui.screens.qrcode.scannedData
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.get
 import com.github.andock.ui.utils.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagesScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
+    val bus = LocalResultEventBus.current
     val viewModel = hiltViewModel<ImagesViewModel>()
     val images by viewModel.images.collectAsState()
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (showPullDialog, setPullDialog) = remember { mutableStateOf<Boolean?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    if (lifecycleOwner is NavBackStackEntry) {
-        val scannedDataFlow = lifecycleOwner.savedStateHandle[ScannedData]
-        val scannedData = scannedDataFlow.collectAsState().value
+    bus.subscribe(scannedData) { scannedData ->
         if (!scannedData.isNullOrEmpty()) {
-            LaunchedEffect(scannedData) {
-                scannedDataFlow.value = null
-                setProgressDialog(
-                    viewModel.pullImage(
-                        ImageReference.parse(scannedData)
-                    )
+            setProgressDialog(
+                viewModel.pullImage(
+                    ImageReference.parse(scannedData)
                 )
-            }
+            )
         }
     }
     Scaffold(
@@ -88,7 +79,7 @@ fun ImagesScreen() {
                 actions = {
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerKey)
+                            navigator.navigate(QrcodeScannerKey)
                         }
                     ) {
                         Icon(
@@ -175,11 +166,11 @@ fun ImagesScreen() {
                         ImageCard(
                             image = image,
                             onRun = debounceClick {
-                                navController.navigate(ContainerCreateKey(image.id))
+                                navigator.navigate(ContainerCreateKey(image.id))
                             },
                             onDelete = debounceClick { setDeleteDialog(image) },
                             onClick = debounceClick {
-                                navController.navigate(ImageDetailKey(image.id))
+                                navigator.navigate(ImageDetailKey(image.id))
                             }
                         )
                     }

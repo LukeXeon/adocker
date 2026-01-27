@@ -97,6 +97,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
     // Fix for Kotlin 2.2.21 compatibility with Hilt
@@ -146,8 +147,6 @@ dependencies {
     // Daemon
     implementation(project(":daemon"))
     implementation(project(":startup"))
-
-    // Ksp
 
     // Testing
     testImplementation(libs.junit)

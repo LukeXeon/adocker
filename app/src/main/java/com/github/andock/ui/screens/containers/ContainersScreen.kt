@@ -41,7 +41,7 @@ import com.github.andock.R
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import kotlinx.coroutines.flow.filterIsInstance
@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainersScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val viewModel = hiltViewModel<ContainersViewModel>()
     val containers by viewModel.sortedList.collectAsState()
     val statesCount by viewModel.stateCounts.collectAsState()
@@ -193,17 +193,17 @@ fun ContainersScreen() {
                                 onStop = { viewModel.stopContainer(container.id) },
                                 onDelete = { setDeleteDialog(container) },
                                 onTerminal = {
-                                    navController.navigate(
+                                    navigator.navigate(
                                         ContainerExecKey(container.id)
                                     )
                                 },
                                 onLog = {
-                                    navController.navigate(
+                                    navigator.navigate(
                                         ContainerLogKey(container.id)
                                     )
                                 },
                                 onClick = {
-                                    navController.navigate(
+                                    navigator.navigate(
                                         ContainerDetailKey(container.id)
                                     )
                                 }

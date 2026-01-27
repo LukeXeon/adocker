@@ -14,17 +14,17 @@ object ContainersModule {
     @IntoSet
     @Provides
     fun provideFeatureAEntryBuilder(): EntryProviderScope<NavKey>.() -> Unit = {
-        entry<ContainerCreateKey> {
-            ContainerCreateScreen()
+        entry<ContainerCreateKey> { key ->
+            ContainerCreateScreen(key)
         }
-        entry<ContainerDetailKey> {
-            ContainerDetailScreen()
+        entry<ContainerDetailKey> { key ->
+            ContainerDetailScreen(key)
         }
-        entry<ContainerExecKey> {
-            ContainerExecScreen()
+        entry<ContainerExecKey> { key ->
+            ContainerExecScreen(key)
         }
-        entry<ContainerLogKey> {
-            ContainerLogScreen()
+        entry<ContainerLogKey> { key ->
+            ContainerLogScreen(key)
         }
         entry<ContainersKey> {
             ContainersScreen()

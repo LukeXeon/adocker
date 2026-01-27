@@ -1,11 +1,12 @@
 package com.github.andock.ui.screens.containers
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.shell.ContainerShell
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -21,16 +22,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class ContainerExecViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = ContainerExecViewModel.Factory::class)
+class ContainerExecViewModel @AssistedInject constructor(
+    @Assisted private val navKey: ContainerExecKey,
     containerManager: ContainerManager
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerExecKey>().containerId
+    val containerId = navKey.containerId
     private val container = containerManager.containers.map { it[containerId] }
     val metadata = container
         .filterNotNull()
@@ -63,5 +63,10 @@ class ContainerExecViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(navKey: ContainerExecKey): ContainerExecViewModel
     }
 }

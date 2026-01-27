@@ -1,24 +1,24 @@
 package com.github.andock.ui.screens.containers
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.images.ImageManager
 import com.github.andock.daemon.images.models.ContainerConfig
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
-@HiltViewModel
-class ContainerCreateViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = ContainerCreateViewModel.Factory::class)
+class ContainerCreateViewModel @AssistedInject constructor(
+    @Assisted private val navKey: ContainerCreateKey,
     imageManager: ImageManager,
     private val containerManager: ContainerManager
 ) : ViewModel() {
-    val imageId = savedStateHandle.toRoute<ContainerCreateKey>().imageId
+    val imageId = navKey.imageId
 
     val image = imageManager.getImageById(imageId)
         .stateIn(
@@ -41,5 +41,10 @@ class ContainerCreateViewModel @Inject constructor(
         config: ContainerConfig = ContainerConfig()
     ) {
         TODO()
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(navKey: ContainerCreateKey): ContainerCreateViewModel
     }
 }

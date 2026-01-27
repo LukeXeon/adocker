@@ -28,20 +28,19 @@ import com.github.andock.daemon.images.downloader.ImageDownloader
 import com.github.andock.ui.components.InfoCard
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
-import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageTagsScreen() {
-    val viewModel = hiltViewModel<ImageTagsViewModel>()
+fun ImageTagsScreen(navKey: ImageTagsKey) {
+    val viewModel = hiltViewModel<ImageTagsViewModel, ImageTagsViewModel.Factory> { factory -> factory.create(navKey) }
     val repository = viewModel.repository
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     val tags = viewModel.tags.collectAsLazyPagingItems()
     Scaffold(

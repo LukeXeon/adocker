@@ -12,13 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.github.andock.R
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 
 @Composable
 fun ProcessLimitWarningDialog(
     onDismissRequest: () -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     AlertDialog(
         onDismissRequest = onDismissRequest,
         icon = {
@@ -46,7 +46,7 @@ fun ProcessLimitWarningDialog(
             Button(
                 onClick = {
                     onDismissRequest()
-                    navController.navigate(ProcessLimitKey)
+                    navigator.navigate(ProcessLimitKey)
                 }
             ) {
                 Text(stringResource(R.string.phantom_warning_open_settings))

@@ -1,23 +1,23 @@
 package com.github.andock.ui.screens.containers
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.github.andock.daemon.containers.ContainerManager
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ContainerDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = ContainerDetailViewModel.Factory::class)
+class ContainerDetailViewModel @AssistedInject constructor(
+    @Assisted private val navKey: ContainerDetailKey,
     private val containerManager: ContainerManager,
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerDetailKey>().containerId
+    val containerId = navKey.containerId
 
     val container = containerManager.containers.map { it[containerId] }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -40,5 +40,10 @@ class ContainerDetailViewModel @Inject constructor(
     // Delete a container
     suspend fun deleteContainer(containerId: String) {
         containerManager.containers.value[containerId]?.remove()
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(navKey: ContainerDetailKey): ContainerDetailViewModel
     }
 }

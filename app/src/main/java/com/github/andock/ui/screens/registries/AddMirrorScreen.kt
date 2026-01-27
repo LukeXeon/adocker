@@ -33,8 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
-import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -43,9 +42,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMirrorScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     val viewModel = hiltViewModel<RegistriesViewModel>()
     var name by remember { mutableStateOf("") }

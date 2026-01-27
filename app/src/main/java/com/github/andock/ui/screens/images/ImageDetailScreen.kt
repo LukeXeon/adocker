@@ -33,9 +33,8 @@ import com.github.andock.daemon.database.model.ImageEntity
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.containers.ContainerCreateKey
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
 import com.github.andock.ui.utils.formatSize
@@ -44,14 +43,14 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageDetailScreen() {
-    val viewModel = hiltViewModel<ImageDetailViewModel>()
-    val navController = LocalNavController.current
+fun ImageDetailScreen(navKey: ImageDetailKey) {
+    val viewModel = hiltViewModel<ImageDetailViewModel, ImageDetailViewModel.Factory> { factory -> factory.create(navKey) }
+    val navigator = LocalNavigator.current
     val image = viewModel.image.collectAsState().value ?: return
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<ImageEntity?>(null) }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     Scaffold(
         topBar = {
@@ -70,7 +69,7 @@ fun ImageDetailScreen() {
                 actions = {
                     // Run container button
                     IconButton(onClick = debounceClick {
-                        navController.navigate(ContainerCreateKey(image.id))
+                        navigator.navigate(ContainerCreateKey(image.id))
                     }) {
                         Icon(
                             Icons.Default.PlayArrow,

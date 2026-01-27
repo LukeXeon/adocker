@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -48,19 +49,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.github.andock.R
-import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
+import com.github.andock.ui.screens.main.LocalResultEventBus
+import com.github.andock.ui.screens.main.ResultEventBus
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.get
-import com.github.andock.ui.utils.savedStateHandleKey
+import kotlinx.coroutines.launch
 
-val ScannedData by savedStateHandleKey<String?>(null)
+val scannedData by ResultEventBus.key<String?>(null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrcodeScannerScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val context = LocalContext.current
+    val bus = LocalResultEventBus.current
+    val scope = rememberCoroutineScope()
     val (hasCameraPermission, setHasCameraPermission) = remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -69,12 +72,8 @@ fun QrcodeScannerScreen() {
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-    val prevScannedData = navController
-        .previousBackStackEntry
-        ?.savedStateHandle
-        ?.get(ScannedData)
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     val (flashEnabled, setFlashEnabled) = remember { mutableStateOf(false) }
     val (scannedData, setScannedData) = remember { mutableStateOf<String?>(null) }
@@ -298,9 +297,11 @@ fun QrcodeScannerScreen() {
         QrcodeConfirmDialog(
             scannedData = scannedData,
             onConfirm = {
-                setScannedData(null)
-                prevScannedData?.value = it
-                onNavigateBack()
+                scope.launch {
+                    setScannedData(null)
+                    bus.send(com.github.andock.ui.screens.qrcode.scannedData, scannedData)
+                    onNavigateBack()
+                }
             },
             onDismissRequest = {
                 setScannedData(null)

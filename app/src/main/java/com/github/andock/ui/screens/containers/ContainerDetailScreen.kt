@@ -37,7 +37,7 @@ import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.ui.components.DetailCard
 import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.utils.debounceClick
 import com.github.andock.ui.utils.formatDate
 import kotlinx.coroutines.flow.filterIsInstance
@@ -46,14 +46,16 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainerDetailScreen() {
-    val viewModel = hiltViewModel<ContainerDetailViewModel>()
+fun ContainerDetailScreen(navKey: ContainerDetailKey) {
+    val viewModel = hiltViewModel<ContainerDetailViewModel, ContainerDetailViewModel.Factory> { factory ->
+        factory.create(navKey)
+    }
     val (isLoading, setLoading) = remember { mutableStateOf(false) }
     val container = viewModel.container.collectAsState().value ?: return
     val metadata = container.metadata.collectAsState().value ?: return
     val containerState by container.state.collectAsState()
     val (showDeleteDialog, setDeleteDialog) = remember { mutableStateOf<Container?>(null) }
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,7 +63,7 @@ fun ContainerDetailScreen() {
                 navigationIcon = {
                     IconButton(
                         onClick = debounceClick {
-                            navController.popBackStack()
+                            navigator.goBack()
                         }
                     ) {
                         Icon(
@@ -74,7 +76,7 @@ fun ContainerDetailScreen() {
                     // Terminal button (only for running containers)
                     if (containerState is ContainerState.Running) {
                         IconButton(onClick = {
-                            navController.navigate(ContainerExecKey(container.id))
+                            navigator.navigate(ContainerExecKey(container.id))
                         }) {
                             Icon(
                                 Icons.Default.Terminal,

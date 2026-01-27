@@ -54,8 +54,7 @@ import androidx.paging.compose.itemKey
 import com.github.andock.R
 import com.github.andock.daemon.containers.shell.ContainerShellState
 import com.github.andock.ui.components.QuickCommandChip
-import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -74,19 +73,18 @@ fun getLineColor(line: String): Color {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Route(ContainerExecKey::class)
 @Composable
-fun ContainerExecScreen() {
-    val viewModel = hiltViewModel<ContainerExecViewModel>()
+fun ContainerExecScreen(navKey: ContainerExecKey) {
+    val viewModel = hiltViewModel<ContainerExecViewModel, ContainerExecViewModel.Factory> { factory -> factory.create(navKey) }
     val snackbarHostState = LocalSnackbarHostState.current
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val metadata = viewModel.metadata.collectAsState().value ?: return
     val shell = viewModel.shell.collectAsState().value
     val isRunning = shell?.state?.collectAsState()?.value is ContainerShellState.Running
     val logLines = shell?.logLines?.collectAsLazyPagingItems()
     var inputText by remember { mutableStateOf("") }
     val onNavigateBack = debounceClick {
-        navController.popBackStack()
+        navigator.goBack()
     }
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.add(WindowInsets.ime),

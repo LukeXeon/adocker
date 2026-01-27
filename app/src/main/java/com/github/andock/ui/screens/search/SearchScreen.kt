@@ -42,9 +42,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.github.andock.R
 import com.github.andock.ui.components.PaginationColumn
 import com.github.andock.ui.components.PaginationPlaceholder
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.images.ImageTagsKey
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.theme.Spacing
 
 /**
@@ -61,7 +60,7 @@ import com.github.andock.ui.theme.Spacing
 @Composable
 fun SearchScreen() {
     val viewModel = hiltViewModel<SearchViewModel>()
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val searchQuery by viewModel.query.collectAsState()
     val isOfficialOnly by viewModel.isOfficialOnly.collectAsState()
     val searchHistory by viewModel.history.collectAsState()
@@ -188,7 +187,7 @@ fun SearchScreen() {
                             result = result,
                             onPull = {
                                 result.repoName?.let { name ->
-                                    navController.navigate(
+                                    navigator.navigate(
                                         ImageTagsKey(name)
                                     )
                                 }

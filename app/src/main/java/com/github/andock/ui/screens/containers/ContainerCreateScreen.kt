@@ -49,7 +49,7 @@ import com.github.andock.daemon.containers.creator.ContainerCreateState
 import com.github.andock.daemon.containers.creator.ContainerCreator
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.ui.components.InfoCard
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -66,10 +66,10 @@ private fun parseEnvVars(input: String): Map<String, String> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContainerCreateScreen() {
-    val viewModel = hiltViewModel<ContainerCreateViewModel>()
+fun ContainerCreateScreen(navKey: ContainerCreateKey) {
+    val viewModel = hiltViewModel<ContainerCreateViewModel, ContainerCreateViewModel.Factory> { factory -> factory.create(navKey) }
     val imageId = viewModel.imageId
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val image = viewModel.image.collectAsState().value
     var containerName by remember { mutableStateOf("") }
     var command by remember { mutableStateOf("") }
@@ -77,7 +77,7 @@ fun ContainerCreateScreen() {
     var envVars by remember { mutableStateOf("") }
     var hostname by remember { mutableStateOf("localhost") }
     var autoStart by remember { mutableStateOf(false) }
-    val onNavigateBack = debounceClick { navController.popBackStack() }
+    val onNavigateBack = debounceClick { navigator.goBack() }
     val (creator, setCreator) = remember { mutableStateOf<ContainerCreator?>(null) }
     Scaffold(
         topBar = {

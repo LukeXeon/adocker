@@ -17,7 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -25,42 +25,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.github.andock.ui.screens.home.HomeKey
 import com.github.andock.ui.utils.debounceClick
 
-val LocalNavController = staticCompositionLocalOf<NavHostController> {
-    error("CompositionLocal LocalNavController not present")
+val LocalNavigator = staticCompositionLocalOf<Navigator> {
+    error("CompositionLocal LocalNavigator not present")
 }
 
 val LocalSnackbarHostState = staticCompositionLocalOf {
     SnackbarHostState()
 }
 
+val LocalResultEventBus: ProvidableCompositionLocal<ResultEventBus> =
+    staticCompositionLocalOf { error("No ResultEventBus has been provided") }
+
 @Composable
 fun MainScreen() {
     val mainViewModel = hiltViewModel<MainViewModel>()
     val bottomTabs = mainViewModel.bottomTabs
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-    // Check if we should show bottom navigation
-    val showBottomBar = remember(currentDestination) {
-        bottomTabs.any { tab ->
-            currentDestination?.hierarchy?.any { it.hasRoute(tab.type) } == true
-        }
-    }
+
+    // Create backstack and navigator for Navigation 3
     val backStack = remember { mutableStateListOf<NavKey>(HomeKey) }
+    val topLevelRoutes = remember(bottomTabs) {
+        bottomTabs.map { it.route() }.toSet()
+    }
+    val navigator = remember(backStack, topLevelRoutes) {
+        Navigator(backStack, topLevelRoutes)
+    }
+
+    // Check if we should show bottom navigation
+    val showBottomBar = remember(navigator.topLevelRoute) {
+        navigator.topLevelRoute in topLevelRoutes
+    }
+
     MainTheme {
         CompositionLocalProvider(
-            LocalNavController provides navController
+            LocalNavigator provides navigator
         ) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -71,10 +76,14 @@ fun MainScreen() {
                 ) {
                     NavDisplay(
                         backStack = backStack,
-                        onBack = { backStack.removeLastOrNull() },
+                        onBack = { navigator.goBack() },
                         entryProvider = entryProvider {
                             mainViewModel.entryBuilders.forEach { builder -> this.builder() }
                         },
+                        entryDecorators = listOf(
+                            rememberSaveableStateHolderNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator()
+                        )
                     )
                     Column(
                         modifier = Modifier
@@ -89,31 +98,25 @@ fun MainScreen() {
                         ) {
                             NavigationBar {
                                 bottomTabs.forEach { tab ->
-                                    tab.Item { selected, route ->
-                                        NavigationBarItem(
-                                            icon = {
-                                                Icon(
-                                                    imageVector = if (selected) {
-                                                        tab.selectedIcon
-                                                    } else {
-                                                        tab.unselectedIcon
-                                                    },
-                                                    contentDescription = stringResource(tab.titleResId)
-                                                )
-                                            },
-                                            label = { Text(stringResource(tab.titleResId)) },
-                                            selected = selected,
-                                            onClick = debounceClick {
-                                                navController.navigate(route) {
-                                                    popUpTo(navController.graph.startDestinationId) {
-                                                        saveState = true
-                                                    }
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
-                                            }
-                                        )
-                                    }
+                                    val route = tab.route()
+                                    val selected = navigator.topLevelRoute == route
+                                    NavigationBarItem(
+                                        icon = {
+                                            Icon(
+                                                imageVector = if (selected) {
+                                                    tab.selectedIcon
+                                                } else {
+                                                    tab.unselectedIcon
+                                                },
+                                                contentDescription = stringResource(tab.titleResId)
+                                            )
+                                        },
+                                        label = { Text(stringResource(tab.titleResId)) },
+                                        selected = selected,
+                                        onClick = debounceClick {
+                                            navigator.navigate(route)
+                                        }
+                                    )
                                 }
                             }
                         }

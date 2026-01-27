@@ -9,5 +9,5 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     val entryBuilders: Set<@JvmSuppressWildcards EntryProviderScope<NavKey>.() -> Unit>,
-    val bottomTabs: List<@JvmSuppressWildcards MainBottomTab<*>>,
+    val bottomTabs: List<@JvmSuppressWildcards MainBottomTab<out NavKey>>,
 ) : ViewModel()

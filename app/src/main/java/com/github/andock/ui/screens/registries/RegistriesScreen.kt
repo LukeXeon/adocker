@@ -25,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,41 +34,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavBackStackEntry
 import com.github.andock.R
 import com.github.andock.daemon.registries.Registry
-import com.github.andock.ui.route.Route
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
+import com.github.andock.ui.screens.main.LocalResultEventBus
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.qrcode.QrcodeScannerKey
-import com.github.andock.ui.screens.qrcode.ScannedData
+import com.github.andock.ui.screens.qrcode.scannedData
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.get
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistriesScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
+    val bus = LocalResultEventBus.current
     val viewModel = hiltViewModel<RegistriesViewModel>()
     val snackbarHostState = LocalSnackbarHostState.current
     val registries by viewModel.sortedList.collectAsState()
     val bestServer by viewModel.bestServer.collectAsState()
     val (serverToDelete, setServerToDelete) = remember { mutableStateOf<Registry?>(null) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    if (lifecycleOwner is NavBackStackEntry) {
-        val scannedDataFlow = lifecycleOwner.savedStateHandle[ScannedData]
-        val scannedData = scannedDataFlow.collectAsState().value
+    val errorMessage = stringResource(R.string.message_error)
+    bus.subscribe(scannedData) { scannedData ->
         if (!scannedData.isNullOrEmpty()) {
-            val message = stringResource(R.string.message_error)
-            LaunchedEffect(scannedData) {
-                scannedDataFlow.value = null
-                if (!viewModel.addScannedCode(scannedData)) {
-                    snackbarHostState.showSnackbar(message)
-                }
+            if (!viewModel.addScannedCode(scannedData)) {
+                snackbarHostState.showSnackbar(errorMessage)
             }
         }
     }
@@ -80,7 +71,7 @@ fun RegistriesScreen() {
                 navigationIcon = {
                     IconButton(
                         onClick = debounceClick {
-                            navController.popBackStack()
+                            navigator.goBack()
                         }
                     ) {
                         Icon(
@@ -100,7 +91,7 @@ fun RegistriesScreen() {
                     }
                     IconButton(
                         onClick = debounceClick {
-                            navController.navigate(QrcodeScannerKey)
+                            navigator.navigate(QrcodeScannerKey)
                         },
                     ) {
                         Icon(
@@ -143,7 +134,7 @@ fun RegistriesScreen() {
                 Spacer(modifier = Modifier.height(Spacing.Medium))
                 OutlinedCard(
                     onClick = debounceClick {
-                        navController.navigate(AddMirrorKey)
+                        navigator.navigate(AddMirrorKey)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

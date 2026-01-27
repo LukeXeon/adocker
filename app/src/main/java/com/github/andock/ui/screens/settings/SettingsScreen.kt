@@ -45,9 +45,8 @@ import androidx.lifecycle.viewModelScope
 import com.github.andock.R
 import com.github.andock.daemon.os.OSArchitecture
 import com.github.andock.daemon.io.formatFileSize
-import com.github.andock.ui.route.Route
 import com.github.andock.ui.screens.limits.ProcessLimitKey
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
 import com.github.andock.ui.screens.registries.RegistriesKey
 import com.github.andock.ui.theme.Spacing
@@ -62,11 +61,11 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val context = LocalContext.current
     val viewModel = hiltViewModel<SettingsViewModel>()
     var storageUsage by remember { mutableStateOf<Long?>(null) }
-    val prootVersion by viewModel.prootVersion.collectAsState()
+    val prootVersion by viewModel.prootVersion.collectAsState(initial = "")
     val snackbarHostState = LocalSnackbarHostState.current
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -112,7 +111,7 @@ fun SettingsScreen() {
                         title = stringResource(R.string.settings_registry_mirror),
                         subtitle = stringResource(R.string.settings_registry_mirror_subtitle),
                         onClick = debounceClick {
-                            navController.navigate(RegistriesKey)
+                            navigator.navigate(RegistriesKey)
                         }
                     )
                 }
@@ -127,7 +126,7 @@ fun SettingsScreen() {
                         title = stringResource(R.string.settings_phantom_process),
                         subtitle = stringResource(R.string.settings_phantom_process_subtitle),
                         onClick = debounceClick {
-                            navController.navigate(ProcessLimitKey)
+                            navigator.navigate(ProcessLimitKey)
                         },
                         isWarning = true
                     )

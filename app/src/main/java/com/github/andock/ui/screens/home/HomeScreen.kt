@@ -53,7 +53,8 @@ import com.github.andock.ui.components.InfoRow
 import com.github.andock.ui.screens.images.ImageDownloadDialog
 import com.github.andock.ui.screens.images.ImagePullDialog
 import com.github.andock.ui.screens.limits.ProcessLimitWarningDialog
-import com.github.andock.ui.screens.main.LocalNavController
+import com.github.andock.ui.screens.main.LocalNavigator
+import com.github.andock.ui.screens.registries.RegistriesKey
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
@@ -61,7 +62,7 @@ import com.github.andock.ui.utils.debounceClick
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val viewModel = hiltViewModel<HomeViewModel>()
     val totalImages by viewModel.totalImages.collectAsState(0)
     val totalContainers by viewModel.totalContainers.collectAsState(0)
@@ -226,7 +227,7 @@ fun HomeScreen() {
                         description = stringResource(R.string.home_mirror_settings_desc),
                         icon = Icons.Default.Public,
                         onClick = debounceClick {
-                            navController.navigate(RegistriesKey)
+                            navigator.navigate(RegistriesKey)
                         },
                         modifier = Modifier.weight(1f)
                     )

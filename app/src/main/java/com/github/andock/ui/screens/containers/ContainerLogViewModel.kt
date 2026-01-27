@@ -1,11 +1,12 @@
 package com.github.andock.ui.screens.containers
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import androidx.paging.cachedIn
 import com.github.andock.daemon.containers.ContainerManager
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,15 +14,14 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class ContainerLogViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = ContainerLogViewModel.Factory::class)
+class ContainerLogViewModel @AssistedInject constructor(
+    @Assisted private val navKey: ContainerLogKey,
     containerManager: ContainerManager,
 ) : ViewModel() {
-    val containerId = savedStateHandle.toRoute<ContainerLogKey>().containerId
+    val containerId = navKey.containerId
 
     val metadata = containerManager.containers.map {
         it[containerId]
@@ -34,4 +34,8 @@ class ContainerLogViewModel @Inject constructor(
         it.logLines
     }.cachedIn(viewModelScope)
 
+    @AssistedFactory
+    interface Factory {
+        fun create(navKey: ContainerLogKey): ContainerLogViewModel
+    }
 }
