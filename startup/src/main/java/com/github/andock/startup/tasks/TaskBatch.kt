@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import javax.inject.Singleton
-import kotlin.coroutines.ContinuationInterceptor
 
 internal class TaskBatch @AssistedInject constructor(
     @Assisted
@@ -22,7 +21,7 @@ internal class TaskBatch @AssistedInject constructor(
 ) : suspend (CoroutineScope) -> List<TaskResult> {
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
-        val interceptor = scope.coroutineContext[ContinuationInterceptor.intercept()]
+        val interceptor = scope.coroutineContext[CoroutineDispatcher.intercept()]
         if (interceptor != null) {
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
