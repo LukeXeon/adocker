@@ -1,0 +1,140 @@
+cmake_minimum_required(VERSION 3.22.1)
+project("proot")
+
+# ============ 配置 ============
+set(PROOT_VERSION "0.15_release")
+set(TALLOC_VERSION "2.4.2")
+
+# 架构映射
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+    set(PROOT_ARCH "aarch64")
+    set(HAS_LOADER_32BIT TRUE)
+elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
+    set(PROOT_ARCH "armv7a")
+    set(HAS_LOADER_32BIT FALSE)
+elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+    set(PROOT_ARCH "x86_64")
+    set(HAS_LOADER_32BIT TRUE)
+elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86")
+    set(PROOT_ARCH "i686")
+    set(HAS_LOADER_32BIT FALSE)
+else()
+    message(FATAL_ERROR "Unsupported ABI: ${CMAKE_ANDROID_ARCH_ABI}")
+endif()
+
+# ============ 目录 ============
+set(PROOT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/proot-build")
+set(PROOT_SOURCE_DIR "${PROOT_BUILD_DIR}/proot-${PROOT_VERSION}")
+set(TALLOC_SOURCE_DIR "${PROOT_BUILD_DIR}/talloc-${TALLOC_VERSION}")
+set(STATIC_ROOT "${PROOT_BUILD_DIR}/static-${PROOT_ARCH}")
+set(INSTALL_ROOT "${PROOT_BUILD_DIR}/install-${PROOT_ARCH}")
+set(SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
+
+# ============ 下载源码 ============
+set(TALLOC_URL "https://download.samba.org/pub/talloc/talloc-${TALLOC_VERSION}.tar.gz")
+set(PROOT_URL "https://github.com/green-green-avk/proot/archive/v${PROOT_VERSION}.tar.gz")
+
+file(MAKE_DIRECTORY ${PROOT_BUILD_DIR})
+
+# 下载 talloc
+if(NOT EXISTS "${TALLOC_SOURCE_DIR}")
+    message(STATUS "Downloading talloc-${TALLOC_VERSION}...")
+    file(DOWNLOAD ${TALLOC_URL} "${PROOT_BUILD_DIR}/talloc.tar.gz" SHOW_PROGRESS)
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xzf talloc.tar.gz
+        WORKING_DIRECTORY ${PROOT_BUILD_DIR}
+    )
+endif()
+
+# 下载 proot
+if(NOT EXISTS "${PROOT_SOURCE_DIR}")
+    message(STATUS "Downloading proot-${PROOT_VERSION}...")
+    file(DOWNLOAD ${PROOT_URL} "${PROOT_BUILD_DIR}/proot.tar.gz" SHOW_PROGRESS)
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xzf proot.tar.gz
+        WORKING_DIRECTORY ${PROOT_BUILD_DIR}
+    )
+endif()
+
+# ============ Python ============
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+# ============ NDK 工具链 ============
+get_filename_component(TOOLCHAIN_BIN "${CMAKE_C_COMPILER}" DIRECTORY)
+set(NDK_AR "${TOOLCHAIN_BIN}/llvm-ar")
+set(NDK_RANLIB "${TOOLCHAIN_BIN}/llvm-ranlib")
+set(NDK_STRIP "${TOOLCHAIN_BIN}/llvm-strip")
+
+# 构建完整的 CC 命令（包含 target 和 sysroot）
+# Android NDK 使用带版本号的 clang wrapper，例如 aarch64-linux-android21-clang
+# 但 CMake 使用的是通用 clang + --target 参数，所以我们需要构建完整命令
+set(NDK_CC "${CMAKE_C_COMPILER} --target=${CMAKE_C_COMPILER_TARGET} --sysroot=${CMAKE_SYSROOT}")
+
+# ============ 编译 talloc ============
+set(TALLOC_LIB "${STATIC_ROOT}/lib/libtalloc.a")
+
+add_custom_command(
+    OUTPUT ${TALLOC_LIB}
+    COMMENT "Building talloc for ${PROOT_ARCH}"
+    COMMAND ${CMAKE_COMMAND} -E env
+        "CC=${NDK_CC}"
+        "AR=${NDK_AR}"
+        "RANLIB=${NDK_RANLIB}"
+        "STATIC_ROOT=${STATIC_ROOT}"
+        "TALLOC_SOURCE_DIR=${TALLOC_SOURCE_DIR}"
+        "PYTHON=${Python3_EXECUTABLE}"
+        "PATH=${SCRIPTS_DIR}/target-mock-bin:$ENV{PATH}"
+        bash ${SCRIPTS_DIR}/build-talloc.sh
+    WORKING_DIRECTORY ${TALLOC_SOURCE_DIR}
+    VERBATIM
+)
+
+add_custom_target(talloc_static DEPENDS ${TALLOC_LIB})
+
+# ============ 编译 proot ============
+set(PROOT_OUTPUT "${INSTALL_ROOT}/bin/libproot.so")
+set(LOADER_OUTPUT "${INSTALL_ROOT}/bin/libproot_loader.so")
+
+add_custom_command(
+    OUTPUT ${PROOT_OUTPUT} ${LOADER_OUTPUT}
+    COMMENT "Building proot for ${PROOT_ARCH}"
+    COMMAND ${CMAKE_COMMAND} -E env
+        "CC=${NDK_CC}"
+        "AR=${NDK_AR}"
+        "STRIP=${NDK_STRIP}"
+        "STATIC_ROOT=${STATIC_ROOT}"
+        "INSTALL_ROOT=${INSTALL_ROOT}"
+        "PROOT_SOURCE_DIR=${PROOT_SOURCE_DIR}"
+        "PATH=${SCRIPTS_DIR}/target-mock-bin:$ENV{PATH}"
+        bash ${SCRIPTS_DIR}/build-proot.sh
+    WORKING_DIRECTORY ${PROOT_SOURCE_DIR}/src
+    DEPENDS talloc_static
+    VERBATIM
+)
+
+add_custom_target(proot_build ALL DEPENDS ${PROOT_OUTPUT} ${LOADER_OUTPUT})
+
+# ============ 复制到输出目录 ============
+set(OUTPUT_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+
+add_custom_command(TARGET proot_build POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROOT_OUTPUT} ${OUTPUT_DIR}/libproot.so
+    COMMAND ${CMAKE_COMMAND} -E copy ${LOADER_OUTPUT} ${OUTPUT_DIR}/libproot_loader.so
+    COMMENT "Copying proot binaries to ${OUTPUT_DIR}"
+)
+
+if(HAS_LOADER_32BIT)
+    add_custom_command(TARGET proot_build POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            ${INSTALL_ROOT}/bin/libproot_loader32.so
+            ${OUTPUT_DIR}/libproot_loader32.so
+        COMMENT "Copying loader32 to ${OUTPUT_DIR}"
+    )
+endif()
+
+# ============ 创建一个极简的占位库触发 Gradle 打包 ============
+# Gradle 需要 CMake 产生至少一个 SHARED 库才会收集 jniLibs
+# 我们创建一个极小的库，稍后通过 Gradle 配置排除它
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/stub.c "void __proot_stub(void){}")
+add_library(proot_stub SHARED ${CMAKE_CURRENT_BINARY_DIR}/stub.c)
+add_dependencies(proot_stub proot_build)

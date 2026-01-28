@@ -1,0 +1,28 @@
+#!/bin/bash
+# Wrapper for install command to handle -D option on macOS
+
+args=()
+create_dirs=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -D)
+            create_dirs=true
+            shift
+            ;;
+        *)
+            args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# If -D was used, create destination directory
+if [ "$create_dirs" = true ] && [ ${#args[@]} -ge 2 ]; then
+    dest="${args[${#args[@]}-1]}"
+    dest_dir=$(dirname "$dest")
+    mkdir -p "$dest_dir"
+fi
+
+# Call real install command without -D
+/usr/bin/install "${args[@]}"
