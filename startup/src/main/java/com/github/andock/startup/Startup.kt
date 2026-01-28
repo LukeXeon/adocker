@@ -37,7 +37,7 @@ suspend fun triggerKey(): String {
         currentCoroutineContext()[RootContext]
     ) {
         "not found RootContext"
-    }.triggerKey
+    }.name
 }
 
 val Context.stats: Stats
