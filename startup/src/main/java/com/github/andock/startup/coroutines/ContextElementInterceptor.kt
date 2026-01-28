@@ -10,7 +10,7 @@ internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
     fun intercept(interceptor: E): E
 
     data class Key<E : CoroutineContext.Element>(
-        val intercepted: CoroutineContext.Key<E>
+        val target: CoroutineContext.Key<E>
     ) : CoroutineContext.Key<ContextElementInterceptor<E>>
 }
 
