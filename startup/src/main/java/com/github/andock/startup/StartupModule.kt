@@ -31,12 +31,12 @@ internal object StartupModule {
         @InternalName("process-name")
         processName: String,
     ): Map<String, List<TaskEntry>> {
-        val map = mutableMapOf<String, MutableList<TaskEntry>>()
+        val map = HashMap<String, ArrayList<TaskEntry>>(tasks.size)
         if (processName.startsWith(application.packageName)) {
             val processName = processName.removePrefix(application.packageName)
                 .removePrefix(":")
             tasks.forEach { (key, task) ->
-                val tasks = map.getOrPut(key.trigger) { ArrayList(key.processes.size) }
+                val tasks = map.getOrPut(key.trigger) { ArrayList(tasks.size) }
                 key.processes.forEach { process ->
                     if (process == processName) {
                         tasks.add(
