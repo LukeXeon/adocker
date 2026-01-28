@@ -2,18 +2,15 @@ package com.github.andock.startup.coroutines
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlin.coroutines.AbstractCoroutineContextElement
-import kotlin.coroutines.CoroutineContext
 
 internal class MainDispatcherInterceptor(
     mainDispatcher: CoroutineDispatcher,
-) : AbstractCoroutineContextElement(CoroutineDispatcher.intercept()),
-    ContextElementInterceptor<CoroutineDispatcher> {
+) : ContextElementInterceptor<CoroutineDispatcher> {
+
+    override val key: ContextElementInterceptor.Key<CoroutineDispatcher> =
+        CoroutineDispatcher.intercept()
 
     private val main = BlockingMainCoroutineDispatcher(mainDispatcher.asDelayable())
-
-    override val target: CoroutineContext.Key<CoroutineDispatcher>
-        get() = CoroutineDispatcher
 
     override fun intercept(interceptor: CoroutineDispatcher): CoroutineDispatcher {
         return when (interceptor) {

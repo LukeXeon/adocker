@@ -5,7 +5,7 @@ import kotlin.coroutines.CoroutineContext
 internal interface ContextElementInterceptor<E : CoroutineContext.Element> :
     CoroutineContext.Element {
 
-    val target: CoroutineContext.Key<E>
+    override val key: Key<E>
 
     fun intercept(interceptor: E): E
 

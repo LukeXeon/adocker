@@ -17,9 +17,9 @@ internal fun <T> CoroutineDispatcher.asDelayable(): T where T : CoroutineDispatc
 }
 
 internal fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.intercept(context: CoroutineContext): E? {
-    return intercept(context[target] ?: return null)
+    return intercept(context[key.intercepted] ?: return null)
 }
 
-internal fun <E : CoroutineContext.Element> CoroutineContext.Key<E>.intercept(): CoroutineContext.Key<ContextElementInterceptor<E>> {
+internal fun <E : CoroutineContext.Element> CoroutineContext.Key<E>.intercept(): ContextElementInterceptor.Key<E> {
     return ContextElementInterceptor.Key(this)
 }
