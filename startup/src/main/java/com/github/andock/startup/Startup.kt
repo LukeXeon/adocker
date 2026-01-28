@@ -5,7 +5,7 @@ import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.startup.AppInitializer
 import com.github.andock.startup.coroutines.RootContext
-import com.github.andock.startup.tasks.TaskBatchFactory
+import com.github.andock.startup.tasks.TaskBatch
 import com.github.andock.startup.tasks.TaskResult
 import com.github.andock.startup.tasks.measureTimeMillis
 import dagger.hilt.android.EntryPointAccessors
@@ -22,7 +22,7 @@ fun Context.trigger(
     val tasks: List<TaskResult>
     val ms = measureTimeMillis {
         require(Looper.getMainLooper().isCurrentThread) { "must be main thread" }
-        val entrypoint = EntryPointAccessors.fromApplication<TaskBatchFactory>(this)
+        val entrypoint = EntryPointAccessors.fromApplication<TaskBatch.Factory>(this)
         val batch = entrypoint.newInstance(key)
         tasks = runBlocking(
             context = RootContext(key),

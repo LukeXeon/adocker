@@ -6,6 +6,9 @@ import com.github.andock.startup.coroutines.interceptor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,5 +49,11 @@ internal class TaskBatch @AssistedInject constructor(
         operator fun invoke(
             @Assisted key: String
         ): TaskBatch
+    }
+
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    internal interface Factory {
+        val newInstance: NewInstance
     }
 }
