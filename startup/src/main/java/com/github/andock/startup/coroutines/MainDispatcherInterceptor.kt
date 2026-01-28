@@ -7,9 +7,7 @@ internal class MainDispatcherInterceptor(
     mainDispatcher: CoroutineDispatcher,
 ) : ContextElementInterceptor<CoroutineDispatcher> {
 
-    override val key: ContextElementInterceptor.Key<CoroutineDispatcher> =
-        CoroutineDispatcher.intercept()
-
+    override val key = CoroutineDispatcher.intercept()
     private val main = BlockingMainCoroutineDispatcher(mainDispatcher.asDelayable())
 
     override fun intercept(interceptor: CoroutineDispatcher): CoroutineDispatcher {
