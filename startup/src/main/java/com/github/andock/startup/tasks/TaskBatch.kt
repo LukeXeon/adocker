@@ -2,7 +2,7 @@ package com.github.andock.startup.tasks
 
 import com.github.andock.startup.InternalName
 import com.github.andock.startup.coroutines.MainDispatcherInterceptor
-import com.github.andock.startup.coroutines.contextElementInterceptorKey
+import com.github.andock.startup.coroutines.intercept
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -22,7 +22,7 @@ internal class TaskBatch @AssistedInject constructor(
 ) : suspend (CoroutineScope) -> List<TaskResult> {
 
     override suspend fun invoke(scope: CoroutineScope): List<TaskResult> {
-        val interceptor = scope.coroutineContext[contextElementInterceptorKey<ContinuationInterceptor>()]
+        val interceptor = scope.coroutineContext[ContinuationInterceptor.intercept()]
         if (interceptor != null) {
             val tasks = tasks.getValue(key)
             return tasks.map { task ->
