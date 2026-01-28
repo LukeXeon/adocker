@@ -20,6 +20,6 @@ internal fun <E : CoroutineContext.Element> ContextElementInterceptor<E>.interce
     return intercept(context[key.target] ?: return null)
 }
 
-internal fun <E : CoroutineContext.Element> CoroutineContext.Key<E>.intercept(): ContextElementInterceptor.Key<E> {
+internal fun <E : CoroutineContext.Element> CoroutineContext.Key<E>.interceptor(): ContextElementInterceptor.Key<E> {
     return ContextElementInterceptor.Key(this)
 }
