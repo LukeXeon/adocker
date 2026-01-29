@@ -1,0 +1,12 @@
+#!/bin/bash
+# Cross-compilation pkg-config wrapper
+# Uses PKG_CONFIG_LIBDIR if set, otherwise returns error (for builds that don't need pkg-config)
+
+if [ -n "$PKG_CONFIG_LIBDIR" ]; then
+    # Use pkgconf from PATH (installed via pip in meson venv)
+    export PKG_CONFIG_PATH="$PKG_CONFIG_LIBDIR"
+    exec pkgconf "$@"
+fi
+
+# No PKG_CONFIG_LIBDIR set, fail silently
+exit 1

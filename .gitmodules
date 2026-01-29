@@ -4,3 +4,6 @@
 [submodule "gpu/src/main/cpp/virglrenderer"]
 	path = gpu/src/main/cpp/virglrenderer
 	url = https://github.com/LukeXeon/virglrenderer.git
+[submodule "gpu/src/main/cpp/libepoxy"]
+	path = gpu/src/main/cpp/libepoxy
+	url = https://github.com/anholt/libepoxy.git
