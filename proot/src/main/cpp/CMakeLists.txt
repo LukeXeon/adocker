@@ -81,7 +81,8 @@ set(TALLOC_LIB "${STATIC_ROOT}/lib/libtalloc.a")
 add_custom_command(
     OUTPUT ${TALLOC_LIB}
     COMMENT "Building talloc for ${PROOT_ARCH}"
-    COMMAND ${CMAKE_COMMAND} -E env
+    COMMAND bash ${SCRIPTS_DIR}/filter-output.sh
+        ${CMAKE_COMMAND} -E env
         "CC=${NDK_CC}"
         "AR=${NDK_AR}"
         "RANLIB=${NDK_RANLIB}"
@@ -103,7 +104,8 @@ set(LOADER_OUTPUT "${INSTALL_ROOT}/bin/libproot_loader.so")
 add_custom_command(
     OUTPUT ${PROOT_OUTPUT} ${LOADER_OUTPUT}
     COMMENT "Building proot for ${PROOT_ARCH}"
-    COMMAND ${CMAKE_COMMAND} -E env
+    COMMAND bash ${SCRIPTS_DIR}/filter-output.sh
+        ${CMAKE_COMMAND} -E env
         "CC=${NDK_CC}"
         "AR=${NDK_AR}"
         "STRIP=${NDK_STRIP}"
