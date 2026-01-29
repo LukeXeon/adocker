@@ -52,9 +52,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.github.andock.R
-import com.github.andock.daemon.shizuku.hasPermission
-import com.github.andock.daemon.shizuku.isAvailable
-import com.github.andock.daemon.shizuku.requestPermission
 import com.github.andock.ui.components.HelpStep
 import com.github.andock.ui.components.StatusRow
 import com.github.andock.ui.screens.main.LocalSnackbarHostState
@@ -77,7 +74,7 @@ fun ProcessLimited() {
     ) {}
     val startInstall = remember {
         suspend {
-            viewModel.getInstallIntent().fold(
+            viewModel.shizukuApp.getInstallIntent().fold(
                 {
                     launcher.launch(it)
                 },
@@ -99,10 +96,10 @@ fun ProcessLimited() {
     val nextStats = remember {
         suspend {
             ProcessLimitStats(
-                isAvailable = isAvailable,
-                hasPermission = hasPermission,
-                isUnrestricted = viewModel.isUnrestricted(),
-                currentLimit = viewModel.getMaxCount()
+                isInstalled = viewModel.shizukuApp.isInstalled,
+                isAvailable = viewModel.shizukuApp.isAvailable,
+                isUnrestricted = viewModel.processLimitCompat.isUnrestricted(),
+                currentLimit = viewModel.processLimitCompat.getMaxCount()
             )
         }
     }
@@ -138,11 +135,11 @@ fun ProcessLimited() {
                     StatusRow(
                         label = "Shizuku",
                         status = when {
-                            !stats.isAvailable -> stringResource(R.string.phantom_shizuku_not_running)
-                            !stats.hasPermission -> stringResource(R.string.phantom_permission_denied)
+                            !stats.isInstalled -> stringResource(R.string.phantom_shizuku_not_running)
+                            !stats.isAvailable -> stringResource(R.string.phantom_permission_denied)
                             else -> stringResource(R.string.phantom_ready)
                         },
-                        isGood = stats.isAvailable && stats.hasPermission,
+                        isGood = stats.isInstalled && stats.isAvailable,
                         icon = Icons.Default.Security
                     )
 
@@ -164,7 +161,7 @@ fun ProcessLimited() {
         }
         // Action buttons
         when {
-            !stats.isAvailable -> {
+            !stats.isInstalled -> {
                 // Shizuku not installed
                 item {
                     Card(
@@ -209,7 +206,7 @@ fun ProcessLimited() {
                 }
             }
 
-            !stats.hasPermission -> {
+            !stats.isAvailable -> {
                 // Shizuku permission needed
                 item {
                     Card {
@@ -230,7 +227,7 @@ fun ProcessLimited() {
                             Button(
                                 onClick = {
                                     viewModel.viewModelScope.launch {
-                                        if (requestPermission()) {
+                                        if (viewModel.shizukuApp.requestPermission()) {
                                             stats = nextStats()
                                         }
                                     }
@@ -270,7 +267,7 @@ fun ProcessLimited() {
                                 onClick = {
                                     viewModel.viewModelScope.launch {
                                         setProcessing(true)
-                                        val success = viewModel.unrestrict()
+                                        val success = viewModel.processLimitCompat.unrestrict()
                                         if (success) {
                                             stats = nextStats()
                                         }
