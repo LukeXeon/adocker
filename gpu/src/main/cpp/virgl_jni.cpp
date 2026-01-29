@@ -152,7 +152,7 @@ static void virgl_legacy_logger(enum virgl_log_level_flags log_level,
 }
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_init(JNIEnv *env, jclass clazz, jint flags, jobject callback) {
+Java_com_github_andock_gpu_virgl_VirGL_init(JNIEnv *env, jclass clazz, jint flags, jobject callback) {
     virgl_set_log_callback(virgl_legacy_logger, nullptr, nullptr);
     // Store global callback reference
     if (g_callback) {
@@ -188,7 +188,7 @@ Java_com_github_andock_virgl_VirGL_init(JNIEnv *env, jclass clazz, jint flags, j
 }
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_cleanup(JNIEnv *env, jclass clazz) {
+Java_com_github_andock_gpu_virgl_VirGL_cleanup(JNIEnv *env, jclass clazz) {
     LOGI("virgl_renderer_cleanup");
     virgl_renderer_cleanup(nullptr);
 
@@ -207,7 +207,7 @@ Java_com_github_andock_virgl_VirGL_cleanup(JNIEnv *env, jclass clazz) {
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_contextCreate(JNIEnv *env, jclass clazz, jint ctxId,
+Java_com_github_andock_gpu_virgl_VirGL_contextCreate(JNIEnv *env, jclass clazz, jint ctxId,
                                                  jstring name) {
     const char *name_str = env->GetStringUTFChars(name, nullptr);
     int ret = virgl_renderer_context_create(ctxId, strlen(name_str), name_str);
@@ -220,7 +220,7 @@ Java_com_github_andock_virgl_VirGL_contextCreate(JNIEnv *env, jclass clazz, jint
 }
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_contextDestroy(JNIEnv *env, jclass clazz, jint ctxId) {
+Java_com_github_andock_gpu_virgl_VirGL_contextDestroy(JNIEnv *env, jclass clazz, jint ctxId) {
     virgl_renderer_context_destroy(ctxId);
 }
 
@@ -229,7 +229,7 @@ Java_com_github_andock_virgl_VirGL_contextDestroy(JNIEnv *env, jclass clazz, jin
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jobject JNICALL
-Java_com_github_andock_virgl_VirGL_getCapSet(JNIEnv *env, jclass clazz, jint set) {
+Java_com_github_andock_gpu_virgl_VirGL_getCapSet(JNIEnv *env, jclass clazz, jint set) {
     uint32_t max_ver = 0, max_size = 0;
     virgl_renderer_get_cap_set(set, &max_ver, &max_size);
 
@@ -253,7 +253,7 @@ Java_com_github_andock_virgl_VirGL_getCapSet(JNIEnv *env, jclass clazz, jint set
 }
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_fillCaps(JNIEnv *env, jclass clazz, jint set, jint version,
+Java_com_github_andock_gpu_virgl_VirGL_fillCaps(JNIEnv *env, jclass clazz, jint set, jint version,
                                             jobject buffer) {
     void *buf = env->GetDirectBufferAddress(buffer);
     jlong capacity = env->GetDirectBufferCapacity(buffer);
@@ -280,7 +280,7 @@ Java_com_github_andock_virgl_VirGL_fillCaps(JNIEnv *env, jclass clazz, jint set,
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_resourceCreate(JNIEnv *env, jclass clazz, jobject args) {
+Java_com_github_andock_gpu_virgl_VirGL_resourceCreate(JNIEnv *env, jclass clazz, jobject args) {
     jclass argsClass = env->GetObjectClass(args);
 
     jfieldID handleField = env->GetFieldID(argsClass, "handle", "I");
@@ -318,18 +318,18 @@ Java_com_github_andock_virgl_VirGL_resourceCreate(JNIEnv *env, jclass clazz, job
 }
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_resourceUnref(JNIEnv *env, jclass clazz, jint handle) {
+Java_com_github_andock_gpu_virgl_VirGL_resourceUnref(JNIEnv *env, jclass clazz, jint handle) {
     virgl_renderer_resource_unref(handle);
 }
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_ctxAttachResource(JNIEnv *env, jclass clazz, jint ctxId,
+Java_com_github_andock_gpu_virgl_VirGL_ctxAttachResource(JNIEnv *env, jclass clazz, jint ctxId,
                                                      jint resHandle) {
     virgl_renderer_ctx_attach_resource(ctxId, resHandle);
 }
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_ctxDetachResource(JNIEnv *env, jclass clazz, jint ctxId,
+Java_com_github_andock_gpu_virgl_VirGL_ctxDetachResource(JNIEnv *env, jclass clazz, jint ctxId,
                                                      jint resHandle) {
     virgl_renderer_ctx_detach_resource(ctxId, resHandle);
 }
@@ -339,7 +339,7 @@ Java_com_github_andock_virgl_VirGL_ctxDetachResource(JNIEnv *env, jclass clazz, 
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_submitCmd(JNIEnv *env, jclass clazz, jobject buffer,
+Java_com_github_andock_gpu_virgl_VirGL_submitCmd(JNIEnv *env, jclass clazz, jobject buffer,
                                              jint ctxId) {
     void *buf = env->GetDirectBufferAddress(buffer);
     jlong capacity = env->GetDirectBufferCapacity(buffer);
@@ -354,7 +354,7 @@ Java_com_github_andock_virgl_VirGL_submitCmd(JNIEnv *env, jclass clazz, jobject 
 }
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_createFence(JNIEnv *env, jclass clazz, jint fenceId,
+Java_com_github_andock_gpu_virgl_VirGL_createFence(JNIEnv *env, jclass clazz, jint fenceId,
                                                jint ctxId) {
     return virgl_renderer_create_fence(fenceId, ctxId);
 }
@@ -374,7 +374,7 @@ static void get_box_from_jobject(JNIEnv *env, jobject boxObj, struct virgl_box *
 }
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_transferGet(JNIEnv *env, jclass clazz,
+Java_com_github_andock_gpu_virgl_VirGL_transferGet(JNIEnv *env, jclass clazz,
                                                jint handle, jint ctxId, jint level, jint stride,
                                                jint layerStride,
                                                jobject boxObj, jlong offset, jobject buffer) {
@@ -401,7 +401,7 @@ Java_com_github_andock_virgl_VirGL_transferGet(JNIEnv *env, jclass clazz,
 }
 
 JNIEXPORT jint JNICALL
-Java_com_github_andock_virgl_VirGL_transferPut(JNIEnv *env, jclass clazz,
+Java_com_github_andock_gpu_virgl_VirGL_transferPut(JNIEnv *env, jclass clazz,
                                                jint handle, jint ctxId, jint level, jint stride,
                                                jint layerStride,
                                                jobject boxObj, jlong offset, jobject buffer) {
@@ -432,7 +432,7 @@ Java_com_github_andock_virgl_VirGL_transferPut(JNIEnv *env, jclass clazz,
 // ----------------------------------------------------------------------------
 
 JNIEXPORT void JNICALL
-Java_com_github_andock_virgl_VirGL_poll(JNIEnv *env, jclass clazz) {
+Java_com_github_andock_gpu_virgl_VirGL_poll(JNIEnv *env, jclass clazz) {
     virgl_renderer_poll();
 }
 
