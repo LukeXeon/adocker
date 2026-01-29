@@ -48,3 +48,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+
+tasks.named("clean") {
+    doLast {
+        delete(layout.projectDirectory.dir(".cxx"))
+    }
+}
