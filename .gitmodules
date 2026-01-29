@@ -1,3 +1,6 @@
 [submodule "proot/src/main/cpp/proot"]
 	path = proot/src/main/cpp/proot
 	url = https://github.com/LukeXeon/proot.git
+[submodule "gpu/src/main/cpp/virglrenderer"]
+	path = gpu/src/main/cpp/virglrenderer
+	url = https://github.com/LukeXeon/virglrenderer.git
