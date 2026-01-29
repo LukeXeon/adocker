@@ -217,7 +217,7 @@ andock/
 
 ### System Integration
 - **Shizuku 13.1.5** - System permission management
-- **PRoot v0.15** - User-space chroot (auto-compiled from source, based on [green-green-avk/proot](https://github.com/green-green-avk/proot))
+- **PRoot v0.15** - User-space chroot (auto-compiled from source, based on [LukeXeon/proot](https://github.com/LukeXeon/proot))
 - **talloc 2.4.2** - Memory management library for PRoot
 
 ### Logging
@@ -534,7 +534,7 @@ UnixHttp4kServer(
 - [PRoot](https://proot-me.github.io/) - User-space chroot implementation
 - [Termux](https://termux.dev/) - Android terminal and PRoot patches
 - [Shizuku](https://shizuku.rikka.app/) - System service access framework
-- [green-green-avk/proot](https://github.com/green-green-avk/proot) - PRoot v0.15 for Android
+- [LukeXeon/proot](https://github.com/LukeXeon/proot) - PRoot for Android (fork of green-green-avk/proot)
 
 ## 📄 License
 

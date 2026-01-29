@@ -217,7 +217,7 @@ andock/
 
 ### 系统集成
 - **Shizuku 13.1.5** - 系统权限管理
-- **PRoot v0.15** - 用户空间 chroot（从源码自动编译，基于 [green-green-avk/proot](https://github.com/green-green-avk/proot)）
+- **PRoot v0.15** - 用户空间 chroot（从源码自动编译，基于 [LukeXeon/proot](https://github.com/LukeXeon/proot)）
 - **talloc 2.4.2** - PRoot 内存管理依赖库
 
 ### 日志
@@ -534,7 +534,7 @@ UnixHttp4kServer(
 - [PRoot](https://proot-me.github.io/) - 用户空间 chroot 实现
 - [Termux](https://termux.dev/) - Android 终端和 PRoot patches
 - [Shizuku](https://shizuku.rikka.app/) - 系统服务访问框架
-- [green-green-avk/proot](https://github.com/green-green-avk/proot) - PRoot v0.15 for Android
+- [LukeXeon/proot](https://github.com/LukeXeon/proot) - PRoot for Android（基于 green-green-avk/proot 的 fork）
 
 ## 📄 许可证
 
