@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.22.1)
 project("proot")
 
 # ============ 配置 ============
-set(PROOT_VERSION "0.15_release")
+# 使用 green-green-avk 的稳定版本
+# 如需使用自己的 fork，改为 "master" 并修改 PROOT_URL
+set(PROOT_VERSION "master")
 set(TALLOC_VERSION "2.4.2")
 
 # 架构映射
@@ -36,7 +38,7 @@ set(SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 
 # ============ 下载源码 ============
 set(TALLOC_URL "https://download.samba.org/pub/talloc/talloc-${TALLOC_VERSION}.tar.gz")
-set(PROOT_URL "https://github.com/green-green-avk/proot/archive/v${PROOT_VERSION}.tar.gz")
+set(PROOT_URL "https://github.com/LukeXeon/proot/archive/refs/heads/${PROOT_VERSION}.tar.gz")
 
 file(MAKE_DIRECTORY ${PROOT_BUILD_DIR})
 
