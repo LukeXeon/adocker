@@ -167,7 +167,8 @@ class ShizukuApp @Inject constructor(
                 }
 
                 override suspend fun invoke(scope: CoroutineScope) {
-                    val (requestCode, grantResult) = scope.coroutineContext[RequestPermissionResult]!!
+                    val (requestCode, grantResult) = scope.coroutineContext[RequestPermissionResult]
+                        ?: return
                     mutex.withLock {
                         requests.remove(requestCode)
                     }?.complete(
