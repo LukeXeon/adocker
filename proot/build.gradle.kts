@@ -14,11 +14,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        externalNativeBuild {
-            cmake {
-                cppFlags("")
-            }
-        }
     }
 
     buildTypes {
