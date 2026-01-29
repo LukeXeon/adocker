@@ -9,19 +9,29 @@ import androidx.core.content.FileProvider
 import com.github.andock.daemon.R
 import com.github.andock.daemon.lazy.suspendLazy
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 
 @Singleton
 class ShizukuApp @Inject constructor(
     private val application: Application,
+    private val scope: CoroutineScope
 ) {
+    private val mutex = Mutex()
     private val requests = MutableIntObjectMap<CompletableDeferred<Boolean>>()
     suspend fun requestPermission(): Boolean {
         when {
@@ -30,10 +40,11 @@ class ShizukuApp @Inject constructor(
             }
 
             !_hasPermission -> {
-                var code: Int
+                var code = 0
                 val deferred = CompletableDeferred<Boolean>()
-                synchronized(this) {
-                    while (true) {
+                val context = currentCoroutineContext()
+                mutex.withLock {
+                    while (context.isActive) {
                         code = Random.nextInt(1, UShort.MAX_VALUE.toInt())
                         if (!requests.containsKey(code)) {
                             requests[code] = deferred
@@ -138,13 +149,32 @@ class ShizukuApp @Inject constructor(
         }
     }
 
+    private data class RequestPermissionResult(
+        val requestCode: Int,
+        val grantResult: Int
+    ) : AbstractCoroutineContextElement(Key) {
+        companion object Key : CoroutineContext.Key<RequestPermissionResult>
+    }
+
+
     init {
-        Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
-            synchronized(this) {
-                requests.remove(requestCode)
-            }?.complete(
-                grantResult == PackageManager.PERMISSION_GRANTED
-            )
-        }
+        Shizuku.addRequestPermissionResultListener(
+            object : suspend (CoroutineScope) -> Unit,
+                Shizuku.OnRequestPermissionResultListener {
+
+                override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                    scope.launch(RequestPermissionResult(requestCode, grantResult), block = this)
+                }
+
+                override suspend fun invoke(scope: CoroutineScope) {
+                    val (requestCode, grantResult) = scope.coroutineContext[RequestPermissionResult]!!
+                    mutex.withLock {
+                        requests.remove(requestCode)
+                    }?.complete(
+                        grantResult == PackageManager.PERMISSION_GRANTED
+                    )
+                }
+            }
+        )
     }
 }
