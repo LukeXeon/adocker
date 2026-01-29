@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.22.1)
 project("proot")
 
 # ============ 配置 ============
-# 使用 green-green-avk 的稳定版本
-# 如需使用自己的 fork，改为 "master" 并修改 PROOT_URL
-set(PROOT_VERSION "master")
 set(TALLOC_VERSION "2.4.2")
 
 # 架构映射
@@ -30,34 +27,22 @@ endif()
 
 # ============ 目录 ============
 set(PROOT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/proot-build")
-set(PROOT_SOURCE_DIR "${PROOT_BUILD_DIR}/proot-${PROOT_VERSION}")
+set(PROOT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/proot")
 set(TALLOC_SOURCE_DIR "${PROOT_BUILD_DIR}/talloc-${TALLOC_VERSION}")
 set(STATIC_ROOT "${PROOT_BUILD_DIR}/static-${PROOT_ARCH}")
 set(INSTALL_ROOT "${PROOT_BUILD_DIR}/install-${PROOT_ARCH}")
 set(SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 
-# ============ 下载源码 ============
+# ============ 下载 talloc ============
 set(TALLOC_URL "https://download.samba.org/pub/talloc/talloc-${TALLOC_VERSION}.tar.gz")
-set(PROOT_URL "https://github.com/LukeXeon/proot/archive/refs/heads/${PROOT_VERSION}.tar.gz")
 
 file(MAKE_DIRECTORY ${PROOT_BUILD_DIR})
 
-# 下载 talloc
 if(NOT EXISTS "${TALLOC_SOURCE_DIR}")
     message(STATUS "Downloading talloc-${TALLOC_VERSION}...")
     file(DOWNLOAD ${TALLOC_URL} "${PROOT_BUILD_DIR}/talloc.tar.gz" SHOW_PROGRESS)
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E tar xzf talloc.tar.gz
-        WORKING_DIRECTORY ${PROOT_BUILD_DIR}
-    )
-endif()
-
-# 下载 proot
-if(NOT EXISTS "${PROOT_SOURCE_DIR}")
-    message(STATUS "Downloading proot-${PROOT_VERSION}...")
-    file(DOWNLOAD ${PROOT_URL} "${PROOT_BUILD_DIR}/proot.tar.gz" SHOW_PROGRESS)
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar xzf proot.tar.gz
         WORKING_DIRECTORY ${PROOT_BUILD_DIR}
     )
 endif()

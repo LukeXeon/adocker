@@ -1,0 +1,3 @@
+[submodule "proot/src/main/cpp/proot"]
+	path = proot/src/main/cpp/proot
+	url = https://github.com/LukeXeon/proot.git
