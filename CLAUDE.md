@@ -41,17 +41,26 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 adb logcat -d | grep -i "PRootEngine\|ImagePull\|Container"
 ```
 
-### Verify PRoot availability
-PRoot binaries are pre-built in `app/src/main/jniLibs/{arch}/`:
-- `libproot.so` - PRoot binary
-- `libproot_loader.so` - 64-bit loader
-- `libproot_loader32.so` - 32-bit loader
+### PRoot Build System
+PRoot is automatically compiled from source during the build process via the `proot` module:
+- **Source:** Downloads PRoot v0.15 and talloc 2.4.2 automatically
+- **Architectures:** arm64-v8a, armeabi-v7a, x86_64, x86
+- **Output:** `libproot.so`, `libproot_loader.so`, `libproot_loader32.so` (for 64-bit archs)
+- **16KB Page Alignment:** Configured for Android 15+ compatibility
+
+Build scripts location: `proot/src/main/cpp/scripts/`
 
 ## Architecture
 
 ### Module Structure
 
 Multi-module architecture:
+- **proot/** - PRoot native build module (Android Library)
+  - `src/main/cpp/CMakeLists.txt` - CMake build configuration
+  - `src/main/cpp/scripts/` - Build scripts for talloc and proot
+  - Downloads and compiles PRoot v0.15 + talloc 2.4.2 from source
+  - Outputs: `libproot.so`, `libproot_loader.so`, `libproot_loader32.so`
+
 - **daemon/** - Core business logic (Android Library)
   - `app/` - AppContext, AppInitializer, AppModule
   - `containers/` - Container, ContainerManager, ContainerState, ContainerStateMachine

@@ -108,6 +108,14 @@ andock/
 │       ├── TimberLogger.kt           # Timber + SLF4J 集成
 │       └── TimberServiceProvider.kt  # SLF4J 服务提供者
 │
+├── proot/                            # PRoot 原生编译模块 (Android Library)
+│   └── src/main/cpp/
+│       ├── CMakeLists.txt            # CMake 构建配置
+│       └── scripts/                  # 编译脚本
+│           ├── build-talloc.sh       # 编译 talloc 依赖库
+│           ├── build-proot.sh        # 编译 PRoot
+│           └── filter-output.sh      # 输出过滤器
+│
 └── app/                              # UI 模块 (Android Application)
     ├── AndockApplication.kt          # Application 类
     ├── ui/
@@ -160,14 +168,15 @@ andock/
     │       ├── Spacing.kt            # 间距常量（8dp 网格）
     │       └── IconSize.kt           # 图标尺寸常量
     │
-    └── src/main/jniLibs/             # Native 库
-        ├── arm64-v8a/
-        │   ├── libproot.so           # PRoot 可执行文件
-        │   ├── libproot_loader.so    # 64 位加载器
-        │   └── libproot_loader32.so  # 32 位加载器
-        ├── armeabi-v7a/
-        ├── x86_64/
-        └── x86/
+    └── build/                        # 构建输出（自动生成）
+        └── intermediates/jniLibs/    # PRoot 二进制文件（由 proot 模块编译）
+            ├── arm64-v8a/
+            │   ├── libproot.so           # PRoot 可执行文件
+            │   ├── libproot_loader.so    # 64 位加载器
+            │   └── libproot_loader32.so  # 32 位加载器
+            ├── armeabi-v7a/
+            ├── x86_64/
+            └── x86/
 ```
 
 ## 🔧 技术栈
@@ -208,7 +217,8 @@ andock/
 
 ### 系统集成
 - **Shizuku 13.1.5** - 系统权限管理
-- **PRoot v0.15** - 用户空间 chroot（来自 [green-green-avk/proot](https://github.com/green-green-avk/proot)）
+- **PRoot v0.15** - 用户空间 chroot（从源码自动编译，基于 [green-green-avk/proot](https://github.com/green-green-avk/proot)）
+- **talloc 2.4.2** - PRoot 内存管理依赖库
 
 ### 日志
 - **Timber 5.0.1** - Android 日志库
@@ -423,9 +433,12 @@ containersDir/
 **问题:** Android 10+ 禁止从 `app_data_file` 目录执行二进制文件
 
 **解决方案:**
-1. PRoot 编译为 `libproot.so`，放置在 APK 的 `jniLibs/` 目录
-2. Android 自动提取到 `nativeLibraryDir`，SELinux 上下文为 `apk_data_file`（可执行）
-3. 直接从 `applicationInfo.nativeLibraryDir` 执行
+1. `proot` 模块在构建时自动下载并编译 PRoot v0.15 + talloc 2.4.2
+2. 编译输出为 `libproot.so`，打包到 APK 的 `jniLibs/` 目录
+3. Android 自动提取到 `nativeLibraryDir`，SELinux 上下文为 `apk_data_file`（可执行）
+4. 直接从 `applicationInfo.nativeLibraryDir` 执行
+
+**16KB 页面对齐:** 为 Android 15+ 设备配置了 `-Wl,-z,max-page-size=16384` 链接选项
 
 **参考:** [Termux 实现](https://github.com/termux/termux-app/issues/1072)
 

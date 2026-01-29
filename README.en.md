@@ -108,6 +108,14 @@ andock/
 │       ├── TimberLogger.kt           # Timber + SLF4J integration
 │       └── TimberServiceProvider.kt  # SLF4J service provider
 │
+├── proot/                            # PRoot native build module (Android Library)
+│   └── src/main/cpp/
+│       ├── CMakeLists.txt            # CMake build configuration
+│       └── scripts/                  # Build scripts
+│           ├── build-talloc.sh       # Build talloc dependency
+│           ├── build-proot.sh        # Build PRoot
+│           └── filter-output.sh      # Output filter
+│
 └── app/                              # UI module (Android Application)
     ├── AndockApplication.kt          # Application class
     ├── ui/
@@ -160,14 +168,15 @@ andock/
     │       ├── Spacing.kt            # Spacing constants (8dp grid)
     │       └── IconSize.kt           # Icon size constants
     │
-    └── src/main/jniLibs/             # Native libraries
-        ├── arm64-v8a/
-        │   ├── libproot.so           # PRoot executable
-        │   ├── libproot_loader.so    # 64-bit loader
-        │   └── libproot_loader32.so  # 32-bit loader
-        ├── armeabi-v7a/
-        ├── x86_64/
-        └── x86/
+    └── build/                        # Build output (auto-generated)
+        └── intermediates/jniLibs/    # PRoot binaries (built by proot module)
+            ├── arm64-v8a/
+            │   ├── libproot.so           # PRoot executable
+            │   ├── libproot_loader.so    # 64-bit loader
+            │   └── libproot_loader32.so  # 32-bit loader
+            ├── armeabi-v7a/
+            ├── x86_64/
+            └── x86/
 ```
 
 ## 🔧 Tech Stack
@@ -208,7 +217,8 @@ andock/
 
 ### System Integration
 - **Shizuku 13.1.5** - System permission management
-- **PRoot v0.15** - User-space chroot (from [green-green-avk/proot](https://github.com/green-green-avk/proot))
+- **PRoot v0.15** - User-space chroot (auto-compiled from source, based on [green-green-avk/proot](https://github.com/green-green-avk/proot))
+- **talloc 2.4.2** - Memory management library for PRoot
 
 ### Logging
 - **Timber 5.0.1** - Android logging library
@@ -423,9 +433,12 @@ containersDir/
 **Problem:** Android 10+ prevents executing binaries from `app_data_file` directories
 
 **Solution:**
-1. PRoot compiled as `libproot.so`, placed in APK's `jniLibs/` directory
-2. Android automatically extracts to `nativeLibraryDir`, SELinux context is `apk_data_file` (executable)
-3. Execute directly from `applicationInfo.nativeLibraryDir`
+1. `proot` module automatically downloads and compiles PRoot v0.15 + talloc 2.4.2 during build
+2. Compiled output as `libproot.so`, packaged into APK's `jniLibs/` directory
+3. Android automatically extracts to `nativeLibraryDir`, SELinux context is `apk_data_file` (executable)
+4. Execute directly from `applicationInfo.nativeLibraryDir`
+
+**16KB Page Alignment:** Configured with `-Wl,-z,max-page-size=16384` linker option for Android 15+ compatibility
 
 **Reference:** [Termux implementation](https://github.com/termux/termux-app/issues/1072)
 
