@@ -118,6 +118,8 @@ dependencies {
 
     implementation(project(":startup"))
 
+    implementation(project(":proot"))
+
     // Ksp
     ksp(project(":startup-ksp"))
 

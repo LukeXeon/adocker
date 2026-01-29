@@ -9,15 +9,19 @@ set(TALLOC_VERSION "2.4.2")
 if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
     set(PROOT_ARCH "aarch64")
     set(HAS_LOADER_32BIT TRUE)
+    set(NDK_CLANG_PREFIX "aarch64-linux-android")
 elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
     set(PROOT_ARCH "armv7a")
     set(HAS_LOADER_32BIT FALSE)
+    set(NDK_CLANG_PREFIX "armv7a-linux-androideabi")
 elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
     set(PROOT_ARCH "x86_64")
     set(HAS_LOADER_32BIT TRUE)
+    set(NDK_CLANG_PREFIX "x86_64-linux-android")
 elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86")
     set(PROOT_ARCH "i686")
     set(HAS_LOADER_32BIT FALSE)
+    set(NDK_CLANG_PREFIX "i686-linux-android")
 else()
     message(FATAL_ERROR "Unsupported ABI: ${CMAKE_ANDROID_ARCH_ABI}")
 endif()
@@ -65,10 +69,11 @@ set(NDK_AR "${TOOLCHAIN_BIN}/llvm-ar")
 set(NDK_RANLIB "${TOOLCHAIN_BIN}/llvm-ranlib")
 set(NDK_STRIP "${TOOLCHAIN_BIN}/llvm-strip")
 
-# 构建完整的 CC 命令（包含 target 和 sysroot）
-# Android NDK 使用带版本号的 clang wrapper，例如 aarch64-linux-android21-clang
-# 但 CMake 使用的是通用 clang + --target 参数，所以我们需要构建完整命令
-set(NDK_CC "${CMAKE_C_COMPILER} --target=${CMAKE_C_COMPILER_TARGET} --sysroot=${CMAKE_SYSROOT}")
+# 使用 NDK 的架构特定 clang wrapper（如 aarch64-linux-android21-clang）
+# 这些 wrapper 已经内置了 --target 和 --sysroot 参数，避免了空格导致的参数解析问题
+# ANDROID_PLATFORM 格式为 "android-21"，需要提取 API level 数字
+string(REGEX REPLACE "android-" "" ANDROID_API_LEVEL "${ANDROID_PLATFORM}")
+set(NDK_CC "${TOOLCHAIN_BIN}/${NDK_CLANG_PREFIX}${ANDROID_API_LEVEL}-clang")
 
 # ============ 编译 talloc ============
 set(TALLOC_LIB "${STATIC_ROOT}/lib/libtalloc.a")

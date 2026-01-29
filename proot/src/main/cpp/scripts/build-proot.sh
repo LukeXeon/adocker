@@ -17,7 +17,10 @@ if ! grep -q "max-page-size=16384" GNUmakefile 2>/dev/null; then
 fi
 
 make distclean || true
-make V=1 "PREFIX=$INSTALL_ROOT" install
+
+# 过滤功能检测阶段的错误输出（这些错误是预期的，不影响编译）
+# .check_process_vm 和 .check_seccomp_filter 在 Android 上不可用
+make V=1 "PREFIX=$INSTALL_ROOT" install 2>&1 | grep -v -E "\.check_process_vm|\.check_seccomp_filter|os2_delete\.c"
 
 # Strip 和重命名
 cd "$INSTALL_ROOT/bin"
