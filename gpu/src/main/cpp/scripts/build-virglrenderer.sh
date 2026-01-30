@@ -15,19 +15,6 @@ MESON="${PYTHON_EXECUTABLE} -m mesonbuild.mesonmain"
 
 cd "$VIRGL_SOURCE_DIR"
 
-# Apply Android compatibility patches for pthread_barrier
-# Android Bionic libc doesn't support pthread_barrier_t
-THREAD_H="src/mesa/util/u_thread.h"
-if grep -q 'HAVE_PTHREAD.*__APPLE__.*__HAIKU__[^_]' "$THREAD_H" 2>/dev/null; then
-    echo "Patching u_thread.h for Android pthread_barrier compatibility..."
-    # macOS sed requires -i '' for in-place without backup
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' 's/#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)$/#if defined(HAVE_PTHREAD) \&\& !defined(__APPLE__) \&\& !defined(__HAIKU__) \&\& !defined(__ANDROID__)/g' "$THREAD_H"
-    else
-        sed -i 's/#if defined(HAVE_PTHREAD) && !defined(__APPLE__) && !defined(__HAIKU__)$/#if defined(HAVE_PTHREAD) \&\& !defined(__APPLE__) \&\& !defined(__HAIKU__) \&\& !defined(__ANDROID__)/g' "$THREAD_H"
-    fi
-fi
-
 BUILD_DIR="builddir-$ARCH"
 
 export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
