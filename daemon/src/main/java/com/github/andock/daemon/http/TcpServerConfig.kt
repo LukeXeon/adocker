@@ -1,5 +1,6 @@
 package com.github.andock.daemon.http
 
+import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,7 @@ import javax.inject.Singleton
  * @param port The TCP port to listen on
  */
 class TcpServerConfig @AssistedInject constructor(
+    @Assisted("port")
     private val port: Int,
     private val scope: CoroutineScope
 ) : ServerConfig {
@@ -32,6 +34,7 @@ class TcpServerConfig @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
+            @Assisted("port")
             port: Int
         ): TcpServerConfig
     }

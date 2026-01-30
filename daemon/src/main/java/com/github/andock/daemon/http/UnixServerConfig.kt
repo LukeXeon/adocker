@@ -1,6 +1,7 @@
 package com.github.andock.daemon.http
 
 import android.net.LocalSocketAddress.Namespace
+import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +20,9 @@ import javax.inject.Singleton
  */
 
 class UnixServerConfig @AssistedInject constructor(
+    @Assisted("name")
     private val name: String,
+    @Assisted("namespace")
     private val namespace: Namespace,
     private val scope: CoroutineScope
 ) : ServerConfig {
@@ -37,7 +40,9 @@ class UnixServerConfig @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
+            @Assisted("name")
             name: String,
+            @Assisted("namespace")
             namespace: Namespace
         ): UnixServerConfig
     }

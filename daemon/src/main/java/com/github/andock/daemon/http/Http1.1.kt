@@ -147,11 +147,16 @@ fun HttpHandler.process(connection: ClientConnection) {
 fun LocalSocket.closeSafely() {
     try {
         close()
-        val address = localSocketAddress
-        if (address.namespace == Namespace.FILESYSTEM) {
-            File(address.name).delete()
-        }
     } catch (e: IOException) {
         Timber.e(e, "Error closing Unix server socket")
+    } finally {
+        val address = localSocketAddress
+        if (address.namespace == Namespace.FILESYSTEM) {
+            try {
+                File(address.name).delete()
+            } catch (e: IOException) {
+                Timber.e(e, "Error delete Unix server socket file")
+            }
+        }
     }
 }
