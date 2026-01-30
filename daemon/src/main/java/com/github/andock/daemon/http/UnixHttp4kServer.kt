@@ -7,6 +7,7 @@ import android.net.LocalSocketAddress.Namespace
 import com.github.andock.daemon.io.chmod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
@@ -25,22 +26,9 @@ import java.io.IOException
 class UnixHttp4kServer(
     private val name: String,
     private val namespace: Namespace,
-    private val httpHandler: HttpHandler
+    private val httpHandler: HttpHandler,
+    private val parentJob: Job
 ) : Http4kServer {
-
-    companion object {
-        private fun LocalSocket.closeSafely() {
-            try {
-                close()
-                val address = localSocketAddress
-                if (address.namespace == Namespace.FILESYSTEM) {
-                    File(address.name).delete()
-                }
-            } catch (e: IOException) {
-                Timber.e(e, "Error closing Unix server socket")
-            }
-        }
-    }
 
     private var scope: CoroutineScope? = null
 
@@ -73,7 +61,7 @@ class UnixHttp4kServer(
             localSocket.closeSafely()
             throw e
         }
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob(parentJob))
         Timber.i("Unix server started on socket ${namespace}:${name}")
         scope.launch {
             try {

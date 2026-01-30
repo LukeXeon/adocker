@@ -21,10 +21,11 @@ object ServerModule {
     @IntoSet
     fun unixHttpServer(
         handler: DockerApiServer,
-        appContext: AppContext
+        appContext: AppContext,
+        factory: UnixServerConfig.Factory
     ): Http4kServer {
         return handler.asServer(
-            UnixServerConfig(
+            factory.create(
                 appContext.socketFile.absolutePath,
                 Namespace.FILESYSTEM
             )
@@ -34,7 +35,10 @@ object ServerModule {
     @Provides
     @Singleton
     @IntoSet
-    fun tcpHttpServer(handler: DockerApiServer): Http4kServer {
-        return handler.asServer(TcpServerConfig(0))
+    fun tcpHttpServer(
+        handler: DockerApiServer,
+        factory: TcpServerConfig.Factory
+    ): Http4kServer {
+        return handler.asServer(factory.create(0))
     }
 }

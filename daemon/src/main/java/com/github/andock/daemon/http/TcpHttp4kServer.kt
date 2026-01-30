@@ -2,6 +2,7 @@ package com.github.andock.daemon.http
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
@@ -19,7 +20,8 @@ import java.net.ServerSocket
  */
 class TcpHttp4kServer(
     private val port: Int,
-    private val httpHandler: HttpHandler
+    private val httpHandler: HttpHandler,
+    private val parentJob: Job?,
 ) : Http4kServer {
     private var serverSocket: ServerSocket? = null
     private var scope: CoroutineScope? = null
@@ -34,7 +36,7 @@ class TcpHttp4kServer(
             return this
         }
         val serverSocket = ServerSocket(port)
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob(parentJob))
         Timber.i("TCP server started on port ${port()}")
         scope.launch {
             try {
