@@ -11,11 +11,6 @@ export PROOT_UNBUNDLE_LOADER='.'
 export PROOT_UNBUNDLE_LOADER_NAME='libproot_loader.so'
 export PROOT_UNBUNDLE_LOADER_NAME_32='libproot_loader32.so'
 
-# 补丁 GNUmakefile 添加 16KB 页面对齐
-if ! grep -q "max-page-size=16384" GNUmakefile 2>/dev/null; then
-    sed -i.bak 's/LOADER_LDFLAGS\$1 += -static -nostdlib/LOADER_LDFLAGS\$1 += -static -nostdlib -Wl,-z,max-page-size=16384/' GNUmakefile
-fi
-
 make distclean || true
 make V=1 "PREFIX=$INSTALL_ROOT" install
 
