@@ -2,5 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/gpu/src/main/cpp/libepoxy" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/gpu/src/main/cpp/virglrenderer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/proot/src/main/cpp/proot" vcs="Git" />
   </component>
 </project>
