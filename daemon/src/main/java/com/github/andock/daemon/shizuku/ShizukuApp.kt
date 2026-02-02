@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import rikka.shizuku.Shizuku
 import timber.log.Timber
 import java.io.File
@@ -49,6 +50,8 @@ class ShizukuApp @Inject constructor(
                         if (!requests.containsKey(code)) {
                             requests[code] = deferred
                             break
+                        } else {
+                            yield()
                         }
                     }
                 }
