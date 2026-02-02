@@ -119,7 +119,7 @@ dependencies {
     implementation(project(":startup"))
 
     implementation(project(":proot"))
-    implementation(project(":gpu"))
+//    implementation(project(":gpu"))
 
     // Ksp
     ksp(project(":startup-ksp"))
