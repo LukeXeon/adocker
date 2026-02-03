@@ -1,4 +1,4 @@
-package com.github.andock.daemon.lazy
+package com.github.andock.common
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

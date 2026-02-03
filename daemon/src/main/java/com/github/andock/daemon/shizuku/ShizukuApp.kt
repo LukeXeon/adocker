@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.collection.MutableIntObjectMap
 import androidx.core.content.FileProvider
+import com.github.andock.common.suspendLazy
 import com.github.andock.daemon.R
-import com.github.andock.daemon.lazy.suspendLazy
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

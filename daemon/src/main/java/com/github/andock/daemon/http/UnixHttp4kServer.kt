@@ -1,10 +1,8 @@
 package com.github.andock.daemon.http
 
 import android.net.LocalServerSocket
-import android.net.LocalSocket
 import android.net.LocalSocketAddress
 import android.net.LocalSocketAddress.Namespace
-import com.github.andock.daemon.io.chmod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,7 +27,6 @@ class UnixHttp4kServer(
     private val httpHandler: HttpHandler,
     private val parentJob: Job
 ) : Http4kServer {
-
     private var scope: CoroutineScope? = null
 
     override fun port(): Int = -1 // Unix sockets don't have ports
@@ -40,25 +37,21 @@ class UnixHttp4kServer(
             Timber.w("Unix server already running on socket ${namespace}:${name}")
             return this
         }
-        var socketFile: File? = null
+        var socketFile: File?
         if (namespace == Namespace.FILESYSTEM) {
             socketFile = File(name)
             if (socketFile.exists() && !socketFile.delete()) {
                 throw IOException("Failed to delete old socket file ${namespace}:${name}")
             }
         }
-        val localSocket = LocalSocket(LocalSocket.SOCKET_STREAM)
         val serverSocket = try {
-            localSocket.bind(
+            LocalServerSocket(
                 LocalSocketAddress(
                     name,
                     namespace
                 )
             )
-            socketFile?.chmod("660".toInt(8))
-            LocalServerSocket(localSocket.fileDescriptor)
         } catch (e: IOException) {
-            localSocket.closeSafely()
             throw e
         }
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob(parentJob))
@@ -67,7 +60,11 @@ class UnixHttp4kServer(
             try {
                 awaitCancellation()
             } finally {
-                localSocket.closeSafely()
+                try {
+                    serverSocket.close()
+                } catch (e: IOException) {
+                    Timber.e(e, "Error closing Unix server socket")
+                }
             }
         }
         scope.launch {

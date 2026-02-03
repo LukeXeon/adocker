@@ -115,10 +115,9 @@ dependencies {
 
     // Stub
     compileOnly(project(":stub"))
-
     implementation(project(":startup"))
-
     implementation(project(":proot"))
+    implementation(project(":common"))
 //    implementation(project(":gpu"))
 
     // Ksp

@@ -36,9 +36,9 @@ import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.containers.ContainerCreateKey
 import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.formatDate
-import com.github.andock.ui.utils.formatSize
-import com.github.andock.ui.utils.withAtLeast
+import com.github.andock.common.formatDate
+import com.github.andock.common.formatSize
+import com.github.andock.common.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

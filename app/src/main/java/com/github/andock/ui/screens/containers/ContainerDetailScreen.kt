@@ -39,7 +39,7 @@ import com.github.andock.ui.components.DetailRow
 import com.github.andock.ui.components.LoadingDialog
 import com.github.andock.ui.screens.main.LocalNavigator
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.formatDate
+import com.github.andock.common.formatDate
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

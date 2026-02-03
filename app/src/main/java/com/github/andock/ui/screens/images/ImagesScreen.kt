@@ -49,7 +49,7 @@ import com.github.andock.ui.screens.qrcode.scannedDataKey
 import com.github.andock.ui.theme.IconSize
 import com.github.andock.ui.theme.Spacing
 import com.github.andock.ui.utils.debounceClick
-import com.github.andock.ui.utils.withAtLeast
+import com.github.andock.common.withAtLeast
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

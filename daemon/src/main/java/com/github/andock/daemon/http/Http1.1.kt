@@ -1,7 +1,5 @@
 package com.github.andock.daemon.http
 
-import android.net.LocalSocket
-import android.net.LocalSocketAddress.Namespace
 import org.http4k.core.Body
 import org.http4k.core.HttpHandler
 import org.http4k.core.MemoryBody
@@ -10,8 +8,6 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import timber.log.Timber
-import java.io.File
-import java.io.IOException
 
 
 private const val HTTP_VERSION = "HTTP/1.1"
@@ -140,23 +136,6 @@ fun HttpHandler.process(connection: ClientConnection) {
             }
         } catch (e: Exception) {
             Timber.e(e, "Error in connection handler")
-        }
-    }
-}
-
-fun LocalSocket.closeSafely() {
-    try {
-        close()
-    } catch (e: IOException) {
-        Timber.e(e, "Error closing Unix server socket")
-    } finally {
-        val address = localSocketAddress
-        if (address.namespace == Namespace.FILESYSTEM) {
-            try {
-                File(address.name).delete()
-            } catch (e: IOException) {
-                Timber.e(e, "Error delete Unix server socket file")
-            }
         }
     }
 }

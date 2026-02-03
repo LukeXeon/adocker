@@ -146,6 +146,7 @@ dependencies {
 
     // Daemon
     implementation(project(":daemon"))
+    implementation(project(":common"))
     implementation(project(":startup"))
 
     // Testing
