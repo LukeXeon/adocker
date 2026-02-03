@@ -11,12 +11,11 @@ class VirGLRenderer @Inject constructor(
     private val eglManager: EGLManager,
     private val factory: VirGLContext.Factory,
 ) {
-    private var localServerSocket: LocalServerSocket? = null
 
     fun start(address: LocalSocketAddress) {
         // Create server socket
         val localSocket = LocalSocket()
         localSocket.bind(address)
-        localServerSocket = LocalServerSocket(address)
+        val localServerSocket = LocalServerSocket(address)
     }
 }

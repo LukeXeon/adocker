@@ -32,7 +32,7 @@ class EGLManager @Inject constructor() {
 
         // Get default display
         display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-        if (display === EGL14.EGL_NO_DISPLAY) {
+        if (display == EGL14.EGL_NO_DISPLAY) {
             Timber.e("eglGetDisplay failed")
             return false
         }
