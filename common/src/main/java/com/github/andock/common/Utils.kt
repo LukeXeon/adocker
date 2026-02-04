@@ -2,11 +2,9 @@ package com.github.andock.common
 
 import android.app.ActivityThread
 import android.app.Application
+import android.os.SystemClock
 import android.view.inspector.WindowInspector
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -14,16 +12,15 @@ import java.util.Locale
 
 suspend inline fun <T> withAtLeast(
     timeMillis: Long,
-    crossinline block: suspend CoroutineScope.() -> T
+    block: suspend () -> T
 ): T {
-    return coroutineScope {
-        val job = launch {
-            delay(timeMillis)
-        }
-        val value = block()
-        job.join()
-        value
+    val start = SystemClock.uptimeMillis()
+    val value = block()
+    val elapsed = SystemClock.uptimeMillis() - start
+    if (elapsed < timeMillis) {
+        delay(timeMillis - elapsed)
     }
+    return value
 }
 
 fun formatDate(timestamp: Long): String {
