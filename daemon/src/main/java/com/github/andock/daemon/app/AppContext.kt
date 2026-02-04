@@ -1,6 +1,5 @@
 package com.github.andock.daemon.app
 
-import android.app.ActivityThread
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import timber.log.Timber
@@ -52,13 +51,7 @@ class AppContext @Inject constructor(
 
     companion object {
         private const val DOCKER_SOCK = "docker.sock"
-
         private const val DIR_CONTAINERS = "containers"
-
         private const val DIR_LAYERS = "layers"
-
-        val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
-            ActivityThread.currentApplication()
-        }
     }
 }

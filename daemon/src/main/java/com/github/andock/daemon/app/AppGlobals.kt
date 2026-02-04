@@ -1,5 +1,6 @@
 package com.github.andock.daemon.app
 
+import com.github.andock.common.application
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -19,6 +20,6 @@ interface AppGlobals {
     val json: Json
 
     companion object : AppGlobals by EntryPointAccessors.fromApplication(
-        AppContext.application
+        application
     )
 }

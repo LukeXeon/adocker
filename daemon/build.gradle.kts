@@ -114,7 +114,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.guava)
 
     // Stub
-    compileOnly(project(":stub"))
     implementation(project(":startup"))
     implementation(project(":proot"))
     implementation(project(":common"))

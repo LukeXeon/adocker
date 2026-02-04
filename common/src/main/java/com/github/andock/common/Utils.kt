@@ -1,5 +1,8 @@
 package com.github.andock.common
 
+import android.app.ActivityThread
+import android.app.Application
+import android.view.inspector.WindowInspector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -37,4 +40,11 @@ fun formatSize(bytes: Long): String {
         bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
         else -> "${bytes / (1024 * 1024 * 1024)} GB"
     }
+}
+
+val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
+    WindowInspector.getGlobalWindowViews().firstOrNull()
+        ?.context
+        ?.applicationContext as? Application
+        ?: ActivityThread.currentApplication()
 }
