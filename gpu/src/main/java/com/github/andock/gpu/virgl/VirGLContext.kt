@@ -1,4 +1,4 @@
-package com.github.andock.gpu.virgl.v2
+package com.github.andock.gpu.virgl
 
 import android.graphics.SurfaceTexture
 import android.net.LocalSocket

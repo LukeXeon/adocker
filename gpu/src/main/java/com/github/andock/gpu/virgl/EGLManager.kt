@@ -1,4 +1,4 @@
-package com.github.andock.gpu.virgl.v2
+package com.github.andock.gpu.virgl
 
 import android.opengl.EGL14
 import android.opengl.EGLConfig

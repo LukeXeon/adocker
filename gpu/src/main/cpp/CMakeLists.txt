@@ -218,7 +218,8 @@ add_dependencies(virglrenderer virglrenderer_build)
 # used in the AndroidManifest.xml file.
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
-        virgl_jni.cpp)
+        VirGLNative.cpp
+)
 
 # Include directories for virglrenderer and libepoxy headers
 target_include_directories(${CMAKE_PROJECT_NAME}
