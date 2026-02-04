@@ -15,6 +15,10 @@ class VirGLRendererContext @AssistedInject constructor(
     private val surface = Surface(surfaceTexture)
     private val eglSurface = eglManager.createWindowSurface(surface)
 
+    init {
+        surfaceTexture.setDefaultBufferSize(1280, 720)
+    }
+
     override fun close() {
         eglManager.destroySurface(eglSurface)
         surface.release()
