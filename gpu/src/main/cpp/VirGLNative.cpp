@@ -32,7 +32,6 @@ extern "C" {
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
 
-
 static void *get_egl_display_callback(void *cookie) {
 }
 
@@ -60,10 +59,9 @@ Java_com_github_andock_gpu_virgl_VirGLNative_initRenderer(
         jlong display,
         jint flags
 ) {
-    LOGI("Initializing VirGL renderer with display=%p, flags=0x%x", (void*)display, flags);
+    LOGI("Initializing VirGL renderer with display=%p, flags=0x%x", (void *) display, flags);
     // Setup virgl callbacks
-    virgl_renderer_callbacks callbacks;
-    memset(&callbacks, 0, sizeof(callbacks));
+    virgl_renderer_callbacks callbacks{};
     callbacks.version = 4;
     callbacks.get_egl_display = get_egl_display_callback;
     callbacks.create_gl_context = create_gl_context_callback;
