@@ -10,6 +10,7 @@ import javax.inject.Singleton
 class VirGLRenderer @Inject constructor(
     private val eglManager: EGLManager,
     private val factory: VirGLContext.Factory,
+    private val contextFactory: VirGLRendererGLContext.Factory
 ) {
 
     companion object {
@@ -24,8 +25,8 @@ class VirGLRenderer @Inject constructor(
         }
     }
 
-    private fun createGLContext(): Long {
-        val context = eglManager.createContext() ?: return 0
+    private fun createGLContext(): VirGLRendererGLContext {
+        return contextFactory.create()
     }
 
     fun start(address: LocalSocketAddress) {

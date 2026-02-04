@@ -7,7 +7,7 @@ import dagger.assisted.AssistedInject
 import java.io.Closeable
 import javax.inject.Singleton
 
-class VirGLRendererContext @AssistedInject constructor(
+class VirGLRendererGLContext @AssistedInject constructor(
     private val eglManager: EGLManager,
 ) : Closeable {
     private val context = eglManager.createContext()
@@ -33,6 +33,6 @@ class VirGLRendererContext @AssistedInject constructor(
     @Singleton
     @AssistedFactory
     interface Factory {
-        fun create(): VirGLRendererContext
+        fun create(): VirGLRendererGLContext
     }
 }
