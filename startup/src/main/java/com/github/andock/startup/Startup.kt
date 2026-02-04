@@ -4,10 +4,10 @@ import android.content.Context
 import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.startup.AppInitializer
+import com.github.andock.common.measureTimeMillis
 import com.github.andock.startup.coroutines.RootContext
 import com.github.andock.startup.tasks.TaskBatch
 import com.github.andock.startup.tasks.TaskResult
-import com.github.andock.startup.tasks.measureTimeMillis
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext

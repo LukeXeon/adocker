@@ -1,9 +1,14 @@
-package com.github.andock.startup.tasks
+package com.github.andock.common
 
 import android.os.SystemClock
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+
+data class TimeMillisWithResult<T>(
+    val result: T,
+    val timeMillis: Long,
+)
 
 @OptIn(ExperimentalContracts::class)
 inline fun measureTimeMillis(block: () -> Unit): Long {

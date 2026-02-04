@@ -39,6 +39,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":common"))
     api(libs.hilt.android)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.android)
