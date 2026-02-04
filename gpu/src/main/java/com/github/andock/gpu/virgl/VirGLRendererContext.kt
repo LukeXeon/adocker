@@ -20,6 +20,7 @@ class VirGLRendererContext @AssistedInject constructor(
     }
 
     override fun close() {
+        eglManager.destroyContext(context)
         eglManager.destroySurface(eglSurface)
         surface.release()
         surfaceTexture.release()
