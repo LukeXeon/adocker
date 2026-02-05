@@ -36,8 +36,6 @@ set(TALLOC_SOURCE_DIR "${PROOT_BUILD_DIR}/talloc-${TALLOC_VERSION}")
 set(STATIC_ROOT "${PROOT_BUILD_DIR}/static-${PROOT_ARCH}")
 set(INSTALL_ROOT "${PROOT_BUILD_DIR}/install-${PROOT_ARCH}")
 set(SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
-# 顶层共享脚本目录 (proot/src/main/cpp -> scripts)
-get_filename_component(ROOT_SCRIPTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../scripts" ABSOLUTE)
 
 # ============ 下载 talloc ============
 set(TALLOC_URL "https://download.samba.org/pub/talloc/talloc-${TALLOC_VERSION}.tar.gz")
@@ -74,7 +72,7 @@ set(TALLOC_LIB "${STATIC_ROOT}/lib/libtalloc.a")
 add_custom_command(
     OUTPUT ${TALLOC_LIB}
     COMMENT "Building talloc for ${PROOT_ARCH}"
-    COMMAND bash ${ROOT_SCRIPTS_DIR}/filter-output.sh
+    COMMAND bash ${SCRIPTS_DIR}/filter-output.sh
         ${CMAKE_COMMAND} -E env
         "CC=${NDK_CC}"
         "AR=${NDK_AR}"
@@ -82,7 +80,7 @@ add_custom_command(
         "STATIC_ROOT=${STATIC_ROOT}"
         "TALLOC_SOURCE_DIR=${TALLOC_SOURCE_DIR}"
         "PYTHON=${Python3_EXECUTABLE}"
-        "PATH=${ROOT_SCRIPTS_DIR}:$ENV{PATH}"
+        "PATH=${SCRIPTS_DIR}:$ENV{PATH}"
         bash ${SCRIPTS_DIR}/build-talloc.sh
     WORKING_DIRECTORY ${TALLOC_SOURCE_DIR}
     VERBATIM
@@ -97,7 +95,7 @@ set(LOADER_OUTPUT "${INSTALL_ROOT}/bin/libproot_loader.so")
 add_custom_command(
     OUTPUT ${PROOT_OUTPUT} ${LOADER_OUTPUT}
     COMMENT "Building proot for ${PROOT_ARCH}"
-    COMMAND bash ${ROOT_SCRIPTS_DIR}/filter-output.sh
+    COMMAND bash ${SCRIPTS_DIR}/filter-output.sh
         ${CMAKE_COMMAND} -E env
         "CC=${NDK_CC}"
         "AR=${NDK_AR}"
@@ -105,7 +103,7 @@ add_custom_command(
         "STATIC_ROOT=${STATIC_ROOT}"
         "INSTALL_ROOT=${INSTALL_ROOT}"
         "PROOT_SOURCE_DIR=${PROOT_SOURCE_DIR}"
-        "PATH=${ROOT_SCRIPTS_DIR}:$ENV{PATH}"
+        "PATH=${SCRIPTS_DIR}:$ENV{PATH}"
         bash ${SCRIPTS_DIR}/build-proot.sh
     WORKING_DIRECTORY ${PROOT_SOURCE_DIR}/src
     DEPENDS talloc_static
