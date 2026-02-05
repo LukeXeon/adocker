@@ -219,6 +219,15 @@ add_dependencies(virglrenderer virglrenderer_build)
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         VirGLNative.cpp
+        # EGL and VirGL initialization
+        virgl_egl_manager.cpp
+        virgl_callbacks.cpp
+        virgl_init.cpp
+        # Epoll server and client handling
+        vtest_epoll_server.cpp
+        vtest_client.cpp
+        # Protocol and I/O
+        vtest_io.cpp
 )
 
 # Include directories for virglrenderer and libepoxy headers
