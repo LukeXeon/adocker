@@ -2,6 +2,7 @@ package com.github.andock.common
 
 import android.app.ActivityThread
 import android.app.Application
+import android.os.Build
 import android.os.SystemClock
 import android.view.inspector.WindowInspector
 import kotlinx.coroutines.delay
@@ -40,8 +41,11 @@ fun formatSize(bytes: Long): String {
 }
 
 val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
-    WindowInspector.getGlobalWindowViews().firstOrNull()
-        ?.context
-        ?.applicationContext as? Application
-        ?: ActivityThread.currentApplication()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        WindowInspector.getGlobalWindowViews().firstOrNull()
+            ?.context
+            ?.applicationContext as? Application
+    } else {
+        null
+    } ?: ActivityThread.currentApplication()
 }
