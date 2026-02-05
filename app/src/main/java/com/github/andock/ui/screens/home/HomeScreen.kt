@@ -69,7 +69,7 @@ fun HomeScreen() {
     val runningContainers by viewModel.runningContainers.collectAsState(0)
     val stoppedContainers by viewModel.stoppedContainers.collectAsState(0)
     val isShowWarning by viewModel.isShowWarning.collectAsState()
-    val prootVersion by viewModel.prootVersion.collectAsState()
+    val prootVersion = viewModel.prootVersion
     val (showPullDialog, setPullDialog) = remember { mutableStateOf<Boolean?>(null) }
     val (showProgressDialog, setProgressDialog) = remember { mutableStateOf<ImageDownloader?>(null) }
 

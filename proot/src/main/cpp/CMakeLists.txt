@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.22.1)
+
+# ============ 配置 C++ STL ============
+# 必须在 project() 之前设置
+
 project("proot")
 
 # ============ 配置 ============
@@ -128,9 +132,12 @@ if(HAS_LOADER_32BIT)
     )
 endif()
 
-# ============ 创建一个极简的占位库触发 Gradle 打包 ============
-# Gradle 需要 CMake 产生至少一个 SHARED 库才会收集 jniLibs
-# 我们创建一个极小的库，稍后通过 Gradle 配置排除它
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/stub.c "void __proot_stub(void){}")
-add_library(proot_stub SHARED ${CMAKE_CURRENT_BINARY_DIR}/stub.c)
-add_dependencies(proot_stub proot_build)
+# ============ 创建 proot_ext 库 ============
+add_library(proot_ext SHARED ext.cpp)
+add_dependencies(proot_ext proot_build)
+target_include_directories(proot_ext PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# 16KB 页面对齐 (Android 15+ 兼容性)
+target_link_options(proot_ext PRIVATE
+    -Wl,-z,max-page-size=16384
+)

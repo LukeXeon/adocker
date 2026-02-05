@@ -65,7 +65,7 @@ fun SettingsScreen() {
     val context = LocalContext.current
     val viewModel = hiltViewModel<SettingsViewModel>()
     var storageUsage by remember { mutableStateOf<Long?>(null) }
-    val prootVersion by viewModel.prootVersion.collectAsState(initial = "")
+    val prootVersion = viewModel.prootVersion
     val snackbarHostState = LocalSnackbarHostState.current
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()

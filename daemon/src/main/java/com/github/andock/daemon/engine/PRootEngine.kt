@@ -3,6 +3,7 @@ package com.github.andock.daemon.engine
 import com.github.andock.daemon.app.AppContext
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.daemon.os.Process
+import com.github.andock.proot.PRoot
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -28,11 +29,10 @@ class PRootEngine @Inject constructor(
     private val appContext: AppContext,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
-    private val prootVersion: PRootVersion,
     private val prootEnv: PRootEnvironment,
 ) {
-    val version
-        get() = prootVersion.value
+
+    val version = PRoot.getVersion()
 
     /**
      * Build the PRoot command for running a container
