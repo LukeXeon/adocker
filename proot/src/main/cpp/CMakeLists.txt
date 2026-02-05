@@ -133,11 +133,8 @@ if(HAS_LOADER_32BIT)
 endif()
 
 # ============ 创建 proot_ext 库 ============
-add_library(proot_ext SHARED ext.cpp)
+add_library(proot_ext SHARED ext.c)
 add_dependencies(proot_ext proot_build)
 target_include_directories(proot_ext PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
 # 16KB 页面对齐 (Android 15+ 兼容性)
-target_link_options(proot_ext PRIVATE
-    -Wl,-z,max-page-size=16384
-)
+target_link_options(proot_ext PRIVATE -Wl,-z,max-page-size=16384)
