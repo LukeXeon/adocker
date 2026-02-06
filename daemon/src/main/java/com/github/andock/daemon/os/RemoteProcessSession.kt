@@ -8,7 +8,9 @@ import timber.log.Timber
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.RejectedExecutionException
 
 class RemoteProcessSession(
     cmd: Array<String>,
@@ -17,15 +19,21 @@ class RemoteProcessSession(
 ) : IRemoteProcessSession.Stub() {
 
     companion object {
+        private val executors = arrayOf(
+            ForkJoinPool.commonPool(),
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            Executors.newCachedThreadPool()
+        )
 
         private fun execute(runnable: Runnable) {
-            runCatching {
-                ForkJoinPool.commonPool().execute(runnable)
-            }.recover {
-                AsyncTask.THREAD_POOL_EXECUTOR.execute(runnable)
-            }.recover {
-                Thread(runnable).start()
-            }.getOrThrow()
+            for (executor in executors) {
+                try {
+                    executor.execute(runnable)
+                    return
+                } catch (e: RejectedExecutionException) {
+                    Timber.e(e)
+                }
+            }
         }
 
         private fun createPipeFd(stream: Any): ParcelFileDescriptor {
