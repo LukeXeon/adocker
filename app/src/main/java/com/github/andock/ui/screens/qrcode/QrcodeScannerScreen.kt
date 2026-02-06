@@ -55,7 +55,7 @@ import com.github.andock.ui.screens.main.LocalResultEventBus
 import com.github.andock.ui.utils.debounceClick
 import kotlinx.coroutines.launch
 
-val scannedDataKey by EventBus.key<String?>(null)
+val scannedDataKey by EventBus.key<String?>()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.withContext
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
-import kotlin.uuid.ExperimentalUuidApi
 
 class EventBus {
     private val _channels = mutableStateMapOf<Key<*>, Channel<Any?>>()
@@ -44,12 +43,11 @@ class EventBus {
         }.send(result)
     }
 
-    data class Key<T>(val name: String, val default: T)
+    data class Key<T>(val name: String)
 
     companion object {
 
-        @OptIn(ExperimentalUuidApi::class)
-        fun <T> key(initialValue: T): ReadOnlyProperty<Any?, Key<T>> {
+        fun <T> key(): ReadOnlyProperty<Any?, Key<T>> {
             return object : ReadOnlyProperty<Any?, Key<T>> {
                 @Volatile
                 private var value: Key<T>? = null
@@ -60,7 +58,7 @@ class EventBus {
                         synchronized(this) {
                             var v2 = value
                             if (v2 == null) {
-                                v2 = Key(property.name, initialValue)
+                                v2 = Key(property.name)
                                 value = v2
                             }
                             return v2
