@@ -23,14 +23,14 @@ class EventBus {
     inline fun <reified T> subscribe(
         key: Key<T>,
         crossinline onResult: suspend (T) -> Unit
-    ) {
-        LaunchedEffect(channels, key) {
-            withContext(Dispatchers.Main.immediate) {
-                channels[key]
-            }?.consumeAsFlow()?.collect { result ->
+    ): Boolean {
+        val channel = channels[key] ?: return false
+        LaunchedEffect(channel) {
+            channel.consumeAsFlow().collect { result ->
                 onResult(result as T)
             }
         }
+        return true
     }
 
     suspend fun <T> send(key: Key<T>, result: T) {
