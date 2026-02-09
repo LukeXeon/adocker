@@ -2,6 +2,7 @@ package com.github.andock.daemon.engine
 
 import android.content.Context
 import com.github.andock.common.nativeLibDir
+import com.github.andock.daemon.app.socketFile
 import java.io.File
 
 
@@ -40,3 +41,9 @@ val Context.environment: Map<String, String>
         env["ANDROID_DATA"] = "/data"
         return env
     }
+
+/** Standard Docker socket path on Linux */
+private const val DOCKER_SOCK_PATH = "/var/run/docker.sock"
+
+val Context.redirect
+    get() = mapOf(DOCKER_SOCK_PATH to socketFile.absolutePath)

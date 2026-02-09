@@ -8,7 +8,6 @@ import com.github.andock.proot.PRoot
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -28,8 +27,6 @@ import javax.inject.Singleton
 @Singleton
 class PRootEngine @Inject constructor(
     private val appContext: Application,
-    @param:Named("redirect")
-    private val mapping: Map<String, String>,
 ) {
 
     val version = PRoot.getVersion()
@@ -57,6 +54,7 @@ class PRootEngine @Inject constructor(
         cmd.add(container.workingDir)
 
         // Bind mounts
+        val mapping = appContext.redirect
         container.binds.forEach { bind ->
             cmd.add("-b")
             val hostPath = mapping.getOrElse(bind.hostPath) { bind.hostPath }
