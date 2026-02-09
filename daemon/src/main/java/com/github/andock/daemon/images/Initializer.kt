@@ -1,6 +1,6 @@
 package com.github.andock.daemon.images
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
 import com.github.andock.startup.Task
 
 
@@ -8,7 +8,7 @@ import com.github.andock.startup.Task
 suspend fun deleteUnreferencedLayers(
     @Suppress("unused")
     @Task("app")
-    appContext: AppContext,
+    appContext: Application,
     imageManager: ImageManager
 ) {
     imageManager.deleteUnreferencedLayers()

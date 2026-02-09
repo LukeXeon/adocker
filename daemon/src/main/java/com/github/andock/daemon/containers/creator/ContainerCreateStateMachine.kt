@@ -1,10 +1,12 @@
 package com.github.andock.daemon.containers.creator
 
+import android.app.Application
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.containersDir
+import com.github.andock.daemon.app.layersDir
 import com.github.andock.daemon.containers.Container
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
@@ -27,7 +29,7 @@ class ContainerCreateStateMachine @AssistedInject constructor(
     initialState: ContainerCreateState,
     private val imageDao: ImageDao,
     private val containerDao: ContainerDao,
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val containerFactory: Container.Factory,
     private val containerManager: ContainerManager,
 ) : FlowReduxStateMachineFactory<ContainerCreateState, CancellationException>() {

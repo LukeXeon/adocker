@@ -1,11 +1,12 @@
 package com.github.andock.daemon.images.downloader
 
+import android.app.Application
 import androidx.room.withTransaction
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.layersDir
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
@@ -38,7 +39,7 @@ class ImageDownloadStateMachine @AssistedInject constructor(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
     private val database: AppDatabase,
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val registryManager: RegistryManager,
 ) : FlowReduxStateMachineFactory<ImageDownloadState, CancellationException>() {
     private val imageRepository = repositories[

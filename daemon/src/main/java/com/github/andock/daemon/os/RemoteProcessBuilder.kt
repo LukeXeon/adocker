@@ -1,9 +1,11 @@
 package com.github.andock.daemon.os
 
+import android.app.Application
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.common.isDebuggable
+import com.github.andock.common.packageInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -14,7 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RemoteProcessBuilder @Inject constructor(
-    appContext: AppContext,
+    appContext: Application,
 ) : ServiceConnection {
     private val userServiceArgs = UserServiceArgs(
         ComponentName(

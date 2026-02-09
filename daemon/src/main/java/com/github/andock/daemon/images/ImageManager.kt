@@ -1,7 +1,8 @@
 package com.github.andock.daemon.images
 
+import android.app.Application
 import androidx.room.withTransaction
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.layersDir
 import com.github.andock.daemon.database.AppDatabase
 import com.github.andock.daemon.database.dao.ImageDao
 import com.github.andock.daemon.database.dao.LayerDao
@@ -20,7 +21,7 @@ class ImageManager @Inject constructor(
     private val imageDao: ImageDao,
     private val layerDao: LayerDao,
     private val database: AppDatabase,
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val downloaderFactory: ImageDownloader.Factory,
     scope: CoroutineScope,
 ) {

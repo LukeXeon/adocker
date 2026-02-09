@@ -10,19 +10,28 @@ import org.acra.config.mailSender
 import org.acra.config.toast
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
+import timber.log.Timber
 
 @Task("app")
 suspend fun appContext(
-    appContext: AppContext,
+    appContext: Application,
     @Suppress("unused")
     @Task("logging")
     logging: Unit,
     @Suppress("unused")
     @Task("reporter")
     reporter: Unit
-): AppContext {
+): Application {
     withContext(Dispatchers.Default) {
-        appContext.initializeDirs()
+        listOf(
+            appContext.containersDir,
+            appContext.layersDir,
+        ).forEach { dir ->
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+        }
+        Timber.d("AppContext initialized")
     }
     return appContext
 }

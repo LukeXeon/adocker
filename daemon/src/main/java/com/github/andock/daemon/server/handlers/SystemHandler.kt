@@ -1,7 +1,12 @@
 package com.github.andock.daemon.server.handlers
 
+import android.app.Application
 import android.os.Build
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.common.isDebuggable
+import com.github.andock.common.nativeLibDir
+import com.github.andock.common.packageInfo
+import com.github.andock.daemon.app.containersDir
+import com.github.andock.daemon.app.layersDir
 import com.github.andock.daemon.containers.ContainerManager
 import com.github.andock.daemon.containers.ContainerState
 import com.github.andock.daemon.images.ImageManager
@@ -25,7 +30,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SystemHandler @Inject constructor(
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val containerManager: ContainerManager,
     private val imageManager: ImageManager
 ) {

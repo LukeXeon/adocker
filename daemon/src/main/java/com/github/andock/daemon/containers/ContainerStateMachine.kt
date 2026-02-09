@@ -1,11 +1,12 @@
 package com.github.andock.daemon.containers
 
+import android.app.Application
 import com.freeletics.flowredux2.ChangeableState
 import com.freeletics.flowredux2.ChangedState
 import com.freeletics.flowredux2.ExecutionPolicy
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.containersDir
 import com.github.andock.daemon.database.dao.ContainerDao
 import com.github.andock.daemon.database.dao.ContainerLogDao
 import com.github.andock.daemon.database.model.ContainerLogEntity
@@ -28,7 +29,7 @@ class ContainerStateMachine @AssistedInject constructor(
     @Assisted
     initialState: ContainerState,
     private val containerDao: ContainerDao,
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val prootEngine: PRootEngine,
     private val containerManager: ContainerManager,
     private val containerLogDao: ContainerLogDao,

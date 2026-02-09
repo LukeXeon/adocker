@@ -1,6 +1,7 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
+import com.github.andock.daemon.app.socketFile
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,7 +13,7 @@ import javax.inject.Named
 object EngineModule {
     @Provides
     @Named("redirect")
-    fun redirect(appContext: AppContext): Map<String, String> {
+    fun redirect(appContext: Application): Map<String, String> {
         return mapOf(
             DOCKER_SOCK_PATH to appContext.socketFile.absolutePath
         )

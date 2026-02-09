@@ -1,7 +1,8 @@
 package com.github.andock.daemon.server
 
+import android.app.Application
 import android.net.LocalSocketAddress.Namespace
-import com.github.andock.daemon.app.AppContext
+import com.github.andock.daemon.app.socketFile
 import com.github.andock.daemon.http.TcpServerConfig
 import com.github.andock.daemon.http.UnixServerConfig
 import dagger.Module
@@ -21,7 +22,7 @@ object ServerModule {
     @IntoSet
     fun unixHttpServer(
         handler: DockerApiServer,
-        appContext: AppContext,
+        appContext: Application,
         factory: UnixServerConfig.Factory
     ): Http4kServer {
         return handler.asServer(

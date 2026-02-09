@@ -1,13 +1,14 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
+import com.github.andock.common.nativeLibDir
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PRootEnvironment @Inject constructor(
-    appContext: AppContext,
+    appContext: Application,
 ) {
     /**
      * Execute PRoot directly from native lib dir (has apk_data_file SELinux context)
@@ -30,7 +31,7 @@ class PRootEnvironment @Inject constructor(
 
         // Set PROOT_TMP_DIR - PRoot needs a writable temporary directory
         // Use app's tmp directory which has write permissions
-        val tmpDir = appContext.tmpDir
+        val tmpDir = appContext.cacheDir
         tmpDir.mkdirs()  // Ensure directory exists
         env["PROOT_TMP_DIR"] = tmpDir.absolutePath
 

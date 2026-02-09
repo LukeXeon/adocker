@@ -1,6 +1,7 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
+import com.github.andock.common.nativeLibDir
 import com.github.andock.daemon.os.Process
 import com.github.andock.daemon.os.await
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PRootVersion @Inject constructor(
-    private val appContext: AppContext,
+    private val appContext: Application,
     private val prootEnv: PRootEnvironment,
     scope: CoroutineScope
 ) {

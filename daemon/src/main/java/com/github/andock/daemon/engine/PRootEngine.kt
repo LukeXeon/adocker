@@ -1,6 +1,7 @@
 package com.github.andock.daemon.engine
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
+import com.github.andock.daemon.app.containersDir
 import com.github.andock.daemon.images.models.ContainerConfig
 import com.github.andock.daemon.os.Process
 import com.github.andock.proot.PRoot
@@ -26,7 +27,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class PRootEngine @Inject constructor(
-    private val appContext: AppContext,
+    private val appContext: Application,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
     private val prootEnv: PRootEnvironment,

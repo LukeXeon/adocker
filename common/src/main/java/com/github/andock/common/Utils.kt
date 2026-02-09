@@ -1,10 +1,6 @@
 package com.github.andock.common
 
-import android.app.ActivityThread
-import android.app.Application
-import android.os.Build
 import android.os.SystemClock
-import android.view.inspector.WindowInspector
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -38,14 +34,4 @@ fun formatSize(bytes: Long): String {
         bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
         else -> "${bytes / (1024 * 1024 * 1024)} GB"
     }
-}
-
-val application by lazy(LazyThreadSafetyMode.PUBLICATION) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        WindowInspector.getGlobalWindowViews().firstOrNull()
-            ?.context
-            ?.applicationContext as? Application
-    } else {
-        null
-    } ?: ActivityThread.currentApplication()
 }

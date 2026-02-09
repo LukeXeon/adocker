@@ -1,12 +1,13 @@
 package com.github.andock.daemon.logging
 
-import com.github.andock.daemon.app.AppContext
+import android.app.Application
+import com.github.andock.common.isDebuggable
 import com.github.andock.startup.Task
 import timber.log.Timber
 
 
 @Task("logging")
-fun logging(appContext: AppContext) {
+fun logging(appContext: Application) {
     if (appContext.isDebuggable) {
         Timber.plant(Timber.DebugTree())
     }
