@@ -30,7 +30,6 @@ class PRootEngine @Inject constructor(
     private val appContext: Application,
     @param:Named("redirect")
     private val mapping: Map<String, String>,
-    private val prootEnv: PRootEnvironment,
 ) {
 
     val version = PRoot.getVersion()
@@ -44,7 +43,7 @@ class PRootEngine @Inject constructor(
         command: List<String>?,
     ): List<String> {
         val cmd = mutableListOf<String>()
-        cmd.add(prootEnv.binary.absolutePath)
+        cmd.add(appContext.binary.absolutePath)
 
         // Root emulation (fake root user)
         cmd.add("-0")
@@ -86,7 +85,7 @@ class PRootEngine @Inject constructor(
      * Build environment variables for the process
      */
     private fun buildEnvironment(container: ContainerConfig): Map<String, String> {
-        val env = HashMap<String, String>(prootEnv.values)
+        val env = HashMap<String, String>(appContext.environment)
         // Default environment
         env["HOME"] = "/root"
         env["USER"] = container.user.ifEmpty { "root" }
