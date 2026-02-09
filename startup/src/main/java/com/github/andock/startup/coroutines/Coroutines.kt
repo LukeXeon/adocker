@@ -8,10 +8,8 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlin.coroutines.CoroutineContext
 
 
-private val mainDispatcherTypes = arrayOf(CoroutineDispatcher::class, Delay::class)
-
 internal fun <T> CoroutineDispatcher.asDelayable(): T where T : CoroutineDispatcher, T : Delay {
-    require(mainDispatcherTypes.all { it.isInstance(this) })
+    require(CoroutineDispatcher::class.isInstance(this) && Delay::class.isInstance(this))
     @Suppress("UNCHECKED_CAST")
     return this as T
 }
