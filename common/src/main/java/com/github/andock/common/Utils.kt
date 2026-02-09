@@ -1,11 +1,15 @@
 package com.github.andock.common
 
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
+import android.os.Process
 import android.os.SystemClock
 import kotlinx.coroutines.delay
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
 
 suspend inline fun <T> withAtLeast(
     timeMillis: Long,
@@ -34,4 +38,23 @@ fun formatSize(bytes: Long): String {
         bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
         else -> "${bytes / (1024 * 1024 * 1024)} GB"
     }
+}
+
+val queuedWorkLooper: Looper by lazy {
+    runCatching {
+        Class.forName("android.os.QueuedWork")
+            .getDeclaredMethod("getHandler").apply {
+                isAccessible = true
+            }(null) as Handler
+    }.map {
+        it.looper
+    }.recover {
+        Timber.e(it, "access android.os.QueuedWork failed")
+        HandlerThread(
+            "queued-work-looper",
+            Process.THREAD_PRIORITY_FOREGROUND
+        ).apply {
+            start()
+        }.looper
+    }.getOrThrow()
 }
