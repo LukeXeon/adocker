@@ -124,7 +124,7 @@ private class UnsafeSuspendLazyImpl<out T>(initializer: suspend () -> T) : Suspe
 
 }
 
-private class SuspendLazyAdapter<T>(
+private class AdaptSuspendLazyImpl<T>(
     private val lazy: Lazy<T>
 ) : SuspendLazy<T> {
 
@@ -153,6 +153,6 @@ fun <T> suspendLazy(mode: LazyThreadSafetyMode, initializer: suspend () -> T): S
     }
 
 fun <T> Lazy<T>.asSuspendLazy(): SuspendLazy<T> {
-    return SuspendLazyAdapter(this)
+    return AdaptSuspendLazyImpl(this)
 }
 
