@@ -19,7 +19,7 @@ interface InMemoryLogDao {
         """
      SELECT 
      id,
-     datetime(timestamp / 1000, 'unixepoch', 'localtime') || ' ' || message AS content
+     message AS content
      FROM in_memory_log_lines 
      WHERE sessionId = :sessionId
      ORDER BY timestamp ASC

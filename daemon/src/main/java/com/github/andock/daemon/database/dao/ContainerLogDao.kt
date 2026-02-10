@@ -19,7 +19,7 @@ interface ContainerLogDao {
         """
       SELECT
       id,
-      datetime(timestamp / 1000, 'unixepoch', 'localtime') || ' ' || message AS content
+      message AS content
       FROM log_lines 
       WHERE containerId = :containerId 
       ORDER BY timestamp ASC
